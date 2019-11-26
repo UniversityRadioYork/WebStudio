@@ -83,6 +83,13 @@ const showplan = createSlice({
           case "AddItem":
             // no-op
             break;
+          case "RemoveItem":
+            const idx = state.plan!.findIndex(x => itemId(x) === op.timeslotitemid);
+            if (idx < 0) {
+              throw new Error();
+            }
+            state.plan!.splice(idx, 1);
+            break;
           default:
             throw new Error();
         }
@@ -301,6 +308,46 @@ export const addItem = (
       newItemData
     })
   );
+};
+
+export const removeItem = (
+  timeslotId: number,
+  itemid: string
+): AppThunk => async (dispatch, getState) => {
+  // This is a simplified version of the second case of moveItem
+  const plan = cloneDeep(getState().showplan.plan!);
+  const item = plan.find(x => itemId(x) === itemid)!;
+  const planColumn = plan
+    .filter(x => x.channel === item.channel)
+    .sort((a, b) => a.weight - b.weight);
+
+  const ops: api.UpdateOp[] = [];
+  ops.push({
+    op: "RemoveItem",
+    timeslotitemid: itemid,
+    channel: item.channel,
+    weight: item.weight
+  });
+  planColumn.splice(planColumn.indexOf(item), 1);
+  for (let i = item.weight; i < planColumn.length; i++) {
+    const movingItem = planColumn[i];
+    ops.push({
+      op: "MoveItem",
+      timeslotitemid: itemId(item),
+      oldchannel: item.channel,
+      oldweight: item.weight,
+      channel: item.channel,
+      weight: item.weight - 1
+    });
+    movingItem.weight -= 1;
+  }
+
+  const result = await api.updateShowplan(timeslotId, ops);
+  if (!result.every(x => x.status)) {
+    dispatch(showplan.actions.planSaveError("Server says no!"));
+    return;
+  }
+  dispatch(showplan.actions.applyOps(ops));
 };
 
 export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {

@@ -166,6 +166,12 @@ export type UpdateOp =
       channel: number;
       weight: number;
       id: string;
+    }
+  | {
+      op: "RemoveItem";
+      timeslotitemid: string;
+      channel: number;
+      weight: number;
     };
 
 interface OpResult {

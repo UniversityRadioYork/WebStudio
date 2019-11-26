@@ -1,6 +1,7 @@
 import React, { useState, useReducer, useRef, useEffect } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
+import { ContextMenu, ContextMenuTrigger, MenuItem } from "react-contextmenu";
 
 import {
   showPlanResource,
@@ -26,15 +27,20 @@ import {
   getShowplan,
   itemId,
   moveItem,
-  addItem
+  addItem,
+  removeItem
 } from "./state";
 
 const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
+const TS_ITEM_MENU_ID = "SongMenu";
+
 function Item({ item: x, index }: { item: PlanItem | Track; index: number }) {
   const id = itemId(x);
+  const isReal = "timeslotitemid" in x;
+  const isGhost = "ghostid" in x;
   return (
-    <Draggable draggableId={id} index={index} isDragDisabled={"ghostid" in x}>
+    <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -43,11 +49,13 @@ function Item({ item: x, index }: { item: PlanItem | Track; index: number }) {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
         >
-          {x.title}
-          {"artist" in x && " - " + x.artist}
-          <code>
-            {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
-          </code>
+          <ContextMenuTrigger id={isReal ? TS_ITEM_MENU_ID : ""} collect={() => ({ id })}>
+            {x.title}
+            {"artist" in x && " - " + x.artist}
+            <code>
+              {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
+            </code>
+          </ContextMenuTrigger>
         </div>
       )}
     </Draggable>
@@ -178,6 +186,11 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       );
     }
   }
+
+  async function onCtxRemoveClick(e: any, data: { id: string }) {
+    dispatch(removeItem(timeslotId, data.id));
+  }
+
   if (showplan === null) {
     return (
       <div className="sp-container">
@@ -215,6 +228,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <LibraryColumn />
         </DragDropContext>
       </div>
+
+      <ContextMenu id={TS_ITEM_MENU_ID}>
+        <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
+      </ContextMenu>
     </div>
   );
 };
