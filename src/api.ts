@@ -152,14 +152,21 @@ export function searchForTracks(
   });
 }
 
-export type UpdateOp = {
-  op: "MoveItem";
-  timeslotitemid: string;
-  oldchannel: number;
-  oldweight: number;
-  channel: number;
-  weight: number;
-};
+export type UpdateOp =
+  | {
+      op: "MoveItem";
+      timeslotitemid: string;
+      oldchannel: number;
+      oldweight: number;
+      channel: number;
+      weight: number;
+    }
+  | {
+      op: "AddItem";
+      channel: number;
+      weight: number;
+      id: string;
+    };
 
 interface OpResult {
   status: boolean;

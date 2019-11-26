@@ -80,10 +80,28 @@ const showplan = createSlice({
             item.channel = op.channel;
             item.weight = op.weight;
             break;
+          case "AddItem":
+            // no-op
+            break;
           default:
             throw new Error();
         }
       });
+    },
+    insertGhost(state, action: PayloadAction<ItemGhost>) {
+      state.plan!.push(action.payload);
+    },
+    replaceGhost(
+      state,
+      action: PayloadAction<{ ghostId: string; newItemData: TimeslotItem }>
+    ) {
+      const idx = state.plan!.findIndex(
+        x => itemId(x) === action.payload.ghostId
+      );
+      if (idx < 0) {
+        throw new Error();
+      }
+      state.plan![idx] = action.payload.newItemData;
     }
   }
 });
@@ -195,7 +213,6 @@ export const moveItem = (
   });
 
   // Then, and only then, put the item in its new place
-  console.log("Moving over");
   ops.push({
     op: "MoveItem",
     timeslotitemid: (itemToMove as TimeslotItem).timeslotitemid,
@@ -205,13 +222,6 @@ export const moveItem = (
     weight: newWeight
   });
 
-  console.log(
-    "TL;DR of opset is\r\n" +
-      ops
-        .map(x => `${x.oldchannel}x${x.oldweight} -> ${x.channel}x${x.weight}`)
-        .join(";\r\n")
-  );
-
   dispatch(showplan.actions.applyOps(ops));
   const result = await api.updateShowplan(timeslotid, ops);
   if (!result.every(x => x.status)) {
@@ -219,6 +229,78 @@ export const moveItem = (
   } else {
     dispatch(showplan.actions.setPlanSaving(false));
   }
+};
+
+export const addItem = (
+  timeslotId: number,
+  newItemData: TimeslotItem
+): AppThunk => async (dispatch, getState) => {
+  const plan = cloneDeep(getState().showplan.plan!);
+  const ops: api.UpdateOp[] = [];
+
+  // This is basically a simplified version of the second case above
+  // Before we add the new item to the plan, we increment everything below it
+  const planColumn = plan
+    .filter(x => x.channel === newItemData.channel)
+    .sort((a, b) => a.weight - b.weight);
+  for (let i = newItemData.weight; i < planColumn.length; i++) {
+    const item = planColumn[i];
+    ops.push({
+      op: "MoveItem",
+      timeslotitemid: itemId(item),
+      oldchannel: item.channel,
+      oldweight: item.weight,
+      channel: item.channel,
+      weight: item.weight + 1
+    });
+    item.weight += 1;
+  }
+
+  // Okay, we have a hole.
+  // Now, we're going to insert a "ghost" item into the plan while we wait for it to save
+  // Note that we're going to flush the move-over operations to Redux now, so that the hole
+  // is there - then, once we get a timeslotitemid, replace it with a proper item
+  dispatch(showplan.actions.applyOps(ops));
+
+  const ghostId = Math.random().toString(10);
+  const newItemTitle =
+    newItemData.type === "central"
+      ? newItemData.artist + "-" + newItemData.title
+      : newItemData.title;
+  const ghost: ItemGhost = {
+    ghostid: ghostId,
+    channel: newItemData.channel,
+    weight: newItemData.weight,
+    title: newItemTitle
+  };
+
+  const idForServer =
+    newItemData.type === "central"
+      ? `${newItemData.album.recordid}-${newItemData.trackid}`
+      : `ManagedDB-${newItemData.auxid}`;
+
+  dispatch(showplan.actions.insertGhost(ghost));
+  ops.push({
+    op: "AddItem",
+    channel: newItemData.channel,
+    weight: newItemData.weight,
+    id: idForServer
+  });
+  const result = await api.updateShowplan(timeslotId, ops);
+  if (!result.every(x => x.status)) {
+    dispatch(showplan.actions.planSaveError("Server says no!"));
+    return;
+  }
+  const lastResult = result[result.length - 1]; // this is the add op
+  const newItemId = lastResult.timeslotitemid!;
+
+  newItemData.timeslotitemid = newItemId;
+  dispatch(
+    showplan.actions.replaceGhost({
+      ghostId: "G" + ghostId,
+      newItemData
+    })
+  );
 };
 
 export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {

@@ -20,7 +20,14 @@ import {
 import useDebounce from "../lib/useDebounce";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
-import { Plan, PlanItem, getShowplan, itemId, moveItem } from "./state";
+import {
+  Plan,
+  PlanItem,
+  getShowplan,
+  itemId,
+  moveItem,
+  addItem
+} from "./state";
 
 const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
@@ -81,8 +88,7 @@ function CentralMusicLibrary() {
     }
     searchForTracks("", track).then(tracks => {
       tracks.forEach(track => {
-        const id =
-          track.album.recordid.toString(10) + "-" + track.trackid.toString(10);
+        const id = itemId(track);
         if (!(id in CML_CACHE)) {
           CML_CACHE[id] = track;
         }
@@ -102,7 +108,7 @@ function CentralMusicLibrary() {
         {(provided, snapshot) => (
           <div ref={provided.innerRef} {...provided.droppableProps}>
             {items.map((item, index) => (
-              <Item key={item.trackid} item={item} index={index} />
+              <Item key={itemId(item)} item={item} index={index} />
             ))}
             {provided.placeholder}
           </div>
@@ -153,7 +159,15 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }
     if (result.draggableId[0] === "T") {
       // this is a track from the CML
-      //TODO
+      const data = CML_CACHE[result.draggableId];
+      const newItem: TimeslotItem = {
+        type: "central",
+        timeslotitemid: "CHANGEME",
+        channel: parseInt(result.destination!.droppableId, 10),
+        weight: result.destination!.index,
+        ...data
+      };
+      dispatch(addItem(timeslotId, newItem));
     } else {
       // this is a normal move (ghosts aren't draggable)
       dispatch(
