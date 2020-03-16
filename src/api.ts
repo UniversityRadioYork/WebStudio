@@ -1,8 +1,9 @@
 import qs from "qs";
 import { convertModelToFormData, urlEncode } from "./lib/utils";
 
-const MYRADIO_BASE_URL =
-  process.env.REACT_APP_MYRADIO_BASE || "https://ury.org.uk/api/v2";
+export const MYRADIO_NON_API_BASE = process.env.REACT_APP_MYRADIO_NONAPI_BASE || "https://ury.org.uk/myradio-staging";
+export const MYRADIO_BASE_URL =
+  process.env.REACT_APP_MYRADIO_BASE || "https://ury.org.uk/api-staging/v2";
 const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
 class ApiException extends Error {}
@@ -23,7 +24,8 @@ export async function myradioApiRequest(
             api_key: MYRADIO_API_KEY
           },
           { addQueryPrefix: true }
-        )
+        ),
+        { credentials: "include" }
     );
   } else {
     const body = JSON.stringify(params);
@@ -33,7 +35,8 @@ export async function myradioApiRequest(
       body,
       headers: {
         "Content-Type": "application/json; charset=UTF-8"
-      }
+      },
+      credentials: "include"
     });
   }
   const json = await (await req).json();
@@ -76,6 +79,7 @@ interface TimeslotItemCentral {
 interface TimeslotItemAux {
   type: "aux";
   summary: string;
+  managedid: number;
   recordid: string;
   auxid: string;
 }

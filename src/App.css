@@ -37,9 +37,13 @@
 .sp-col {
   display: block;
   flex: 1;
-  border: 1px solid black;
-  height: calc(100% - 60px);
+  /*height: calc(100% - 60px);*/
   overflow-y: scroll;
+}
+
+.sp-col-inner {
+  border: 1px solid black;
+  height: 90%;
 }
 
 .sp-track {
@@ -54,6 +58,10 @@
 
 .sp-track:hover {
   background-color: #78acf1;
+}
+
+.sp-track-active {
+  background-color: #10c998;
 }
 
 html, body, #root {

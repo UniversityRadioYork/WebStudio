@@ -31,21 +31,34 @@ import {
   removeItem
 } from "./state";
 
+import * as PlayerState from "./player/state";
+
 const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
 const TS_ITEM_MENU_ID = "SongMenu";
 
-function Item({ item: x, index }: { item: PlanItem | Track; index: number }) {
+function Item({ item: x, index, column }: { item: PlanItem | Track; index: number; column: number }) {
+  const dispatch = useDispatch();
   const id = itemId(x);
   const isReal = "timeslotitemid" in x;
   const isGhost = "ghostid" in x;
+
+  const playerState = useSelector((state: RootState) => state.player.players[column]);
+
+  function triggerClick() {
+    if (column > -1) {
+      dispatch(PlayerState.load(column, x));
+    }
+  }
+
   return (
     <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           key={id}
-          className="sp-track"
+          className={`sp-track ${(playerState.loadedItem !== null && itemId(playerState.loadedItem) === id) ? "sp-track-active" : ""}`}
+          onClick={triggerClick}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
         >
@@ -62,27 +75,45 @@ function Item({ item: x, index }: { item: PlanItem | Track; index: number }) {
   );
 }
 
+function Player({ id }: { id: number }) {
+  const playerState = useSelector((state: RootState) => state.player.players[id]);
+  const dispatch = useDispatch();
+
+  return (
+    <div>
+      {playerState.loadedItem !== null && (<div>{playerState.loadedItem.title}</div>)}
+      {playerState.loading && <b>LOADING</b>}
+      <button onClick={() => dispatch(PlayerState.play(id))}>p</button>
+      <button onClick={() => dispatch(PlayerState.pause(id))}>u</button>
+      <button onClick={() => dispatch(PlayerState.stop(id))}>s</button>
+    </div>
+  );
+}
+
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
-    <Droppable droppableId={id.toString(10)}>
-      {(provided, snapshot) => (
-        <div
-          className="sp-col"
-          ref={provided.innerRef}
-          {...provided.droppableProps}
-        >
-          {typeof data[id] === "undefined"
-            ? null
-            : data
-                .filter(x => x.channel === id)
-                .sort((a, b) => a.weight - b.weight)
-                .map((x, index) => (
-                  <Item key={itemId(x)} item={x} index={index} />
-                ))}
-          {provided.placeholder}
-        </div>
-      )}
-    </Droppable>
+    <div className="sp-col">
+      <Droppable droppableId={id.toString(10)}>
+        {(provided, snapshot) => (
+          <div
+            className="sp-col-inner"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {typeof data[id] === "undefined"
+              ? null
+              : data
+                  .filter(x => x.channel === id)
+                  .sort((a, b) => a.weight - b.weight)
+                  .map((x, index) => (
+                    <Item key={itemId(x)} item={x} index={index} column={id} />
+                  ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+      <Player id={id} />
+    </div>
   );
 }
 
@@ -116,7 +147,7 @@ function CentralMusicLibrary() {
         {(provided, snapshot) => (
           <div ref={provided.innerRef} {...provided.droppableProps}>
             {items.map((item, index) => (
-              <Item key={itemId(item)} item={item} index={index} />
+              <Item key={itemId(item)} item={item} index={index} column={-1} />
             ))}
             {provided.placeholder}
           </div>
@@ -211,7 +242,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   }
   return (
     <div className="sp-container">
-      <h1>Show Planner</h1>
+      <h1>baps3 ayy lmao</h1>
       <div className="sp-status">
         {planSaving && <em>Plan saving...</em>}
         {planSaveError && (

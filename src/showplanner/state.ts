@@ -230,12 +230,12 @@ export const moveItem = (
   });
 
   dispatch(showplan.actions.applyOps(ops));
-  const result = await api.updateShowplan(timeslotid, ops);
-  if (!result.every(x => x.status)) {
-    dispatch(showplan.actions.planSaveError("Server says no!"));
-  } else {
+  // const result = await api.updateShowplan(timeslotid, ops);
+  // if (!result.every(x => x.status)) {
+  //   dispatch(showplan.actions.planSaveError("Server says no!"));
+  // } else {
     dispatch(showplan.actions.setPlanSaving(false));
-  }
+  // }
 };
 
 export const addItem = (
@@ -293,21 +293,21 @@ export const addItem = (
     weight: newItemData.weight,
     id: idForServer
   });
-  const result = await api.updateShowplan(timeslotId, ops);
-  if (!result.every(x => x.status)) {
-    dispatch(showplan.actions.planSaveError("Server says no!"));
-    return;
-  }
-  const lastResult = result[result.length - 1]; // this is the add op
-  const newItemId = lastResult.timeslotitemid!;
+  // const result = await api.updateShowplan(timeslotId, ops);
+  // if (!result.every(x => x.status)) {
+  //   dispatch(showplan.actions.planSaveError("Server says no!"));
+  //   return;
+  // }
+  // const lastResult = result[result.length - 1]; // this is the add op
+  // const newItemId = lastResult.timeslotitemid!;
 
-  newItemData.timeslotitemid = newItemId;
-  dispatch(
-    showplan.actions.replaceGhost({
-      ghostId: "G" + ghostId,
-      newItemData
-    })
-  );
+  // newItemData.timeslotitemid = newItemId;
+  // dispatch(
+  //   showplan.actions.replaceGhost({
+  //     ghostId: "G" + ghostId,
+  //     newItemData
+  //   })
+  // );
 };
 
 export const removeItem = (
@@ -342,11 +342,11 @@ export const removeItem = (
     movingItem.weight -= 1;
   }
 
-  const result = await api.updateShowplan(timeslotId, ops);
-  if (!result.every(x => x.status)) {
-    dispatch(showplan.actions.planSaveError("Server says no!"));
-    return;
-  }
+  // const result = await api.updateShowplan(timeslotId, ops);
+  // if (!result.every(x => x.status)) {
+  //   dispatch(showplan.actions.planSaveError("Server says no!"));
+  //   return;
+  // }
   dispatch(showplan.actions.applyOps(ops));
 };
 
