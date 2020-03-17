@@ -85,3 +85,15 @@ html, body, #root {
 .react-contextmenu-item--disabled {
   cursor: not-allowed;
 }
+
+.sp-state-playing {
+  background-color: #2cdb2c;
+}
+
+.sp-state-paused {
+  background-color: #dbbb2c;
+}
+
+.sp-state-stopped {
+  background-color: #db2c2c;
+}

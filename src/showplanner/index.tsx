@@ -83,9 +83,18 @@ function Player({ id }: { id: number }) {
     <div>
       {playerState.loadedItem !== null && (<div>{playerState.loadedItem.title}</div>)}
       {playerState.loading && <b>LOADING</b>}
-      <button onClick={() => dispatch(PlayerState.play(id))}>p</button>
-      <button onClick={() => dispatch(PlayerState.pause(id))}>u</button>
-      <button onClick={() => dispatch(PlayerState.stop(id))}>s</button>
+      <button
+        onClick={() => dispatch(PlayerState.play(id))}
+        className={playerState.state === "playing" ? "sp-state-playing" : ""}
+      >p</button>
+      <button
+        onClick={() => dispatch(PlayerState.pause(id))}
+        className={playerState.state === "paused" ? "sp-state-paused" : ""}
+      >a</button>
+      <button
+        onClick={() => dispatch(PlayerState.stop(id))}
+        className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
+      >s</button>
     </div>
   );
 }

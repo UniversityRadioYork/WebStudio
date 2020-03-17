@@ -1,16 +1,26 @@
+import "../../lib/webcast";
+
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { PlanItem } from "../state";
 import { Track, MYRADIO_NON_API_BASE } from "../../api";
 import { AppThunk } from "../../store";
 
+/// <reference path="webcast.d.ts" />
+
 const audioContext = new AudioContext();
 const playerSources: MediaElementAudioSourceNode[] = [];
 const playerGains: GainNode[] = [];
-const destination = audioContext.createMediaStreamDestination();
+// TODO
+// const destination = audioContext.createWebcastSource(4096, 2);
+const destination = audioContext.createDynamicsCompressor();
+destination.connect(audioContext.destination);
+
+type PlayerStateEnum = "playing" | "paused" | "stopped";
 
 interface SinglePlayerState {
 	loadedItem: PlanItem  | Track | null
 	loading: boolean;
+	state: PlayerStateEnum;
 }
 
 interface PlayerState {
@@ -22,13 +32,16 @@ const playerState = createSlice({
 	initialState: {
 		players: [{
 			loadedItem: null,
-			loading: false
+			loading: false,
+			state: "stopped"
 		}, {
 			loadedItem: null,
-			loading: false
+			loading: false,
+			state: "stopped"
 		}, {
 			loadedItem: null,
-			loading: false
+			loading: false,
+			state: "stopped"
 		}]
 	} as PlayerState,
 	reducers: {
@@ -38,6 +51,9 @@ const playerState = createSlice({
 		},
 		itemLoadComplete(state, action: PayloadAction<{ player: number}>) {
 			state.players[action.payload.player].loading = false;
+		},
+		setPlayerState(state, action: PayloadAction<{ player: number, state: PlayerStateEnum }>) {
+			state.players[action.payload.player].state = action.payload.state;
 		}
 	}
 });
@@ -69,25 +85,29 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => dispat
 	const sauce = audioContext.createMediaElementSource(el);
 	const gain = audioContext.createGain();
 	sauce.connect(gain);
-	gain.connect(audioContext.destination);
 	gain.connect(destination);
+	console.log("Connected to", destination);
 	playerSources[player] = sauce;
 	playerGains[player] = gain;
 }
 
 export const play = (player: number): AppThunk => dispatch => {
 	playerSources[player].mediaElement.play();
+	dispatch(playerState.actions.setPlayerState({ player, state: "playing" }));
 };
 
 export const pause = (player: number): AppThunk => dispatch => {
 	if (playerSources[player].mediaElement.paused) {
 		playerSources[player].mediaElement.play();
+		dispatch(playerState.actions.setPlayerState({ player, state: "playing" }));
 	} else {
 		playerSources[player].mediaElement.pause();
+		dispatch(playerState.actions.setPlayerState({ player, state: "paused" }));
 	}
 };
 
 export const stop = (player: number): AppThunk => dispatch => {
 	playerSources[player].mediaElement.pause();
 	playerSources[player].mediaElement.currentTime = 0;
+	dispatch(playerState.actions.setPlayerState({ player, state: "stopped" }));
 };
