@@ -92,22 +92,34 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => dispat
 }
 
 export const play = (player: number): AppThunk => dispatch => {
-	playerSources[player].mediaElement.play();
-	dispatch(playerState.actions.setPlayerState({ player, state: "playing" }));
+	try{
+		playerSources[player].mediaElement.play();
+		dispatch(playerState.actions.setPlayerState({ player, state: "playing" }));
+	} catch {
+		console.log("nothing selected/loaded");
+	}
 };
 
 export const pause = (player: number): AppThunk => dispatch => {
-	if (playerSources[player].mediaElement.paused) {
-		playerSources[player].mediaElement.play();
-		dispatch(playerState.actions.setPlayerState({ player, state: "playing" }));
-	} else {
-		playerSources[player].mediaElement.pause();
-		dispatch(playerState.actions.setPlayerState({ player, state: "paused" }));
+	try{
+		if (playerSources[player].mediaElement.paused) {
+			playerSources[player].mediaElement.play();
+			dispatch(playerState.actions.setPlayerState({ player, state: "playing" }));
+		} else {
+			playerSources[player].mediaElement.pause();
+			dispatch(playerState.actions.setPlayerState({ player, state: "paused" }));
+		}
+	} catch {
+		console.log("nothing selected/loaded");
 	}
 };
 
 export const stop = (player: number): AppThunk => dispatch => {
-	playerSources[player].mediaElement.pause();
-	playerSources[player].mediaElement.currentTime = 0;
-	dispatch(playerState.actions.setPlayerState({ player, state: "stopped" }));
+	try{
+		playerSources[player].mediaElement.pause();
+		playerSources[player].mediaElement.currentTime = 0;
+		dispatch(playerState.actions.setPlayerState({ player, state: "stopped" }));
+	} catch {
+		console.log("nothing selected/loaded");
+	}
 };

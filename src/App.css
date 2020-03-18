@@ -75,7 +75,7 @@ html, body, #root {
   padding: 0;
   margin: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
 }
 
 .react-contextmenu--visible {
@@ -93,6 +93,14 @@ html, body, #root {
   cursor: not-allowed;
 }
 
+.mediaButtons button{
+  width: 32%;
+  height: 95%;
+  border-radius: 20%;
+  border-style: none;
+  margin: .5%;
+}
+
 .sp-state-playing {
   background-color: #2cdb2c;
 }
@@ -105,8 +113,6 @@ html, body, #root {
   background-color: #db2c2c;
 }
 
-.mediaButtons button{
-  width: 33%;
-  height: 100%;
+button{
+  background-color: rgb(199, 199, 199);
 }
-
