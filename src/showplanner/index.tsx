@@ -81,6 +81,7 @@ function Player({ id }: { id: number }) {
 
   return (
     <div>
+      {playerState.loadedItem == null && (<div>No Media Selected</div>)}
       {playerState.loadedItem !== null && (<div>{playerState.loadedItem.title}</div>)}
       {playerState.loading && <b>LOADING</b>}
       <button
