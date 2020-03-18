@@ -95,6 +95,7 @@ export const play = (player: number): AppThunk => dispatch => {
 	try{
 		playerSources[player].mediaElement.play();
 		dispatch(playerState.actions.setPlayerState({ player, state: "playing" }));
+		playerSources[player].mediaElement.addEventListener("ended", function(){dispatch(playerState.actions.setPlayerState({ player, state: "stopped" }));})
 	} catch {
 		console.log("nothing selected/loaded");
 	}
