@@ -80,10 +80,11 @@ function Player({ id }: { id: number }) {
   const dispatch = useDispatch();
 
   return (
-    <div>
+    <div style={{height:"16%"}}>
       {playerState.loadedItem == null && (<div>No Media Selected</div>)}
-      {playerState.loadedItem !== null && (<div>{playerState.loadedItem.title}</div>)}
+      {(playerState.loadedItem !== null && playerState.loading == false) && (<div>{playerState.loadedItem.title}</div>)}
       {playerState.loading && <b>LOADING</b>}
+      <div className="mediaButtons" style={{height:"100%"}}>
       <button
         onClick={() => dispatch(PlayerState.play(id))}
         className={playerState.state === "playing" ? "sp-state-playing" : ""}
@@ -96,32 +97,35 @@ function Player({ id }: { id: number }) {
         onClick={() => dispatch(PlayerState.stop(id))}
         className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
       >s</button>
+      </div>
     </div>
   );
 }
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
-    <div className="sp-col">
-      <Droppable droppableId={id.toString(10)}>
-        {(provided, snapshot) => (
-          <div
-            className="sp-col-inner"
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-          >
-            {typeof data[id] === "undefined"
-              ? null
-              : data
-                  .filter(x => x.channel === id)
-                  .sort((a, b) => a.weight - b.weight)
-                  .map((x, index) => (
-                    <Item key={itemId(x)} item={x} index={index} column={id} />
-                  ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
+    <div className="sp-main-col">
+      <div className="sp-col">
+        <Droppable droppableId={id.toString(10)}>
+          {(provided, snapshot) => (
+            <div
+              className="sp-col-inner"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {typeof data[id] === "undefined"
+                ? null
+                : data
+                    .filter(x => x.channel === id)
+                    .sort((a, b) => a.weight - b.weight)
+                    .map((x, index) => (
+                      <Item key={itemId(x)} item={x} index={index} column={id} />
+                    ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </div>
       <Player id={id} />
     </div>
   );
@@ -170,18 +174,20 @@ function CentralMusicLibrary() {
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   return (
-    <div className="sp-col">
-      <select
-        style={{ width: "100%" }}
-        value={sauce}
-        onChange={e => setSauce(e.target.value)}
-      >
-        <option value={"None"} disabled>
-          Choose a library
-        </option>
-        <option value={"CentralMusicLibrary"}>Central Music Library</option>
-      </select>
-      {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
+    <div className="sp-main-col">
+      <div className="sp-col" style={{height:"98%"}}>
+        <select
+          style={{ width: "100%" }}
+          value={sauce}
+          onChange={e => setSauce(e.target.value)}
+        >
+          <option value={"None"} disabled>
+            Choose a library
+          </option>
+          <option value={"CentralMusicLibrary"}>Central Music Library</option>
+        </select>
+        {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
+      </div>
     </div>
   );
 }
