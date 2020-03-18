@@ -84,9 +84,9 @@ function Player({ id }: { id: number }) {
   const dispatch = useDispatch();
 
   return (
-    <div style={{height:"16%"}}>
+    <div style={{height:"16%"}} className="player">
       {playerState.loadedItem == null && (<div>No Media Selected</div>)}
-      {(playerState.loadedItem !== null && playerState.loading == false) && (<div>{playerState.loadedItem.title}</div>)}
+  {(playerState.loadedItem !== null && playerState.loading == false) && (<div>{playerState.loadedItem.title}</div>)}
       {playerState.loading && <b>LOADING</b>}
       <div className="mediaButtons" style={{height:"100%"}}>
       <button
@@ -184,8 +184,7 @@ function CentralMusicLibrary() {
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   return (
-    <div className="sp-main-col">
-      <div className="sp-col" style={{height:"98%"}}>
+      <div className="sp-col" style={{height:"48%", marginBottom:"1%"}}>
         <select
           style={{ width: "100%" }}
           value={sauce}
@@ -198,7 +197,15 @@ function LibraryColumn() {
         </select>
         {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
       </div>
-    </div>
+  );
+}
+
+function MixingInterface(){
+  const [sauce, setSauce] = useState("None");
+  return (
+      <div className="sp-col" style={{height:"48%", overflowY:"visible"}}>
+        <h1>Mixing Interface</h1>
+      </div>
   );
 }
 
@@ -282,10 +289,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <Column id={0} data={showplan} />
           <Column id={1} data={showplan} />
           <Column id={2} data={showplan} />
+          <div className="sp-main-col" style={{marginRight:".2%"}}>
           <LibraryColumn />
+          <MixingInterface />
+          </div>
         </DragDropContext>
       </div>
-
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
       </ContextMenu>
