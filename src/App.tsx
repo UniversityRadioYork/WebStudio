@@ -33,7 +33,7 @@ const App: React.FC = () => {
     );
   } else {
     return (
-      <div>
+      <div style={{marginLeft:"1.5%"}}>
         <h1>Welcome to showplanner2</h1>
         <input
           type="text"
@@ -41,6 +41,7 @@ const App: React.FC = () => {
           value={inputVal}
           onChange={e => setInputVal(e.target.value)}
           onKeyPress={e=>enterKeyCont(e.key)}
+          autoFocus
         />
         <button onClick={cont}>Continue</button>
       </div>
