@@ -18,6 +18,12 @@ const App: React.FC = () => {
     force();
   }
 
+  function enterKeyCont(key: string) {
+      if (key == 'Enter'){
+        cont()
+      }
+  }
+
   const q = qs.parse(window.location.search, { ignoreQueryPrefix: true });
   if ("timeslot_id" in q) {
     return (
@@ -34,6 +40,7 @@ const App: React.FC = () => {
           placeholder="enter a timeslot id"
           value={inputVal}
           onChange={e => setInputVal(e.target.value)}
+          onKeyPress={e=>enterKeyCont(e.key)}
         />
         <button onClick={cont}>Continue</button>
       </div>
