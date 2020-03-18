@@ -33,6 +33,10 @@ import {
 
 import * as PlayerState from "./player/state";
 
+import playLogo from '../assets/icons/play.svg'
+import pauseLogo from '../assets/icons/pause.svg'
+import stopLogo from '../assets/icons/stop.svg'
+
 const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
 const TS_ITEM_MENU_ID = "SongMenu";
@@ -88,15 +92,21 @@ function Player({ id }: { id: number }) {
       <button
         onClick={() => dispatch(PlayerState.play(id))}
         className={playerState.state === "playing" ? "sp-state-playing" : ""}
-      >p</button>
+      >
+        <img src={playLogo} style={{height:"10vh"}}/>
+      </button>
       <button
         onClick={() => dispatch(PlayerState.pause(id))}
         className={playerState.state === "paused" ? "sp-state-paused" : ""}
-      >a</button>
+      >
+        <img src={pauseLogo} style={{height:"10vh"}}/>
+      </button>
       <button
         onClick={() => dispatch(PlayerState.stop(id))}
         className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
-      >s</button>
+      >
+        <img src={stopLogo} style={{height:"10vh"}}/>
+      </button>
       </div>
     </div>
   );
