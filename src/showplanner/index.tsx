@@ -31,23 +31,33 @@ import {
   removeItem
 } from "./state";
 
-import * as PlayerState from "./player/state";
+import * as PlayerState from "../mixer/state";
 
-import playLogo from '../assets/icons/play.svg'
-import pauseLogo from '../assets/icons/pause.svg'
-import stopLogo from '../assets/icons/stop.svg'
+import playLogo from "../assets/icons/play.svg";
+import pauseLogo from "../assets/icons/pause.svg";
+import stopLogo from "../assets/icons/stop.svg";
 
 const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
 const TS_ITEM_MENU_ID = "SongMenu";
 
-function Item({ item: x, index, column }: { item: PlanItem | Track; index: number; column: number }) {
+function Item({
+  item: x,
+  index,
+  column
+}: {
+  item: PlanItem | Track;
+  index: number;
+  column: number;
+}) {
   const dispatch = useDispatch();
   const id = itemId(x);
   const isReal = "timeslotitemid" in x;
   const isGhost = "ghostid" in x;
 
-  const playerState = useSelector((state: RootState) => state.player.players[column]);
+  const playerState = useSelector(
+    (state: RootState) => state.mixer.players[column]
+  );
 
   function triggerClick() {
     if (column > -1) {
@@ -61,12 +71,20 @@ function Item({ item: x, index, column }: { item: PlanItem | Track; index: numbe
         <div
           ref={provided.innerRef}
           key={id}
-          className={`sp-track ${(playerState.loadedItem !== null && itemId(playerState.loadedItem) === id) ? "sp-track-active" : ""}`}
+          className={`sp-track ${
+            playerState.loadedItem !== null &&
+            itemId(playerState.loadedItem) === id
+              ? "sp-track-active"
+              : ""
+          }`}
           onClick={triggerClick}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
         >
-          <ContextMenuTrigger id={isReal ? TS_ITEM_MENU_ID : ""} collect={() => ({ id })}>
+          <ContextMenuTrigger
+            id={isReal ? TS_ITEM_MENU_ID : ""}
+            collect={() => ({ id })}
+          >
             {x.title}
             {"artist" in x && " - " + x.artist}
             <code>
@@ -80,33 +98,43 @@ function Item({ item: x, index, column }: { item: PlanItem | Track; index: numbe
 }
 
 function Player({ id }: { id: number }) {
-  const playerState = useSelector((state: RootState) => state.player.players[id]);
+  const playerState = useSelector(
+    (state: RootState) => state.mixer.players[id]
+  );
   const dispatch = useDispatch();
 
   return (
-    <div style={{height:"16%"}} className="player">
-      {playerState.loadedItem == null && (<div>No Media Selected</div>)}
-  {(playerState.loadedItem !== null && playerState.loading == false) && (<div>{playerState.loadedItem.title}</div>)}
+    <div className="player">
+      {playerState.loadedItem == null && <div>No Media Selected</div>}
+      {playerState.loadedItem !== null && playerState.loading == false && (
+        <div>{playerState.loadedItem.title}</div>
+      )}
       {playerState.loading && <b>LOADING</b>}
-      <div className="mediaButtons" style={{height:"100%"}}>
-      <button
-        onClick={() => dispatch(PlayerState.play(id))}
-        className={playerState.state === "playing" ? "sp-state-playing" : ""}
-      >
-        <img src={playLogo} style={{height:"10vh"}}/>
-      </button>
-      <button
-        onClick={() => dispatch(PlayerState.pause(id))}
-        className={playerState.state === "paused" ? "sp-state-paused" : ""}
-      >
-        <img src={pauseLogo} style={{height:"10vh"}}/>
-      </button>
-      <button
-        onClick={() => dispatch(PlayerState.stop(id))}
-        className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
-      >
-        <img src={stopLogo} style={{height:"10vh"}}/>
-      </button>
+      <div className="mediaButtons">
+        <button
+          onClick={() => dispatch(PlayerState.play(id))}
+          className={playerState.state === "playing" ? "sp-state-playing" : ""}
+        >
+          <img src={playLogo} className="sp-player-button" />
+        </button>
+        <button
+          onClick={() => dispatch(PlayerState.pause(id))}
+          className={playerState.state === "paused" ? "sp-state-paused" : ""}
+        >
+          <img src={pauseLogo} className="sp-player-button" />
+        </button>
+        <button
+          onClick={() => dispatch(PlayerState.stop(id))}
+          className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
+        >
+          <img src={stopLogo} className="sp-player-button" />
+        </button>
+      </div>
+      <div className="sp-mixer-buttons">
+        <div className="sp-mixer-buttons-backdrop" style={{ width: playerState.volume * 100 + "%" }}></div>
+        <button onClick={() => dispatch(PlayerState.setVolume(id, "off"))}>Off</button>
+        <button onClick={() => dispatch(PlayerState.setVolume(id, "bed"))}>Bed</button>
+        <button onClick={() => dispatch(PlayerState.setVolume(id, "full"))}>Full</button>
       </div>
     </div>
   );
@@ -129,7 +157,12 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
                     .filter(x => x.channel === id)
                     .sort((a, b) => a.weight - b.weight)
                     .map((x, index) => (
-                      <Item key={itemId(x)} item={x} index={index} column={id} />
+                      <Item
+                        key={itemId(x)}
+                        item={x}
+                        index={index}
+                        column={id}
+                      />
                     ))}
               {provided.placeholder}
             </div>
@@ -184,28 +217,28 @@ function CentralMusicLibrary() {
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   return (
-      <div className="sp-col" style={{height:"48%", marginBottom:"1%"}}>
-        <select
-          style={{ width: "100%" }}
-          value={sauce}
-          onChange={e => setSauce(e.target.value)}
-        >
-          <option value={"None"} disabled>
-            Choose a library
-          </option>
-          <option value={"CentralMusicLibrary"}>Central Music Library</option>
-        </select>
-        {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
-      </div>
+    <div className="sp-col" style={{ height: "48%", marginBottom: "1%" }}>
+      <select
+        style={{ width: "100%" }}
+        value={sauce}
+        onChange={e => setSauce(e.target.value)}
+      >
+        <option value={"None"} disabled>
+          Choose a library
+        </option>
+        <option value={"CentralMusicLibrary"}>Central Music Library</option>
+      </select>
+      {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
+    </div>
   );
 }
 
-function MixingInterface(){
+function MixingInterface() {
   const [sauce, setSauce] = useState("None");
   return (
-      <div className="sp-col" style={{height:"48%", overflowY:"visible"}}>
-        <h1>Mixing Interface</h1>
-      </div>
+    <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
+      <h1>Mixing Interface</h1>
+    </div>
   );
 }
 
@@ -275,9 +308,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   }
   return (
     <div className="sp-container">
-      <div style={{height:"10%"}}>
+      <div style={{ height: "10%" }}>
         <h1>baps3 ayy lmao</h1>
-        <img src="https://ury.org.uk/images/logo.png" style={{height:"6%", right:"2%", position:"absolute", top:"2%"}}/>
+        <img
+          src="https://ury.org.uk/images/logo.png"
+          style={{ height: "6%", right: "2%", position: "absolute", top: "2%" }}
+        />
       </div>
       <div className="sp-status">
         {planSaving && <em>Plan saving...</em>}
@@ -292,9 +328,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <Column id={0} data={showplan} />
           <Column id={1} data={showplan} />
           <Column id={2} data={showplan} />
-          <div className="sp-main-col" style={{marginRight:".2%"}}>
-          <LibraryColumn />
-          <MixingInterface />
+          <div className="sp-main-col" style={{ marginRight: ".2%" }}>
+            <LibraryColumn />
+            <MixingInterface />
           </div>
         </DragDropContext>
       </div>

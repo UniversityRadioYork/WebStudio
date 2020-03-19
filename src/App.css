@@ -38,13 +38,15 @@
 }
 
 .sp-col {
-  display: block;
-  height: 80%;
+  display: flex;
+  height: 60%;
   overflow-y: scroll;
   border: 1px solid black;
   margin-left: .2vw;
   margin-right: .2vw;
   padding: .2vw;
+  flex-direction: column;
+  flex-wrap: nowrap;
 }
 
 .sp-main-col{
@@ -52,7 +54,7 @@
 }
 
 .sp-col-inner {
-  height: 99%;
+  flex: 1;
 }
 
 .sp-track {
@@ -70,7 +72,7 @@
 }
 
 .sp-track-active {
-  background-color: #10c998;
+  background-color: #10c998 !important;
 }
 
 html, body, #root {
@@ -120,6 +122,31 @@ button{
 }
 
 .player div {
-  height: 16%;
   overflow-x: hidden;
+}
+
+.sp-player-button {
+  height: 2em;
+}
+
+.sp-mixer-buttons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  position: relative;
+}
+
+.sp-mixer-buttons-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #78acf1;
+}
+
+.sp-mixer-buttons button {
+  flex: 1;
+  background: transparent;
+  border: 1px solid black;
+  z-index: 100;
 }
