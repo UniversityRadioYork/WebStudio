@@ -98,6 +98,9 @@ const showplan = createSlice({
     insertGhost(state, action: PayloadAction<ItemGhost>) {
       state.plan!.push(action.payload);
     },
+    addItem(state, action: PayloadAction<TimeslotItem>) {
+      state.plan!.push(action.payload);
+    },
     replaceGhost(
       state,
       action: PayloadAction<{ ghostId: string; newItemData: TimeslotItem }>
@@ -267,32 +270,35 @@ export const addItem = (
   // Now, we're going to insert a "ghost" item into the plan while we wait for it to save
   // Note that we're going to flush the move-over operations to Redux now, so that the hole
   // is there - then, once we get a timeslotitemid, replace it with a proper item
+  //
+  // TODO: no we won't, we'll just insert it directly
   dispatch(showplan.actions.applyOps(ops));
+  dispatch(showplan.actions.addItem(newItemData));
 
-  const ghostId = Math.random().toString(10);
-  const newItemTitle =
-    newItemData.type === "central"
-      ? newItemData.artist + "-" + newItemData.title
-      : newItemData.title;
-  const ghost: ItemGhost = {
-    ghostid: ghostId,
-    channel: newItemData.channel,
-    weight: newItemData.weight,
-    title: newItemTitle
-  };
+  // const ghostId = Math.random().toString(10);
+  // const newItemTitle =
+  //   newItemData.type === "central"
+  //     ? newItemData.artist + "-" + newItemData.title
+  //     : newItemData.title;
+  // const ghost: ItemGhost = {
+  //   ghostid: ghostId,
+  //   channel: newItemData.channel,
+  //   weight: newItemData.weight,
+  //   title: newItemTitle
+  // };
 
-  const idForServer =
-    newItemData.type === "central"
-      ? `${newItemData.album.recordid}-${newItemData.trackid}`
-      : `ManagedDB-${newItemData.auxid}`;
+  // const idForServer =
+  //   newItemData.type === "central"
+  //     ? `${newItemData.album.recordid}-${newItemData.trackid}`
+  //     : `ManagedDB-${newItemData.auxid}`;
 
-  dispatch(showplan.actions.insertGhost(ghost));
-  ops.push({
-    op: "AddItem",
-    channel: newItemData.channel,
-    weight: newItemData.weight,
-    id: idForServer
-  });
+  // dispatch(showplan.actions.insertGhost(ghost));
+  // ops.push({
+  //   op: "AddItem",
+  //   channel: newItemData.channel,
+  //   weight: newItemData.weight,
+  //   id: idForServer
+  // });
   // const result = await api.updateShowplan(timeslotId, ops);
   // if (!result.every(x => x.status)) {
   //   dispatch(showplan.actions.planSaveError("Server says no!"));

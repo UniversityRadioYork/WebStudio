@@ -129,7 +129,6 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 
 export const play = (player: number): AppThunk => dispatch => {
 	try {
-		console.log("PLAY YOU FASCIST")
 		playerSources[player].mediaElement.play();
 		dispatch(
 			mixerState.actions.setPlayerState({ player, state: "playing" })
@@ -199,7 +198,6 @@ export const setVolume = (
 	const currentLevel = getState().mixer.players[player].volume;
 	playerGainTweens[player] = new (Between as any)(currentLevel, volume)
 		.on("update", (value: number) => {
-			console.log(value);
 			dispatch(mixerState.actions.setPlayerVolume({ player, volume }));
 			if (playerGains[player]) {
 				playerGains[player].gain.value = value;

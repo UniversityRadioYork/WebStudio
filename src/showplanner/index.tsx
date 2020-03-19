@@ -72,6 +72,7 @@ function Item({
           ref={provided.innerRef}
           key={id}
           className={`sp-track ${
+            column > 0 &&
             playerState.loadedItem !== null &&
             itemId(playerState.loadedItem) === id
               ? "sp-track-active"
@@ -131,10 +132,19 @@ function Player({ id }: { id: number }) {
         </button>
       </div>
       <div className="sp-mixer-buttons">
-        <div className="sp-mixer-buttons-backdrop" style={{ width: playerState.volume * 100 + "%" }}></div>
-        <button onClick={() => dispatch(PlayerState.setVolume(id, "off"))}>Off</button>
-        <button onClick={() => dispatch(PlayerState.setVolume(id, "bed"))}>Bed</button>
-        <button onClick={() => dispatch(PlayerState.setVolume(id, "full"))}>Full</button>
+        <div
+          className="sp-mixer-buttons-backdrop"
+          style={{ width: playerState.volume * 100 + "%" }}
+        ></div>
+        <button onClick={() => dispatch(PlayerState.setVolume(id, "off"))}>
+          Off
+        </button>
+        <button onClick={() => dispatch(PlayerState.setVolume(id, "bed"))}>
+          Bed
+        </button>
+        <button onClick={() => dispatch(PlayerState.setVolume(id, "full"))}>
+          Full
+        </button>
       </div>
     </div>
   );
@@ -267,7 +277,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       const data = CML_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
         type: "central",
-        timeslotitemid: "CHANGEME",
+        timeslotitemid: "CHANGEME" + Math.random(),
         channel: parseInt(result.destination!.droppableId, 10),
         weight: result.destination!.index,
         ...data
