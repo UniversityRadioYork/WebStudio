@@ -72,7 +72,7 @@ function Item({
           ref={provided.innerRef}
           key={id}
           className={`sp-track ${
-            column > 0 &&
+            column >= 0 &&
             playerState.loadedItem !== null &&
             itemId(playerState.loadedItem) === id
               ? "sp-track-active"
@@ -98,6 +98,8 @@ function Item({
   );
 }
 
+const USE_REAL_GAIN_VALUE = false;
+
 function Player({ id }: { id: number }) {
   const playerState = useSelector(
     (state: RootState) => state.mixer.players[id]
@@ -108,7 +110,7 @@ function Player({ id }: { id: number }) {
     <div className="player">
       {playerState.loadedItem == null && <div>No Media Selected</div>}
       {playerState.loadedItem !== null && playerState.loading == false && (
-        <div>{playerState.loadedItem.title}</div>
+        <div style={{ height: "1.5em", overflowY: "hidden" }}>{playerState.loadedItem.title}</div>
       )}
       {playerState.loading && <b>LOADING</b>}
       <div className="mediaButtons">
@@ -134,7 +136,7 @@ function Player({ id }: { id: number }) {
       <div className="sp-mixer-buttons">
         <div
           className="sp-mixer-buttons-backdrop"
-          style={{ width: playerState.volume * 100 + "%" }}
+          style={{ width: (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) * 100 + "%" }}
         ></div>
         <button onClick={() => dispatch(PlayerState.setVolume(id, "off"))}>
           Off
@@ -268,7 +270,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   }, [timeslotId]);
 
   async function onDragEnd(result: DropResult, provider: ResponderProvided) {
-    if (result.destination!.droppableId[0] === "$") {
+    if (!result.destination) {
+      return;
+    }
+    if (result.destination.droppableId[0] === "$") {
       // pseudo-channel
       return;
     }
@@ -278,8 +283,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       const newItem: TimeslotItem = {
         type: "central",
         timeslotitemid: "CHANGEME" + Math.random(),
-        channel: parseInt(result.destination!.droppableId, 10),
-        weight: result.destination!.index,
+        channel: parseInt(result.destination.droppableId, 10),
+        weight: result.destination.index,
         ...data
       };
       dispatch(addItem(timeslotId, newItem));
@@ -287,8 +292,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is a normal move (ghosts aren't draggable)
       dispatch(
         moveItem(timeslotId, result.draggableId, [
-          parseInt(result.destination!.droppableId, 10),
-          result.destination!.index
+          parseInt(result.destination.droppableId, 10),
+          result.destination.index
         ])
       );
     }

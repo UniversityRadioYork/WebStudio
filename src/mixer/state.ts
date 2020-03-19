@@ -1,15 +1,27 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import * as Between from "between.js";
+import {
+	createSlice,
+	PayloadAction,
+	Store,
+	Dispatch,
+	Action,
+	Middleware
+} from "@reduxjs/toolkit";
+import Between from "between.js";
 import { PlanItem } from "../showplanner/state";
+import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE } from "../api";
 import { AppThunk } from "../store";
+import { RootState } from "../rootReducer";
 
 console.log(Between);
 
 const audioContext = new AudioContext();
 const playerSources: MediaElementAudioSourceNode[] = [];
 const playerGains: GainNode[] = [];
-const playerGainTweens: Between.Between[] = [];
+const playerGainTweens: Array<{
+	target: VolumePresetEnum;
+	tweens: Between[];
+}> = [];
 // TODO
 // const destination = audioContext.createWebcastSource(4096, 2);
 const destination = audioContext.createDynamicsCompressor();
@@ -23,6 +35,7 @@ interface PlayerState {
 	loading: boolean;
 	state: PlayerStateEnum;
 	volume: number;
+	gain: number;
 }
 
 interface MixerState {
@@ -37,19 +50,22 @@ const mixerState = createSlice({
 				loadedItem: null,
 				loading: false,
 				state: "stopped",
-				volume: 1
+				volume: 1,
+				gain: 1
 			},
 			{
 				loadedItem: null,
 				loading: false,
 				state: "stopped",
-				volume: 1
+				volume: 1,
+				gain: 1
 			},
 			{
 				loadedItem: null,
 				loading: false,
 				state: "stopped",
-				volume: 1
+				volume: 1,
+				gain: 1
 			}
 		]
 	} as MixerState,
@@ -73,9 +89,21 @@ const mixerState = createSlice({
 		},
 		setPlayerVolume(
 			state,
-			action: PayloadAction<{ player: number; volume: number }>
+			action: PayloadAction<{
+				player: number;
+				volume: number;
+			}>
 		) {
 			state.players[action.payload.player].volume = action.payload.volume;
+		},
+		setPlayerGain(
+			state,
+			action: PayloadAction<{
+				player: number;
+				gain: number;
+			}>
+		) {
+			state.players[action.payload.player].gain = action.payload.gain;
 		}
 	}
 });
@@ -114,9 +142,14 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 		);
 	}
 	el.oncanplay = () => {
+		console.log("can play");
+	};
+	el.oncanplaythrough = () => {
+		console.log("can play through");
 		dispatch(mixerState.actions.itemLoadComplete({ player }));
 	};
 	el.load();
+	console.log("loading");
 	const sauce = audioContext.createMediaElementSource(el);
 	const gain = audioContext.createGain();
 	gain.gain.value = getState().mixer.players[player].volume;
@@ -179,29 +212,158 @@ export const stop = (player: number): AppThunk => dispatch => {
 	}
 };
 
+const FADE_TIME_SECONDS = 1;
 export const setVolume = (
 	player: number,
 	level: VolumePresetEnum
 ): AppThunk => (dispatch, getState) => {
 	let volume: number;
+	let uiLevel: number;
 	switch (level) {
 		case "off":
 			volume = 0;
+			uiLevel = 0;
 			break;
 		case "bed":
 			volume = 0.25;
+			uiLevel = 0.5;
 			break;
 		case "full":
-			volume = 1;
+			volume = uiLevel = 1;
 			break;
 	}
-	const currentLevel = getState().mixer.players[player].volume;
-	playerGainTweens[player] = new (Between as any)(currentLevel, volume)
-		.on("update", (value: number) => {
-			dispatch(mixerState.actions.setPlayerVolume({ player, volume }));
-			if (playerGains[player]) {
-				playerGains[player].gain.value = value;
-			}
+
+	// Right, okay, big fun is happen.
+	// To make the fade sound natural, we need to ramp it exponentially.
+	// To make the UI look sensible, we need to ramp it linearly.
+	// Time for cheating!
+
+	if (typeof playerGainTweens[player] !== "undefined") {
+		// We've interrupted a previous fade.
+		// If we've just hit the button/key to go to the same value as that fade,
+		// stop it and immediately cut to the target value.
+		// Otherwise, stop id and start a new fade.
+		playerGainTweens[player].tweens.forEach(tween => tween.pause());
+		if (playerGainTweens[player].target === level) {
+			delete playerGainTweens[player];
+			dispatch(
+				mixerState.actions.setPlayerVolume({ player, volume: uiLevel })
+			);
+			dispatch(
+				mixerState.actions.setPlayerGain({ player, gain: volume })
+			);
+			return;
+		}
+	}
+
+	const state = getState().mixer.players[player];
+
+	const currentLevel = state.volume;
+	const currentGain = state.gain;
+	const volumeTween = new Between(currentLevel, uiLevel)
+		.time(FADE_TIME_SECONDS * 1000)
+		.on("update", (val: number) => {
+			console.log(val);
+			dispatch(
+				mixerState.actions.setPlayerVolume({ player, volume: val })
+			);
+		});
+	const gainTween = new Between(currentGain, volume)
+		.time(FADE_TIME_SECONDS * 1000)
+		.easing((Between as any).Easing.Quadratic.InOut)
+		.on("update", (val: number) => {
+			console.log(val);
+			dispatch(mixerState.actions.setPlayerGain({ player, gain: val }));
 		})
-		.time(1000);
+		.on("complete", () => {
+			// clean up when done
+			delete playerGainTweens[player];
+		});
+
+	playerGainTweens[player] = {
+		target: level,
+		tweens: [volumeTween, gainTween]
+	};
+};
+
+export const mixerMiddleware: Middleware<
+	{},
+	RootState,
+	Dispatch<any>
+> = store => next => action => {
+	const oldState = store.getState().mixer;
+	const result = next(action);
+	const newState = store.getState().mixer;
+	newState.players.forEach((state, index) => {
+		if (typeof playerGains[index] !== "undefined") {
+			if (oldState.players[index].gain !== newState.players[index].gain) {
+				playerGains[index].gain.value = state.gain;
+			}
+		}
+	});
+	return result;
+};
+
+export const mixerKeyboardShortcutsMiddleware: Middleware<
+	{},
+	RootState,
+	Dispatch<any>
+> = store => {
+	Keys("q", () => {
+		store.dispatch(play(0));
+	});
+	Keys("w", () => {
+		store.dispatch(pause(0));
+	});
+	Keys("e", () => {
+		store.dispatch(stop(0));
+	});
+	Keys("r", () => {
+		store.dispatch(play(1));
+	});
+	Keys("t", () => {
+		store.dispatch(pause(1));
+	});
+	Keys("y", () => {
+		store.dispatch(stop(1));
+	});
+	Keys("u", () => {
+		store.dispatch(play(2));
+	});
+	Keys("i", () => {
+		store.dispatch(pause(2));
+	});
+	Keys("o", () => {
+		store.dispatch(stop(2));
+	});
+
+	Keys("a", () => {
+		store.dispatch(setVolume(0, "off"));
+	});
+	Keys("s", () => {
+		store.dispatch(setVolume(0, "bed"));
+	});
+	Keys("d", () => {
+		store.dispatch(setVolume(0, "full"));
+	});
+	Keys("f", () => {
+		store.dispatch(setVolume(1, "off"));
+	});
+	Keys("g", () => {
+		store.dispatch(setVolume(1, "bed"));
+	});
+	Keys("h", () => {
+		store.dispatch(setVolume(1, "full"));
+	});
+	Keys("j", () => {
+		store.dispatch(setVolume(2, "off"));
+	});
+	Keys("k", () => {
+		store.dispatch(setVolume(2, "bed"));
+	});
+	Keys("l", () => {
+		store.dispatch(setVolume(2, "full"));
+	});
+
+	return next => action => next(action);
 };

@@ -2,374 +2,376 @@
 // Declare your modules properly, people!
 
 declare module "between.js" {
-	/**
-	 * Loop mode
-	 */
-	export type LoopMode = "repeat" | "bounce";
-	export type EventEmmit = "start" | "update" | "complete";
-
-	/**
-	 * A collection of easing methods defining ease-in ease-out curves.
-	 */
-	export interface Easing extends Function {
+	declare namespace Between {
 		/**
-		 * Linear easing.
-		 *
-		 * @class Easing.Linear
+		 * Loop mode
 		 */
-		Linear: {
-			/**
-			 * Ease-in.
-			 *
-			 * @method Easing.Linear#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} k^2.
-			 */
-			None: Function;
-		};
+		export type LoopMode = "repeat" | "bounce";
+		export type EventEmmit = "start" | "update" | "complete";
 
 		/**
-		 * Quadratic easing.
-		 *
-		 * @class Easing.Quadratic
+		 * A collection of easing methods defining ease-in ease-out curves.
 		 */
-		Quadratic: {
+		export interface Easing extends Function {
 			/**
-			 * Ease-in.
+			 * Linear easing.
 			 *
-			 * @method Easing.Quadratic#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} k^2.
+			 * @class Easing.Linear
 			 */
-			In: Function;
+			Linear: {
+				/**
+				 * Ease-in.
+				 *
+				 * @method Easing.Linear#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} k^2.
+				 */
+				None: Function;
+			};
 
 			/**
-			 * Ease-out.
+			 * Quadratic easing.
 			 *
-			 * @method Easing.Quadratic#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} k* (2-k).
+			 * @class Easing.Quadratic
 			 */
-			Out: Function;
+			Quadratic: {
+				/**
+				 * Ease-in.
+				 *
+				 * @method Easing.Quadratic#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} k^2.
+				 */
+				In: Function;
+
+				/**
+				 * Ease-out.
+				 *
+				 * @method Easing.Quadratic#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} k* (2-k).
+				 */
+				Out: Function;
+
+				/**
+				 * Ease-in/out.
+				 *
+				 * @method Easing.Quadratic#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
 
 			/**
-			 * Ease-in/out.
+			 * Cubic easing.
 			 *
-			 * @method Easing.Quadratic#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Cubic
 			 */
-			InOut: Function;
-		};
+			Cubic: {
+				/**
+				 * Cubic ease-in.
+				 *
+				 * @method Easing.Cubic#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
 
-		/**
-		 * Cubic easing.
-		 *
-		 * @class Easing.Cubic
-		 */
-		Cubic: {
-			/**
-			 * Cubic ease-in.
-			 *
-			 * @method Easing.Cubic#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Cubic ease-out.
+				 *
+				 * @method Easing.Cubic#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
 
-			/**
-			 * Cubic ease-out.
-			 *
-			 * @method Easing.Cubic#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			Out: Function;
-
-			/**
-			 * Cubic ease-in/out.
-			 *
-			 * @method Easing.Cubic#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			InOut: Function;
-		};
-
-		/**
-		 * Quartic easing.
-		 *
-		 * @class Easing.Quartic
-		 */
-		Quartic: {
-			/**
-			 * Quartic ease-in.
-			 *
-			 * @method Easing.Quartic#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Cubic ease-in/out.
+				 *
+				 * @method Easing.Cubic#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
 
 			/**
-			 * Quartic ease-out.
+			 * Quartic easing.
 			 *
-			 * @method Easing.Quartic#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Quartic
 			 */
-			Out: Function;
+			Quartic: {
+				/**
+				 * Quartic ease-in.
+				 *
+				 * @method Easing.Quartic#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
+
+				/**
+				 * Quartic ease-out.
+				 *
+				 * @method Easing.Quartic#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
+
+				/**
+				 * Quartic ease-in/out.
+				 *
+				 * @method Easing.Quartic#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
 
 			/**
-			 * Quartic ease-in/out.
+			 * Quintic easing.
 			 *
-			 * @method Easing.Quartic#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Quintic
 			 */
-			InOut: Function;
-		};
+			Quintic: {
+				/**
+				 * Quintic ease-in.
+				 *
+				 * @method Easing.Quintic#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
 
-		/**
-		 * Quintic easing.
-		 *
-		 * @class Easing.Quintic
-		 */
-		Quintic: {
-			/**
-			 * Quintic ease-in.
-			 *
-			 * @method Easing.Quintic#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Quintic ease-out.
+				 *
+				 * @method Easing.Quintic#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
 
-			/**
-			 * Quintic ease-out.
-			 *
-			 * @method Easing.Quintic#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			Out: Function;
-
-			/**
-			 * Quintic ease-in/out.
-			 *
-			 * @method Easing.Quintic#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			InOut: Number;
-		};
-
-		/**
-		 * Sinusoidal easing.
-		 *
-		 * @class Easing.Sinusoidal
-		 */
-		Sinusoidal: {
-			/**
-			 * Sinusoidal ease-in.
-			 *
-			 * @method Easing.Sinusoidal#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Quintic ease-in/out.
+				 *
+				 * @method Easing.Quintic#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Number;
+			};
 
 			/**
-			 * Sinusoidal ease-out.
+			 * Sinusoidal easing.
 			 *
-			 * @method Easing.Sinusoidal#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Sinusoidal
 			 */
-			Out: Function;
+			Sinusoidal: {
+				/**
+				 * Sinusoidal ease-in.
+				 *
+				 * @method Easing.Sinusoidal#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
+
+				/**
+				 * Sinusoidal ease-out.
+				 *
+				 * @method Easing.Sinusoidal#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
+
+				/**
+				 * Sinusoidal ease-in/out.
+				 *
+				 * @method Easing.Sinusoidal#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
 
 			/**
-			 * Sinusoidal ease-in/out.
+			 * Exponential easing.
 			 *
-			 * @method Easing.Sinusoidal#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Exponential
 			 */
-			InOut: Function;
-		};
+			Exponential: {
+				/**
+				 * Exponential ease-in.
+				 *
+				 * @method Easing.Exponential#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
 
-		/**
-		 * Exponential easing.
-		 *
-		 * @class Easing.Exponential
-		 */
-		Exponential: {
-			/**
-			 * Exponential ease-in.
-			 *
-			 * @method Easing.Exponential#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Exponential ease-out.
+				 *
+				 * @method Easing.Exponential#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
 
-			/**
-			 * Exponential ease-out.
-			 *
-			 * @method Easing.Exponential#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			Out: Function;
-
-			/**
-			 * Exponential ease-in/out.
-			 *
-			 * @method Easing.Exponential#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			InOut: Function;
-		};
-
-		/**
-		 * Circular easing.
-		 *
-		 * @class Easing.Circular
-		 */
-		Circular: {
-			/**
-			 * Circular ease-in.
-			 *
-			 * @method Easing.Circular#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Exponential ease-in/out.
+				 *
+				 * @method Easing.Exponential#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
 
 			/**
-			 * Circular ease-out.
+			 * Circular easing.
 			 *
-			 * @method Easing.Circular#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Circular
 			 */
-			Out: Function;
+			Circular: {
+				/**
+				 * Circular ease-in.
+				 *
+				 * @method Easing.Circular#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
+
+				/**
+				 * Circular ease-out.
+				 *
+				 * @method Easing.Circular#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
+
+				/**
+				 * Circular ease-in/out.
+				 *
+				 * @method Easing.Circular#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
 
 			/**
-			 * Circular ease-in/out.
+			 * Elastic easing.
 			 *
-			 * @method Easing.Circular#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Elastic
 			 */
-			InOut: Function;
-		};
+			Elastic: {
+				/**
+				 * Elastic ease-in.
+				 *
+				 * @method Easing.Elastic#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
 
-		/**
-		 * Elastic easing.
-		 *
-		 * @class Easing.Elastic
-		 */
-		Elastic: {
-			/**
-			 * Elastic ease-in.
-			 *
-			 * @method Easing.Elastic#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Elastic ease-out.
+				 *
+				 * @method Easing.Elastic#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
 
-			/**
-			 * Elastic ease-out.
-			 *
-			 * @method Easing.Elastic#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			Out: Function;
-
-			/**
-			 * Elastic ease-in/out.
-			 *
-			 * @method Easing.Elastic#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			InOut: Function;
-		};
-
-		/**
-		 * Back easing.
-		 *
-		 * @class Easing.Back
-		 */
-		Back: {
-			/**
-			 * Back ease-in.
-			 *
-			 * @method Easing.Back#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Elastic ease-in/out.
+				 *
+				 * @method Easing.Elastic#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
 
 			/**
-			 * Back ease-out.
+			 * Back easing.
 			 *
-			 * @method Easing.Back#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Back
 			 */
-			Out: Function;
+			Back: {
+				/**
+				 * Back ease-in.
+				 *
+				 * @method Easing.Back#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
+
+				/**
+				 * Back ease-out.
+				 *
+				 * @method Easing.Back#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
+
+				/**
+				 * Back ease-in/out.
+				 *
+				 * @method Easing.Back#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
 
 			/**
-			 * Back ease-in/out.
+			 * Bounce easing.
 			 *
-			 * @method Easing.Back#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
+			 * @class Easing.Bounce
 			 */
-			InOut: Function;
-		};
+			Bounce: {
+				/**
+				 * Bounce ease-in.
+				 *
+				 * @method Easing.Bounce#In
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				In: Function;
 
-		/**
-		 * Bounce easing.
-		 *
-		 * @class Easing.Bounce
-		 */
-		Bounce: {
-			/**
-			 * Bounce ease-in.
-			 *
-			 * @method Easing.Bounce#In
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			In: Function;
+				/**
+				 * Bounce ease-out.
+				 *
+				 * @method Easing.Bounce#Out
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				Out: Function;
 
-			/**
-			 * Bounce ease-out.
-			 *
-			 * @method Easing.Bounce#Out
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			Out: Function;
-
-			/**
-			 * Bounce ease-in/out.
-			 *
-			 * @method Easing.Bounce#InOut
-			 * @param {number} k - The value to be tweened.
-			 * @returns {number} The tweened value.
-			 */
-			InOut: Function;
-		};
+				/**
+				 * Bounce ease-in/out.
+				 *
+				 * @method Easing.Bounce#InOut
+				 * @param {number} k - The value to be tweened.
+				 * @returns {number} The tweened value.
+				 */
+				InOut: Function;
+			};
+		}
 	}
 
-	export class Between {
+	declare class Between {
 		/**
 		 * Creates a new Between instance
 		 * @param from start
@@ -421,4 +423,6 @@ declare module "between.js" {
 		 */
 		isPaused: boolean;
 	}
+
+	export = Between;
 }
