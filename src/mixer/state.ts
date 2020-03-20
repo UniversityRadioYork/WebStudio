@@ -12,6 +12,8 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
+import WaveSurfer from "wavesurfer.js";
+
 
 console.log(Between);
 
@@ -44,6 +46,7 @@ interface PlayerState {
 	state: PlayerStateEnum;
 	volume: number;
 	gain: number;
+	wavesurfer: WaveSurfer | null;
 }
 
 interface MicState {
@@ -67,21 +70,24 @@ const mixerState = createSlice({
 				loading: false,
 				state: "stopped",
 				volume: 1,
-				gain: 1
+				gain: 1,
+				wavesurfer: null
 			},
 			{
 				loadedItem: null,
 				loading: false,
 				state: "stopped",
 				volume: 1,
-				gain: 1
+				gain: 1,
+				wavesurfer: null
 			},
 			{
 				loadedItem: null,
 				loading: false,
 				state: "stopped",
 				volume: 1,
-				gain: 1
+				gain: 1,
+				wavesurfer: null
 			}
 		],
 		mic: {
@@ -173,6 +179,10 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 			"Unsure how to handle this!\r\n\r\n" + JSON.stringify(item)
 		);
 	}
+	var wavesurfer = getState().mixer.players[player].wavesurfer;
+
+
+
 	el.oncanplay = () => {
 		console.log("can play");
 	};
@@ -180,9 +190,13 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 		console.log("can play through");
 		dispatch(mixerState.actions.itemLoadComplete({ player }));
 	};
-	el.load();
+
+	//el.load();
+
 	console.log("loading");
+	//const sauce = wavesurfer.backend.getMediaElementSource(el);
 	const sauce = audioContext.createMediaElementSource(el);
+	//const gain = wavesurfer.backend.createGain();
 	const gain = audioContext.createGain();
 	gain.gain.value = getState().mixer.players[player].gain;
 	sauce.connect(gain);
@@ -190,6 +204,45 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 	console.log("Connected to", destination);
 	playerSources[player] = sauce;
 	playerGains[player] = gain;
+
+
+	let waveform = document.getElementById("waveform-" + player.toString());
+	if (waveform != undefined) {
+		waveform.innerHTML = "";
+	}
+	wavesurfer = WaveSurfer.create({
+		container: '#waveform-' + player.toString(),
+		waveColor: '#CCCCFF',
+		progressColor: '#9999FF',
+		audioContext: audioContext,
+		backend: "MediaElement",
+		responsive: true
+
+				//forceDecode: true
+	});
+
+	//el.load();
+	if (wavesurfer != null) {
+		wavesurfer.params.xhr = {
+						cache: 'default',
+						mode: 'cors',
+						method: 'GET',
+				credentials: 'include',
+				withCredentials: true,
+						redirect: 'follow',
+						referrer: 'client',
+						headers: [
+					{
+						key: "Access-Control-Allow-Credentials",
+						value: "true"
+					}
+						]
+		};
+		wavesurfer.load(playerSources[player].mediaElement);
+		wavesurfer.on('ready', function (data = wavesurfer) {
+			data.drawBuffer();
+		});
+	}
 };
 
 export const play = (player: number): AppThunk => dispatch => {

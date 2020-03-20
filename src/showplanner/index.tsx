@@ -151,8 +151,13 @@ function Player({ id }: { id: number }) {
             <i className="fas fa-stop fa-2x"></i>
           </button>
         </div>
-        <div className="card-footer">
-            <h4 className="my-0 font-weight-normal">Time / {playerState.loadedItem !== null ? playerState.loadedItem.length : "Empty"}</h4>
+        <div className="p-0 card-footer waveform" >
+
+            <span className="m-0 current">{playerState.wavesurfer != null ? playerState.wavesurfer.getCurrentTime() : "00:00:00"}</span>
+            <span className="m-0 length">{playerState.loadedItem !== null ? playerState.loadedItem.length : "00:00:00"}</span>
+            <span className="m-0 intro">00:00:00 - in</span>
+            <span className="m-0 outro">out - 00:00:00</span>
+            <div className="m-0 waveform-graph" id={"waveform-" + id}></div>
         </div>
       </div>
     </div>

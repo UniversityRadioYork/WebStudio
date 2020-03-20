@@ -178,3 +178,33 @@ code {
     background-color: #2D425F;
   }
 }
+
+.waveform span {
+  float: left;
+  position: relative;
+  display: block;
+  z-index: 5;
+
+}
+.waveform .current, .waveform .length {
+
+  font-size: 1.2rem;
+  font-weight: 800;
+
+}
+.waveform .length, .waveform .outro {
+  right: 0;
+  position: absolute;
+
+}
+.waveform .intro, .waveform .outro  {
+  bottom: 0;
+  position: absolute;
+}
+.card-footer {
+  height: 200px;
+}
+.waveform-graph {
+  position: absolute;
+  width: 100%;
+}
