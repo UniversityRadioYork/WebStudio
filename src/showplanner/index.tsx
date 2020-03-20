@@ -1,4 +1,4 @@
-import React, { useState, useReducer, useRef, useEffect } from "react";
+import React, { useState, useReducer, useRef, useEffect, memo } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { ContextMenu, ContextMenuTrigger, MenuItem } from "react-contextmenu";
@@ -41,7 +41,7 @@ const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
 const TS_ITEM_MENU_ID = "SongMenu";
 
-function Item({
+const Item = memo(function Item({
   item: x,
   index,
   column
@@ -96,7 +96,7 @@ function Item({
       )}
     </Draggable>
   );
-}
+});
 
 const USE_REAL_GAIN_VALUE = false;
 
@@ -108,11 +108,12 @@ function Player({ id }: { id: number }) {
 
   return (
     <div className="player">
-      {playerState.loadedItem == null && <div>No Media Selected</div>}
-      {playerState.loadedItem !== null && playerState.loading == false && (
-        <div style={{ height: "1.5em", overflowY: "hidden" }}>{playerState.loadedItem.title}</div>
-      )}
-      {playerState.loading && <b>LOADING</b>}
+      <div style={{ height: "1.5em", overflowY: "hidden" }}>
+        {playerState.loadedItem !== null && playerState.loading == false
+          ? playerState.loadedItem.title
+          : "No Media Selected"}{" "}
+          {playerState.loading && <b>LOADING</b>}
+      </div>
       <div className="mediaButtons">
         <button
           onClick={() => dispatch(PlayerState.play(id))}
@@ -136,7 +137,12 @@ function Player({ id }: { id: number }) {
       <div className="sp-mixer-buttons">
         <div
           className="sp-mixer-buttons-backdrop"
-          style={{ width: (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) * 100 + "%" }}
+          style={{
+            width:
+              (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
+                100 +
+              "%"
+          }}
         ></div>
         <button onClick={() => dispatch(PlayerState.setVolume(id, "off"))}>
           Off
