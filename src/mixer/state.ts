@@ -22,6 +22,12 @@ const playerGainTweens: Array<{
 	target: VolumePresetEnum;
 	tweens: Between[];
 }> = [];
+
+let micMedia: MediaStream | null = null;
+let micSource: MediaStreamAudioSourceNode | null = null;
+let micGain: GainNode | null = null;
+let micCompressor: DynamicsCompressorNode | null = null;
+
 // TODO
 // const destination = audioContext.createWebcastSource(4096, 2);
 const destination = audioContext.createDynamicsCompressor();
@@ -29,6 +35,8 @@ destination.connect(audioContext.destination);
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type VolumePresetEnum = "off" | "bed" | "full";
+type MicVolumePresetEnum = "off" | "full";
+type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
 interface PlayerState {
 	loadedItem: PlanItem | Track | null;
@@ -38,8 +46,16 @@ interface PlayerState {
 	gain: number;
 }
 
+interface MicState {
+	open: boolean;
+	openError: null | MicErrorEnum;
+	volume: number;
+	gain: number;
+}
+
 interface MixerState {
 	players: PlayerState[];
+	mic: MicState;
 }
 
 const mixerState = createSlice({
@@ -67,7 +83,13 @@ const mixerState = createSlice({
 				volume: 1,
 				gain: 1
 			}
-		]
+		],
+		mic: {
+			open: false,
+			volume: 1,
+			gain: 1,
+			openError: null
+		}
 	} as MixerState,
 	reducers: {
 		loadItem(
@@ -104,6 +126,16 @@ const mixerState = createSlice({
 			}>
 		) {
 			state.players[action.payload.player].gain = action.payload.gain;
+		},
+		setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
+			state.mic.openError = action.payload;
+		},
+		micOpen(state) {
+			state.mic.open = true;
+		},
+		setMicLevels(state, action: PayloadAction<{volume: number, gain: number}>) {
+			state.mic.volume = action.payload.volume;
+			state.mic.gain = action.payload.gain;
 		}
 	}
 });
@@ -152,7 +184,7 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 	console.log("loading");
 	const sauce = audioContext.createMediaElementSource(el);
 	const gain = audioContext.createGain();
-	gain.gain.value = getState().mixer.players[player].volume;
+	gain.gain.value = getState().mixer.players[player].gain;
 	sauce.connect(gain);
 	gain.connect(destination);
 	console.log("Connected to", destination);
@@ -286,6 +318,55 @@ export const setVolume = (
 	};
 };
 
+export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
+	if (getState().mixer.mic.open) {
+		return;
+	}
+	dispatch(mixerState.actions.setMicError(null));
+	if (!("mediaDevices" in navigator)) {
+		// mediaDevices is not there - we're probably not in a secure context
+		dispatch(mixerState.actions.setMicError("NOT_SECURE_CONTEXT"));
+		return;
+	}
+	try {
+		micMedia = await navigator.mediaDevices.getUserMedia({
+			audio: {
+				echoCancellation: false,
+				autoGainControl: false,
+				noiseSuppression: false,
+				latency: 0.01
+			}
+		});
+	} catch (e) {
+		if (e instanceof DOMException) {
+			switch (e.message) {
+				case "Permission denied":
+					dispatch(mixerState.actions.setMicError("NO_PERMISSION"));
+					break;
+				default:
+					dispatch(mixerState.actions.setMicError("UNKNOWN"));
+			}
+		} else {
+			dispatch(mixerState.actions.setMicError("UNKNOWN"));
+		}
+		return;
+	}
+	// Okay, we have a mic stream, time to do some audio nonsense
+	micSource = audioContext.createMediaStreamSource(micMedia)
+	micGain = audioContext.createGain();
+	micCompressor = audioContext.createDynamicsCompressor();
+	// TODO: for testing we're connecting mic output to main out
+	// When streaming works we don't want to do this, because the latency is high enough to speech-jam
+	micSource.connect(micGain).connect(micCompressor).connect(destination);
+	dispatch(mixerState.actions.micOpen());
+};
+
+export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => dispatch => {
+	// no tween fuckery here, just cut the level
+	const levelVal = level === "full" ? 1 : 0;
+	dispatch(mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal }));
+};
+
 export const mixerMiddleware: Middleware<
 	{},
 	RootState,
@@ -301,6 +382,9 @@ export const mixerMiddleware: Middleware<
 			}
 		}
 	});
+	if (newState.mic.gain !== oldState.mic.gain && micGain !== null) {
+		micGain.gain.value = newState.mic.gain;
+	}
 	return result;
 };
 
@@ -363,6 +447,11 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
 	});
 	Keys("l", () => {
 		store.dispatch(setVolume(2, "full"));
+	});
+
+	Keys("x", () => {
+		const state = store.getState().mixer.mic;
+		store.dispatch(setMicVolume(state.volume === 1 ? "off" : "full"));
 	});
 
 	return next => action => next(action);
