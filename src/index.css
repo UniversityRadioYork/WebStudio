@@ -61,10 +61,8 @@ code {
   color: #ffffff;
   padding: 10px 15px; /** added to center the logo **/
   line-height: 30px;  /** added to center the logo **/
+  margin-right: 0;
 
-}
-.navbar-ury .navbar-brand.myradio-logo {
-  margin-left: 0 !important;
 }
 .navbar-ury .navbar-brand img {
   max-height: 100%;
