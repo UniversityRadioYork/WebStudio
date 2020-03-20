@@ -10047,10 +10047,6 @@ wbuf@^1.1.0, wbuf@^1.7.3:
   dependencies:
     minimalistic-assert "^1.0.0"
 
-"webcast.js@ssh://git@github.com/UniversityRadioYork/webcast.js":
-  version "0.0.0"
-  resolved "ssh://git@github.com/UniversityRadioYork/webcast.js#1ebc76dbe05033208a107feae986c0edb38e8261"
-
 webidl-conversions@^4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-4.0.2.tgz#a855980b1f0b6b359ba1d5d9fb39ae941faa63ad"
