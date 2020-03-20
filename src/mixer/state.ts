@@ -225,7 +225,7 @@ export const setVolume = (
 			uiLevel = 0;
 			break;
 		case "bed":
-			volume = 0.125;
+			volume = 0.185;
 			uiLevel = 0.5;
 			break;
 		case "full":
