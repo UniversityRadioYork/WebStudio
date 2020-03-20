@@ -37,6 +37,8 @@ import playLogo from "../assets/icons/play.svg";
 import pauseLogo from "../assets/icons/pause.svg";
 import stopLogo from "../assets/icons/stop.svg";
 
+import appLogo from "../assets/images/webstudio.svg";
+
 const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
 const TS_ITEM_MENU_ID = "SongMenu";
@@ -260,6 +262,50 @@ function MixingInterface() {
   );
 }
 
+
+function NavBar() {
+  const userName = "Matthew Stratford";
+  return (
+
+    <header className="navbar navbar-ury navbar-expand-md fixed-top bd-navbar">
+      <nav className="container">
+        <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsed" aria-controls="collapsed" aria-expanded="false" aria-label="Toggle navigation">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="navbar-nav">
+        <a className="navbar-brand" href="/">
+          <img src="//ury.org.uk/myradio/img/URY.svg" height="34" alt="University Radio York Logo" />
+        </a>
+        <span className="navbar-brand divider"></span>
+        <a className="navbar-brand" href="/">
+          <img src={appLogo} height="34" alt="University Radio York Logo" />
+        </a>
+        </div>
+
+        <ul className="nav navbar-nav navbar-right">
+          <li className="nav-item">
+            <a className="nav-link" target="_blank" href="https://ury.org.uk/myradio/MyRadio/timeslot/?next=/webstudio">
+              <span className="fa fa-clock-o"></span>&nbsp;
+              Timeslot Time
+            </a>
+          </li>
+          <li className="nav-item dropdown">
+            <a className="nav-link dropdown-toggle" href="#" id="dropdown07" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span className="fa fa-user-o"></span>&nbsp;
+              {userName}
+            </a>
+            <div className="dropdown-menu" aria-labelledby="dropdown07">
+              <a className="dropdown-item" target="_blank" href="https://ury.org.uk/myradio/Profile/default/">My Profile</a>
+              <a className="dropdown-item" target="_blank" href="https://ury.org.uk/myradio/MyRadio/logout/">Logout</a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+  );
+}
+
 const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   const {
     plan: showplan,
@@ -329,6 +375,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   }
   return (
     <div className="sp-container">
+      <NavBar />
       <div style={{ height: "10%" }}>
         <h1>WebStudio</h1>
         <img
