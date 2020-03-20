@@ -100,7 +100,6 @@ html, body, #root {
 .mediaButtons button{
   width: 32%;
   height: 95%;
-  border-radius: 20%;
   border-style: none;
   margin: .5%;
 }

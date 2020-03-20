@@ -6,6 +6,8 @@ import { cloneDeep } from "lodash";
 
 export interface ItemGhost {
   title: string;
+  artist: string;
+  length: string;
   ghostid: string;
   channel: number;
   weight: number;

@@ -110,32 +110,59 @@ function Player({ id }: { id: number }) {
 
   return (
     <div className="player">
+
+
+    <div className="card-deck mb-3 text-center">
+      <div className="card mb-4 shadow-sm">
+
+        <div className="card-body">
+          <h4 className="card-title">
+            {playerState.loadedItem !== null
+            && playerState.loading == false
+            ? playerState.loadedItem.title
+                : (playerState.loading ? `LOADING` : "No Media Selected")}
+          </h4>
+          <h4>
+            <small className="text-muted">
+              {playerState.loadedItem !== null
+              && playerState.loading == false
+              ? playerState.loadedItem.artist
+              : ""}&nbsp;
+            </small>
+          </h4>
+        </div>
+        <div className="mediaButtons">
+          <button
+            onClick={() => dispatch(PlayerState.play(id))}
+            className={playerState.state === "playing" ? "sp-state-playing" : ""}
+          >
+            <i className="fas fa-play fa-2x"></i>
+          </button>
+          <button
+            onClick={() => dispatch(PlayerState.pause(id))}
+            className={playerState.state === "paused" ? "sp-state-paused" : ""}
+          >
+            <i className="fas fa-pause fa-2x"></i>
+          </button>
+          <button
+            onClick={() => dispatch(PlayerState.stop(id))}
+            className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
+          >
+            <i className="fas fa-stop fa-2x"></i>
+          </button>
+        </div>
+        <div className="card-footer">
+            <h4 className="my-0 font-weight-normal">Time / {playerState.loadedItem !== null ? playerState.loadedItem.length : "Empty"}</h4>
+        </div>
+      </div>
+    </div>
+
+
+
       <div style={{ height: "1.5em", overflowY: "hidden" }}>
-        {playerState.loadedItem !== null && playerState.loading == false
-          ? playerState.loadedItem.title
-          : "No Media Selected"}{" "}
-          {playerState.loading && <b>LOADING</b>}
+
       </div>
-      <div className="mediaButtons">
-        <button
-          onClick={() => dispatch(PlayerState.play(id))}
-          className={playerState.state === "playing" ? "sp-state-playing" : ""}
-        >
-          <img src={playLogo} className="sp-player-button" />
-        </button>
-        <button
-          onClick={() => dispatch(PlayerState.pause(id))}
-          className={playerState.state === "paused" ? "sp-state-paused" : ""}
-        >
-          <img src={pauseLogo} className="sp-player-button" />
-        </button>
-        <button
-          onClick={() => dispatch(PlayerState.stop(id))}
-          className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
-        >
-          <img src={stopLogo} className="sp-player-button" />
-        </button>
-      </div>
+
       <div className="sp-mixer-buttons">
         <div
           className="sp-mixer-buttons-backdrop"
