@@ -270,7 +270,7 @@ export const setVolume = (
 		});
 	const gainTween = new Between(currentGain, volume)
 		.time(FADE_TIME_SECONDS * 1000)
-		.easing((Between as any).Easing.Quadratic.InOut)
+		.easing((Between as any).Easing.Exponential.InOut)
 		.on("update", (val: number) => {
 			console.log(val);
 			dispatch(mixerState.actions.setPlayerGain({ player, gain: val }));
