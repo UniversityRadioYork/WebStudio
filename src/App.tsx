@@ -34,7 +34,7 @@ const App: React.FC = () => {
   } else {
     return (
       <div style={{marginLeft:"1.5%"}}>
-        <h1>Welcome to showplanner2</h1>
+        <h1>Welcome to BAPS3</h1>
         <input
           type="text"
           placeholder="enter a timeslot id"

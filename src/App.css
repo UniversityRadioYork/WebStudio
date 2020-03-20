@@ -134,6 +134,7 @@ button{
   flex-direction: row;
   flex-wrap: nowrap;
   position: relative;
+  height: 30%;
 }
 
 .sp-mixer-buttons-backdrop {
@@ -149,4 +150,13 @@ button{
   background: transparent;
   border: 1px solid black;
   z-index: 100;
+}
+
+.mediaButtons {
+  height: 50%;
+  overflow: hidden;
+}
+
+.player{
+  height: 20%;
 }

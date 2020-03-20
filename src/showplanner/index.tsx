@@ -330,7 +330,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   return (
     <div className="sp-container">
       <div style={{ height: "10%" }}>
-        <h1>baps3 ayy lmao</h1>
+        <h1>WebStudio</h1>
         <img
           src="https://ury.org.uk/images/logo.png"
           style={{ height: "6%", right: "2%", position: "absolute", top: "2%" }}
