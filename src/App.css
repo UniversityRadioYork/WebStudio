@@ -160,3 +160,10 @@ button{
 .player{
   height: 20%;
 }
+
+.sp-alert {
+  display: block;
+  color: white;
+  background-color: #e6463e;
+  padding: 0.3em;
+}

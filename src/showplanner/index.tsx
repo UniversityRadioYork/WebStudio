@@ -31,7 +31,7 @@ import {
   removeItem
 } from "./state";
 
-import * as PlayerState from "../mixer/state";
+import * as MixerState from "../mixer/state";
 
 import playLogo from "../assets/icons/play.svg";
 import pauseLogo from "../assets/icons/pause.svg";
@@ -61,7 +61,7 @@ const Item = memo(function Item({
 
   function triggerClick() {
     if (column > -1) {
-      dispatch(PlayerState.load(column, x));
+      dispatch(MixerState.load(column, x));
     }
   }
 
@@ -112,23 +112,23 @@ function Player({ id }: { id: number }) {
         {playerState.loadedItem !== null && playerState.loading == false
           ? playerState.loadedItem.title
           : "No Media Selected"}{" "}
-          {playerState.loading && <b>LOADING</b>}
+        {playerState.loading && <b>LOADING</b>}
       </div>
       <div className="mediaButtons">
         <button
-          onClick={() => dispatch(PlayerState.play(id))}
+          onClick={() => dispatch(MixerState.play(id))}
           className={playerState.state === "playing" ? "sp-state-playing" : ""}
         >
           <img src={playLogo} className="sp-player-button" />
         </button>
         <button
-          onClick={() => dispatch(PlayerState.pause(id))}
+          onClick={() => dispatch(MixerState.pause(id))}
           className={playerState.state === "paused" ? "sp-state-paused" : ""}
         >
           <img src={pauseLogo} className="sp-player-button" />
         </button>
         <button
-          onClick={() => dispatch(PlayerState.stop(id))}
+          onClick={() => dispatch(MixerState.stop(id))}
           className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
         >
           <img src={stopLogo} className="sp-player-button" />
@@ -144,13 +144,13 @@ function Player({ id }: { id: number }) {
               "%"
           }}
         ></div>
-        <button onClick={() => dispatch(PlayerState.setVolume(id, "off"))}>
+        <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
           Off
         </button>
-        <button onClick={() => dispatch(PlayerState.setVolume(id, "bed"))}>
+        <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
           Bed
         </button>
-        <button onClick={() => dispatch(PlayerState.setVolume(id, "full"))}>
+        <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
           Full
         </button>
       </div>
@@ -251,11 +251,44 @@ function LibraryColumn() {
   );
 }
 
-function MixingInterface() {
-  const [sauce, setSauce] = useState("None");
+function MicControl() {
+  const state = useSelector((state: RootState) => state.mixer.mic);
+  const dispatch = useDispatch();
   return (
     <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
-      <h1>Mixing Interface</h1>
+      <h2>Microphone</h2>
+      <button
+        disabled={state.open}
+        onClick={() => dispatch(MixerState.openMicrophone())}
+      >
+        Open
+      </button>
+      {state.openError !== null && (
+        <div className="sp-alert">
+          {state.openError === "NO_PERMISSION"
+            ? "Please grant this page permission to use your microphone and try again."
+            : state.openError === "NOT_SECURE_CONTEXT"
+            ? "We can't open the microphone. Please make sure the address bar has a https:// at the start and try again."
+            : "An error occurred when opening the microphone. Please try again."}
+        </div>
+      )}
+      <div className="sp-mixer-buttons">
+        <div
+          className="sp-mixer-buttons-backdrop"
+          style={{
+            width:
+              (USE_REAL_GAIN_VALUE ? state.gain : state.volume) *
+                100 +
+              "%"
+          }}
+        ></div>
+        <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
+          Off
+        </button>
+        <button onClick={() => dispatch(MixerState.setMicVolume("full"))}>
+          Full
+        </button>
+      </div>
     </div>
   );
 }
@@ -351,7 +384,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <Column id={2} data={showplan} />
           <div className="sp-main-col" style={{ marginRight: ".2%" }}>
             <LibraryColumn />
-            <MixingInterface />
+            <MicControl />
           </div>
         </DragDropContext>
       </div>
