@@ -331,7 +331,7 @@ function NavBar() {
         </a>
         <span className="navbar-brand divider"></span>
         <a className="navbar-brand" href="/">
-          <img src={appLogo} height="34" alt="University Radio York Logo" />
+          <img src={appLogo} height="34" alt="Web Studio Logo" />
         </a>
         </div>
 
@@ -430,11 +430,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     <div className="sp-container">
       <NavBar />
       <div style={{ height: "10%" }}>
-        <h1>WebStudio</h1>
-        <img
-          src="https://ury.org.uk/images/logo.png"
-          style={{ height: "6%", right: "2%", position: "absolute", top: "2%" }}
-        />
       </div>
       <div className="sp-status">
         {planSaving && <em>Plan saving...</em>}
