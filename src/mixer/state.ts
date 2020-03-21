@@ -266,12 +266,12 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 					}
 						]
 		};
+		dispatch(mixerState.actions.setTimeCurrent({ player: player, time: 0 }));
+		dispatch(mixerState.actions.setTimeLength({ player: player, time: 0 }));
 		wavesurfer.load(playerSources[player].mediaElement);
 		wavesurfer.on('ready', function () {
 			if (wavesurfer) {
-				console.log("aaaa");
 				let duration = wavesurfer.getDuration();
-				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: 0 }));
 				dispatch(mixerState.actions.setTimeLength({ player: player, time: duration }));
 			}
 		});

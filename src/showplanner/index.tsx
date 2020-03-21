@@ -110,7 +110,7 @@ function Player({ id }: { id: number }) {
   const dispatch = useDispatch();
 
   return (
-    <div className="player">
+    <div className={(playerState.loadedItem !== null && playerState.loading == false) ? "player loaded" : "player"}>
 
 
     <div className="card-deck mb-3 text-center">
@@ -159,7 +159,7 @@ function Player({ id }: { id: number }) {
             <span id={"remaining-" + id} className="m-0 remaining">{secToHHMM(playerState.timeRemaining)}</span>
             <span className="m-0 intro">{playerState.loadedItem !== null ? secToHHMM(playerState.loadedItem.intro ? playerState.loadedItem.intro : 0) : "00:00:00"} - in</span>
             <span className="m-0 outro">out - 00:00:00</span>
-            <span className="m-0 loading">{(playerState.loadedItem && playerState.timeLength === 0) ? "LOADING" : ""}</span>
+            <span className="m-0 loading">{(playerState.loadedItem !== null && playerState.timeLength === 0) ? "LOADING" : ""}</span>
             <div className="m-0 graph" id={"waveform-" + id}></div>
         </div>
       </div>

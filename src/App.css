@@ -112,7 +112,7 @@ html, body, #root {
   background-color: #dbbb2c;
 }
 
-.sp-state-stopped {
+.player.loaded .sp-state-stopped {
   background-color: #db2c2c;
 }
 
@@ -120,8 +120,15 @@ button{
   background-color: rgb(199, 199, 199);
 }
 
+
 .player div {
   overflow-x: hidden;
+}
+.player {
+  opacity: 0.5;
+}
+.player.loaded {
+  opacity: 1;
 }
 
 .sp-player-button {
@@ -386,9 +393,9 @@ button{
 }
 @-webkit-keyframes flash {
 	0% { }
-	50% { background-color:orange; }
+	50% { background-color: rgb(199, 255, 199); }
 }
 @keyframes flash {
   0% { }
-  50% { background-color:orange; }
+  50% { background-color: rgb(199, 255, 199); }
 }
