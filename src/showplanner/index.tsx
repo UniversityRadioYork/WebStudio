@@ -109,67 +109,66 @@ function Player({ id }: { id: number }) {
     <div className={(playerState.loadedItem !== null && playerState.loading == false) ? "player loaded" : "player"}>
 
 
-    <div className="card-deck mb-3 text-center">
-      <div className="card shadow-sm">
-        <div className="row m-0 p-0 card-header channelButtons">
+        <div className="card text-center">
+        <div className="row m-0 p-1 card-header channelButtons">
           <button
-            className={(playerState.autoAdvance ? "btn-primary" : "btn-outline-secondary") + " btn col-4 sp-play-on-load"}
+            className={(playerState.autoAdvance ? "btn-primary" : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"}
             onClick={() => dispatch(MixerState.toggleAutoAdvance(id))}
           >
             <i className="fa fa-level-down-alt"></i>&nbsp;
             Auto Advance
           </button>
           <button
-            className={(playerState.playOnLoad ? "btn-primary": "btn-outline-secondary") + " btn col-4 sp-play-on-load"}
+            className={(playerState.playOnLoad ? "btn-primary": "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"}
             onClick={() => dispatch(MixerState.togglePlayOnLoad(id))}
           >
             <i className="far fa-play-circle"></i>&nbsp;
             Play on Load
           </button>
           <button
-            className={(playerState.repeat != "none" ? "btn-primary" : "btn-outline-secondary") + " btn col-4 sp-play-on-load"}
+            className={(playerState.repeat != "none" ? "btn-primary" : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"}
             onClick={() => dispatch(MixerState.toggleRepeat(id))}
           >
             <i className="fa fa-redo"></i>&nbsp;
             Repeat {playerState.repeat}
           </button>
         </div>
-        <div className="card-body">
-          <h4 className="card-title">
+        <div className="card-body p-0">
+          <span className="card-title"><strong>
             {playerState.loadedItem !== null
             && playerState.loading == false
             ? playerState.loadedItem.title
                 : (playerState.loading ? `LOADING` : "No Media Selected")}
-          </h4>
-          <h4>
-            <small className="text-muted">
+            </strong>
+          </span><br />
+          <span className="text-muted">
               {playerState.loadedItem !== null
               && playerState.loading == false
               ? playerState.loadedItem.artist
               : ""}&nbsp;
-            </small>
-          </h4>
+          </span>
+          <div className="mediaButtons">
+            <button
+              onClick={() => dispatch(MixerState.play(id))}
+                className={(playerState.state === "playing" ? ((playerState.timeRemaining < 15) ? "sp-state-playing sp-ending-soon" : "sp-state-playing") : "")}
+            >
+              <i className="fas fa-play"></i>
+            </button>
+            <button
+              onClick={() => dispatch(MixerState.pause(id))}
+              className={playerState.state === "paused" ? "sp-state-paused" : ""}
+            >
+              <i className="fas fa-pause"></i>
+            </button>
+            <button
+              onClick={() => dispatch(MixerState.stop(id))}
+              className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
+            >
+              <i className="fas fa-stop"></i>
+            </button>
+          </div>
         </div>
-        <div className="mediaButtons">
-          <button
-            onClick={() => dispatch(MixerState.play(id))}
-              className={(playerState.state === "playing" ? ((playerState.timeRemaining < 15) ? "sp-state-playing sp-ending-soon" : "sp-state-playing") : "")}
-          >
-            <i className="fas fa-play fa-2x"></i>
-          </button>
-          <button
-            onClick={() => dispatch(MixerState.pause(id))}
-            className={playerState.state === "paused" ? "sp-state-paused" : ""}
-          >
-            <i className="fas fa-pause fa-2x"></i>
-          </button>
-          <button
-            onClick={() => dispatch(MixerState.stop(id))}
-            className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
-          >
-            <i className="fas fa-stop fa-2x"></i>
-          </button>
-        </div>
+
         <div className="p-0 card-footer waveform" >
 
             <span id={"current-" + id} className="m-0 current">{secToHHMM(playerState.timeCurrent)}</span>
@@ -181,7 +180,7 @@ function Player({ id }: { id: number }) {
             <div className="m-0 graph" id={"waveform-" + id}></div>
         </div>
       </div>
-    </div>
+
       <div className="sp-mixer-buttons">
         <div
           className="sp-mixer-buttons-backdrop"
@@ -209,7 +208,7 @@ function Player({ id }: { id: number }) {
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
     <div className="sp-main-col">
-      <div className="sp-col">
+      <div className="sp-col shadow">
         <Droppable droppableId={id.toString(10)}>
           {(provided, snapshot) => (
             <div
@@ -344,20 +343,21 @@ function MicControl() {
 
 function NavBar() {
   const userName = "Matthew Stratford";
+
   return (
 
-    <header className="navbar navbar-ury navbar-expand-md fixed-top bd-navbar">
+    <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
       <nav className="container">
         <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsed" aria-controls="collapsed" aria-expanded="false" aria-label="Toggle navigation">
           <span className="navbar-toggler-icon"></span>
         </button>
         <div className="navbar-nav">
         <a className="navbar-brand" href="/">
-          <img src="//ury.org.uk/myradio/img/URY.svg" height="34" alt="University Radio York Logo" />
+          <img src="//ury.org.uk/myradio/img/URY.svg" height="30" alt="University Radio York Logo" />
         </a>
         <span className="navbar-brand divider"></span>
         <a className="navbar-brand" href="/">
-          <img src={appLogo} height="34" alt="Web Studio Logo" />
+          <img src={appLogo} height="28" alt="Web Studio Logo" />
         </a>
         </div>
 
@@ -369,7 +369,7 @@ function NavBar() {
             </a>
           </li>
           <li className="nav-item dropdown">
-            <a className="nav-link dropdown-toggle" href="#" id="dropdown07" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <a className="nav-link dropdown-toggle" href="https://ury.org.uk/myradio/Profile/default/" id="dropdown07" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <span className="fa fa-user-o"></span>&nbsp;
               {userName}
             </a>
@@ -399,6 +399,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
   }, [timeslotId]);
+
+  function toggleSidebar() {
+    var element = document.getElementById('sidebar');
+    if (element) {
+      element.classList.toggle('active')
+    }
+  };
 
   async function onDragEnd(result: DropResult, provider: ResponderProvided) {
     if (!result.destination) {
@@ -453,10 +460,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     );
   }
   return (
-    <div className="sp-container">
+    <div className="sp-container m-0">
       <NavBar />
-      <div style={{ height: "10%" }}>
-      </div>
       <div className="sp-status">
         {planSaving && <em>Plan saving...</em>}
         {planSaveError && (
@@ -470,7 +475,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <Column id={0} data={showplan} />
           <Column id={1} data={showplan} />
           <Column id={2} data={showplan} />
-          <div className="sp-main-col" style={{ marginRight: ".2%" }}>
+          <div className="sp-main-col sidebar-toggle">
+            <button id="sidebarCollapse" className="btn btn-sm ml-auto" type="button" onClick={() => toggleSidebar()}>
+                <i className="fas fa-align-justify"></i> Show Sidebar
+            </button>
+          </div>
+          <div id="sidebar" className="sp-main-col">
             <LibraryColumn />
             <MicControl />
           </div>
