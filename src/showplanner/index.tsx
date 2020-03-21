@@ -34,10 +34,6 @@ import { secToHHMM } from "../utils";
 
 import * as MixerState from "../mixer/state";
 
-import playLogo from "../assets/icons/play.svg";
-import pauseLogo from "../assets/icons/pause.svg";
-import stopLogo from "../assets/icons/stop.svg";
-
 import appLogo from "../assets/images/webstudio.svg";
 
 const CML_CACHE: { [recordid_trackid: string]: Track } = {};
@@ -114,8 +110,30 @@ function Player({ id }: { id: number }) {
 
 
     <div className="card-deck mb-3 text-center">
-      <div className="card mb-4 shadow-sm">
-
+      <div className="card shadow-sm">
+        <div className="row m-0 p-0 card-header channelButtons">
+          <button
+            className={(playerState.autoAdvance ? "btn-primary" : "btn-outline-secondary") + " btn col-4 sp-play-on-load"}
+            onClick={() => dispatch(MixerState.toggleAutoAdvance(id))}
+          >
+            <i className="fa fa-level-down-alt"></i>&nbsp;
+            Auto Advance
+          </button>
+          <button
+            className={(playerState.playOnLoad ? "btn-primary": "btn-outline-secondary") + " btn col-4 sp-play-on-load"}
+            onClick={() => dispatch(MixerState.togglePlayOnLoad(id))}
+          >
+            <i className="far fa-play-circle"></i>&nbsp;
+            Play on Load
+          </button>
+          <button
+            className={(playerState.repeat != "none" ? "btn-primary" : "btn-outline-secondary") + " btn col-4 sp-play-on-load"}
+            onClick={() => dispatch(MixerState.toggleRepeat(id))}
+          >
+            <i className="fa fa-redo"></i>&nbsp;
+            Repeat {playerState.repeat}
+          </button>
+        </div>
         <div className="card-body">
           <h4 className="card-title">
             {playerState.loadedItem !== null

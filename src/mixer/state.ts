@@ -13,7 +13,6 @@ import { Track, MYRADIO_NON_API_BASE } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
-import { secToHHMM } from "../utils";
 
 
 console.log(Between);
@@ -37,6 +36,7 @@ const destination = audioContext.createDynamicsCompressor();
 destination.connect(audioContext.destination);
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
+type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
@@ -51,6 +51,9 @@ interface PlayerState {
 	timeCurrent: number;
 	timeRemaining: number;
 	timeLength: number;
+	playOnLoad: Boolean;
+	autoAdvance: Boolean;
+	repeat: PlayerRepeatEnum;
 }
 
 interface MicState {
@@ -78,7 +81,10 @@ const mixerState = createSlice({
 				wavesurfer: null,
 				timeCurrent: 0,
 				timeRemaining: 0,
-				timeLength: 0
+				timeLength: 0,
+				playOnLoad: false,
+				autoAdvance: true,
+				repeat: "none"
 			},
 			{
 				loadedItem: null,
@@ -89,7 +95,10 @@ const mixerState = createSlice({
 				wavesurfer: null,
 				timeCurrent: 0,
 				timeRemaining: 0,
-				timeLength: 0
+				timeLength: 0,
+				playOnLoad: false,
+				autoAdvance: true,
+				repeat: "none"
 			},
 			{
 				loadedItem: null,
@@ -100,7 +109,10 @@ const mixerState = createSlice({
 				wavesurfer: null,
 				timeCurrent: 0,
 				timeRemaining: 0,
-				timeLength: 0
+				timeLength: 0,
+				playOnLoad: false,
+				autoAdvance: true,
+				repeat: "none"
 			}
 		],
 		mic: {
@@ -172,8 +184,41 @@ const mixerState = createSlice({
 			time: number;
 		}>) {
 			state.players[action.payload.player].timeLength = action.payload.time;
-			console.log("aaa");
+		},
+		setAutoAdvance(
+			state,
+			action: PayloadAction<{
+			player: number;
+		}>) {
+			state.players[action.payload.player].autoAdvance = !state.players[action.payload.player].autoAdvance;
+		},
+		setPlayOnLoad(
+			state,
+			action: PayloadAction<{
+			player: number;
+		}>) {
+			state.players[action.payload.player].playOnLoad = !state.players[action.payload.player].playOnLoad;
+		},
+		setRepeat(
+			state,
+			action: PayloadAction<{
+			player: number;
+		}>) {
+			var playVal = state.players[action.payload.player].repeat;
+			switch (playVal) {
+				case "none":
+					playVal = "one";
+					break;
+				case "one":
+					playVal = "all";
+					break;
+				case "all":
+					playVal = "none";
+					break;
+			}
+			state.players[action.payload.player].repeat = playVal;
 		}
+
 	}
 });
 
@@ -272,11 +317,12 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 		wavesurfer.on('ready', function () {
 			if (wavesurfer) {
 				let duration = wavesurfer.getDuration();
+				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: 0 }));
 				dispatch(mixerState.actions.setTimeLength({ player: player, time: duration }));
 			}
 		});
 		wavesurfer.on('audioprocess', function (time: number) {
-			if (wavesurfer && Math.random() > 0.95) {
+			if (wavesurfer && Math.random() > 0.90) {
 				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: time}));
 			}
 		});
@@ -334,6 +380,24 @@ export const stop = (player: number): AppThunk => dispatch => {
 	} catch {
 		console.log("nothing selected/loaded");
 	}
+};
+
+export const toggleAutoAdvance = (player: number): AppThunk => dispatch => {
+	dispatch(
+		mixerState.actions.setAutoAdvance({ player })
+	);
+};
+
+export const togglePlayOnLoad = (player: number): AppThunk => dispatch => {
+	dispatch(
+		mixerState.actions.setPlayOnLoad({ player })
+	);
+};
+
+export const toggleRepeat = (player: number): AppThunk => dispatch => {
+	dispatch(
+		mixerState.actions.setRepeat({ player })
+	);
 };
 
 const FADE_TIME_SECONDS = 1;
