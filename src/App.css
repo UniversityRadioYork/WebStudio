@@ -36,6 +36,7 @@
   flex-wrap: nowrap;
   height: calc(100% - 60px);
   align-items: stretch;
+  overflow: hidden;
 }
 
 .sp-col {
