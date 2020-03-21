@@ -13,6 +13,7 @@ import { Track, MYRADIO_NON_API_BASE } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
+import { secToHHMM } from "../utils";
 
 
 console.log(Between);
@@ -47,6 +48,9 @@ interface PlayerState {
 	volume: number;
 	gain: number;
 	wavesurfer: WaveSurfer | null;
+	timeCurrent: number;
+	timeRemaining: number;
+	timeLength: number;
 }
 
 interface MicState {
@@ -71,7 +75,10 @@ const mixerState = createSlice({
 				state: "stopped",
 				volume: 1,
 				gain: 1,
-				wavesurfer: null
+				wavesurfer: null,
+				timeCurrent: 0,
+				timeRemaining: 0,
+				timeLength: 0
 			},
 			{
 				loadedItem: null,
@@ -79,7 +86,10 @@ const mixerState = createSlice({
 				state: "stopped",
 				volume: 1,
 				gain: 1,
-				wavesurfer: null
+				wavesurfer: null,
+				timeCurrent: 0,
+				timeRemaining: 0,
+				timeLength: 0
 			},
 			{
 				loadedItem: null,
@@ -87,7 +97,10 @@ const mixerState = createSlice({
 				state: "stopped",
 				volume: 1,
 				gain: 1,
-				wavesurfer: null
+				wavesurfer: null,
+				timeCurrent: 0,
+				timeRemaining: 0,
+				timeLength: 0
 			}
 		],
 		mic: {
@@ -142,6 +155,24 @@ const mixerState = createSlice({
 		setMicLevels(state, action: PayloadAction<{volume: number, gain: number}>) {
 			state.mic.volume = action.payload.volume;
 			state.mic.gain = action.payload.gain;
+		},
+		setTimeCurrent(
+			state,
+			action: PayloadAction<{
+			player: number;
+			time: number;
+		}>) {
+			state.players[action.payload.player].timeCurrent = action.payload.time;
+			state.players[action.payload.player].timeRemaining = state.players[action.payload.player].timeLength - action.payload.time;
+		},
+		setTimeLength(
+			state,
+			action: PayloadAction<{
+			player: number;
+			time: number;
+		}>) {
+			state.players[action.payload.player].timeLength = action.payload.time;
+			console.log("aaa");
 		}
 	}
 });
@@ -180,7 +211,7 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 		);
 	}
 	var wavesurfer = getState().mixer.players[player].wavesurfer;
-
+	var playerState = getState().mixer.players[player];
 
 
 	el.oncanplay = () => {
@@ -194,9 +225,7 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 	//el.load();
 
 	console.log("loading");
-	//const sauce = wavesurfer.backend.getMediaElementSource(el);
 	const sauce = audioContext.createMediaElementSource(el);
-	//const gain = wavesurfer.backend.createGain();
 	const gain = audioContext.createGain();
 	gain.gain.value = getState().mixer.players[player].gain;
 	sauce.connect(gain);
@@ -214,7 +243,6 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 		container: '#waveform-' + player.toString(),
 		waveColor: '#CCCCFF',
 		progressColor: '#9999FF',
-		audioContext: audioContext,
 		backend: "MediaElement",
 		responsive: true
 
@@ -239,8 +267,18 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 						]
 		};
 		wavesurfer.load(playerSources[player].mediaElement);
-		wavesurfer.on('ready', function (data = wavesurfer) {
-			data.drawBuffer();
+		wavesurfer.on('ready', function () {
+			if (wavesurfer) {
+				console.log("aaaa");
+				let duration = wavesurfer.getDuration();
+				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: 0 }));
+				dispatch(mixerState.actions.setTimeLength({ player: player, time: duration }));
+			}
+		});
+		wavesurfer.on('audioprocess', function (time: number) {
+			if (wavesurfer && Math.random() > 0.95) {
+				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: time}));
+			}
 		});
 	}
 };
@@ -260,6 +298,7 @@ export const play = (player: number): AppThunk => dispatch => {
 						state: "stopped"
 					})
 				);
+				playerSources[player].mediaElement.currentTime = 0;
 			}
 		);
 	} catch {

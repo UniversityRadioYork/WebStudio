@@ -166,3 +166,229 @@ button{
   background-color: #e6463e;
   padding: 0.3em;
 }
+
+
+
+
+
+/* Stuff to get the nav to collapse at 991px (when the menu collapses)
+ * Taken from http://stackoverflow.com/a/36289507/995325 */
+@media (max-width: 991px) {
+  .navbar-header {
+      float: none;
+  }
+  .navbar-left, .navbar-right {
+      float: none !important;
+  }
+  .navbar-toggle {
+      display: block;
+  }
+  .navbar-collapse {
+      border-top: 1px solid transparent;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .navbar-fixed-top {
+      top: 0;
+      border-width: 0 0 1px;
+  }
+  .navbar-collapse.collapse {
+      display: none !important;
+  }
+  .navbar-nav {
+      float: none !important;
+      margin-top: 7.5px;
+  }
+  .navbar-nav > li {
+      float: none;
+  }
+  .navbar-nav > li > a {
+      padding-top: 10px;
+      padding-bottom: 10px;
+  }
+  .collapse.in {
+      display: block !important;
+  }
+}
+/** MyRadio bootstrap navbar overides taken from http://work.smarchal.com/twbscolor/css/2D425F2D425Fffffffe1e1e11 **/
+.navbar-ury {
+  background-color: #2D333C;
+  border-color: #2D425F;
+  border: none;
+}
+.navbar-ury .navbar-brand {
+  color: #ffffff;
+  padding: 10px 15px; /** added to center the logo **/
+  line-height: 30px;  /** added to center the logo **/
+  margin-right: 0;
+
+}
+.navbar-ury .navbar-brand img {
+  max-height: 100%;
+}
+.navbar-ury .navbar-brand:hover,
+.navbar-ury .navbar-brand:focus {
+  color: #e1e1e1;
+}
+.navbar-ury .navbar-brand.divider {
+  border-right: 1px white solid;
+  margin: 14px 0;
+  height: 22px;
+  padding: 0;
+}
+.navbar-ury .navbar-text {
+  color: #ffffff;
+}
+.navbar-ury .navbar-nav > li > a {
+  color: #ffffff;
+}
+.navbar-ury .navbar-nav > li.nav-img {
+  height: 50px;
+}
+.navbar-ury .navbar-nav > li.nav-img > a {
+  height: 100%;
+  padding: 10px 10px;
+}
+.navbar-ury .navbar-nav > li.nav-img > a > img {
+  height: 100%;
+}
+.navbar-ury .navbar-nav .caret {
+  margin-left: 5px;
+}
+.navbar-ury .navbar-nav .glyphicon {
+  margin-right: 5px;
+}
+
+.navbar-ury .navbar-nav > li > a:hover,
+.navbar-ury .navbar-nav > li > a:focus {
+  color: #e1e1e1;
+  background-color: #2D425F;
+}
+.navbar-ury .navbar-nav > li > .dropdown-menu {
+  background-color: #2D333C;
+  border-top: none;
+}
+.navbar-ury .navbar-nav > li > .dropdown-menu > a {
+  color: #ffffff;
+}
+.navbar-ury .navbar-nav > li > .dropdown-menu > a:hover,
+.navbar-ury .navbar-nav > li > .dropdown-menu > a:focus {
+  color: #e1e1e1;
+  background-color: #2D425F;
+}
+.navbar-ury .navbar-nav > li > .dropdown-menu > .divider {
+  background-color: #2D425F;
+}
+.navbar-ury .navbar-nav .open .dropdown-menu > .active > a,
+.navbar-ury .navbar-nav .open .dropdown-menu > .active > a:hover,
+.navbar-ury .navbar-nav .open .dropdown-menu > .active > a:focus {
+  color: #e1e1e1;
+  background-color: #2D333C;
+}
+.navbar-ury .navbar-nav > .active > a,
+.navbar-ury .navbar-nav > .active > a:hover,
+.navbar-ury .navbar-nav > .active > a:focus {
+  color: #e1e1e1;
+  background-color: #2D333C;
+}
+.navbar-ury .navbar-nav > .open > a,
+.navbar-ury .navbar-nav > .open > a:hover,
+.navbar-ury .navbar-nav > .open > a:focus {
+  color: #e1e1e1;
+  background-color: #2D425F !important;
+}
+.navbar-ury .navbar-toggle {
+  border-color: #2D425F;
+}
+.navbar-ury .navbar-toggle:hover,
+.navbar-ury .navbar-toggle:focus {
+  background-color: #2D425F;
+}
+.navbar-ury .navbar-toggle .icon-bar {
+  background-color: #ffffff;
+}
+.navbar-ury .navbar-collapse,
+.navbar-ury .navbar-form {
+  border-color: #ffffff;
+}
+.navbar-ury .navbar-link {
+  color: #ffffff;
+}
+.navbar-ury .navbar-link:hover {
+  color: #e1e1e1;
+}
+.navbar-ury .navbar-brand:hover {
+  color: #e1e1e1;
+  background-color: #2D425F !important;
+}
+
+@media (max-width: 767px) {
+  .navbar-ury .navbar-nav .open .dropdown-menu > li > a {
+    color: #ffffff;
+  }
+  .navbar-ury .navbar-nav .open .dropdown-menu > li > a:hover,
+  .navbar-ury .navbar-nav .open .dropdown-menu > li > a:focus {
+    color: #e1e1e1;
+  }
+  .navbar-ury .navbar-nav .open .dropdown-menu > .active > a,
+  .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:hover,
+  .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:focus {
+    color: #e1e1e1;
+    background-color: #2D425F;
+  }
+}
+
+.waveform span {
+  float: left;
+  position: relative;
+  display: block;
+  z-index: 5;
+
+}
+.waveform .current, .waveform .remaining, .waveform .length {
+
+  font-size: 1.2rem;
+  font-weight: 800;
+
+}
+.waveform .remaining, .waveform .outro {
+  right: 0;
+  position: absolute;
+
+}
+.waveform .intro, .waveform .outro, .waveform .length  {
+  bottom: 0;
+  position: absolute;
+}
+.waveform .length {
+  text-align: center;
+  width: 100%;
+}
+.waveform {
+  height: 200px;
+}
+.waveform .graph {
+  position: absolute;
+  width: 100%;
+}
+
+.waveform .loading {
+  width: 100%;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 200;
+  opacity: 0.5;
+}
+
+/* Flash class and keyframe animation */
+.sp-ending-soon {
+	-webkit-animation: flash steps(1) 0.5s infinite;
+	animation: flash steps(1) 0.5s infinite;
+}
+@-webkit-keyframes flash {
+	0% { }
+	50% { background-color:orange; }
+}
+@keyframes flash {
+  0% { }
+  50% { background-color:orange; }
+}

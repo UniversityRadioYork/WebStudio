@@ -11,6 +11,7 @@ export interface ItemGhost {
   ghostid: string;
   channel: number;
   weight: number;
+  intro: number;
 }
 
 export type PlanItem = TimeslotItem | ItemGhost;

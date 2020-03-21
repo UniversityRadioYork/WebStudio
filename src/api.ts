@@ -79,6 +79,7 @@ interface TimeslotItemCentral {
 interface TimeslotItemAux {
   type: "aux";
   artist: null;
+  intro: null;
   summary: string;
   managedid: number;
   recordid: string;

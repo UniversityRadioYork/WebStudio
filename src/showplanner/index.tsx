@@ -30,6 +30,7 @@ import {
   addItem,
   removeItem
 } from "./state";
+import { secToHHMM } from "../utils";
 
 import * as MixerState from "../mixer/state";
 
@@ -134,7 +135,7 @@ function Player({ id }: { id: number }) {
         <div className="mediaButtons">
           <button
             onClick={() => dispatch(MixerState.play(id))}
-            className={playerState.state === "playing" ? "sp-state-playing" : ""}
+              className={(playerState.state === "playing" ? ((playerState.timeRemaining < 15) ? "sp-state-playing sp-ending-soon" : "sp-state-playing") : "")}
           >
             <i className="fas fa-play fa-2x"></i>
           </button>
@@ -153,11 +154,13 @@ function Player({ id }: { id: number }) {
         </div>
         <div className="p-0 card-footer waveform" >
 
-            <span className="m-0 current">{playerState.wavesurfer != null ? playerState.wavesurfer.getCurrentTime() : "00:00:00"}</span>
-            <span className="m-0 length">{playerState.loadedItem !== null ? playerState.loadedItem.length : "00:00:00"}</span>
-            <span className="m-0 intro">00:00:00 - in</span>
+            <span id={"current-" + id} className="m-0 current">{secToHHMM(playerState.timeCurrent)}</span>
+            <span id={"length-" + id} className="m-0 length">{secToHHMM(playerState.timeLength)}</span>
+            <span id={"remaining-" + id} className="m-0 remaining">{secToHHMM(playerState.timeRemaining)}</span>
+            <span className="m-0 intro">{playerState.loadedItem !== null ? secToHHMM(playerState.loadedItem.intro ? playerState.loadedItem.intro : 0) : "00:00:00"} - in</span>
             <span className="m-0 outro">out - 00:00:00</span>
-            <div className="m-0 waveform-graph" id={"waveform-" + id}></div>
+            <span className="m-0 loading">{(playerState.loadedItem && playerState.timeLength === 0) ? "LOADING" : ""}</span>
+            <div className="m-0 graph" id={"waveform-" + id}></div>
         </div>
       </div>
     </div>
