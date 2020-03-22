@@ -150,7 +150,7 @@ function Player({ id }: { id: number }) {
           <div className="mediaButtons">
             <button
               onClick={() => dispatch(MixerState.play(id))}
-                className={(playerState.state === "playing" ? ((playerState.timeRemaining < 15) ? "sp-state-playing sp-ending-soon" : "sp-state-playing") : "")}
+                className={(playerState.state === "playing" ? ((playerState.timeRemaining <= 15) ? "sp-state-playing sp-ending-soon" : "sp-state-playing") : "")}
             >
               <i className="fas fa-play"></i>
             </button>
