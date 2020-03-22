@@ -13,6 +13,7 @@ export interface ItemGhost {
   channel: number;
   weight: number;
   intro: number;
+  clean: boolean;
 }
 
 export type PlanItem = TimeslotItem | ItemGhost;

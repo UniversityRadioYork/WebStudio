@@ -65,6 +65,7 @@ interface TimeslotItemBase {
   title: string;
   length: string;
   trackid: number;
+  clean: boolean;
 }
 
 interface TimeslotItemCentral {

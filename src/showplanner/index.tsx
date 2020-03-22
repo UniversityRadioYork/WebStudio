@@ -88,6 +88,11 @@ const Item = memo(function Item({
             <i className={"fa fa-circle " + (x.type)}></i>&nbsp;
             {x.title}
             {"artist" in x && " - " + x.artist}
+            <small className=
+              {"border rounded border-danger text-danger p-1 m-1" + (
+                x.clean === false ? "" : " d-none")}>
+              Explicit
+            </small>
             <code>
               {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
             </code>
@@ -135,16 +140,24 @@ function Player({ id }: { id: number }) {
           </button>
         </div>
         <div className="card-body p-0">
-          <span className="card-title"><strong>
+          <span className="card-title">
+            <strong>
             {playerState.loadedItem !== null
-            && playerState.loading == false
+            && playerState.loading === false
             ? playerState.loadedItem.title
                 : (playerState.loading ? `LOADING` : "No Media Selected")}
             </strong>
+            <small className=
+              {"border rounded border-danger text-danger p-1 m-1" + (
+                playerState.loadedItem !== null
+                && playerState.loading === false
+                && playerState.loadedItem.clean === false ? "" : " d-none")}>
+              Explicit
+            </small>
           </span><br />
           <span className="text-muted">
               {playerState.loadedItem !== null
-              && playerState.loading == false
+              && playerState.loading === false
               ? playerState.loadedItem.artist
               : ""}&nbsp;
           </span>
