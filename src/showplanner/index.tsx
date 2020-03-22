@@ -245,11 +245,23 @@ function CentralMusicLibrary() {
   const debouncedTrack = useDebounce(track, 1000);
   const debouncedArtist = useDebounce(artist, 1000);
   const [items, setItems] = useState<Track[]>([]);
+
+  type searchingStateEnum = "searching" | "not-searching" | "results" | "no-results";
+  const [state, setState] = useState<searchingStateEnum>("not-searching");
   useEffect(() => {
     if (debouncedTrack === "" && debouncedArtist === "") {
+      setItems([]);
+      setState("not-searching");
       return;
     }
+    setItems([]);
+    setState("searching");
     searchForTracks(artist, track).then(tracks => {
+      if (tracks.length === 0) {
+        setState("no-results");
+      } else {
+        setState("results");
+      }
       tracks.forEach(track => {
         const id = itemId(track);
         if (!(id in CML_CACHE)) {
@@ -273,6 +285,28 @@ function CentralMusicLibrary() {
         value={artist}
         onChange={e => setArtist(e.target.value)}
       />
+      <span className={state !== "results" ? "mt-5 text-center text-muted" : "d-none"}>
+      <i className=
+        {"fa fa-2x " +
+          (state === "not-searching"
+          ? "fa-search" :
+            state === "searching"
+              ? "fa-cog fa-spin" :
+                state === "no-results"
+                ? "fa-times-circle" :
+                  "d-none"
+          )
+        }></i><br />
+      {
+        state === "not-searching"
+        ? "Enter a search term." :
+          state === "searching"
+            ? "Searching..." :
+              state === "no-results"
+              ? "No results." :
+                ""
+      }
+      </span>
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
           <div ref={provided.innerRef} {...provided.droppableProps}>
