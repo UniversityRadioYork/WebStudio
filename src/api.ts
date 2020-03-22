@@ -134,6 +134,7 @@ function wrapPromise<T, TArgs>(factory: (...args: TArgs[]) => Promise<T>) {
 }
 
 export interface Track {
+  type: "central";
   title: string;
   artist: string;
   album: Album;

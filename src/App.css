@@ -95,6 +95,18 @@
   background-color: #78acf1;
 }
 
+.sp-track .central {
+  color: green;
+}
+
+.sp-track .aux {
+  color: #07F;
+}
+
+.sp-track .ghost {
+  color: gray;
+}
+
 .sp-track-active {
   background-color: #10c998 !important;
 }

@@ -5,6 +5,7 @@ import { AppThunk } from "../store";
 import { cloneDeep } from "lodash";
 
 export interface ItemGhost {
+  type: "ghost";
   title: string;
   artist: string;
   length: string;

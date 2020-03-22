@@ -85,6 +85,7 @@ const Item = memo(function Item({
             id={isReal ? TS_ITEM_MENU_ID : ""}
             collect={() => ({ id })}
           >
+            <i className={"fa fa-circle " + (x.type)}></i>&nbsp;
             {x.title}
             {"artist" in x && " - " + x.artist}
             <code>
