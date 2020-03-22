@@ -274,12 +274,14 @@ function CentralMusicLibrary() {
   return (
     <>
       <input
+        className="form-control"
         type="text"
         placeholder="Filter by track..."
         value={track}
         onChange={e => setTrack(e.target.value)}
       />
       <input
+        className="form-control"
         type="text"
         placeholder="Filter by artist..."
         value={artist}
@@ -326,6 +328,7 @@ function LibraryColumn() {
   return (
     <div className="sp-col" style={{ height: "48%", marginBottom: "1%" }}>
       <select
+        className="form-control"
         style={{ width: "100%" }}
         value={sauce}
         onChange={e => setSauce(e.target.value)}
@@ -335,7 +338,14 @@ function LibraryColumn() {
         </option>
         <option value={"CentralMusicLibrary"}>Central Music Library</option>
       </select>
+      <div className="border-top my-3"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
+
+      <span className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}>
+        <i className="far fa-2x fa-caret-square-down"></i>
+        <br />
+        Select a library to search.
+      </span>
     </div>
   );
 }
