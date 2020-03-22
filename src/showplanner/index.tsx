@@ -241,13 +241,15 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
 
 function CentralMusicLibrary() {
   const [track, setTrack] = useState("");
+  const [artist, setArtist] = useState("");
   const debouncedTrack = useDebounce(track, 1000);
+  const debouncedArtist = useDebounce(artist, 1000);
   const [items, setItems] = useState<Track[]>([]);
   useEffect(() => {
-    if (debouncedTrack === "") {
+    if (debouncedTrack === "" && debouncedArtist === "") {
       return;
     }
-    searchForTracks("", track).then(tracks => {
+    searchForTracks(artist, track).then(tracks => {
       tracks.forEach(track => {
         const id = itemId(track);
         if (!(id in CML_CACHE)) {
@@ -256,7 +258,7 @@ function CentralMusicLibrary() {
       });
       setItems(tracks);
     });
-  }, [debouncedTrack]);
+  }, [debouncedTrack, debouncedArtist]);
   return (
     <>
       <input
@@ -264,6 +266,12 @@ function CentralMusicLibrary() {
         placeholder="Filter by track..."
         value={track}
         onChange={e => setTrack(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Filter by artist..."
+        value={artist}
+        onChange={e => setArtist(e.target.value)}
       />
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
