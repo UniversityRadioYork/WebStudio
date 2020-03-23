@@ -2,6 +2,7 @@ import React, { useState, useReducer, useRef, useEffect, memo } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { ContextMenu, ContextMenuTrigger, MenuItem } from "react-contextmenu";
+import { useBeforeunload } from "react-beforeunload";
 
 import {
   showPlanResource,
@@ -303,6 +304,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   } = useSelector((state: RootState) => state.showplan);
 
   const dispatch = useDispatch();
+
+  useBeforeunload(event => event.preventDefault());
 
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
