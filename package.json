@@ -29,6 +29,7 @@
     "redux": "^4.0.4",
     "typescript": "3.7.2"
   },
+  "homepage": "https://ury.org.uk/webstudio",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
