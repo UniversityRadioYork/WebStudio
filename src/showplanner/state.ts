@@ -48,7 +48,7 @@ const showplan = createSlice({
   name: "showplan",
   initialState,
   reducers: {
-    getShowplanStarting(state, action) {
+    getShowplanStarting(state) {
       state.planLoadError = null;
       state.planLoading = true;
     },
