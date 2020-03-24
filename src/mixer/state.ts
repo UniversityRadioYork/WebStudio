@@ -298,7 +298,10 @@ export const load = (
 				time: wavesurfer.getDuration()
 			})
 		);
-		// TODO play-on-load
+		const state = getState().mixer.players[player];
+		if (state.playOnLoad) {
+			wavesurfer.play();
+		}
 	});
 	wavesurfer.on("play", () => {
 		dispatch(
@@ -317,8 +320,28 @@ export const load = (
 		dispatch(
 			mixerState.actions.setPlayerState({ player, state: "stopped" })
 		);
-		// TODO repeat
-		// TODO auto-advance
+		const state = getState().mixer.players[player];
+		if (state.repeat === "one") {
+			wavesurfer.play();
+		} else if (state.repeat === "all") {
+			if ("channel" in item) {
+				// it's not in the CML/libraries "column"
+				const itsChannel = getState().showplan.plan!.filter(x => x.channel === item.channel);
+				const itsIndex = itsChannel.indexOf(item);
+				if (itsIndex === itsChannel.length - 1) {
+					dispatch(load(player, itsChannel[0]));
+				}
+			}
+		} else if (state.autoAdvance) {
+			if ("channel" in item) {
+				// it's not in the CML/libraries "column"
+				const itsChannel = getState().showplan.plan!.filter(x => x.channel === item.channel);
+				const itsIndex = itsChannel.indexOf(item);
+				if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
+					dispatch(load(player, itsChannel[itsIndex + 1]));
+				}
+			}
+		}
 	});
 	wavesurfer.on("audioprocess", () => {
 		if (
