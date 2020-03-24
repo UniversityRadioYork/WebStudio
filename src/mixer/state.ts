@@ -17,8 +17,7 @@ import WaveSurfer from "wavesurfer.js";
 console.log(Between);
 
 const audioContext = new AudioContext();
-const playerSources: MediaElementAudioSourceNode[] = [];
-const playerGains: GainNode[] = [];
+const wavesurfers: WaveSurfer[] = [];
 const playerGainTweens: Array<{
 	target: VolumePresetEnum;
 	tweens: Between[];
@@ -129,6 +128,8 @@ const mixerState = createSlice({
 			state.players[action.payload.player].loadedItem =
 				action.payload.item;
 			state.players[action.payload.player].loading = true;
+			state.players[action.payload.player].timeCurrent = 0;
+			state.players[action.payload.player].timeLength = 0;
 		},
 		itemLoadComplete(state, action: PayloadAction<{ player: number }>) {
 			state.players[action.payload.player].loading = false;
@@ -242,8 +243,8 @@ export const load = (
 	player: number,
 	item: PlanItem | Track
 ): AppThunk => async (dispatch, getState) => {
-	if (typeof playerSources[player] !== "undefined") {
-		if (!playerSources[player].mediaElement.paused) {
+	if (typeof wavesurfers[player] !== "undefined") {
+		if (wavesurfers[player].isPlaying()) {
 			// already playing, don't kill playback
 			return;
 		}
@@ -271,155 +272,107 @@ export const load = (
 		);
 	}
 
-	const result = await fetch(url, { credentials: "include" });
-	const rawData = await result.arrayBuffer();
-	const blob = new Blob([rawData]);
-	const blobUrl = URL.createObjectURL(blob);
-
-	const el = new Audio();
-	el.src = blobUrl;
-	el.crossOrigin = "use-credentials";
-
-	var wavesurfer = getState().mixer.players[player].wavesurfer;
-	var playerState = getState().mixer.players[player];
-
-	el.oncanplay = () => {
-		console.log("can play");
-	};
-	el.oncanplaythrough = () => {
-		console.log("can play through");
-		dispatch(mixerState.actions.itemLoadComplete({ player }));
-	};
-
-	//el.load();
-
 	console.log("loading");
-	const sauce = audioContext.createMediaElementSource(el);
-	const gain = audioContext.createGain();
-	gain.gain.value = getState().mixer.players[player].gain;
-	sauce.connect(gain);
-	gain.connect(destination);
-	console.log("Connected to", destination);
-	playerSources[player] = sauce;
-	playerGains[player] = gain;
 
 	let waveform = document.getElementById("waveform-" + player.toString());
 	if (waveform != undefined) {
 		waveform.innerHTML = "";
 	}
-	wavesurfer = WaveSurfer.create({
+	const wavesurfer = WaveSurfer.create({
+		audioContext,
 		container: "#waveform-" + player.toString(),
 		waveColor: "#CCCCFF",
 		progressColor: "#9999FF",
-		backend: "MediaElement",
-		responsive: true
-
-		//forceDecode: true
+		backend: "MediaElementWebAudio",
+		responsive: true,
+		xhr: {
+			credentials: "include"
+		} as any
 	});
 
-	//el.load();
-	if (wavesurfer != null) {
-		wavesurfer.params.xhr = {
-			cache: "default",
-			mode: "cors",
-			method: "GET",
-			credentials: "include",
-			withCredentials: true,
-			redirect: "follow",
-			referrer: "client",
-			headers: [
-				{
-					key: "Access-Control-Allow-Credentials",
-					value: "true"
-				}
-			]
-		};
+	wavesurfer.on("ready", () => {
+		dispatch(mixerState.actions.itemLoadComplete({ player }));
 		dispatch(
-			mixerState.actions.setTimeCurrent({ player: player, time: 0 })
+			mixerState.actions.setTimeLength({
+				player,
+				time: wavesurfer.getDuration()
+			})
 		);
-		dispatch(mixerState.actions.setTimeLength({ player: player, time: 0 }));
-		wavesurfer.load(playerSources[player].mediaElement);
-		wavesurfer.on("ready", function() {
-			if (wavesurfer) {
-				let duration = wavesurfer.getDuration();
-				dispatch(
-					mixerState.actions.setTimeCurrent({
-						player: player,
-						time: 0
-					})
-				);
-				dispatch(
-					mixerState.actions.setTimeLength({
-						player: player,
-						time: duration
-					})
-				);
-			}
-		});
-		wavesurfer.on("audioprocess", function(time: number) {
-			if (wavesurfer && Math.random() > 0.9) {
-				dispatch(
-					mixerState.actions.setTimeCurrent({
-						player: player,
-						time: time
-					})
-				);
-			}
-		});
-	}
-};
-
-export const play = (player: number): AppThunk => dispatch => {
-	try {
-		playerSources[player].mediaElement.play();
+		// TODO play-on-load
+	});
+	wavesurfer.on("play", () => {
 		dispatch(
 			mixerState.actions.setPlayerState({ player, state: "playing" })
 		);
-		playerSources[player].mediaElement.addEventListener(
-			"ended",
-			function() {
-				dispatch(
-					mixerState.actions.setPlayerState({
-						player,
-						state: "stopped"
-					})
-				);
-				playerSources[player].mediaElement.currentTime = 0;
-			}
+	});
+	wavesurfer.on("pause", () => {
+		dispatch(
+			mixerState.actions.setPlayerState({
+				player,
+				state: wavesurfer.getCurrentTime() === 0 ? "stopped" : "paused"
+			})
 		);
-	} catch {
-		console.log("nothing selected/loaded");
+	});
+	wavesurfer.on("finish", () => {
+		dispatch(
+			mixerState.actions.setPlayerState({ player, state: "stopped" })
+		);
+		// TODO repeat
+		// TODO auto-advance
+	});
+	wavesurfer.on("audioprocess", () => {
+		if (
+			wavesurfer.getCurrentTime() -
+				getState().mixer.players[player].timeCurrent >
+			0.5
+		) {
+			dispatch(
+				mixerState.actions.setTimeCurrent({
+					player,
+					time: wavesurfer.getCurrentTime()
+				})
+			);
+		}
+	});
+
+	const result = await fetch(url, { credentials: "include" });
+	const rawData = await result.arrayBuffer();
+	const blob = new Blob([rawData]);
+	const objectUrl = URL.createObjectURL(blob);
+
+	const audio = new Audio(objectUrl);
+
+	wavesurfer.load(audio);
+
+	wavesurfers[player] = wavesurfer;
+};
+
+export const play = (player: number): AppThunk => dispatch => {
+	if (typeof wavesurfers[player] === "undefined") {
+		console.log("nothing loaded");
+		return;
 	}
+	wavesurfers[player].play();
 };
 
 export const pause = (player: number): AppThunk => dispatch => {
-	try {
-		if (playerSources[player].mediaElement.paused) {
-			playerSources[player].mediaElement.play();
-			dispatch(
-				mixerState.actions.setPlayerState({ player, state: "playing" })
-			);
-		} else {
-			playerSources[player].mediaElement.pause();
-			dispatch(
-				mixerState.actions.setPlayerState({ player, state: "paused" })
-			);
-		}
-	} catch {
-		console.log("nothing selected/loaded");
+	if (typeof wavesurfers[player] === "undefined") {
+		console.log("nothing loaded");
+		return;
+	}
+	if (wavesurfers[player].isPlaying()) {
+		wavesurfers[player].pause();
+	} else {
+		wavesurfers[player].play();
 	}
 };
 
 export const stop = (player: number): AppThunk => dispatch => {
-	try {
-		playerSources[player].mediaElement.pause();
-		playerSources[player].mediaElement.currentTime = 0;
-		dispatch(
-			mixerState.actions.setPlayerState({ player, state: "stopped" })
-		);
-	} catch {
-		console.log("nothing selected/loaded");
+	if (typeof wavesurfers[player] === "undefined") {
+		console.log("nothing loaded");
+		return;
 	}
+	wavesurfers[player].stop();
 };
 
 export const toggleAutoAdvance = (player: number): AppThunk => dispatch => {
@@ -573,9 +526,9 @@ export const mixerMiddleware: Middleware<
 	const result = next(action);
 	const newState = store.getState().mixer;
 	newState.players.forEach((state, index) => {
-		if (typeof playerGains[index] !== "undefined") {
+		if (typeof wavesurfers[index] !== "undefined") {
 			if (oldState.players[index].gain !== newState.players[index].gain) {
-				playerGains[index].gain.value = state.gain;
+				wavesurfers[index].setVolume(state.gain);
 			}
 		}
 	});
