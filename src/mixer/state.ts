@@ -14,7 +14,6 @@ import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
 
-
 console.log(Between);
 
 const audioContext = new AudioContext();
@@ -164,46 +163,62 @@ const mixerState = createSlice({
 		micOpen(state) {
 			state.mic.open = true;
 		},
-		setMicLevels(state, action: PayloadAction<{volume: number, gain: number}>) {
+		setMicLevels(
+			state,
+			action: PayloadAction<{ volume: number; gain: number }>
+		) {
 			state.mic.volume = action.payload.volume;
 			state.mic.gain = action.payload.gain;
 		},
 		setTimeCurrent(
 			state,
 			action: PayloadAction<{
-			player: number;
-			time: number;
-		}>) {
-			state.players[action.payload.player].timeCurrent = action.payload.time;
-			state.players[action.payload.player].timeRemaining = state.players[action.payload.player].timeLength - action.payload.time;
+				player: number;
+				time: number;
+			}>
+		) {
+			state.players[action.payload.player].timeCurrent =
+				action.payload.time;
+			state.players[action.payload.player].timeRemaining =
+				state.players[action.payload.player].timeLength -
+				action.payload.time;
 		},
 		setTimeLength(
 			state,
 			action: PayloadAction<{
-			player: number;
-			time: number;
-		}>) {
-			state.players[action.payload.player].timeLength = action.payload.time;
+				player: number;
+				time: number;
+			}>
+		) {
+			state.players[action.payload.player].timeLength =
+				action.payload.time;
 		},
 		setAutoAdvance(
 			state,
 			action: PayloadAction<{
-			player: number;
-		}>) {
-			state.players[action.payload.player].autoAdvance = !state.players[action.payload.player].autoAdvance;
+				player: number;
+			}>
+		) {
+			state.players[action.payload.player].autoAdvance = !state.players[
+				action.payload.player
+			].autoAdvance;
 		},
 		setPlayOnLoad(
 			state,
 			action: PayloadAction<{
-			player: number;
-		}>) {
-			state.players[action.payload.player].playOnLoad = !state.players[action.payload.player].playOnLoad;
+				player: number;
+			}>
+		) {
+			state.players[action.payload.player].playOnLoad = !state.players[
+				action.payload.player
+			].playOnLoad;
 		},
 		setRepeat(
 			state,
 			action: PayloadAction<{
-			player: number;
-		}>) {
+				player: number;
+			}>
+		) {
 			var playVal = state.players[action.payload.player].repeat;
 			switch (playVal) {
 				case "none":
@@ -218,16 +233,15 @@ const mixerState = createSlice({
 			}
 			state.players[action.payload.player].repeat = playVal;
 		}
-
 	}
 });
 
 export default mixerState.reducer;
 
-export const load = (player: number, item: PlanItem | Track): AppThunk => (
-	dispatch,
-	getState
-) => {
+export const load = (
+	player: number,
+	item: PlanItem | Track
+): AppThunk => async (dispatch, getState) => {
 	if (typeof playerSources[player] !== "undefined") {
 		if (!playerSources[player].mediaElement.paused) {
 			// already playing, don't kill playback
@@ -235,18 +249,19 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 		}
 	}
 	dispatch(mixerState.actions.loadItem({ player, item }));
-	const el = new Audio();
-	el.crossOrigin = "use-credentials";
+
+	let url;
+
 	if ("album" in item) {
 		// track
-		el.src =
+		url =
 			MYRADIO_NON_API_BASE +
 			"/NIPSWeb/secure_play?recordid=" +
 			item.album.recordid +
 			"&trackid=" +
 			item.trackid;
 	} else if ("type" in item && item.type == "aux") {
-		el.src =
+		url =
 			MYRADIO_NON_API_BASE +
 			"/NIPSWeb/managed_play?managedid=" +
 			item.managedid;
@@ -255,9 +270,18 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 			"Unsure how to handle this!\r\n\r\n" + JSON.stringify(item)
 		);
 	}
+
+	const result = await fetch(url, { credentials: "include" });
+	const rawData = await result.arrayBuffer();
+	const blob = new Blob([rawData]);
+	const blobUrl = URL.createObjectURL(blob);
+
+	const el = new Audio();
+	el.src = blobUrl;
+	el.crossOrigin = "use-credentials";
+
 	var wavesurfer = getState().mixer.players[player].wavesurfer;
 	var playerState = getState().mixer.players[player];
-
 
 	el.oncanplay = () => {
 		console.log("can play");
@@ -279,51 +303,67 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 	playerSources[player] = sauce;
 	playerGains[player] = gain;
 
-
 	let waveform = document.getElementById("waveform-" + player.toString());
 	if (waveform != undefined) {
 		waveform.innerHTML = "";
 	}
 	wavesurfer = WaveSurfer.create({
-		container: '#waveform-' + player.toString(),
-		waveColor: '#CCCCFF',
-		progressColor: '#9999FF',
+		container: "#waveform-" + player.toString(),
+		waveColor: "#CCCCFF",
+		progressColor: "#9999FF",
 		backend: "MediaElement",
 		responsive: true
 
-				//forceDecode: true
+		//forceDecode: true
 	});
 
 	//el.load();
 	if (wavesurfer != null) {
 		wavesurfer.params.xhr = {
-						cache: 'default',
-						mode: 'cors',
-						method: 'GET',
-				credentials: 'include',
-				withCredentials: true,
-						redirect: 'follow',
-						referrer: 'client',
-						headers: [
-					{
-						key: "Access-Control-Allow-Credentials",
-						value: "true"
-					}
-						]
+			cache: "default",
+			mode: "cors",
+			method: "GET",
+			credentials: "include",
+			withCredentials: true,
+			redirect: "follow",
+			referrer: "client",
+			headers: [
+				{
+					key: "Access-Control-Allow-Credentials",
+					value: "true"
+				}
+			]
 		};
-		dispatch(mixerState.actions.setTimeCurrent({ player: player, time: 0 }));
+		dispatch(
+			mixerState.actions.setTimeCurrent({ player: player, time: 0 })
+		);
 		dispatch(mixerState.actions.setTimeLength({ player: player, time: 0 }));
 		wavesurfer.load(playerSources[player].mediaElement);
-		wavesurfer.on('ready', function () {
+		wavesurfer.on("ready", function() {
 			if (wavesurfer) {
 				let duration = wavesurfer.getDuration();
-				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: 0 }));
-				dispatch(mixerState.actions.setTimeLength({ player: player, time: duration }));
+				dispatch(
+					mixerState.actions.setTimeCurrent({
+						player: player,
+						time: 0
+					})
+				);
+				dispatch(
+					mixerState.actions.setTimeLength({
+						player: player,
+						time: duration
+					})
+				);
 			}
 		});
-		wavesurfer.on('audioprocess', function (time: number) {
-			if (wavesurfer && Math.random() > 0.90) {
-				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: time}));
+		wavesurfer.on("audioprocess", function(time: number) {
+			if (wavesurfer && Math.random() > 0.9) {
+				dispatch(
+					mixerState.actions.setTimeCurrent({
+						player: player,
+						time: time
+					})
+				);
 			}
 		});
 	}
@@ -383,21 +423,15 @@ export const stop = (player: number): AppThunk => dispatch => {
 };
 
 export const toggleAutoAdvance = (player: number): AppThunk => dispatch => {
-	dispatch(
-		mixerState.actions.setAutoAdvance({ player })
-	);
+	dispatch(mixerState.actions.setAutoAdvance({ player }));
 };
 
 export const togglePlayOnLoad = (player: number): AppThunk => dispatch => {
-	dispatch(
-		mixerState.actions.setPlayOnLoad({ player })
-	);
+	dispatch(mixerState.actions.setPlayOnLoad({ player }));
 };
 
 export const toggleRepeat = (player: number): AppThunk => dispatch => {
-	dispatch(
-		mixerState.actions.setRepeat({ player })
-	);
+	dispatch(mixerState.actions.setRepeat({ player }));
 };
 
 const FADE_TIME_SECONDS = 1;
@@ -508,19 +542,26 @@ export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
 		return;
 	}
 	// Okay, we have a mic stream, time to do some audio nonsense
-	micSource = audioContext.createMediaStreamSource(micMedia)
+	micSource = audioContext.createMediaStreamSource(micMedia);
 	micGain = audioContext.createGain();
 	micCompressor = audioContext.createDynamicsCompressor();
 	// TODO: for testing we're connecting mic output to main out
 	// When streaming works we don't want to do this, because the latency is high enough to speech-jam
-	micSource.connect(micGain).connect(micCompressor).connect(destination);
+	micSource
+		.connect(micGain)
+		.connect(micCompressor)
+		.connect(destination);
 	dispatch(mixerState.actions.micOpen());
 };
 
-export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => dispatch => {
+export const setMicVolume = (
+	level: MicVolumePresetEnum
+): AppThunk => dispatch => {
 	// no tween fuckery here, just cut the level
 	const levelVal = level === "full" ? 1 : 0;
-	dispatch(mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal }));
+	dispatch(
+		mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
+	);
 };
 
 export const mixerMiddleware: Middleware<
