@@ -5,10 +5,15 @@ import { AppThunk } from "../store";
 import { cloneDeep } from "lodash";
 
 export interface ItemGhost {
+  type: "ghost";
   title: string;
+  artist: string;
+  length: string;
   ghostid: string;
   channel: number;
   weight: number;
+  intro: number;
+  clean: boolean;
 }
 
 export type PlanItem = TimeslotItem | ItemGhost;

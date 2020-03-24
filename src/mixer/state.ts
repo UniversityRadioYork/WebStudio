@@ -12,6 +12,8 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
+import WaveSurfer from "wavesurfer.js";
+
 
 console.log(Between);
 
@@ -34,6 +36,7 @@ const destination = audioContext.createDynamicsCompressor();
 destination.connect(audioContext.destination);
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
+type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
@@ -44,6 +47,13 @@ interface PlayerState {
 	state: PlayerStateEnum;
 	volume: number;
 	gain: number;
+	wavesurfer: WaveSurfer | null;
+	timeCurrent: number;
+	timeRemaining: number;
+	timeLength: number;
+	playOnLoad: Boolean;
+	autoAdvance: Boolean;
+	repeat: PlayerRepeatEnum;
 }
 
 interface MicState {
@@ -67,21 +77,42 @@ const mixerState = createSlice({
 				loading: false,
 				state: "stopped",
 				volume: 1,
-				gain: 1
+				gain: 1,
+				wavesurfer: null,
+				timeCurrent: 0,
+				timeRemaining: 0,
+				timeLength: 0,
+				playOnLoad: false,
+				autoAdvance: true,
+				repeat: "none"
 			},
 			{
 				loadedItem: null,
 				loading: false,
 				state: "stopped",
 				volume: 1,
-				gain: 1
+				gain: 1,
+				wavesurfer: null,
+				timeCurrent: 0,
+				timeRemaining: 0,
+				timeLength: 0,
+				playOnLoad: false,
+				autoAdvance: true,
+				repeat: "none"
 			},
 			{
 				loadedItem: null,
 				loading: false,
 				state: "stopped",
 				volume: 1,
-				gain: 1
+				gain: 1,
+				wavesurfer: null,
+				timeCurrent: 0,
+				timeRemaining: 0,
+				timeLength: 0,
+				playOnLoad: false,
+				autoAdvance: true,
+				repeat: "none"
 			}
 		],
 		mic: {
@@ -136,7 +167,58 @@ const mixerState = createSlice({
 		setMicLevels(state, action: PayloadAction<{volume: number, gain: number}>) {
 			state.mic.volume = action.payload.volume;
 			state.mic.gain = action.payload.gain;
+		},
+		setTimeCurrent(
+			state,
+			action: PayloadAction<{
+			player: number;
+			time: number;
+		}>) {
+			state.players[action.payload.player].timeCurrent = action.payload.time;
+			state.players[action.payload.player].timeRemaining = state.players[action.payload.player].timeLength - action.payload.time;
+		},
+		setTimeLength(
+			state,
+			action: PayloadAction<{
+			player: number;
+			time: number;
+		}>) {
+			state.players[action.payload.player].timeLength = action.payload.time;
+		},
+		setAutoAdvance(
+			state,
+			action: PayloadAction<{
+			player: number;
+		}>) {
+			state.players[action.payload.player].autoAdvance = !state.players[action.payload.player].autoAdvance;
+		},
+		setPlayOnLoad(
+			state,
+			action: PayloadAction<{
+			player: number;
+		}>) {
+			state.players[action.payload.player].playOnLoad = !state.players[action.payload.player].playOnLoad;
+		},
+		setRepeat(
+			state,
+			action: PayloadAction<{
+			player: number;
+		}>) {
+			var playVal = state.players[action.payload.player].repeat;
+			switch (playVal) {
+				case "none":
+					playVal = "one";
+					break;
+				case "one":
+					playVal = "all";
+					break;
+				case "all":
+					playVal = "none";
+					break;
+			}
+			state.players[action.payload.player].repeat = playVal;
 		}
+
 	}
 });
 
@@ -173,6 +255,10 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 			"Unsure how to handle this!\r\n\r\n" + JSON.stringify(item)
 		);
 	}
+	var wavesurfer = getState().mixer.players[player].wavesurfer;
+	var playerState = getState().mixer.players[player];
+
+
 	el.oncanplay = () => {
 		console.log("can play");
 	};
@@ -180,7 +266,9 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 		console.log("can play through");
 		dispatch(mixerState.actions.itemLoadComplete({ player }));
 	};
-	el.load();
+
+	//el.load();
+
 	console.log("loading");
 	const sauce = audioContext.createMediaElementSource(el);
 	const gain = audioContext.createGain();
@@ -190,6 +278,55 @@ export const load = (player: number, item: PlanItem | Track): AppThunk => (
 	console.log("Connected to", destination);
 	playerSources[player] = sauce;
 	playerGains[player] = gain;
+
+
+	let waveform = document.getElementById("waveform-" + player.toString());
+	if (waveform != undefined) {
+		waveform.innerHTML = "";
+	}
+	wavesurfer = WaveSurfer.create({
+		container: '#waveform-' + player.toString(),
+		waveColor: '#CCCCFF',
+		progressColor: '#9999FF',
+		backend: "MediaElement",
+		responsive: true
+
+				//forceDecode: true
+	});
+
+	//el.load();
+	if (wavesurfer != null) {
+		wavesurfer.params.xhr = {
+						cache: 'default',
+						mode: 'cors',
+						method: 'GET',
+				credentials: 'include',
+				withCredentials: true,
+						redirect: 'follow',
+						referrer: 'client',
+						headers: [
+					{
+						key: "Access-Control-Allow-Credentials",
+						value: "true"
+					}
+						]
+		};
+		dispatch(mixerState.actions.setTimeCurrent({ player: player, time: 0 }));
+		dispatch(mixerState.actions.setTimeLength({ player: player, time: 0 }));
+		wavesurfer.load(playerSources[player].mediaElement);
+		wavesurfer.on('ready', function () {
+			if (wavesurfer) {
+				let duration = wavesurfer.getDuration();
+				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: 0 }));
+				dispatch(mixerState.actions.setTimeLength({ player: player, time: duration }));
+			}
+		});
+		wavesurfer.on('audioprocess', function (time: number) {
+			if (wavesurfer && Math.random() > 0.90) {
+				dispatch(mixerState.actions.setTimeCurrent({ player: player, time: time}));
+			}
+		});
+	}
 };
 
 export const play = (player: number): AppThunk => dispatch => {
@@ -207,6 +344,7 @@ export const play = (player: number): AppThunk => dispatch => {
 						state: "stopped"
 					})
 				);
+				playerSources[player].mediaElement.currentTime = 0;
 			}
 		);
 	} catch {
@@ -242,6 +380,24 @@ export const stop = (player: number): AppThunk => dispatch => {
 	} catch {
 		console.log("nothing selected/loaded");
 	}
+};
+
+export const toggleAutoAdvance = (player: number): AppThunk => dispatch => {
+	dispatch(
+		mixerState.actions.setAutoAdvance({ player })
+	);
+};
+
+export const togglePlayOnLoad = (player: number): AppThunk => dispatch => {
+	dispatch(
+		mixerState.actions.setPlayOnLoad({ player })
+	);
+};
+
+export const toggleRepeat = (player: number): AppThunk => dispatch => {
+	dispatch(
+		mixerState.actions.setRepeat({ player })
+	);
 };
 
 const FADE_TIME_SECONDS = 1;

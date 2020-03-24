@@ -65,6 +65,7 @@ interface TimeslotItemBase {
   title: string;
   length: string;
   trackid: number;
+  clean: boolean;
 }
 
 interface TimeslotItemCentral {
@@ -78,6 +79,8 @@ interface TimeslotItemCentral {
 
 interface TimeslotItemAux {
   type: "aux";
+  artist: null;
+  intro: null;
   summary: string;
   managedid: number;
   recordid: string;
@@ -132,6 +135,7 @@ function wrapPromise<T, TArgs>(factory: (...args: TArgs[]) => Promise<T>) {
 }
 
 export interface Track {
+  type: "central";
   title: string;
   artist: string;
   album: Album;
