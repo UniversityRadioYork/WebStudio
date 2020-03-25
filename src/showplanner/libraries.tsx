@@ -115,7 +115,11 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
 
 	useEffect(() => {
 		async function load() {
-			const libItems = await loadAuxLibrary(libraryId);
+			let libItems = await loadAuxLibrary(libraryId);
+			// Caching is fun huehuehue
+			if (!(Array.isArray(libItems))) {
+				libItems = Object.keys(libItems).map(x => (libItems as any)[x]);
+			}
 			libItems.forEach(item => {
 				const id = itemId(item);
 				if (!(id in AUX_CACHE)) {
