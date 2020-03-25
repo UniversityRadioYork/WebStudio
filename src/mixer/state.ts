@@ -370,17 +370,25 @@ export const load = (
 	wavesurfers[player] = wavesurfer;
 };
 
-export const play = (player: number): AppThunk => dispatch => {
+export const play = (player: number): AppThunk => (dispatch, getState) => {
 	if (typeof wavesurfers[player] === "undefined") {
 		console.log("nothing loaded");
+		return;
+	}
+	if (getState().mixer.players[player].loading) {
+		console.log("not ready");
 		return;
 	}
 	wavesurfers[player].play();
 };
 
-export const pause = (player: number): AppThunk => dispatch => {
+export const pause = (player: number): AppThunk => (dispatch, getState) => {
 	if (typeof wavesurfers[player] === "undefined") {
 		console.log("nothing loaded");
+		return;
+	}
+	if (getState().mixer.players[player].loading) {
+		console.log("not ready");
 		return;
 	}
 	if (wavesurfers[player].isPlaying()) {
@@ -390,9 +398,13 @@ export const pause = (player: number): AppThunk => dispatch => {
 	}
 };
 
-export const stop = (player: number): AppThunk => dispatch => {
+export const stop = (player: number): AppThunk => (dispatch, getState) => {
 	if (typeof wavesurfers[player] === "undefined") {
 		console.log("nothing loaded");
+		return;
+	}
+	if (getState().mixer.players[player].loading) {
+		console.log("not ready");
 		return;
 	}
 	wavesurfers[player].stop();
