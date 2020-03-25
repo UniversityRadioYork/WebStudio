@@ -36,73 +36,10 @@ import { secToHHMM } from "../utils";
 import * as MixerState from "../mixer/state";
 
 import appLogo from "../assets/images/webstudio.svg";
+import { Item, TS_ITEM_MENU_ID } from "./Item";
+import { CentralMusicLibrary, CML_CACHE } from "./libraries";
 
-const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
-const TS_ITEM_MENU_ID = "SongMenu";
-
-const Item = memo(function Item({
-  item: x,
-  index,
-  column
-}: {
-  item: PlanItem | Track;
-  index: number;
-  column: number;
-}) {
-  const dispatch = useDispatch();
-  const id = itemId(x);
-  const isReal = "timeslotitemid" in x;
-  const isGhost = "ghostid" in x;
-
-  const playerState = useSelector(
-    (state: RootState) => state.mixer.players[column]
-  );
-
-  function triggerClick() {
-    if (column > -1) {
-      dispatch(MixerState.load(column, x));
-    }
-  }
-
-  return (
-    <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          key={id}
-          className={`sp-track ${
-            column >= 0 &&
-            playerState.loadedItem !== null &&
-            itemId(playerState.loadedItem) === id
-              ? "sp-track-active"
-              : ""
-          }`}
-          onClick={triggerClick}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-        >
-          <ContextMenuTrigger
-            id={isReal ? TS_ITEM_MENU_ID : ""}
-            collect={() => ({ id })}
-          >
-            <i className={"fa fa-circle " + (x.type)}></i>&nbsp;
-            {x.title}
-            {"artist" in x && " - " + x.artist}
-            <small className=
-              {"border rounded border-danger text-danger p-1 m-1" + (
-                x.clean === false ? "" : " d-none")}>
-              Explicit
-            </small>
-            <code>
-              {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
-            </code>
-          </ContextMenuTrigger>
-        </div>
-      )}
-    </Draggable>
-  );
-});
 
 const USE_REAL_GAIN_VALUE = false;
 
@@ -254,90 +191,6 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
   );
 }
 
-function CentralMusicLibrary() {
-  const [track, setTrack] = useState("");
-  const [artist, setArtist] = useState("");
-  const debouncedTrack = useDebounce(track, 1000);
-  const debouncedArtist = useDebounce(artist, 1000);
-  const [items, setItems] = useState<Track[]>([]);
-
-  type searchingStateEnum = "searching" | "not-searching" | "results" | "no-results";
-  const [state, setState] = useState<searchingStateEnum>("not-searching");
-  useEffect(() => {
-    if (debouncedTrack === "" && debouncedArtist === "") {
-      setItems([]);
-      setState("not-searching");
-      return;
-    }
-    setItems([]);
-    setState("searching");
-    searchForTracks(artist, track).then(tracks => {
-      if (tracks.length === 0) {
-        setState("no-results");
-      } else {
-        setState("results");
-      }
-      tracks.forEach(track => {
-        const id = itemId(track);
-        if (!(id in CML_CACHE)) {
-          CML_CACHE[id] = track;
-        }
-      });
-      setItems(tracks);
-    });
-  }, [debouncedTrack, debouncedArtist]);
-  return (
-    <>
-      <input
-        className="form-control"
-        type="text"
-        placeholder="Filter by track..."
-        value={track}
-        onChange={e => setTrack(e.target.value)}
-      />
-      <input
-        className="form-control"
-        type="text"
-        placeholder="Filter by artist..."
-        value={artist}
-        onChange={e => setArtist(e.target.value)}
-      />
-      <span className={state !== "results" ? "mt-5 text-center text-muted" : "d-none"}>
-      <i className=
-        {"fa fa-2x " +
-          (state === "not-searching"
-          ? "fa-search" :
-            state === "searching"
-              ? "fa-cog fa-spin" :
-                state === "no-results"
-                ? "fa-times-circle" :
-                  "d-none"
-          )
-        }></i><br />
-      {
-        state === "not-searching"
-        ? "Enter a search term." :
-          state === "searching"
-            ? "Searching..." :
-              state === "no-results"
-              ? "No results." :
-                ""
-      }
-      </span>
-      <Droppable droppableId="$CML">
-        {(provided, snapshot) => (
-          <div ref={provided.innerRef} {...provided.droppableProps}>
-            {items.map((item, index) => (
-              <Item key={itemId(item)} item={item} index={index} column={-1} />
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </>
-  );
-}
-
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   return (
@@ -486,6 +339,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }
     if (result.draggableId[0] === "T") {
       // this is a track from the CML
+      // TODO: this is ugly, should be in redux
       const data = CML_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
         type: "central",
