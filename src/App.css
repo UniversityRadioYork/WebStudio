@@ -417,6 +417,10 @@ button{
   opacity: 0.5;
 }
 
+.bypass-click {
+  pointer-events: none;
+}
+
 /* Flash class and keyframe animation */
 .sp-ending-soon {
 	-webkit-animation: flash steps(1) 0.5s infinite;
