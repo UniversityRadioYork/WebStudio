@@ -186,12 +186,12 @@ function Player({ id }: { id: number }) {
 
         <div className="p-0 card-footer waveform" >
 
-            <span id={"current-" + id} className="m-0 current">{secToHHMM(playerState.timeCurrent)}</span>
-            <span id={"length-" + id} className="m-0 length">{secToHHMM(playerState.timeLength)}</span>
-            <span id={"remaining-" + id} className="m-0 remaining">{secToHHMM(playerState.timeRemaining)}</span>
-            <span className="m-0 intro">{playerState.loadedItem !== null ? secToHHMM(playerState.loadedItem.intro ? playerState.loadedItem.intro : 0) : "00:00:00"} - in</span>
-            <span className="m-0 outro">out - 00:00:00</span>
-            <span className="m-0 loading">{(playerState.loadedItem !== null && playerState.timeLength === 0) ? "LOADING" : ""}</span>
+            <span id={"current-" + id} className="m-0 current bypass-click">{secToHHMM(playerState.timeCurrent)}</span>
+            <span id={"length-" + id} className="m-0 length bypass-click">{secToHHMM(playerState.timeLength)}</span>
+            <span id={"remaining-" + id} className="m-0 remaining bypass-click">{secToHHMM(playerState.timeRemaining)}</span>
+            <span className="m-0 intro bypass-click">{playerState.loadedItem !== null ? secToHHMM(playerState.loadedItem.intro ? playerState.loadedItem.intro : 0) : "00:00:00"} - in</span>
+            <span className="m-0 outro bypass-click">out - 00:00:00</span>
+            {(playerState.loadedItem !== null && playerState.timeLength === 0) && <span className="m-0 loading bypass-click">LOADING</span>}
             <div className="m-0 graph" id={"waveform-" + id}></div>
         </div>
       </div>
