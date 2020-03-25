@@ -1,4 +1,4 @@
-import { TimeslotItem, Track, Showplan } from "../api";
+import { TimeslotItem, Track, Showplan, AuxItem } from "../api";
 import * as api from "../api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
@@ -20,9 +20,12 @@ export type PlanItem = TimeslotItem | ItemGhost;
 
 export type Plan = PlanItem[][];
 
-export function itemId(item: PlanItem | Track) {
+export function itemId(item: PlanItem | Track | AuxItem) {
   if ("timeslotitemid" in item) {
     return item.timeslotitemid;
+  }
+  if ("auxid" in item) {
+    return "A" + item.auxid;
   }
   if ("ghostid" in item) {
     return "G" + item.ghostid;

@@ -9,7 +9,7 @@ import {
 import Between from "between.js";
 import { PlanItem } from "../showplanner/state";
 import Keys from "keymaster";
-import { Track, MYRADIO_NON_API_BASE } from "../api";
+import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
@@ -40,7 +40,7 @@ type MicVolumePresetEnum = "off" | "full";
 type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
 interface PlayerState {
-	loadedItem: PlanItem | Track | null;
+	loadedItem: PlanItem | Track | AuxItem | null;
 	loading: boolean;
 	state: PlayerStateEnum;
 	volume: number;
@@ -123,7 +123,7 @@ const mixerState = createSlice({
 	reducers: {
 		loadItem(
 			state,
-			action: PayloadAction<{ player: number; item: PlanItem | Track }>
+			action: PayloadAction<{ player: number; item: PlanItem | Track | AuxItem }>
 		) {
 			state.players[action.payload.player].loadedItem =
 				action.payload.item;
@@ -241,7 +241,7 @@ export default mixerState.reducer;
 
 export const load = (
 	player: number,
-	item: PlanItem | Track
+	item: PlanItem | Track | AuxItem
 ): AppThunk => async (dispatch, getState) => {
 	if (typeof wavesurfers[player] !== "undefined") {
 		if (wavesurfers[player].isPlaying()) {
@@ -261,7 +261,7 @@ export const load = (
 			item.album.recordid +
 			"&trackid=" +
 			item.trackid;
-	} else if ("type" in item && item.type == "aux") {
+	} else if ("managedid" in item) {
 		url =
 			MYRADIO_NON_API_BASE +
 			"/NIPSWeb/managed_play?managedid=" +

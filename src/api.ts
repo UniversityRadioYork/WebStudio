@@ -1,36 +1,29 @@
 import qs from "qs";
 import { convertModelToFormData, urlEncode } from "./lib/utils";
 
-export const MYRADIO_NON_API_BASE = process.env.REACT_APP_MYRADIO_NONAPI_BASE || "https://ury.org.uk/myradio-staging";
+export const MYRADIO_NON_API_BASE =
+  process.env.REACT_APP_MYRADIO_NONAPI_BASE ||
+  "https://ury.org.uk/myradio-staging";
 export const MYRADIO_BASE_URL =
   process.env.REACT_APP_MYRADIO_BASE || "https://ury.org.uk/api-staging/v2";
 const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
 class ApiException extends Error {}
 
-export async function myradioApiRequest(
-  endpoint: string,
+export async function myradioRequest(
+  url: string,
   method: "GET" | "POST" | "PUT",
   params: any
-): Promise<any> {
+): Promise<Response> {
   let req = null;
   if (method === "GET") {
-    req = fetch(
-      MYRADIO_BASE_URL +
-        endpoint +
-        qs.stringify(
-          {
-            ...params,
-            api_key: MYRADIO_API_KEY
-          },
-          { addQueryPrefix: true }
-        ),
-        { credentials: "include" }
-    );
+    req = fetch(url + qs.stringify(params, { addQueryPrefix: true }), {
+      credentials: "include"
+    });
   } else {
     const body = JSON.stringify(params);
     console.log(body);
-    req = fetch(MYRADIO_BASE_URL + endpoint + "?api_key=" + MYRADIO_API_KEY, {
+    req = fetch(url, {
       method,
       body,
       headers: {
@@ -39,7 +32,16 @@ export async function myradioApiRequest(
       credentials: "include"
     });
   }
-  const json = await (await req).json();
+  return await req;
+}
+
+export async function myradioApiRequest(
+  endpoint: string,
+  method: "GET" | "POST" | "PUT",
+  params: any
+): Promise<any> {
+  const res = await myradioRequest(MYRADIO_BASE_URL + endpoint, method, params);
+  const json = await res.json();
   if (json.status === "OK") {
     return json.payload;
   } else {
@@ -77,14 +79,21 @@ interface TimeslotItemCentral {
   album: Album;
 }
 
-interface TimeslotItemAux {
+export interface AuxItem {
   type: "aux";
-  artist: null;
-  intro: null;
   summary: string;
+  title: string;
   managedid: number;
+  length: string;
+  trackid: number;
+  expirydate: boolean | string;
+  expired: boolean;
   recordid: string;
   auxid: string;
+}
+
+interface TimeslotItemAux extends AuxItem {
+  type: "aux";
 }
 
 export type TimeslotItem = TimeslotItemBase &
@@ -158,6 +167,12 @@ export function searchForTracks(
     limit: 100,
     digitised: true
   });
+}
+
+export function loadAuxLibrary(libraryId: string): Promise<AuxItem[]> {
+  return myradioRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
+    libraryid: libraryId
+  }).then(res => res.json());
 }
 
 export type UpdateOp =

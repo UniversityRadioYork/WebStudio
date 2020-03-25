@@ -37,9 +37,7 @@ import * as MixerState from "../mixer/state";
 
 import appLogo from "../assets/images/webstudio.svg";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
-import { CentralMusicLibrary, CML_CACHE } from "./libraries";
-
-
+import { CentralMusicLibrary, CML_CACHE, AuxLibrary, AUX_CACHE } from "./libraries";
 
 const USE_REAL_GAIN_VALUE = false;
 
@@ -50,86 +48,137 @@ function Player({ id }: { id: number }) {
   const dispatch = useDispatch();
 
   return (
-    <div className={(playerState.loadedItem !== null && playerState.loading == false) ? "player loaded" : "player"}>
-
-
-        <div className="card text-center">
+    <div
+      className={
+        playerState.loadedItem !== null && playerState.loading == false
+          ? "player loaded"
+          : "player"
+      }
+    >
+      <div className="card text-center">
         <div className="row m-0 p-1 card-header channelButtons">
           <button
-            className={(playerState.autoAdvance ? "btn-primary" : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"}
+            className={
+              (playerState.autoAdvance
+                ? "btn-primary"
+                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
+            }
             onClick={() => dispatch(MixerState.toggleAutoAdvance(id))}
           >
-            <i className="fa fa-level-down-alt"></i>&nbsp;
-            Auto Advance
+            <i className="fa fa-level-down-alt"></i>&nbsp; Auto Advance
           </button>
           <button
-            className={(playerState.playOnLoad ? "btn-primary": "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"}
+            className={
+              (playerState.playOnLoad
+                ? "btn-primary"
+                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
+            }
             onClick={() => dispatch(MixerState.togglePlayOnLoad(id))}
           >
-            <i className="far fa-play-circle"></i>&nbsp;
-            Play on Load
+            <i className="far fa-play-circle"></i>&nbsp; Play on Load
           </button>
           <button
-            className={(playerState.repeat != "none" ? "btn-primary" : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"}
+            className={
+              (playerState.repeat != "none"
+                ? "btn-primary"
+                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
+            }
             onClick={() => dispatch(MixerState.toggleRepeat(id))}
           >
-            <i className="fa fa-redo"></i>&nbsp;
-            Repeat {playerState.repeat}
+            <i className="fa fa-redo"></i>&nbsp; Repeat {playerState.repeat}
           </button>
         </div>
         <div className="card-body p-0">
           <span className="card-title">
             <strong>
-            {playerState.loadedItem !== null
-            && playerState.loading === false
-            ? playerState.loadedItem.title
-                : (playerState.loading ? `LOADING` : "No Media Selected")}
+              {playerState.loadedItem !== null && !playerState.loading
+                ? playerState.loadedItem.title
+                : playerState.loading
+                ? `LOADING`
+                : "No Media Selected"}
             </strong>
-            <small className=
-              {"border rounded border-danger text-danger p-1 m-1" + (
-                playerState.loadedItem !== null
-                && playerState.loading === false
-                && playerState.loadedItem.clean === false ? "" : " d-none")}>
+            <small
+              className={
+                "border rounded border-danger text-danger p-1 m-1" +
+                (playerState.loadedItem !== null &&
+                !playerState.loading &&
+                "clean" in playerState.loadedItem &&
+                !playerState.loadedItem.clean
+                  ? ""
+                  : " d-none")
+              }
+            >
               Explicit
             </small>
-          </span><br />
+          </span>
+          <br />
           <span className="text-muted">
-              {playerState.loadedItem !== null
-              && playerState.loading === false
-              ? playerState.loadedItem.artist
-              : ""}&nbsp;
+            {playerState.loadedItem !== null && !playerState.loading
+              ? "artist" in playerState.loadedItem &&
+                playerState.loadedItem.artist
+              : ""}
+            &nbsp;
           </span>
           <div className="mediaButtons">
             <button
               onClick={() => dispatch(MixerState.play(id))}
-                className={(playerState.state === "playing" ? ((playerState.timeRemaining <= 15) ? "sp-state-playing sp-ending-soon" : "sp-state-playing") : "")}
+              className={
+                playerState.state === "playing"
+                  ? playerState.timeRemaining <= 15
+                    ? "sp-state-playing sp-ending-soon"
+                    : "sp-state-playing"
+                  : ""
+              }
             >
               <i className="fas fa-play"></i>
             </button>
             <button
               onClick={() => dispatch(MixerState.pause(id))}
-              className={playerState.state === "paused" ? "sp-state-paused" : ""}
+              className={
+                playerState.state === "paused" ? "sp-state-paused" : ""
+              }
             >
               <i className="fas fa-pause"></i>
             </button>
             <button
               onClick={() => dispatch(MixerState.stop(id))}
-              className={playerState.state === "stopped" ? "sp-state-stopped" : ""}
+              className={
+                playerState.state === "stopped" ? "sp-state-stopped" : ""
+              }
             >
               <i className="fas fa-stop"></i>
             </button>
           </div>
         </div>
 
-        <div className="p-0 card-footer waveform" >
-
-            <span id={"current-" + id} className="m-0 current bypass-click">{secToHHMM(playerState.timeCurrent)}</span>
-            <span id={"length-" + id} className="m-0 length bypass-click">{secToHHMM(playerState.timeLength)}</span>
-            <span id={"remaining-" + id} className="m-0 remaining bypass-click">{secToHHMM(playerState.timeRemaining)}</span>
-            <span className="m-0 intro bypass-click">{playerState.loadedItem !== null ? secToHHMM(playerState.loadedItem.intro ? playerState.loadedItem.intro : 0) : "00:00:00"} - in</span>
-            <span className="m-0 outro bypass-click">out - 00:00:00</span>
-            {(playerState.loadedItem !== null && playerState.timeLength === 0) && <span className="m-0 loading bypass-click">LOADING</span>}
-            <div className="m-0 graph" id={"waveform-" + id}></div>
+        <div className="p-0 card-footer waveform">
+          <span id={"current-" + id} className="m-0 current bypass-click">
+            {secToHHMM(playerState.timeCurrent)}
+          </span>
+          <span id={"length-" + id} className="m-0 length bypass-click">
+            {secToHHMM(playerState.timeLength)}
+          </span>
+          <span id={"remaining-" + id} className="m-0 remaining bypass-click">
+            {secToHHMM(playerState.timeRemaining)}
+          </span>
+          {playerState.loadedItem !== null &&
+            "intro" in playerState.loadedItem && (
+              <span className="m-0 intro bypass-click">
+                {playerState.loadedItem !== null
+                  ? secToHHMM(
+                      playerState.loadedItem.intro
+                        ? playerState.loadedItem.intro
+                        : 0
+                    )
+                  : "00:00:00"}{" "}
+                - in
+              </span>
+            )}
+          <span className="m-0 outro bypass-click">out - 00:00:00</span>
+          {playerState.loadedItem !== null && playerState.timeLength === 0 && (
+            <span className="m-0 loading bypass-click">LOADING</span>
+          )}
+          <div className="m-0 graph" id={"waveform-" + id}></div>
         </div>
       </div>
 
@@ -191,6 +240,23 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
   );
 }
 
+// TODO: this shouldn't have to be hardcoded
+const AUX_LIBRARIES: {[key: string]: string} = {
+  "aux-11": "Ambiences/Soundscapes",
+  "aux-3": "Artist Drops",
+  "aux-1": "Beds",
+  "aux-7": "Daily News Bulletins",
+  "aux-13": "Event Resources",
+  "aux-2": "Jingles",
+  "aux-4": "News",
+  "aux-5": "Presenter Idents",
+  "aux-6": "Promos",
+  "aux-12": "Roses 2018",
+  "aux-10": "Sound Effects",
+  "aux-8": "Speech",
+  "aux-9": "Teasers"
+};
+
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   return (
@@ -205,11 +271,15 @@ function LibraryColumn() {
           Choose a library
         </option>
         <option value={"CentralMusicLibrary"}>Central Music Library</option>
+        <option disabled>Resources</option>
+        {Object.keys(AUX_LIBRARIES).map(libId => <option key={libId} value={libId}>{AUX_LIBRARIES[libId]}</option>)}
       </select>
       <div className="border-top my-3"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
-
-      <span className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}>
+      {sauce.startsWith("aux-") && <AuxLibrary libraryId={sauce} />}
+      <span
+        className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
+      >
         <i className="far fa-2x fa-caret-square-down"></i>
         <br />
         Select a library to search.
@@ -243,10 +313,7 @@ function MicControl() {
         <div
           className="sp-mixer-buttons-backdrop"
           style={{
-            width:
-              (USE_REAL_GAIN_VALUE ? state.gain : state.volume) *
-                100 +
-              "%"
+            width: (USE_REAL_GAIN_VALUE ? state.gain : state.volume) * 100 + "%"
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
@@ -260,48 +327,79 @@ function MicControl() {
   );
 }
 
-
 function NavBar() {
   const userName = "Matthew Stratford";
 
   return (
-
     <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
       <nav className="container">
-        <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsed" aria-controls="collapsed" aria-expanded="false" aria-label="Toggle navigation">
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#collapsed"
+          aria-controls="collapsed"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
           <span className="navbar-toggler-icon"></span>
         </button>
         <div className="navbar-nav">
-        <a className="navbar-brand" href="/">
-          <img src="//ury.org.uk/myradio/img/URY.svg" height="30" alt="University Radio York Logo" />
-        </a>
-        <span className="navbar-brand divider"></span>
-        <a className="navbar-brand" href="/">
-          <img src={appLogo} height="28" alt="Web Studio Logo" />
-        </a>
+          <a className="navbar-brand" href="/">
+            <img
+              src="//ury.org.uk/myradio/img/URY.svg"
+              height="30"
+              alt="University Radio York Logo"
+            />
+          </a>
+          <span className="navbar-brand divider"></span>
+          <a className="navbar-brand" href="/">
+            <img src={appLogo} height="28" alt="Web Studio Logo" />
+          </a>
         </div>
 
         <ul className="nav navbar-nav navbar-right">
           <li className="nav-item">
-            <a className="nav-link" target="_blank" href="https://ury.org.uk/myradio/MyRadio/timeslot/?next=/webstudio">
-              <span className="fa fa-clock-o"></span>&nbsp;
-              Timeslot Time
+            <a
+              className="nav-link"
+              target="_blank"
+              href="https://ury.org.uk/myradio/MyRadio/timeslot/?next=/webstudio"
+            >
+              <span className="fa fa-clock-o"></span>&nbsp; Timeslot Time
             </a>
           </li>
           <li className="nav-item dropdown">
-            <a className="nav-link dropdown-toggle" href="https://ury.org.uk/myradio/Profile/default/" id="dropdown07" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <a
+              className="nav-link dropdown-toggle"
+              href="https://ury.org.uk/myradio/Profile/default/"
+              id="dropdown07"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
               <span className="fa fa-user-o"></span>&nbsp;
               {userName}
             </a>
             <div className="dropdown-menu" aria-labelledby="dropdown07">
-              <a className="dropdown-item" target="_blank" href="https://ury.org.uk/myradio/Profile/default/">My Profile</a>
-              <a className="dropdown-item" target="_blank" href="https://ury.org.uk/myradio/MyRadio/logout/">Logout</a>
+              <a
+                className="dropdown-item"
+                target="_blank"
+                href="https://ury.org.uk/myradio/Profile/default/"
+              >
+                My Profile
+              </a>
+              <a
+                className="dropdown-item"
+                target="_blank"
+                href="https://ury.org.uk/myradio/MyRadio/logout/"
+              >
+                Logout
+              </a>
             </div>
           </li>
         </ul>
       </nav>
     </header>
-
   );
 }
 
@@ -323,11 +421,11 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   }, [timeslotId]);
 
   function toggleSidebar() {
-    var element = document.getElementById('sidebar');
+    var element = document.getElementById("sidebar");
     if (element) {
-      element.classList.toggle('active')
+      element.classList.toggle("active");
     }
-  };
+  }
 
   async function onDragEnd(result: DropResult, provider: ResponderProvided) {
     if (!result.destination) {
@@ -346,6 +444,19 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "CHANGEME" + Math.random(),
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
+        ...data
+      };
+      dispatch(addItem(timeslotId, newItem));
+    } else if (result.draggableId[0] === "A") {
+      // this is an aux resource
+      // TODO: this is ugly, should be in redux
+      const data = AUX_CACHE[result.draggableId];
+      const newItem: TimeslotItem = {
+        type: "aux",
+        timeslotitemid: "CHANGEME" + Math.random(),
+        channel: parseInt(result.destination.droppableId, 10),
+        weight: result.destination.index,
+        clean: true,
         ...data
       };
       dispatch(addItem(timeslotId, newItem));
@@ -399,8 +510,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <Column id={1} data={showplan} />
           <Column id={2} data={showplan} />
           <div className="sp-main-col sidebar-toggle">
-            <button id="sidebarCollapse" className="btn btn-sm ml-auto" type="button" onClick={() => toggleSidebar()}>
-                <i className="fas fa-align-justify"></i> Show Sidebar
+            <button
+              id="sidebarCollapse"
+              className="btn btn-sm ml-auto"
+              type="button"
+              onClick={() => toggleSidebar()}
+            >
+              <i className="fas fa-align-justify"></i> Show Sidebar
             </button>
           </div>
           <div id="sidebar" className="sp-main-col">
