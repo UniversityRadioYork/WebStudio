@@ -403,6 +403,10 @@ function NavBar() {
   );
 }
 
+function incrReducer(state: number, action: any) {
+  return state + 1;
+}
+
 const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   const {
     plan: showplan,
@@ -427,6 +431,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }
   }
 
+  const [insertIndex, increment] = useReducer(incrReducer, 0);
+
   async function onDragEnd(result: DropResult, provider: ResponderProvided) {
     if (!result.destination) {
       return;
@@ -441,25 +447,27 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       const data = CML_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
         type: "central",
-        timeslotitemid: "CHANGEME" + Math.random(),
+        timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         ...data
       };
       dispatch(addItem(timeslotId, newItem));
+      increment(null);
     } else if (result.draggableId[0] === "A") {
       // this is an aux resource
       // TODO: this is ugly, should be in redux
       const data = AUX_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
         type: "aux",
-        timeslotitemid: "CHANGEME" + Math.random(),
+        timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
         ...data
       };
       dispatch(addItem(timeslotId, newItem));
+      increment(null);
     } else {
       // this is a normal move (ghosts aren't draggable)
       dispatch(
