@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { PlanItem, itemId } from "./state";
-import { Track } from "../api";
+import { Track, AuxItem } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
 
@@ -15,7 +15,7 @@ export const Item = memo(function Item({
   index,
   column
 }: {
-  item: PlanItem | Track;
+  item: PlanItem | Track | AuxItem;
   index: number;
   column: number;
 }) {
@@ -60,7 +60,7 @@ export const Item = memo(function Item({
             {"artist" in x && " - " + x.artist}
             <small className=
               {"border rounded border-danger text-danger p-1 m-1" + (
-                x.clean === false ? "" : " d-none")}>
+                "clean" in x && x.clean === false ? "" : " d-none")}>
               Explicit
             </small>
             <code>
