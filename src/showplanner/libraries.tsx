@@ -138,14 +138,21 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
 			<Droppable droppableId="$CML">
 				{(provided, snapshot) => (
 					<div ref={provided.innerRef} {...provided.droppableProps}>
-						{items.map((item, index) => (
-							<Item
-								key={itemId(item)}
-								item={item}
-								index={index}
-								column={-1}
-							/>
-						))}
+						{items
+							.filter(
+								its =>
+									its.title
+										.toLowerCase()
+										.indexOf(title.toLowerCase()) > -1
+							)
+							.map((item, index) => (
+								<Item
+									key={itemId(item)}
+									item={item}
+									index={index}
+									column={-1}
+								/>
+							))}
 						{provided.placeholder}
 					</div>
 				)}
