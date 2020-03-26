@@ -274,89 +274,98 @@ export const load = (
 
 	console.log("loading");
 
-	let waveform = document.getElementById("waveform-" + player.toString());
-	if (waveform != undefined) {
-		waveform.innerHTML = "";
-	}
-	const wavesurfer = WaveSurfer.create({
-		audioContext,
-		container: "#waveform-" + player.toString(),
-		waveColor: "#CCCCFF",
-		progressColor: "#9999FF",
-		backend: "MediaElementWebAudio",
-		responsive: true,
-		xhr: {
-			credentials: "include"
-		} as any
-	});
-
-	wavesurfer.on("ready", () => {
-		dispatch(mixerState.actions.itemLoadComplete({ player }));
-		dispatch(
-			mixerState.actions.setTimeLength({
-				player,
-				time: wavesurfer.getDuration()
-			})
-		);
-		const state = getState().mixer.players[player];
-		if (state.playOnLoad) {
-			wavesurfer.play();
+	let wavesurfer: WaveSurfer;
+	if (typeof wavesurfers[player] !== "undefined") {
+		let waveform = document.getElementById("waveform-" + player.toString());
+		if (waveform != undefined) {
+			waveform.innerHTML = "";
 		}
-	});
-	wavesurfer.on("play", () => {
-		dispatch(
-			mixerState.actions.setPlayerState({ player, state: "playing" })
-		);
-	});
-	wavesurfer.on("pause", () => {
-		dispatch(
-			mixerState.actions.setPlayerState({
-				player,
-				state: wavesurfer.getCurrentTime() === 0 ? "stopped" : "paused"
-			})
-		);
-	});
-	wavesurfer.on("finish", () => {
-		dispatch(
-			mixerState.actions.setPlayerState({ player, state: "stopped" })
-		);
-		const state = getState().mixer.players[player];
-		if (state.repeat === "one") {
-			wavesurfer.play();
-		} else if (state.repeat === "all") {
-			if ("channel" in item) {
-				// it's not in the CML/libraries "column"
-				const itsChannel = getState().showplan.plan!.filter(x => x.channel === item.channel);
-				const itsIndex = itsChannel.indexOf(item);
-				if (itsIndex === itsChannel.length - 1) {
-					dispatch(load(player, itsChannel[0]));
-				}
-			}
-		} else if (state.autoAdvance) {
-			if ("channel" in item) {
-				// it's not in the CML/libraries "column"
-				const itsChannel = getState().showplan.plan!.filter(x => x.channel === item.channel);
-				const itsIndex = itsChannel.indexOf(item);
-				if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
-					dispatch(load(player, itsChannel[itsIndex + 1]));
-				}
-			}
-		}
-	});
-	wavesurfer.on("audioprocess", () => {
-		if (
-			wavesurfer.getCurrentTime() -
-				getState().mixer.players[player].timeCurrent >
-			0.5
-		) {
+		wavesurfer = wavesurfers[player];
+	} else {
+		wavesurfer = WaveSurfer.create({
+			audioContext,
+			container: "#waveform-" + player.toString(),
+			waveColor: "#CCCCFF",
+			progressColor: "#9999FF",
+			backend: "MediaElementWebAudio",
+			responsive: true,
+			xhr: {
+				credentials: "include"
+			} as any
+		});
+		wavesurfer.on("ready", () => {
+			dispatch(mixerState.actions.itemLoadComplete({ player }));
 			dispatch(
-				mixerState.actions.setTimeCurrent({
+				mixerState.actions.setTimeLength({
 					player,
-					time: wavesurfer.getCurrentTime()
+					time: wavesurfer.getDuration()
 				})
 			);
-		}
-	});
+			const state = getState().mixer.players[player];
+			if (state.playOnLoad) {
+				wavesurfer.play();
+			}
+		});
+		wavesurfer.on("play", () => {
+			dispatch(
+				mixerState.actions.setPlayerState({ player, state: "playing" })
+			);
+		});
+		wavesurfer.on("pause", () => {
+			dispatch(
+				mixerState.actions.setPlayerState({
+					player,
+					state:
+						wavesurfer.getCurrentTime() === 0 ? "stopped" : "paused"
+				})
+			);
+		});
+		wavesurfer.on("finish", () => {
+			dispatch(
+				mixerState.actions.setPlayerState({ player, state: "stopped" })
+			);
+			const state = getState().mixer.players[player];
+			if (state.repeat === "one") {
+				wavesurfer.play();
+			} else if (state.repeat === "all") {
+				if ("channel" in item) {
+					// it's not in the CML/libraries "column"
+					const itsChannel = getState().showplan.plan!.filter(
+						x => x.channel === item.channel
+					);
+					const itsIndex = itsChannel.indexOf(item);
+					if (itsIndex === itsChannel.length - 1) {
+						dispatch(load(player, itsChannel[0]));
+					}
+				}
+			} else if (state.autoAdvance) {
+				if ("channel" in item) {
+					// it's not in the CML/libraries "column"
+					const itsChannel = getState().showplan.plan!.filter(
+						x => x.channel === item.channel
+					);
+					const itsIndex = itsChannel.indexOf(item);
+					if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
+						dispatch(load(player, itsChannel[itsIndex + 1]));
+					}
+				}
+			}
+		});
+		wavesurfer.on("audioprocess", () => {
+			if (
+				wavesurfer.getCurrentTime() -
+					getState().mixer.players[player].timeCurrent >
+				0.5
+			) {
+				dispatch(
+					mixerState.actions.setTimeCurrent({
+						player,
+						time: wavesurfer.getCurrentTime()
+					})
+				);
+			}
+		});
+	}
 
 	const result = await fetch(url, { credentials: "include" });
 	const rawData = await result.arrayBuffer();
