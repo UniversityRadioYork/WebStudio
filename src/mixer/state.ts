@@ -29,10 +29,12 @@ let micSource: MediaStreamAudioSourceNode | null = null;
 let micGain: GainNode | null = null;
 let micCompressor: DynamicsCompressorNode | null = null;
 
-// TODO
-// const destination = audioContext.createWebcastSource(4096, 2);
-const destination = audioContext.createDynamicsCompressor();
-destination.connect(audioContext.destination);
+const finalCompressor = audioContext.createDynamicsCompressor();
+finalCompressor.connect(audioContext.destination);
+
+export const destination = audioContext.createMediaStreamDestination();
+console.log("final destination", destination);
+finalCompressor.connect(destination);
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
@@ -548,7 +550,7 @@ export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
 	micSource
 		.connect(micGain)
 		.connect(micCompressor)
-		.connect(destination);
+		.connect(finalCompressor);
 	dispatch(mixerState.actions.micOpen());
 };
 
