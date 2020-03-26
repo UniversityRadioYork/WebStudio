@@ -8,6 +8,7 @@ import {
 } from "@reduxjs/toolkit";
 import Between from "between.js";
 import { PlanItem } from "../showplanner/state";
+import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
@@ -307,6 +308,15 @@ export const load = (
 		dispatch(
 			mixerState.actions.setPlayerState({ player, state: "playing" })
 		);
+		console.log(item);
+		if ("album" in item) {
+			//track
+			dispatch(
+				BroadcastState.tracklistStart(item.trackid)
+			);
+
+		}
+
 	});
 	wavesurfer.on("pause", () => {
 		dispatch(

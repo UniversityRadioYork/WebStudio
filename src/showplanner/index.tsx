@@ -34,6 +34,7 @@ import {
 import { secToHHMM } from "../utils";
 
 import * as MixerState from "../mixer/state";
+import * as BroadcastState from "../broadcast/state";
 
 import appLogo from "../assets/images/webstudio.svg";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
@@ -329,7 +330,8 @@ function MicControl() {
 
 function NavBar() {
   const userName = "Matthew Stratford";
-
+  const dispatch = useDispatch();
+  const broadcastState = useSelector((state: RootState) => state.broadcast);
   return (
     <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
       <nav className="container">
@@ -359,6 +361,9 @@ function NavBar() {
         </div>
 
         <ul className="nav navbar-nav navbar-right">
+          <li className="nav-item nav-link">
+            <button className="" onClick={() => dispatch(BroadcastState.toggleTracklisting())}>{broadcastState.tracklisting ? "Tracklisting!" : "Not Tracklisting"} </button>
+          </li>
           <li className="nav-item">
             <a
               className="nav-link"
