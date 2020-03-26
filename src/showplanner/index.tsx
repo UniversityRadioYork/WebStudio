@@ -364,6 +364,9 @@ function NavBar() {
           <li className="nav-item nav-link">
             <button className="" onClick={() => dispatch(BroadcastState.toggleTracklisting())}>{broadcastState.tracklisting ? "Tracklisting!" : "Not Tracklisting"} </button>
           </li>
+          <li className="nav-item nav-link">
+            <button className="" onClick={() => dispatch(BroadcastState.connect())}>{broadcastState.connectionState}</button>
+          </li>
           <li className="nav-item">
             <a
               className="nav-link"
