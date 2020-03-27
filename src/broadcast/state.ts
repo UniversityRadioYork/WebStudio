@@ -8,10 +8,12 @@ import {
 } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { Track, myradioApiRequest } from "../api";
-import { WebRTCStreamer, ConnectionStateEnum } from "./rtc_streamer";
+import { WebRTCStreamer } from "./rtc_streamer";
 import { destination } from "../mixer/state";
+import { ConnectionStateEnum, Streamer } from "./streamer";
+import { RecordingStreamer } from "./recording_streamer";
 
-let streamer: WebRTCStreamer | null = null;
+let streamer: Streamer | null = null;
 
 interface BroadcastState {
   tracklisting: boolean;
@@ -59,9 +61,18 @@ export const tracklistEnd = (trackid: number): AppThunk => (dispatch, getState) 
   }
 };
 
-export const connect = (): AppThunk => dispatch => {
+export const connect = (): AppThunk => async dispatch => {
   streamer = new WebRTCStreamer(destination.stream);
   streamer.addConnectionStateListener(state => {
     dispatch(broadcastState.actions.setConnectionState(state));
   });
+  await streamer.start();
 };
+
+export const disconnect = (): AppThunk => async dispatch => {
+  if (streamer) {
+    await streamer.stop();
+  } else {
+    console.warn("disconnect called with no streamer!");
+  }
+}

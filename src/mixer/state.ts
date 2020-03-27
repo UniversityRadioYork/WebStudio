@@ -377,7 +377,13 @@ export const load = (
 
 	const audio = new Audio(objectUrl);
 
+	wavesurfer.backend!.gainNode.connect(destination);
+
 	wavesurfer.load(audio);
+
+	// THIS IS BAD
+	(wavesurfer as any).backend.gainNode.disconnect();
+	(wavesurfer as any).backend.gainNode.connect(finalCompressor);
 
 	wavesurfers[player] = wavesurfer;
 };
