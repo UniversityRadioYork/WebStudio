@@ -377,8 +377,6 @@ export const load = (
 
 	const audio = new Audio(objectUrl);
 
-	wavesurfer.backend!.gainNode.connect(destination);
-
 	wavesurfer.load(audio);
 
 	// THIS IS BAD
