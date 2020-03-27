@@ -1,34 +1,44 @@
+import { Streamer, ConnectionStateListener, ConnectionStateEnum } from "./streamer";
+
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
-export type ConnectionStateEnum = "NOT_CONNECTED" | "CONNECTING" | "CONNECTED" | "CONNECTION_LOST";
-type ConnectionStateListener = (val: ConnectionStateEnum) => any;
 
-export class WebRTCStreamer {
+
+export class WebRTCStreamer extends Streamer {
 	pc: RTCPeerConnection;
-	ws: WebSocket;
+	ws: WebSocket | undefined;
 	state: StreamerState = "HELLO";
 
-	csListeners: ConnectionStateListener[] = [];
-
 	constructor(stream: MediaStream) {
+		super();
 		this.pc = new RTCPeerConnection({});
 		this.pc.onconnectionstatechange = e => {
 			console.log("Connection state change: " + this.pc.connectionState);
-			this.csListeners.forEach(l => l(this.mapStateToConnectionState()));
+			this.onStateChange(this.mapStateToConnectionState());
 		};
 		console.log("Stream tracks", stream.getAudioTracks());
 		stream.getAudioTracks().forEach(track => this.pc.addTrack(track));
-		this.ws = new WebSocket("ws://localhost:8079/stream"); // TODO
+	}
+
+	async start(): Promise<void> {
+        this.ws = new WebSocket("ws://localhost:8079/stream"); // TODO
 		this.ws.onopen = e => {
 			console.log("WS open");
-			this.csListeners.forEach(l => l(this.mapStateToConnectionState()));
+			this.onStateChange(this.mapStateToConnectionState());
 		};
 		this.ws.onclose = e => {
 			console.log("WS close");
-			this.csListeners.forEach(l => l(this.mapStateToConnectionState()));
+			this.onStateChange(this.mapStateToConnectionState());
 		};
 		this.ws.addEventListener("message", this.onMessage.bind(this));
-	}
+    }
+    
+    async stop(): Promise<void> {
+        if (this.ws) {
+			this.ws.close();
+		}
+		this.pc.close();
+    }
 
 	async onMessage(evt: MessageEvent) {
 		const data = JSON.parse(evt.data);
@@ -36,13 +46,13 @@ export class WebRTCStreamer {
 			case "HELLO":
 				console.log("WS HELLO, our client ID is " + data.connectionId);
 				if (this.state !== "HELLO") {
-					this.ws.close();
+					this.ws!.close();
 				}
 				const offer = await this.pc.createOffer();
 				// TODO do some fun SDP fuckery to get quality
 				await this.pc.setLocalDescription(offer);
 				await this.waitForIceCandidates();
-				this.ws.send(
+				this.ws!.send(
 					JSON.stringify({
 						kind: "OFFER",
 						type: this.pc.localDescription!.type,
@@ -82,11 +92,6 @@ export class WebRTCStreamer {
 		});
 	}
 
-	close() {
-		this.ws.close();
-		this.pc.close();
-	}
-
 	mapStateToConnectionState(): ConnectionStateEnum {
 		switch (this.pc.connectionState) {
 			case "connected": return "CONNECTED";
@@ -94,20 +99,15 @@ export class WebRTCStreamer {
 			case "disconnected": return "CONNECTION_LOST";
 			case "failed": return "CONNECTION_LOST";
 			default:
-				switch (this.ws.readyState) {
+				if (this.ws) {
+					switch (this.ws.readyState) {
 					case 1: return "CONNECTING";
 					case 2: case 3: return "CONNECTION_LOST";
 					case 0: return "NOT_CONNECTED";
 					default: throw new Error();
 				} 
-		}
-	}
-
-	addConnectionStateListener(listener: ConnectionStateListener) {
-		this.csListeners.push(listener);
-		listener(this.mapStateToConnectionState());
-		return () => {
-			this.csListeners.splice(this.csListeners.indexOf(listener), 1);
+				}
+				return "NOT_CONNECTED";
 		}
 	}
 }

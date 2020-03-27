@@ -38,7 +38,12 @@ import * as BroadcastState from "../broadcast/state";
 
 import appLogo from "../assets/images/webstudio.svg";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
-import { CentralMusicLibrary, CML_CACHE, AuxLibrary, AUX_CACHE } from "./libraries";
+import {
+  CentralMusicLibrary,
+  CML_CACHE,
+  AuxLibrary,
+  AUX_CACHE
+} from "./libraries";
 
 const USE_REAL_GAIN_VALUE = false;
 
@@ -242,7 +247,7 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
 }
 
 // TODO: this shouldn't have to be hardcoded
-const AUX_LIBRARIES: {[key: string]: string} = {
+const AUX_LIBRARIES: { [key: string]: string } = {
   "aux-11": "Ambiences/Soundscapes",
   "aux-3": "Artist Drops",
   "aux-1": "Beds",
@@ -273,7 +278,11 @@ function LibraryColumn() {
         </option>
         <option value={"CentralMusicLibrary"}>Central Music Library</option>
         <option disabled>Resources</option>
-        {Object.keys(AUX_LIBRARIES).map(libId => <option key={libId} value={libId}>{AUX_LIBRARIES[libId]}</option>)}
+        {Object.keys(AUX_LIBRARIES).map(libId => (
+          <option key={libId} value={libId}>
+            {AUX_LIBRARIES[libId]}
+          </option>
+        ))}
       </select>
       <div className="border-top my-3"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
@@ -362,10 +371,28 @@ function NavBar() {
 
         <ul className="nav navbar-nav navbar-right">
           <li className="nav-item nav-link">
-            <button className="" onClick={() => dispatch(BroadcastState.toggleTracklisting())}>{broadcastState.tracklisting ? "Tracklisting!" : "Not Tracklisting"} </button>
+            <button
+              className=""
+              onClick={() => dispatch(BroadcastState.toggleTracklisting())}
+            >
+              {broadcastState.tracklisting
+                ? "Tracklisting!"
+                : "Not Tracklisting"}{" "}
+            </button>
           </li>
           <li className="nav-item nav-link">
-            <button className="" onClick={() => dispatch(BroadcastState.connect())}>{broadcastState.connectionState}</button>
+            <button
+              className=""
+              onClick={() =>
+                dispatch(
+                  broadcastState.connectionState === "NOT_CONNECTED"
+                    ? BroadcastState.connect()
+                    : BroadcastState.disconnect()
+                )
+              }
+            >
+              {broadcastState.connectionState}
+            </button>
           </li>
           <li className="nav-item">
             <a
