@@ -40,13 +40,13 @@ export const toggleTracklisting = (): AppThunk => dispatch => {
 export const tracklistStart = (trackid: number): AppThunk =>(dispatch, getState) => {
   console.log("Attempting to tracklist: " + trackid);
   if (getState().broadcast.tracklisting) {
-    console.log(myradioApiRequest("/TracklistItem", "POST", { trackid: trackid, source: 'w', state: 'c' }));
+    return myradioApiRequest("/TracklistItem", "POST", { trackid: trackid, source: 'w', state: 'c' });
   }
 };
 
-export const tracklistEnd = (trackid: number): AppThunk => (dispatch, getState) => {
-  console.log("Attempting to tracklist: " + trackid);
+export const tracklistEnd = (tracklistitemid: number): AppThunk => (dispatch, getState) => {
+  console.log("Attempting to end tracklistitem: " + tracklistitemid);
   if (getState().broadcast.tracklisting) {
-    myradioApiRequest("/TracklistItem", "POST", { trackid: trackid, source: 'w', state: 'c' });
+    myradioApiRequest("/TracklistItem/" + tracklistitemid + "/endtime", "PUT", { });
   }
 };
