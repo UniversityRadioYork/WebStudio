@@ -139,6 +139,7 @@ const mixerState = createSlice({
 			state.players[action.payload.player].loading = true;
 			state.players[action.payload.player].timeCurrent = 0;
 			state.players[action.payload.player].timeLength = 0;
+			state.players[action.payload.player].tracklistItemID = -1;
 		},
 		itemLoadComplete(state, action: PayloadAction<{ player: number }>) {
 			state.players[action.payload.player].loading = false;
