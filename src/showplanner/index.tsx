@@ -323,6 +323,18 @@ function MicControl() {
       >
         Open
       </button>
+
+      <select
+        className="form-control"
+        style={{ width: "100%" }}
+        value={"None"}
+      >
+        <option value={"None"} disabled>
+          Choose a microphone
+        </option>
+        {Object.keys(AUX_LIBRARIES).map(libId => <option key={libId} value={libId}>{AUX_LIBRARIES[libId]}</option>)}
+      </select>
+
       {state.openError !== null && (
         <div className="sp-alert">
           {state.openError === "NO_PERMISSION"
