@@ -359,9 +359,10 @@ export const load = (
 	});
 	wavesurfer.on("audioprocess", () => {
 		if (
-			wavesurfer.getCurrentTime() -
-				getState().mixer.players[player].timeCurrent >
-			0.5
+			Math.abs(
+				wavesurfer.getCurrentTime() -
+					getState().mixer.players[player].timeCurrent
+			) > 0.5
 		) {
 			dispatch(
 				mixerState.actions.setTimeCurrent({
