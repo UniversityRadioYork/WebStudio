@@ -296,6 +296,7 @@ function MicControl() {
   const [micList, setMicList] = useState(dummylist);
   const dispatch = useDispatch();
   const [micSource, setMicSource] = useState("None")
+  const [lock, setLock] = useState(false)
 
   if (gotMicList == false){
     navigator.mediaDevices.enumerateDevices()
@@ -316,16 +317,21 @@ function MicControl() {
     return temp
   }
 
+  function toggleCheck(){setLock(!lock)}
+
   return (
     <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
       <h2>Microphone</h2>
       <button
-        disabled={state.id == micSource}
+        disabled={state.id == micSource || lock}
         onClick={() => dispatch(MixerState.openMicrophone(micSource))}
       >
         Open
       </button>
-
+      <div className="custom-control custom-checkbox">
+      <input className="custom-control-input" type="checkbox" id="micLock" onChange={toggleCheck}></input>
+      <label className="custom-control-label" htmlFor="micLock" style={{marginLeft:"8px"}}> Lock Microphone</label>
+      </div>
       <select
         className="form-control"
         style={{ width: "100%" }}
@@ -334,12 +340,11 @@ function MicControl() {
       >
         <option value={"None"} disabled label="Choose a microphone"></option>
         {
-          micList.map(e => {
-            return <option value={e.deviceId}>{e.label}</option>;
+          micList.map(function(e,i) {
+            return <option value={e.deviceId} key={i}>{e.label}</option>;
           })
         }
       </select>
-
       {state.openError !== null && (
         <div className="sp-alert">
           {state.openError === "NO_PERMISSION"
