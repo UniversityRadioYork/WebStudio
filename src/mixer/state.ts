@@ -64,6 +64,7 @@ interface MicState {
 	openError: null | MicErrorEnum;
 	volume: number;
 	gain: number;
+	id:string;
 }
 
 interface MixerState {
@@ -122,7 +123,8 @@ const mixerState = createSlice({
 			open: false,
 			volume: 1,
 			gain: 1,
-			openError: null
+			openError: null,
+			id: "None"
 		}
 	} as MixerState,
 	reducers: {
@@ -166,8 +168,9 @@ const mixerState = createSlice({
 		setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
 			state.mic.openError = action.payload;
 		},
-		micOpen(state) {
+		micOpen(state, micID) {
 			state.mic.open = true;
+			state.mic.id = micID.payload;
 		},
 		setMicLevels(
 			state,
@@ -558,7 +561,7 @@ export const openMicrophone = (micID:string): AppThunk => async (dispatch, getSt
 		.connect(micGain)
 		.connect(micCompressor)
 		.connect(destination);
-	dispatch(mixerState.actions.micOpen());
+	dispatch(mixerState.actions.micOpen(micID));
 };
 
 export const setMicVolume = (
