@@ -32,7 +32,7 @@
     "react-scripts": "3.2.0",
     "redux": "^4.0.4",
     "typescript": "3.7.2",
-    "wavesurfer.js": "UniversityRadioYork/wavesurfer.js#ury"
+    "wavesurfer.js": "github.com/UniversityRadioYork/wavesurfer.js#ury"
   },
   "homepage": "https://ury.org.uk/webstudio",
   "scripts": {
