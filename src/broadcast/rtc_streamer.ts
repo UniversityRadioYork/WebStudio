@@ -21,7 +21,7 @@ export class WebRTCStreamer extends Streamer {
 	}
 
 	async start(): Promise<void> {
-        this.ws = new WebSocket("ws://localhost:8079/stream"); // TODO
+        this.ws = new WebSocket("ws://audio.ury.org.uk/webstudio/stream"); // TODO
 		this.ws.onopen = e => {
 			console.log("WS open");
 			this.onStateChange(this.mapStateToConnectionState());
