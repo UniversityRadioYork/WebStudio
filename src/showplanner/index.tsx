@@ -321,7 +321,7 @@ function MicControl() {
       <h2>Microphone</h2>
       <button
         disabled={state.open}
-        onClick={() => dispatch(MixerState.openMicrophone())}
+        onClick={() => dispatch(MixerState.openMicrophone(micSource))}
       >
         Open
       </button>
@@ -332,13 +332,10 @@ function MicControl() {
         value={micSource}
         onChange={e => setMicSource(e.target.value)}
       >
-        <option value={"None"} disabled>
-          Choose a microphone
-        </option>
+        <option value={"None"} disabled label="Choose a microphone"></option>
         {
-          micList.map(function(device) {
-            console.log("when rendering list: ", micList)
-            return <option value={device.deviceId}>{device.label}</option>;
+          micList.map(e => {
+            return <option value={e.deviceId}>{e.label}</option>;
           })
         }
       </select>
