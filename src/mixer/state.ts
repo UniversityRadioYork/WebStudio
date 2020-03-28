@@ -510,7 +510,7 @@ export const setVolume = (
 	};
 };
 
-export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
+export const openMicrophone = (micID:string): AppThunk => async (dispatch, getState) => {
 	if (getState().mixer.mic.open) {
 		return;
 	}
@@ -523,6 +523,7 @@ export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
 	try {
 		micMedia = await navigator.mediaDevices.getUserMedia({
 			audio: {
+				deviceId:{exact: micID},
 				echoCancellation: false,
 				autoGainControl: false,
 				noiseSuppression: false,
