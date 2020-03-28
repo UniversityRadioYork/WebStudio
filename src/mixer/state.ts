@@ -57,6 +57,7 @@ interface PlayerState {
 	playOnLoad: Boolean;
 	autoAdvance: Boolean;
 	repeat: PlayerRepeatEnum;
+	tracklistItemID: number;
 }
 
 interface MicState {
@@ -87,7 +88,8 @@ const mixerState = createSlice({
 				timeLength: 0,
 				playOnLoad: false,
 				autoAdvance: true,
-				repeat: "none"
+				repeat: "none",
+				tracklistItemID: -1
 			},
 			{
 				loadedItem: null,
@@ -101,7 +103,8 @@ const mixerState = createSlice({
 				timeLength: 0,
 				playOnLoad: false,
 				autoAdvance: true,
-				repeat: "none"
+				repeat: "none",
+				tracklistItemID: -1
 			},
 			{
 				loadedItem: null,
@@ -115,7 +118,8 @@ const mixerState = createSlice({
 				timeLength: 0,
 				playOnLoad: false,
 				autoAdvance: true,
-				repeat: "none"
+				repeat: "none",
+				tracklistItemID: -1
 			}
 		],
 		mic: {
@@ -238,6 +242,15 @@ const mixerState = createSlice({
 					break;
 			}
 			state.players[action.payload.player].repeat = playVal;
+		},
+		setTracklistItemID(
+			state,
+			action: PayloadAction<{
+				player: number,
+				id: number
+			}>
+		) {
+			state.players[action.payload.player].tracklistItemID = action.payload.id;
 		}
 	}
 });
@@ -298,6 +311,12 @@ export const load = (
 	wavesurfer.on("ready", () => {
 		dispatch(mixerState.actions.itemLoadComplete({ player }));
 		dispatch(
+			mixerState.actions.setTimeCurrent({
+				player,
+				time: 0
+			})
+		);
+		dispatch(
 			mixerState.actions.setTimeLength({
 				player,
 				time: wavesurfer.getDuration()
@@ -315,9 +334,10 @@ export const load = (
 		console.log(item);
 		if ("album" in item) {
 			//track
-			dispatch(
+			console.log(dispatch(
 				BroadcastState.tracklistStart(item.trackid)
-			);
+			));
+			//dispatch(mixerState.actions.setTracklistItemID({ player, id }));
 
 		}
 
@@ -334,6 +354,9 @@ export const load = (
 		dispatch(
 			mixerState.actions.setPlayerState({ player, state: "stopped" })
 		);
+		console.log(dispatch(
+			BroadcastState.tracklistEnd(0)
+		));
 		const state = getState().mixer.players[player];
 		if (state.repeat === "one") {
 			wavesurfer.play();
@@ -423,6 +446,11 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 		return;
 	}
 	wavesurfers[player].stop();
+
+	console.log(dispatch(
+		BroadcastState.tracklistEnd(0)
+	));
+
 };
 
 export const toggleAutoAdvance = (player: number): AppThunk => dispatch => {
