@@ -292,16 +292,18 @@ function LibraryColumn() {
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
   const [gotMicList, setGotMicList] = useState(false);
-  var micList: MediaDeviceInfo[] = []
+  const dummylist: MediaDeviceInfo[] = []
+  const [micList, setMicList] = useState(dummylist);
   const dispatch = useDispatch();
+  const [micSource, setMicSource] = useState("None")
 
   if (gotMicList == false){
     navigator.mediaDevices.enumerateDevices()
     .then((devices)=>{
-      micList = reduceToInputs(devices)
+      setMicList(reduceToInputs(devices))
       setGotMicList(true)
     })
-  .catch(() => {console.log("Could not fetch devices");})
+    .catch(() => {console.log("Could not fetch devices");})
   }
 
   function reduceToInputs(devices:MediaDeviceInfo[]){
@@ -327,12 +329,18 @@ function MicControl() {
       <select
         className="form-control"
         style={{ width: "100%" }}
-        value={"None"}
+        value={micSource}
+        onChange={e => setMicSource(e.target.value)}
       >
         <option value={"None"} disabled>
           Choose a microphone
         </option>
-        {Object.keys(AUX_LIBRARIES).map(libId => <option key={libId} value={libId}>{AUX_LIBRARIES[libId]}</option>)}
+        {
+          micList.map(function(device) {
+            console.log("when rendering list: ", micList)
+            return <option value={device.deviceId}>{device.label}</option>;
+          })
+        }
       </select>
 
       {state.openError !== null && (
