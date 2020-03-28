@@ -32,6 +32,10 @@ let micCompressor: DynamicsCompressorNode | null = null;
 // TODO
 // const destination = audioContext.createWebcastSource(4096, 2);
 const destination = audioContext.createDynamicsCompressor();
+destination.ratio.value = 20 //brickwall destination comressor
+destination.threshold.value = -0.5
+destination.attack.value = 0
+destination.release.value = .2
 destination.connect(audioContext.destination);
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
@@ -543,6 +547,10 @@ export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
 	micSource = audioContext.createMediaStreamSource(micMedia);
 	micGain = audioContext.createGain();
 	micCompressor = audioContext.createDynamicsCompressor();
+	micCompressor.ratio.value = 3 // mic compressor - fairly gentle, can be upped
+	micCompressor.threshold.value = -18
+	micCompressor.attack.value = .01
+	micCompressor.release.value = .1
 	// TODO: for testing we're connecting mic output to main out
 	// When streaming works we don't want to do this, because the latency is high enough to speech-jam
 	micSource
