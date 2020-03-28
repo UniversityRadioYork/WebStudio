@@ -292,15 +292,26 @@ function LibraryColumn() {
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
   const [gotMicList, setGotMicList] = useState(false);
+  var micList: MediaDeviceInfo[] = []
   const dispatch = useDispatch();
 
   if (gotMicList == false){
-    console.log(navigator.mediaDevices.enumerateDevices())
-    setGotMicList(true)
+    navigator.mediaDevices.enumerateDevices()
+    .then((devices)=>{
+      micList = reduceToInputs(devices)
+      setGotMicList(true)
+    })
+  .catch(() => {console.log("Could not fetch devices");})
   }
 
-  function reduceToInputs(){
-    
+  function reduceToInputs(devices:MediaDeviceInfo[]){
+    var temp: MediaDeviceInfo[] = []
+    devices.forEach((device)=>{
+      if (device.kind == "audioinput") {
+        temp.push(device)
+      }
+    })
+    return temp
   }
 
   return (
