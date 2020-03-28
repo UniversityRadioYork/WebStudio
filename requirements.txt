@@ -1,0 +1,13 @@
+aioice==0.6.18
+aiortc==0.9.27
+av==7.0.1
+cffi==1.14.0
+crc32c==2.0
+cryptography==2.8
+JACK-Client==0.5.2
+netifaces==0.10.9
+pycparser==2.20
+pyee==7.0.1
+pylibsrtp==0.6.6
+six==1.14.0
+websockets==8.1

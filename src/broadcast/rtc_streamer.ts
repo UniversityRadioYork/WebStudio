@@ -1,8 +1,10 @@
-import { Streamer, ConnectionStateListener, ConnectionStateEnum } from "./streamer";
+import {
+	Streamer,
+	ConnectionStateListener,
+	ConnectionStateEnum
+} from "./streamer";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
-
-
 
 export class WebRTCStreamer extends Streamer {
 	pc: RTCPeerConnection;
@@ -11,7 +13,26 @@ export class WebRTCStreamer extends Streamer {
 
 	constructor(stream: MediaStream) {
 		super();
-		this.pc = new RTCPeerConnection({});
+		this.pc = new RTCPeerConnection({
+			iceServers: [
+				{
+					urls: ["stun:eu-turn4.xirsys.com"]
+				},
+				{
+					username:
+						"h42bRBHL2GtRTiQRoXN8GCG-PFYMl4Acel6EQ9xINBWdTpoZyBEGyCcJBCtT3iINAAAAAF5_NJptYXJrc3BvbGFrb3Zz",
+					credential: "17e834fa-70e7-11ea-a66c-faa4ea02ad5c",
+					urls: [
+						"turn:eu-turn4.xirsys.com:80?transport=udp",
+						"turn:eu-turn4.xirsys.com:3478?transport=udp",
+						"turn:eu-turn4.xirsys.com:80?transport=tcp",
+						"turn:eu-turn4.xirsys.com:3478?transport=tcp",
+						"turns:eu-turn4.xirsys.com:443?transport=tcp",
+						"turns:eu-turn4.xirsys.com:5349?transport=tcp"
+					]
+				}
+			]
+		});
 		this.pc.onconnectionstatechange = e => {
 			console.log("Connection state change: " + this.pc.connectionState);
 			this.onStateChange(this.mapStateToConnectionState());
@@ -21,7 +42,7 @@ export class WebRTCStreamer extends Streamer {
 	}
 
 	async start(): Promise<void> {
-        this.ws = new WebSocket("ws://audio.ury.org.uk/webstudio/stream"); // TODO
+		this.ws = new WebSocket("ws://audio.ury.org.uk/webstudio/stream"); // TODO
 		this.ws.onopen = e => {
 			console.log("WS open");
 			this.onStateChange(this.mapStateToConnectionState());
@@ -31,14 +52,14 @@ export class WebRTCStreamer extends Streamer {
 			this.onStateChange(this.mapStateToConnectionState());
 		};
 		this.ws.addEventListener("message", this.onMessage.bind(this));
-    }
-    
-    async stop(): Promise<void> {
-        if (this.ws) {
+	}
+
+	async stop(): Promise<void> {
+		if (this.ws) {
 			this.ws.close();
 		}
 		this.pc.close();
-    }
+	}
 
 	async onMessage(evt: MessageEvent) {
 		const data = JSON.parse(evt.data);
@@ -94,18 +115,27 @@ export class WebRTCStreamer extends Streamer {
 
 	mapStateToConnectionState(): ConnectionStateEnum {
 		switch (this.pc.connectionState) {
-			case "connected": return "CONNECTED";
-			case "connecting": return "CONNECTING";
-			case "disconnected": return "CONNECTION_LOST";
-			case "failed": return "CONNECTION_LOST";
+			case "connected":
+				return "CONNECTED";
+			case "connecting":
+				return "CONNECTING";
+			case "disconnected":
+				return "CONNECTION_LOST";
+			case "failed":
+				return "CONNECTION_LOST";
 			default:
 				if (this.ws) {
 					switch (this.ws.readyState) {
-					case 1: return "CONNECTING";
-					case 2: case 3: return "CONNECTION_LOST";
-					case 0: return "NOT_CONNECTED";
-					default: throw new Error();
-				} 
+						case 1:
+							return "CONNECTING";
+						case 2:
+						case 3:
+							return "CONNECTION_LOST";
+						case 0:
+							return "NOT_CONNECTED";
+						default:
+							throw new Error();
+					}
 				}
 				return "NOT_CONNECTED";
 		}
