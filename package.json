@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^1.0.4",
+    "@types/dom-mediacapture-record": "^1.0.4",
     "@types/jest": "24.0.22",
     "@types/keymaster": "^1.6.28",
     "@types/lodash": "^4.14.149",
@@ -31,7 +32,7 @@
     "react-scripts": "3.2.0",
     "redux": "^4.0.4",
     "typescript": "3.7.2",
-    "wavesurfer.js": "^3.3.1"
+    "wavesurfer.js": "github.com/UniversityRadioYork/wavesurfer.js#ury"
   },
   "homepage": "https://ury.org.uk/webstudio",
   "scripts": {
