@@ -320,7 +320,7 @@ function MicControl() {
     <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
       <h2>Microphone</h2>
       <button
-        disabled={state.open}
+        disabled={state.id == micSource}
         onClick={() => dispatch(MixerState.openMicrophone(micSource))}
       >
         Open
