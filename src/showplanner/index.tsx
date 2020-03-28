@@ -291,7 +291,18 @@ function LibraryColumn() {
 
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
+  const [gotMicList, setGotMicList] = useState(false);
   const dispatch = useDispatch();
+
+  if (gotMicList == false){
+    console.log(navigator.mediaDevices.enumerateDevices())
+    setGotMicList(true)
+  }
+
+  function reduceToInputs(){
+    
+  }
+
   return (
     <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
       <h2>Microphone</h2>
