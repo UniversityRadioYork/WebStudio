@@ -515,7 +515,7 @@ export const setVolume = (
 
 export const openMicrophone = (micID:string): AppThunk => async (dispatch, getState) => {
 	if (getState().mixer.mic.open) {
-		return;
+		micSource?.disconnect()
 	}
 	dispatch(mixerState.actions.setMicError(null));
 	if (!("mediaDevices" in navigator)) {
