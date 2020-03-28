@@ -139,6 +139,7 @@ const mixerState = createSlice({
 			state.players[action.payload.player].loading = true;
 			state.players[action.payload.player].timeCurrent = 0;
 			state.players[action.payload.player].timeLength = 0;
+			state.players[action.payload.player].tracklistItemID = -1;
 		},
 		itemLoadComplete(state, action: PayloadAction<{ player: number }>) {
 			state.players[action.payload.player].loading = false;
@@ -331,16 +332,6 @@ export const load = (
 		dispatch(
 			mixerState.actions.setPlayerState({ player, state: "playing" })
 		);
-		console.log(item);
-		if ("album" in item) {
-			//track
-			console.log(dispatch(
-				BroadcastState.tracklistStart(item.trackid)
-			));
-			//dispatch(mixerState.actions.setTracklistItemID({ player, id }));
-
-		}
-
 	});
 	wavesurfer.on("pause", () => {
 		dispatch(
@@ -413,11 +404,21 @@ export const play = (player: number): AppThunk => (dispatch, getState) => {
 		console.log("nothing loaded");
 		return;
 	}
-	if (getState().mixer.players[player].loading) {
+	var state = getState().mixer.players[player];
+	if (state.loading) {
 		console.log("not ready");
 		return;
 	}
 	wavesurfers[player].play();
+
+	if (state.loadedItem && "album" in state.loadedItem) {
+		//track
+		dispatch(
+			BroadcastState.tracklistStart(player, state.loadedItem.trackid)
+		);
+		//dispatch(mixerState.actions.setTracklistItemID({ player, id }));
+
+	}
 };
 
 export const pause = (player: number): AppThunk => (dispatch, getState) => {
@@ -441,15 +442,18 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 		console.log("nothing loaded");
 		return;
 	}
-	if (getState().mixer.players[player].loading) {
+	var state = getState().mixer.players[player];
+	if (state.loading) {
 		console.log("not ready");
 		return;
 	}
 	wavesurfers[player].stop();
 
-	console.log(dispatch(
-		BroadcastState.tracklistEnd(0)
-	));
+	if (state.tracklistItemID !== -1) {
+		dispatch(
+			BroadcastState.tracklistEnd(state.tracklistItemID)
+		);
+	}
 
 };
 
