@@ -51,7 +51,7 @@ export const tracklistStart = (player: number, trackid: number): AppThunk =>asyn
 export const tracklistEnd = (tracklistitemid: number): AppThunk => async (dispatch, getState) => {
   console.log("Attempting to end tracklistitem: " + tracklistitemid);
   if (getState().broadcast.tracklisting) {
-    myradioApiRequest("/tracklistItem/" + tracklistitemid + "/endtime", "PUT", null);
+    myradioApiRequest("/tracklistItem/" + tracklistitemid + "/endtime", "PUT", {});
   }
 };
 
