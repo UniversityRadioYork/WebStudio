@@ -8,22 +8,32 @@ import {
 } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { Track, myradioApiRequest } from "../api";
+import { WebRTCStreamer } from "./rtc_streamer";
+import { destination } from "../mixer/state";
+import { ConnectionStateEnum, Streamer } from "./streamer";
+import { RecordingStreamer } from "./recording_streamer";
 
+let streamer: Streamer | null = null;
 
 interface BroadcastState {
   tracklisting: boolean;
+  connectionState: ConnectionStateEnum;
 }
 
 const broadcastState = createSlice({
   name: "Broadcast",
   initialState: {
-    tracklisting: false
+    tracklisting: false,
+    connectionState: "NOT_CONNECTED"
   } as BroadcastState,
   reducers: {
     setTracklisting(
       state
     ) {
       state.tracklisting = !state.tracklisting;
+    },
+    setConnectionState(state, action: PayloadAction<ConnectionStateEnum>) {
+      state.connectionState = action.payload;
     }
   }
 });
@@ -55,8 +65,6 @@ export const tracklistEnd = (tracklistitemid: number): AppThunk => async (dispat
   }
 };
 
-
-
 export function sendTracklistStart(
   trackid: number
 ): Promise<TrackListItem> {
@@ -67,3 +75,19 @@ export function sendTracklistStart(
     state: 'c'
   })
 };
+
+export const connect = (): AppThunk => async dispatch => {
+  streamer = new WebRTCStreamer(destination.stream);
+  streamer.addConnectionStateListener(state => {
+    dispatch(broadcastState.actions.setConnectionState(state));
+  });
+  await streamer.start();
+};
+
+export const disconnect = (): AppThunk => async dispatch => {
+  if (streamer) {
+    await streamer.stop();
+  } else {
+    console.warn("disconnect called with no streamer!");
+  }
+}
