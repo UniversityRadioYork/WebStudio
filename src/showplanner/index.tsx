@@ -3,6 +3,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { ContextMenu, ContextMenuTrigger, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
+import { MYRADIO_NON_API_BASE } from "../api"
 
 import {
   showPlanResource,
@@ -329,9 +330,10 @@ function MicControl() {
 }
 
 function NavBar() {
-  const userName = "Matthew Stratford";
   const dispatch = useDispatch();
+  const sessionState = useSelector((state: RootState) => state.session);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
+  const redirect_url = encodeURI(window.location.toString());
   return (
     <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
       <nav className="container">
@@ -367,36 +369,34 @@ function NavBar() {
           <li className="nav-item">
             <a
               className="nav-link"
-              target="_blank"
-              href="https://ury.org.uk/myradio/MyRadio/timeslot/?next=/webstudio"
+              href={MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url}
             >
-              <span className="fa fa-clock-o"></span>&nbsp; Timeslot Time
+              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot?.timeStr}
             </a>
           </li>
           <li className="nav-item dropdown">
             <a
               className="nav-link dropdown-toggle"
-              href="https://ury.org.uk/myradio/Profile/default/"
+              href={MYRADIO_NON_API_BASE + "/Profile/default/"}
               id="dropdown07"
               data-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false"
             >
-              <span className="fa fa-user-o"></span>&nbsp;
-              {userName}
+              <i className="fa fa-user-o"></i>&nbsp;
+              {sessionState.currentUser?.fname} {sessionState.currentUser?.sname}
             </a>
             <div className="dropdown-menu" aria-labelledby="dropdown07">
               <a
                 className="dropdown-item"
                 target="_blank"
-                href="https://ury.org.uk/myradio/Profile/default/"
+                href={MYRADIO_NON_API_BASE + "/Profile/default/"}
               >
                 My Profile
               </a>
               <a
                 className="dropdown-item"
-                target="_blank"
-                href="https://ury.org.uk/myradio/MyRadio/logout/"
+                href={MYRADIO_NON_API_BASE + "/MyRadio/logout/"}
               >
                 Logout
               </a>
@@ -427,7 +427,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
-  }, [timeslotId]);
+  }, [dispatch, timeslotId]);
+
+
 
   function toggleSidebar() {
     var element = document.getElementById("sidebar");

@@ -210,3 +210,44 @@ export function updateShowplan(
     set: ops
   });
 }
+
+
+
+export interface Timeslot {
+  timeslotid: number,
+  time: number,
+  timeStr: string
+
+}
+
+
+
+export function getCurrentAPITimeslot(): Promise<Timeslot> {
+  return myradioApiRequest(`/timeslot/userselectedtimeslot`, "GET", {}
+  ).then(res => {
+    console.log(res);
+    return res;
+  });
+};
+
+
+export interface User {
+  memberid: number,
+  fname: string,
+  sname: string,
+  url: string,
+  photo: string
+
+}
+
+
+
+export function getCurrentAPIUser(): Promise<User> {
+  return myradioApiRequest(`/user/currentuser`, "GET", {}
+  ).then(res => {
+    console.log(res);
+    return res;
+  });
+};
+
+
