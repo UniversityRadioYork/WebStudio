@@ -37,11 +37,11 @@ const SessionHandler: React.FC<{ }> = function () {
     timeslotLoadError
   } = useSelector((state: RootState) => state.session);
 
-  var redirect_url = encodeURI(window.location.toString());
+  var redirect_url = encodeURIComponent(window.location.toString());
   if (currentUser === null) {
     return (
       <div className="sp-container">
-        <h1>Getting User Data...</h1>
+        <h1>Getting user data...</h1>
         {(userLoading) && (
           <b>Your data is loading, please wait just a second...</b>
         )}

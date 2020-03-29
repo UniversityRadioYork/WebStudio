@@ -172,7 +172,7 @@ function NavBar() {
   const dispatch = useDispatch();
   const sessionState = useSelector((state: RootState) => state.session);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
-  const redirect_url = encodeURI(window.location.toString());
+  const redirect_url = encodeURIComponent(window.location.toString());
   return (
     <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
       <nav className="container">
@@ -367,7 +367,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   if (showplan === null) {
     return (
       <div className="sp-container">
-        <h1>Show Planner</h1>
+        <h1>Getting show plan...</h1>
         {planLoading && (
           <b>Your plan is loading, please wait just a second...</b>
         )}
