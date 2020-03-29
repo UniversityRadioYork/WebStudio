@@ -23,6 +23,7 @@ const playerGainTweens: Array<{
 	target: VolumePresetEnum;
 	tweens: Between[];
 }> = [];
+const loadAbortControllers: AbortController[] = [];
 
 let micMedia: MediaStream | null = null;
 let micSource: MediaStreamAudioSourceNode | null = null;
@@ -30,16 +31,15 @@ let micGain: GainNode | null = null;
 let micCompressor: DynamicsCompressorNode | null = null;
 
 const finalCompressor = audioContext.createDynamicsCompressor();
-finalCompressor.ratio.value = 20 //brickwall destination comressor
-finalCompressor.threshold.value = -0.5
-finalCompressor.attack.value = 0
-finalCompressor.release.value = .2
+finalCompressor.ratio.value = 20; //brickwall destination comressor
+finalCompressor.threshold.value = -0.5;
+finalCompressor.attack.value = 0;
+finalCompressor.release.value = 0.2;
 finalCompressor.connect(audioContext.destination);
 
 export const destination = audioContext.createMediaStreamDestination();
 console.log("final destination", destination);
 finalCompressor.connect(destination);
-
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
@@ -50,6 +50,7 @@ type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 interface PlayerState {
 	loadedItem: PlanItem | Track | AuxItem | null;
 	loading: boolean;
+	loadError: boolean;
 	state: PlayerStateEnum;
 	volume: number;
 	gain: number;
@@ -92,7 +93,8 @@ const mixerState = createSlice({
 				playOnLoad: false,
 				autoAdvance: true,
 				repeat: "none",
-				tracklistItemID: -1
+				tracklistItemID: -1,
+				loadError: false
 			},
 			{
 				loadedItem: null,
@@ -107,7 +109,8 @@ const mixerState = createSlice({
 				playOnLoad: false,
 				autoAdvance: true,
 				repeat: "none",
-				tracklistItemID: -1
+				tracklistItemID: -1,
+				loadError: false
 			},
 			{
 				loadedItem: null,
@@ -122,7 +125,8 @@ const mixerState = createSlice({
 				playOnLoad: false,
 				autoAdvance: true,
 				repeat: "none",
-				tracklistItemID: -1
+				tracklistItemID: -1,
+				loadError: false
 			}
 		],
 		mic: {
@@ -135,7 +139,10 @@ const mixerState = createSlice({
 	reducers: {
 		loadItem(
 			state,
-			action: PayloadAction<{ player: number; item: PlanItem | Track | AuxItem }>
+			action: PayloadAction<{
+				player: number;
+				item: PlanItem | Track | AuxItem;
+			}>
 		) {
 			state.players[action.payload.player].loadedItem =
 				action.payload.item;
@@ -143,9 +150,14 @@ const mixerState = createSlice({
 			state.players[action.payload.player].timeCurrent = 0;
 			state.players[action.payload.player].timeLength = 0;
 			state.players[action.payload.player].tracklistItemID = -1;
+			state.players[action.payload.player].loadError = false;
 		},
 		itemLoadComplete(state, action: PayloadAction<{ player: number }>) {
 			state.players[action.payload.player].loading = false;
+		},
+		itemLoadError(state, action: PayloadAction<{ player: number }>) {
+			state.players[action.payload.player].loading = false;
+			state.players[action.payload.player].loadError = true;
 		},
 		setPlayerState(
 			state,
@@ -250,11 +262,12 @@ const mixerState = createSlice({
 		setTracklistItemID(
 			state,
 			action: PayloadAction<{
-				player: number,
-				id: number
+				player: number;
+				id: number;
 			}>
 		) {
-			state.players[action.payload.player].tracklistItemID = action.payload.id;
+			state.players[action.payload.player].tracklistItemID =
+				action.payload.id;
 		}
 	}
 });
@@ -271,6 +284,12 @@ export const load = (
 			return;
 		}
 	}
+	// If we're already loading something, abort it
+	if (typeof loadAbortControllers[player] !== "undefined") {
+		loadAbortControllers[player].abort();
+	}
+	loadAbortControllers[player] = new AbortController();
+
 	dispatch(mixerState.actions.loadItem({ player, item }));
 
 	let url;
@@ -348,16 +367,16 @@ export const load = (
 		dispatch(
 			mixerState.actions.setPlayerState({ player, state: "stopped" })
 		);
-		console.log(dispatch(
-			BroadcastState.tracklistEnd(0)
-		));
+		console.log(dispatch(BroadcastState.tracklistEnd(0)));
 		const state = getState().mixer.players[player];
 		if (state.repeat === "one") {
 			wavesurfer.play();
 		} else if (state.repeat === "all") {
 			if ("channel" in item) {
 				// it's not in the CML/libraries "column"
-				const itsChannel = getState().showplan.plan!.filter(x => x.channel === item.channel);
+				const itsChannel = getState().showplan.plan!.filter(
+					x => x.channel === item.channel
+				);
 				const itsIndex = itsChannel.indexOf(item);
 				if (itsIndex === itsChannel.length - 1) {
 					dispatch(load(player, itsChannel[0]));
@@ -366,7 +385,9 @@ export const load = (
 		} else if (state.autoAdvance) {
 			if ("channel" in item) {
 				// it's not in the CML/libraries "column"
-				const itsChannel = getState().showplan.plan!.filter(x => x.channel === item.channel);
+				const itsChannel = getState().showplan.plan!.filter(
+					x => x.channel === item.channel
+				);
 				const itsIndex = itsChannel.indexOf(item);
 				if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
 					dispatch(load(player, itsChannel[itsIndex + 1]));
@@ -390,20 +411,38 @@ export const load = (
 		}
 	});
 
-	const result = await fetch(url, { credentials: "include" });
-	const rawData = await result.arrayBuffer();
-	const blob = new Blob([rawData]);
-	const objectUrl = URL.createObjectURL(blob);
+	try {
+		const signal = loadAbortControllers[player].signal; // hang on to the signal, even if its controller gets replaced
+		const result = await fetch(url, {
+			credentials: "include",
+			signal
+		});
+		const rawData = await result.arrayBuffer();
+		const blob = new Blob([rawData]);
+		const objectUrl = URL.createObjectURL(blob);
 
-	const audio = new Audio(objectUrl);
+		const audio = new Audio(objectUrl);
 
-	wavesurfer.load(audio);
+		wavesurfer.load(audio);
 
-	// THIS IS BAD
-	(wavesurfer as any).backend.gainNode.disconnect();
-	(wavesurfer as any).backend.gainNode.connect(finalCompressor);
+		// THIS IS BAD
+		(wavesurfer as any).backend.gainNode.disconnect();
+		(wavesurfer as any).backend.gainNode.connect(finalCompressor);
 
-	wavesurfers[player] = wavesurfer;
+		// Double-check we haven't been aborted since
+		if (signal.aborted) {
+			throw new DOMException("abort load", "AbortError");
+		}
+
+		wavesurfers[player] = wavesurfer;
+	} catch (e) {
+		if ("name" in e && e.name === "AbortError") {
+			// load was aborted, ignore the error
+		} else {
+			console.error(e);
+			dispatch(mixerState.actions.itemLoadError({ player }));
+		}
+	}
 };
 
 export const play = (player: number): AppThunk => (dispatch, getState) => {
@@ -424,7 +463,6 @@ export const play = (player: number): AppThunk => (dispatch, getState) => {
 			BroadcastState.tracklistStart(player, state.loadedItem.trackid)
 		);
 		//dispatch(mixerState.actions.setTracklistItemID({ player, id }));
-
 	}
 };
 
@@ -457,11 +495,8 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 	wavesurfers[player].stop();
 
 	if (state.tracklistItemID !== -1) {
-		dispatch(
-			BroadcastState.tracklistEnd(state.tracklistItemID)
-		);
+		dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
 	}
-
 };
 
 export const toggleAutoAdvance = (player: number): AppThunk => dispatch => {
@@ -587,10 +622,10 @@ export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
 	micSource = audioContext.createMediaStreamSource(micMedia);
 	micGain = audioContext.createGain();
 	micCompressor = audioContext.createDynamicsCompressor();
-	micCompressor.ratio.value = 3 // mic compressor - fairly gentle, can be upped
-	micCompressor.threshold.value = -18
-	micCompressor.attack.value = .01
-	micCompressor.release.value = .1
+	micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
+	micCompressor.threshold.value = -18;
+	micCompressor.attack.value = 0.01;
+	micCompressor.release.value = 0.1;
 	// TODO: for testing we're connecting mic output to main out
 	// When streaming works we don't want to do this, because the latency is high enough to speech-jam
 	micSource
