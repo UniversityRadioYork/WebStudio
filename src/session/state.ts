@@ -3,7 +3,7 @@ import {
   PayloadAction
 } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
-import { User, getCurrentAPIUser, Timeslot, getCurrentAPITimeslot } from "../api";
+import { User, getCurrentApiUser, Timeslot, getCurrentApiTimeslot } from "../api";
 import { timestampToDateTime } from "../utils";
 
 
@@ -83,7 +83,7 @@ export const getCurrentUser = (
 export const getUser = (): AppThunk => async dispatch => {
   dispatch(sessionState.actions.getUserStarting());
   try {
-    const user = await getCurrentAPIUser();
+    const user = await getCurrentApiUser();
     dispatch(sessionState.actions.getUserSuccess(user));
   } catch (e) {
     console.log("failed to get user. " + e.toString())
@@ -94,7 +94,7 @@ export const getUser = (): AppThunk => async dispatch => {
 export const getTimeslot = (): AppThunk => async dispatch => {
   dispatch(sessionState.actions.getTimeslotStarting());
   try {
-    const timeslot = await getCurrentAPITimeslot();
+    const timeslot = await getCurrentApiTimeslot();
     dispatch(sessionState.actions.getTimeslotSuccess(timeslot));
   } catch (e) {
     console.log("failed to get selected timeslot. " + e.toString())
