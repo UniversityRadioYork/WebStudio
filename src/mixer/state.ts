@@ -435,6 +435,7 @@ export const load = (
 		}
 
 		wavesurfers[player] = wavesurfer;
+		delete loadAbortControllers[player];
 	} catch (e) {
 		if ("name" in e && e.name === "AbortError") {
 			// load was aborted, ignore the error
