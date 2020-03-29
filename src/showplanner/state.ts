@@ -79,6 +79,7 @@ const showplan = createSlice({
       if (!state.plan) {
         return;
       }
+      console.log("Applying op sequence", action.payload);
       action.payload.forEach(op => {
         switch (op.op) {
           case "MoveItem":
@@ -347,7 +348,7 @@ export const removeItem = (
     const movingItem = planColumn[i];
     ops.push({
       op: "MoveItem",
-      timeslotitemid: itemId(item),
+      timeslotitemid: itemId(movingItem),
       oldchannel: item.channel,
       oldweight: item.weight,
       channel: item.channel,
@@ -400,7 +401,8 @@ export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {
     }
 
     if (ops.length > 0) {
-      console.log("Is corrupt, but we're not going to repair it :)")
+      console.log("Is corrupt, repairing locally")
+      dispatch(showplan.actions.applyOps(ops));
       /*
       console.log("Repairing showplan", ops);
       const updateResult = await api.updateShowplan(timeslotId, ops);
