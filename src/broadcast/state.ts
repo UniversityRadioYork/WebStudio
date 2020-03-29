@@ -46,8 +46,8 @@ export const { toggleTracklisting } = broadcastState.actions;
 export const tracklistStart = (player: number, trackid: number): AppThunk =>async (dispatch, getState) => {
   if (getState().broadcast.tracklisting) {
     console.log("Attempting to tracklist: " + trackid);
-    var tracklistitemid = (await sendTracklistStart(trackid)).audiologid;
-    dispatch(MixerState.setTracklistItemID(player, tracklistitemid))
+    var id = (await sendTracklistStart(trackid)).audiologid;
+    dispatch(MixerState.setTracklistItemID({player, id}))
   }
 };
 
