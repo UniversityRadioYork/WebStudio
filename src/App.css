@@ -64,13 +64,13 @@
   transition: all 0.3s;
 }
 .sidebar-toggle {
-  flex-shrink: 1;
   flex-grow: 0;
   width: auto;
 
 }
 .sidebar-toggle .btn {
-    text-orientation: sideways;
+  writing-mode: vertical-rl;
+  flex: 1;
 }
 
 .sp-main-col.active {
@@ -405,6 +405,7 @@ button{
   position: absolute;
   height: 6vh;
   width: 100%;
+  overflow: hidden;
 }
 .waveform .graph wave {
   height: 6vh !important;
