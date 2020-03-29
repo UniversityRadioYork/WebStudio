@@ -226,13 +226,27 @@ function NavBar() {
               {broadcastState.connectionState}
             </button>
           </li>
-          <li className="nav-item">
+          <li className="nav-item dropdown">
             <a
-              className="nav-link"
+              className="nav-link dropdown-toggle"
               href={MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url}
+              id="timeslotDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
             >
-              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot?.timeStr}
+              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot?.starttimeStr}
             </a>
+            <div className="dropdown-menu" aria-labelledby="timeslotDropdown">
+              <a
+                className="dropdown-item"
+                href={MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url}
+              >
+                Switch Timeslot
+              </a>
+              <h6 className="dropdown-header">{sessionState.currentTimeslot?.title}</h6>
+              <h6 className="dropdown-header">ID: {sessionState.currentTimeslot?.timeslotid}</h6>
+            </div>
           </li>
           <li className="nav-item dropdown">
             <a

@@ -53,7 +53,7 @@ const sessionState = createSlice({
       state.timeslotLoadError = null;
       state.currentTimeslot = action.payload;
       if (action.payload != null) {
-        state.currentTimeslot.timeStr = timestampToDateTime(action.payload.time);
+        state.currentTimeslot.starttimeStr = timestampToDateTime(action.payload.starttime);
       }
     },
     getTimeslotError(state, action: PayloadAction<string>) {
