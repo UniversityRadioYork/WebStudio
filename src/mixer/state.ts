@@ -388,8 +388,10 @@ export const load = (
 		dispatch(
 			mixerState.actions.setPlayerState({ player, state: "stopped" })
 		);
-		console.log(dispatch(BroadcastState.tracklistEnd(0)));
 		const state = getState().mixer.players[player];
+		if (state.tracklistItemID !== -1) {
+			dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
+		}
 		if (state.repeat === "one") {
 			wavesurfer.play();
 		} else if (state.repeat === "all") {
