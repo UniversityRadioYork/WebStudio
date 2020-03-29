@@ -64,7 +64,7 @@ interface MicState {
 	openError: null | MicErrorEnum;
 	volume: number;
 	gain: number;
-	id:string;
+	id: string | null;
 }
 
 interface MixerState {
@@ -124,7 +124,7 @@ const mixerState = createSlice({
 			volume: 1,
 			gain: 1,
 			openError: null,
-			id: "None"
+			id: null
 		}
 	} as MixerState,
 	reducers: {
@@ -168,9 +168,9 @@ const mixerState = createSlice({
 		setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
 			state.mic.openError = action.payload;
 		},
-		micOpen(state, micID) {
+		micOpen(state, action) {
 			state.mic.open = true;
-			state.mic.id = micID.payload;
+			state.mic.id = action.payload;
 		},
 		setMicLevels(
 			state,

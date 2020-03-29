@@ -291,21 +291,18 @@ function LibraryColumn() {
 
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
-  const [gotMicList, setGotMicList] = useState(false);
-  const dummylist: MediaDeviceInfo[] = []
-  const [micList, setMicList] = useState(dummylist);
+  const [micList, setMicList] = useState<MediaDeviceInfo[]>([]);
   const dispatch = useDispatch();
-  const [micSource, setMicSource] = useState("None")
+  const [nextMicSource, setNextMicSource] = useState("None") // next mic source
   const [lock, setLock] = useState(false)
 
-  if (gotMicList == false){
+  useEffect(()=>{
     navigator.mediaDevices.enumerateDevices()
     .then((devices)=>{
       setMicList(reduceToInputs(devices))
-      setGotMicList(true)
     })
     .catch(() => {console.log("Could not fetch devices");})
-  }
+  }, [])
 
   function reduceToInputs(devices:MediaDeviceInfo[]){
     var temp: MediaDeviceInfo[] = []
@@ -323,8 +320,8 @@ function MicControl() {
     <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
       <h2>Microphone</h2>
       <button
-        disabled={state.id == micSource || lock}
-        onClick={() => dispatch(MixerState.openMicrophone(micSource))}
+        disabled={state.id == nextMicSource || lock}
+        onClick={() => dispatch(MixerState.openMicrophone(nextMicSource))}
       >
         Open
       </button>
@@ -335,8 +332,8 @@ function MicControl() {
       <select
         className="form-control"
         style={{ width: "100%" }}
-        value={micSource}
-        onChange={e => setMicSource(e.target.value)}
+        value={nextMicSource}
+        onChange={e => setNextMicSource(e.target.value)}
       >
         <option value={"None"} disabled label="Choose a microphone"></option>
         {
