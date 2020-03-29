@@ -66,7 +66,7 @@ const SessionHandler: React.FC<{ }> = function () {
     );
   }
 
-  return (<p>loaded</p>);
+  return (null);
 };
 
 export default SessionHandler;
