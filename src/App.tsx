@@ -60,7 +60,7 @@ const App: React.FC = () => {
     } else {
       return (
         <div style={{marginLeft:"1.5%"}}>
-          <h1>Welcome to Web Studio</h1>
+          <h1>Welcome to WebStudio</h1>
           <input
             type="text"
             placeholder="enter a timeslot id"
