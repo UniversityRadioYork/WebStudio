@@ -23,7 +23,7 @@ const broadcastState = createSlice({
     connectionState: "NOT_CONNECTED"
   } as BroadcastState,
   reducers: {
-    setTracklisting(
+    toggleTracklisting(
       state
     ) {
       state.tracklisting = !state.tracklisting;
@@ -41,11 +41,7 @@ export interface TrackListItem {
   audiologid: number
 }
 
-
-export const toggleTracklisting = (): AppThunk => dispatch => {
-  console.log("Toggled tracklisting.");
-  dispatch(broadcastState.actions.setTracklisting());
-};
+export const { toggleTracklisting } = broadcastState.actions;
 
 export const tracklistStart = (player: number, trackid: number): AppThunk =>async (dispatch, getState) => {
   if (getState().broadcast.tracklisting) {

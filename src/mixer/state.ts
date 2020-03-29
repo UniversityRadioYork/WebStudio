@@ -225,7 +225,7 @@ const mixerState = createSlice({
 			state.players[action.payload.player].timeLength =
 				action.payload.time;
 		},
-		setAutoAdvance(
+		toggleAutoAdvance(
 			state,
 			action: PayloadAction<{
 				player: number;
@@ -235,7 +235,7 @@ const mixerState = createSlice({
 				action.payload.player
 			].autoAdvance;
 		},
-		setPlayOnLoad(
+		togglePlayOnLoad(
 			state,
 			action: PayloadAction<{
 				player: number;
@@ -245,7 +245,7 @@ const mixerState = createSlice({
 				action.payload.player
 			].playOnLoad;
 		},
-		setRepeat(
+		toggleRepeat(
 			state,
 			action: PayloadAction<{
 				player: number;
@@ -486,7 +486,6 @@ export const play = (player: number): AppThunk => (dispatch, getState) => {
 		dispatch(
 			BroadcastState.tracklistStart(player, state.loadedItem.trackid)
 		);
-		//dispatch(mixerState.actions.setTracklistItemID({ player, id }));
 	}
 };
 
@@ -523,17 +522,7 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 	}
 };
 
-export const toggleAutoAdvance = (player: number): AppThunk => dispatch => {
-	dispatch(mixerState.actions.setAutoAdvance({ player }));
-};
-
-export const togglePlayOnLoad = (player: number): AppThunk => dispatch => {
-	dispatch(mixerState.actions.setPlayOnLoad({ player }));
-};
-
-export const toggleRepeat = (player: number): AppThunk => dispatch => {
-	dispatch(mixerState.actions.setRepeat({ player }));
-};
+export const { toggleAutoAdvance, togglePlayOnLoad, toggleRepeat } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
 	wavesurfers.forEach(
@@ -543,9 +532,7 @@ export const redrawWavesurfers = (): AppThunk => () => {
 	)
 }
 
-export const setTracklistItemID = (player: number, tracklistitemid: number): AppThunk => (dispatch, getState) => {
-	dispatch(mixerState.actions.setTracklistItemID({player: player, id: tracklistitemid}));
-}
+export const { setTracklistItemID } = mixerState.actions;
 
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
