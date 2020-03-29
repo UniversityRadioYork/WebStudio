@@ -52,7 +52,9 @@ const sessionState = createSlice({
       state.timeslotLoading = false;
       state.timeslotLoadError = null;
       state.currentTimeslot = action.payload;
-      state.currentTimeslot.timeStr = timestampToDateTime(action.payload.time);
+      if (action.payload != null) {
+        state.currentTimeslot.timeStr = timestampToDateTime(action.payload.time);
+      }
     },
     getTimeslotError(state, action: PayloadAction<string>) {
       state.timeslotLoading = false;
