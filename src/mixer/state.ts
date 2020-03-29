@@ -535,6 +535,14 @@ export const toggleRepeat = (player: number): AppThunk => dispatch => {
 	dispatch(mixerState.actions.setRepeat({ player }));
 };
 
+export const redrawWavesurfers = (): AppThunk => () => {
+	wavesurfers.forEach(
+		function(item) {
+			item.drawBuffer();
+		}
+	)
+}
+
 export const setTracklistItemID = (player: number, tracklistitemid: number): AppThunk => (dispatch, getState) => {
 	dispatch(mixerState.actions.setTracklistItemID({player: player, id: tracklistitemid}));
 }
