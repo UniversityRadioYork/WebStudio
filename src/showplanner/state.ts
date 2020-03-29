@@ -1,4 +1,4 @@
-import { TimeslotItem, Track, Showplan, AuxItem } from "../api";
+import { TimeslotItem, Track, AuxItem } from "../api";
 import * as api from "../api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
