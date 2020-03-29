@@ -1,9 +1,24 @@
-// the rest of this is shamelessly stolen from
-// https://github.com/BrechtDeMan/WebAudioEvaluationTool/blob/master/js/loudness.js
+// @ts-ignore
+const LOCK_ON_FACTOR = 1.0 - 0.6;
+const LOCK_ON_TIME = 0.0025;
+const DROP_FACTOR = 10.0 ** (-24.0 / 20.0);
+const DROP_TIME = 2.8;
+const CLIP_PPM = 8.5;
+const SAMPLE_LIMIT = 1;
+const DB_PER_PPM = 4.0;
+const DB_CONST = 20.0;
+const SF = 48000;
 
+declare const sampleRate: number;
+
+type StereoModeEnum = "M3" | "M6" | "AB";
 // @ts-ignore
 class LoudnessProcessor extends AudioWorkletProcessor {
-    process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>) {
+    process(
+        inputs: Float32Array[][],
+        outputs: Float32Array[][],
+        parameters: Record<string, Float32Array>
+    ) {
         const sampleData = inputs[0];
         let peak = -Infinity;
         for (let channel = 0; channel < sampleData.length; channel++) {
@@ -23,88 +38,59 @@ class LoudnessProcessor extends AudioWorkletProcessor {
     }
 }
 
-// @ts-ignore
-registerProcessor("loudness-processor", LoudnessProcessor);
+class PeakProcessor extends AudioWorkletProcessor {
+    intermediateValue: number[] = [0.0, 0.0];
+    lockonfract = (1.0 - LOCK_ON_FACTOR) ** (1.0 / (sampleRate * LOCK_ON_TIME));
+    drop = DROP_FACTOR ** (1.0 / (sampleRate / DROP_TIME));
 
-function calculateMeanSquared(buffer: AudioBuffer, frame_dur: number, frame_overlap: number) {
-    var frame_size = Math.floor(buffer.sampleRate * frame_dur);
-    var step_size = Math.floor(frame_size * (1.0 - frame_overlap));
-    var num_frames = Math.floor((buffer.length - frame_size) / step_size);
-    num_frames = Math.max(num_frames, 1);
+    calcIntermediate(input: Float32Array[]) {
+        // Source of fun: the libbaptools implementation takes audio as a short
+        // while we get it as a float.
+        const result = [];
+        input.forEach((chData, chIndex) => {
+            let tempPpm = this.intermediateValue[chIndex];
 
-    var MS = Array(buffer.numberOfChannels);
-    for (var c = 0; c < buffer.numberOfChannels; c++) {
-        MS[c] = new Float32Array(num_frames);
-        var data = buffer.getChannelData(c);
-        for (var no = 0; no < num_frames; no++) {
-            MS[c][no] = 0.0;
-            for (var ptr = 0; ptr < frame_size; ptr++) {
-                var i = no * step_size + ptr;
-                if (i >= buffer.length) {
-                    break;
+            chData.forEach((value, sa) => {
+                if (Math.abs(value) > tempPpm) {
+                    tempPpm +=
+                        this.lockonfract * (Math.abs(value) - tempPpm);
                 }
-                var sample = data[i];
-                MS[c][no] += sample * sample;
-            }
-            MS[c][no] /= frame_size;
-        }
-    }
-    return MS;
-}
+            });
 
-function calculateLoudnessFromBlocks(blocks: number[][]) {
-    var num_frames = blocks[0].length;
-    var num_channels = blocks.length;
-    var MSL = Array(num_frames);
-    for (var n = 0; n < num_frames; n++) {
-        var sum = 0;
-        for (var c = 0; c < num_channels; c++) {
-            var G = 1.0;
-            if (G >= 3) {
-                G = 1.41;
-            }
-            sum += blocks[c][n] * G;
-        }
-        MSL[n] = -0.691 + 10 * Math.log10(sum);
-    }
-    return MSL;
-}
-
-function loudnessGate(blocks: number[], source: number[][], threshold: number) {
-    var num_frames = source[0].length;
-    var num_channels = source.length;
-    var LK = Array(num_channels);
-    var n, c;
-    for (c = 0; c < num_channels; c++) {
-        LK[c] = [];
+            tempPpm *= this.drop;
+            this.intermediateValue[chIndex] = tempPpm;
+        });
     }
 
-    for (n = 0; n < num_frames; n++) {
-        if (blocks[n] > threshold) {
-            for (c = 0; c < num_channels; c++) {
-                LK[c].push(source[c][n]);
-            }
+    convert(intermediate: number): number {
+        if (intermediate < 0.001) {
+            return 0;
         }
+        let ppmVal =
+            CLIP_PPM -
+            (DB_CONST / DB_PER_PPM) * Math.log10(SAMPLE_LIMIT / intermediate);
+        if (ppmVal < 1.0) {
+            ppmVal =
+                1.0 -
+                1.0 / (24.0 / DB_PER_PPM) +
+                (1.0 / (24.0 / DB_PER_PPM)) * ppmVal;
+        }
+        return ppmVal < 0.0 ? 0.0 : ppmVal;
     }
-    return LK;
+
+    process(
+        inputs: Float32Array[][],
+        outputs: Float32Array[][],
+        parameters: Record<string, Float32Array>
+    ) {
+        this.calcIntermediate(inputs[0]);
+        this.port.postMessage({
+            peak: this.convert(this.intermediateValue[0]),
+            loudness: this.intermediateValue[0]
+        });
+        return true;
+    }
 }
 
-function loudnessOfBlocks(blocks: number[][]) {
-    var num_frames = blocks[0].length;
-    var num_channels = blocks.length;
-    var loudness = 0.0;
-    for (var n = 0; n < num_frames; n++) {
-        var sum = 0;
-        for (var c = 0; c < num_channels; c++) {
-            var G = 1.0;
-            if (G >= 3) {
-                G = 1.41;
-            }
-            sum += blocks[c][n] * G;
-        }
-        sum /= num_frames;
-        loudness += sum;
-    }
-    loudness = -0.691 + 10 * Math.log10(loudness);
-    return loudness;
-}
+// @ts-ignore
+registerProcessor("loudness-processor", PeakProcessor);
