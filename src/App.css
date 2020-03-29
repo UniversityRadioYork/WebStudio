@@ -405,6 +405,7 @@ button{
   position: absolute;
   height: 6vh;
   width: 100%;
+  overflow: hidden;
 }
 .waveform .graph wave {
   height: 6vh !important;
