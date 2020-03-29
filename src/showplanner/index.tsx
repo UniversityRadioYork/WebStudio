@@ -311,6 +311,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     if (element) {
       element.classList.toggle("active");
     }
+    setTimeout(function () {dispatch(MixerState.redrawWavesurfers())}, 500);
   }
 
   const [insertIndex, increment] = useReducer(incrReducer, 0);
@@ -400,14 +401,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <Column id={1} data={showplan} />
           <Column id={2} data={showplan} />
           <div className="sp-main-col sidebar-toggle">
-            <button
+            <span
               id="sidebarCollapse"
-              className="btn btn-sm ml-auto"
-              type="button"
+              className="btn btn-outline-dark btn-sm mb-0"
               onClick={() => toggleSidebar()}
             >
-              <i className="fas fa-align-justify"></i> Show Sidebar
-            </button>
+              <i className="fas fa-align-justify mb-2"></i>Toggle Sidebar
+            </span>
           </div>
           <div id="sidebar" className="sp-main-col">
             <LibraryColumn />

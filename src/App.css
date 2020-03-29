@@ -64,13 +64,13 @@
   transition: all 0.3s;
 }
 .sidebar-toggle {
-  flex-shrink: 1;
   flex-grow: 0;
   width: auto;
 
 }
 .sidebar-toggle .btn {
-    text-orientation: sideways;
+  writing-mode: vertical-rl;
+  flex: 1;
 }
 
 .sp-main-col.active {
