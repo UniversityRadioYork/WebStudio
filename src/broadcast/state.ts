@@ -1,13 +1,8 @@
 import {
   createSlice,
-  PayloadAction,
-  Store,
-  Dispatch,
-  Action,
-  Middleware
 } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
-import { Track, myradioApiRequest } from "../api";
+import { myradioApiRequest } from "../api";
 
 
 interface BroadcastState {

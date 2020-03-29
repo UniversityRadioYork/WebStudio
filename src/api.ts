@@ -1,11 +1,10 @@
 import qs from "qs";
-import { convertModelToFormData, urlEncode } from "./lib/utils";
 
 export const MYRADIO_NON_API_BASE =
   process.env.REACT_APP_MYRADIO_NONAPI_BASE ||
-  "https://ury.org.uk/myradio-staging";
+  "https://ury.org.uk/myradio-dev";
 export const MYRADIO_BASE_URL =
-  process.env.REACT_APP_MYRADIO_BASE || "https://ury.org.uk/api-staging/v2";
+  process.env.REACT_APP_MYRADIO_BASE || "https://ury.org.uk/api-dev/v2";
 const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
 class ApiException extends Error {}
