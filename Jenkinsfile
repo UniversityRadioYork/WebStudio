@@ -25,6 +25,10 @@ pipeline {
     when {
       branch 'production'
     }
+    environment {
+      REACT_APP_MYRADIO_NONAPI_BASE = 'https://ury.org.uk/myradio'
+      REACT_APP_MYRADIO_BASE = 'https://ury.org.uk/api/v2'
+    }
     steps {
       sh 'sed -i -e \'s/ury.org.uk\\/webstudio-dev/ury.org.uk\\/webstudio/\' package.json'
       sh 'yarn build'
