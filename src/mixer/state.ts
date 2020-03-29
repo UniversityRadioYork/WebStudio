@@ -27,14 +27,17 @@ let micSource: MediaStreamAudioSourceNode | null = null;
 let micGain: GainNode | null = null;
 let micCompressor: DynamicsCompressorNode | null = null;
 
-// TODO
-// const destination = audioContext.createWebcastSource(4096, 2);
-const destination = audioContext.createDynamicsCompressor();
-destination.ratio.value = 20 //brickwall destination comressor
-destination.threshold.value = -0.5
-destination.attack.value = 0
-destination.release.value = .2
-destination.connect(audioContext.destination);
+const finalCompressor = audioContext.createDynamicsCompressor();
+finalCompressor.ratio.value = 20 //brickwall destination comressor
+finalCompressor.threshold.value = -0.5
+finalCompressor.attack.value = 0
+finalCompressor.release.value = .2
+finalCompressor.connect(audioContext.destination);
+
+export const destination = audioContext.createMediaStreamDestination();
+console.log("final destination", destination);
+finalCompressor.connect(destination);
+
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
@@ -394,6 +397,10 @@ export const load = (
 
 	wavesurfer.load(audio);
 
+	// THIS IS BAD
+	(wavesurfer as any).backend.gainNode.disconnect();
+	(wavesurfer as any).backend.gainNode.connect(finalCompressor);
+
 	wavesurfers[player] = wavesurfer;
 };
 
@@ -587,7 +594,7 @@ export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
 	micSource
 		.connect(micGain)
 		.connect(micCompressor)
-		.connect(destination);
+		.connect(finalCompressor);
 	dispatch(mixerState.actions.micOpen());
 };
 
