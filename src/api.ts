@@ -106,7 +106,6 @@ export function getShowplan(showId: number): Promise<Showplan> {
     "GET",
     {}
   ).then(res => {
-    console.log(res);
     return Object.keys(res).map(x => res[x]);
   });
 }
@@ -214,17 +213,16 @@ export function updateShowplan(
 
 export interface Timeslot {
   timeslotid: number,
-  time: number,
-  timeStr: string
-
+  starttime: number,
+  starttimeStr: string,
+  title: string
 }
 
 
 
-export function getCurrentAPITimeslot(): Promise<Timeslot> {
+export function getCurrentApiTimeslot(): Promise<Timeslot> {
   return myradioApiRequest(`/timeslot/userselectedtimeslot`, "GET", {}
   ).then(res => {
-    console.log(res);
     return res;
   });
 };
@@ -236,15 +234,13 @@ export interface User {
   sname: string,
   url: string,
   photo: string
-
 }
 
 
 
-export function getCurrentAPIUser(): Promise<User> {
+export function getCurrentApiUser(): Promise<User> {
   return myradioApiRequest(`/user/currentuser`, "GET", {}
   ).then(res => {
-    console.log(res);
     return res;
   });
 };

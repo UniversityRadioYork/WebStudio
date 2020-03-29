@@ -48,15 +48,15 @@ export const toggleTracklisting = (): AppThunk => dispatch => {
 };
 
 export const tracklistStart = (player: number, trackid: number): AppThunk =>async (dispatch, getState) => {
-  console.log("Attempting to tracklist: " + trackid);
   if (getState().broadcast.tracklisting) {
+    console.log("Attempting to tracklist: " + trackid);
     getState().mixer.players[player].tracklistItemID = (await sendTracklistStart(trackid)).audiologid;
   }
 };
 
 export const tracklistEnd = (tracklistitemid: number): AppThunk => async (dispatch, getState) => {
-  console.log("Attempting to end tracklistitem: " + tracklistitemid);
   if (getState().broadcast.tracklisting) {
+    console.log("Attempting to end tracklistitem: " + tracklistitemid);
     myradioApiRequest("/tracklistItem/" + tracklistitemid + "/endtime", "PUT", {});
   }
 };
