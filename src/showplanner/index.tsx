@@ -1,29 +1,22 @@
-import React, { useState, useReducer, useRef, useEffect, memo } from "react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import HTML5Backend from "react-dnd-html5-backend";
-import { ContextMenu, ContextMenuTrigger, MenuItem } from "react-contextmenu";
+import React, { useState, useReducer, useEffect, memo } from "react";
+import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
+import { MYRADIO_NON_API_BASE } from "../api"
 
 import {
-  showPlanResource,
-  Showplan,
   TimeslotItem,
-  Track,
-  searchForTracks
 } from "../api";
-import { XYCoord } from "dnd-core";
+
 import {
   Droppable,
   DragDropContext,
-  Draggable,
   DropResult,
   ResponderProvided
 } from "react-beautiful-dnd";
-import useDebounce from "../lib/useDebounce";
+
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 import {
-  Plan,
   PlanItem,
   getShowplan,
   itemId,
@@ -31,7 +24,6 @@ import {
   addItem,
   removeItem
 } from "./state";
-import { secToHHMM } from "../utils";
 
 import * as MixerState from "../mixer/state";
 import * as BroadcastState from "../broadcast/state";
@@ -46,6 +38,8 @@ import {
 } from "./libraries";
 import { Player, USE_REAL_GAIN_VALUE } from "./Player";
 import { MicCalibrationModal } from "../mixer/MicCalibrationModal";
+
+import { timestampToDateTime } from "../lib/utils";
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -176,9 +170,10 @@ function MicControl() {
 }
 
 function NavBar() {
-  const userName = "Matthew Stratford";
   const dispatch = useDispatch();
+  const sessionState = useSelector((state: RootState) => state.session);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
+  const redirect_url = encodeURIComponent(window.location.toString());
   return (
     <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
       <nav className="container">
@@ -232,39 +227,51 @@ function NavBar() {
               {broadcastState.connectionState}
             </button>
           </li>
-          <li className="nav-item">
+          <li className="nav-item dropdown">
             <a
-              className="nav-link"
-              target="_blank"
-              href="https://ury.org.uk/myradio/MyRadio/timeslot/?next=/webstudio"
+              className="nav-link dropdown-toggle"
+              href={MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url}
+              id="timeslotDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
             >
-              <span className="fa fa-clock-o"></span>&nbsp; Timeslot Time
+              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot && timestampToDateTime(sessionState.currentTimeslot.starttime)}
             </a>
+            <div className="dropdown-menu" aria-labelledby="timeslotDropdown">
+              <a
+                className="dropdown-item"
+                href={MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url}
+              >
+                Switch Timeslot
+              </a>
+              <h6 className="dropdown-header">{sessionState.currentTimeslot?.title}</h6>
+              <h6 className="dropdown-header">ID: {sessionState.currentTimeslot?.timeslotid}</h6>
+            </div>
           </li>
           <li className="nav-item dropdown">
             <a
               className="nav-link dropdown-toggle"
-              href="https://ury.org.uk/myradio/Profile/default/"
+              href={MYRADIO_NON_API_BASE + "/Profile/default/"}
               id="dropdown07"
               data-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false"
             >
-              <span className="fa fa-user-o"></span>&nbsp;
-              {userName}
+              <i className="fa fa-user-o"></i>&nbsp;
+              {sessionState.currentUser?.fname} {sessionState.currentUser?.sname}
             </a>
             <div className="dropdown-menu" aria-labelledby="dropdown07">
               <a
                 className="dropdown-item"
                 target="_blank"
-                href="https://ury.org.uk/myradio/Profile/default/"
+                href={MYRADIO_NON_API_BASE + "/Profile/default/"}
               >
                 My Profile
               </a>
               <a
                 className="dropdown-item"
-                target="_blank"
-                href="https://ury.org.uk/myradio/MyRadio/logout/"
+                href={MYRADIO_NON_API_BASE + "/MyRadio/logout/"}
               >
                 Logout
               </a>
@@ -295,13 +302,16 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
-  }, [timeslotId]);
+  }, [dispatch, timeslotId]);
+
+
 
   function toggleSidebar() {
     var element = document.getElementById("sidebar");
     if (element) {
       element.classList.toggle("active");
     }
+    setTimeout(function () {dispatch(MixerState.redrawWavesurfers())}, 500);
   }
 
   const [insertIndex, increment] = useReducer(incrReducer, 0);
@@ -359,7 +369,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   if (showplan === null) {
     return (
       <div className="sp-container">
-        <h1>Show Planner</h1>
+        <h1>Getting show plan...</h1>
         {planLoading && (
           <b>Your plan is loading, please wait just a second...</b>
         )}
@@ -391,14 +401,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <Column id={1} data={showplan} />
           <Column id={2} data={showplan} />
           <div className="sp-main-col sidebar-toggle">
-            <button
+            <span
               id="sidebarCollapse"
-              className="btn btn-sm ml-auto"
-              type="button"
+              className="btn btn-outline-dark btn-sm mb-0"
               onClick={() => toggleSidebar()}
             >
-              <i className="fas fa-align-justify"></i> Show Sidebar
-            </button>
+              <i className="fas fa-align-justify mb-2"></i>Toggle Sidebar
+            </span>
           </div>
           <div id="sidebar" className="sp-main-col">
             <LibraryColumn />

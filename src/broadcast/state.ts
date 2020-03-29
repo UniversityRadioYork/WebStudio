@@ -1,15 +1,11 @@
 import {
   createSlice,
-  PayloadAction,
-  Store,
-  Dispatch,
-  Action,
-  Middleware
+  PayloadAction
 } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
-import { Track, myradioApiRequest } from "../api";
+import { myradioApiRequest } from "../api";
 import { WebRTCStreamer } from "./rtc_streamer";
-import { destination } from "../mixer/state";
+import * as MixerState from "../mixer/state";
 import { ConnectionStateEnum, Streamer } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 
@@ -27,7 +23,7 @@ const broadcastState = createSlice({
     connectionState: "NOT_CONNECTED"
   } as BroadcastState,
   reducers: {
-    setTracklisting(
+    toggleTracklisting(
       state
     ) {
       state.tracklisting = !state.tracklisting;
@@ -45,22 +41,19 @@ export interface TrackListItem {
   audiologid: number
 }
 
-
-export const toggleTracklisting = (): AppThunk => dispatch => {
-  console.log("Toggled tracklisting.");
-  dispatch(broadcastState.actions.setTracklisting());
-};
+export const { toggleTracklisting } = broadcastState.actions;
 
 export const tracklistStart = (player: number, trackid: number): AppThunk =>async (dispatch, getState) => {
-  console.log("Attempting to tracklist: " + trackid);
   if (getState().broadcast.tracklisting) {
-    getState().mixer.players[player].tracklistItemID = (await sendTracklistStart(trackid)).audiologid;
+    console.log("Attempting to tracklist: " + trackid);
+    var id = (await sendTracklistStart(trackid)).audiologid;
+    dispatch(MixerState.setTracklistItemID({player, id}))
   }
 };
 
 export const tracklistEnd = (tracklistitemid: number): AppThunk => async (dispatch, getState) => {
-  console.log("Attempting to end tracklistitem: " + tracklistitemid);
   if (getState().broadcast.tracklisting) {
+    console.log("Attempting to end tracklistitem: " + tracklistitemid);
     myradioApiRequest("/tracklistItem/" + tracklistitemid + "/endtime", "PUT", {});
   }
 };
@@ -77,7 +70,7 @@ export function sendTracklistStart(
 };
 
 export const connect = (): AppThunk => async dispatch => {
-  streamer = new WebRTCStreamer(destination.stream);
+  streamer = new WebRTCStreamer(MixerState.destination.stream);
   streamer.addConnectionStateListener(state => {
     dispatch(broadcastState.actions.setConnectionState(state));
   });
