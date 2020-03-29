@@ -73,6 +73,7 @@ interface MicState {
 	openError: null | MicErrorEnum;
 	volume: number;
 	gain: number;
+	id: string | null;
 	calibration: MicCalibrationState | null;
 }
 
@@ -139,6 +140,7 @@ const mixerState = createSlice({
 			volume: 1,
 			gain: 1,
 			openError: null,
+			id: null,
 			calibration: null
 		}
 	} as MixerState,
@@ -192,8 +194,9 @@ const mixerState = createSlice({
 		setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
 			state.mic.openError = action.payload;
 		},
-		micOpen(state) {
+		micOpen(state, action) {
 			state.mic.open = true;
+			state.mic.id = action.payload;
 		},
 		setMicLevels(
 			state,
@@ -608,9 +611,9 @@ export const setVolume = (
 	};
 };
 
-export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
+export const openMicrophone = (micID:string): AppThunk => async (dispatch, getState) => {
 	if (getState().mixer.mic.open) {
-		return;
+		micSource?.disconnect()
 	}
 	dispatch(mixerState.actions.setMicError(null));
 	if (!("mediaDevices" in navigator)) {
@@ -621,6 +624,7 @@ export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
 	try {
 		micMedia = await navigator.mediaDevices.getUserMedia({
 			audio: {
+				deviceId:{exact: micID},
 				echoCancellation: false,
 				autoGainControl: false,
 				noiseSuppression: false,
@@ -655,7 +659,7 @@ export const openMicrophone = (): AppThunk => async (dispatch, getState) => {
 		.connect(micGain)
 		.connect(micCompressor)
 		.connect(finalCompressor);
-	dispatch(mixerState.actions.micOpen());
+	dispatch(mixerState.actions.micOpen(micID));
 };
 
 export const setMicVolume = (

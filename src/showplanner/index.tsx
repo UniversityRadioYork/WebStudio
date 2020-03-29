@@ -129,16 +129,57 @@ function LibraryColumn() {
 
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
+  const [micList, setMicList] = useState<MediaDeviceInfo[]>([]);
   const dispatch = useDispatch();
+  const [nextMicSource, setNextMicSource] = useState("None") // next mic source
+  const [lock, setLock] = useState(false)
+
+  useEffect(()=>{
+    navigator.mediaDevices.enumerateDevices()
+    .then((devices)=>{
+      setMicList(reduceToInputs(devices))
+    })
+    .catch(() => {console.log("Could not fetch devices");})
+  }, [])
+
+  function reduceToInputs(devices:MediaDeviceInfo[]){
+    var temp: MediaDeviceInfo[] = []
+    devices.forEach((device)=>{
+      if (device.kind == "audioinput") {
+        temp.push(device)
+      }
+    })
+    return temp
+  }
+
+  function toggleCheck(){setLock(!lock)}
+
   return (
     <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
       <h2>Microphone</h2>
       <button
-        disabled={state.open}
-        onClick={() => dispatch(MixerState.openMicrophone())}
+        disabled={state.id == nextMicSource || lock}
+        onClick={() => dispatch(MixerState.openMicrophone(nextMicSource))}
       >
         Open
       </button>
+      <div className="custom-control custom-checkbox">
+      <input className="custom-control-input" type="checkbox" id="micLock" onChange={toggleCheck}></input>
+      <label className="custom-control-label" htmlFor="micLock" style={{marginLeft:"8px"}}> Lock Microphone</label>
+      </div>
+      <select
+        className="form-control"
+        style={{ width: "100%" }}
+        value={nextMicSource}
+        onChange={e => setNextMicSource(e.target.value)}
+      >
+        <option value={"None"} disabled label="Choose a microphone"></option>
+        {
+          micList.map(function(e,i) {
+            return <option value={e.deviceId} key={i}>{e.label}</option>;
+          })
+        }
+      </select>
       <button disabled={!state.open} onClick={() => dispatch(MixerState.startMicCalibration())}>
         Calibrate Trim
       </button>
