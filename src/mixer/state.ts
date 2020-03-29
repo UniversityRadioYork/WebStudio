@@ -535,6 +535,10 @@ export const toggleRepeat = (player: number): AppThunk => dispatch => {
 	dispatch(mixerState.actions.setRepeat({ player }));
 };
 
+export const setTracklistItemID = (player: number, tracklistitemid: number): AppThunk => (dispatch, getState) => {
+	dispatch(mixerState.actions.setTracklistItemID({player: player, id: tracklistitemid}));
+}
+
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
 	player: number,
