@@ -45,6 +45,7 @@ import {
   AUX_CACHE
 } from "./libraries";
 import { Player, USE_REAL_GAIN_VALUE } from "./Player";
+import { MicCalibrationModal } from "../mixer/MicCalibrationModal";
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -143,6 +144,9 @@ function MicControl() {
         onClick={() => dispatch(MixerState.openMicrophone())}
       >
         Open
+      </button>
+      <button disabled={!state.open} onClick={() => dispatch(MixerState.startMicCalibration())}>
+        Calibrate Trim
       </button>
       {state.openError !== null && (
         <div className="sp-alert">
@@ -405,6 +409,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
       </ContextMenu>
+      <MicCalibrationModal />
     </div>
   );
 };

@@ -14,6 +14,7 @@ import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
+import { createLoudnessMeasurement } from "./loudness";
 
 console.log(Between);
 
@@ -64,11 +65,17 @@ interface PlayerState {
 	tracklistItemID: number;
 }
 
+interface MicCalibrationState {
+	peak: number;
+	loudness: number;
+}
+
 interface MicState {
 	open: boolean;
 	openError: null | MicErrorEnum;
 	volume: number;
 	gain: number;
+	calibration: MicCalibrationState | null;
 }
 
 interface MixerState {
@@ -133,7 +140,8 @@ const mixerState = createSlice({
 			open: false,
 			volume: 1,
 			gain: 1,
-			openError: null
+			openError: null,
+			calibration: null
 		}
 	} as MixerState,
 	reducers: {
@@ -268,6 +276,21 @@ const mixerState = createSlice({
 		) {
 			state.players[action.payload.player].tracklistItemID =
 				action.payload.id;
+		},
+		startMicCalibration(state) {
+			state.mic.calibration = {
+				peak: -Infinity,
+				loudness: -16
+			};
+		},
+		stopMicCalibration(state) {
+			state.mic.calibration = null;
+		},
+		setMicLoudness(state, action: PayloadAction<{peak: number, loudness: number }>) {
+			if (state.mic.calibration) {
+				state.mic.calibration.peak = action.payload.peak;
+				state.mic.calibration.loudness = action.payload.loudness;
+			}
 		}
 	}
 });
@@ -645,6 +668,40 @@ export const setMicVolume = (
 		mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
 	);
 };
+
+let cancelLoudnessMeasurement: (() => void) | null = null;
+
+const CALIBRATE_THE_CALIBRATOR = true;
+
+export const startMicCalibration =  (): AppThunk => async (dispatch, getState) => {
+	if (!getState().mixer.mic.open) {
+		return;
+	}
+	dispatch(mixerState.actions.startMicCalibration());
+	let input: AudioNode;
+	if (CALIBRATE_THE_CALIBRATOR) {
+		const sauce = new Audio("https://ury.org.uk/myradio/NIPSWeb/managed_play/?managedid=6489") // URY 1K Sine -2.5dbFS PPM5
+		sauce.crossOrigin = "use-credentials";
+		sauce.autoplay = true;
+		sauce.load();
+		input = audioContext.createMediaElementSource(sauce);
+	} else {
+		input = micSource!;
+	}
+	cancelLoudnessMeasurement = await createLoudnessMeasurement(
+		input,
+		loudness => {
+			dispatch(mixerState.actions.setMicLoudness(loudness));
+		}
+	);
+}
+
+export const stopMicCalibration = (): AppThunk => (dispatch, getState) => {
+	if (getState().mixer.mic.calibration === null) {
+		return;
+	}
+	dispatch(mixerState.actions.stopMicCalibration());
+}
 
 export const mixerMiddleware: Middleware<
 	{},
