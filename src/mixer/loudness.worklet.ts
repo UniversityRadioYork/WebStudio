@@ -13,7 +13,7 @@ declare const sampleRate: number;
 
 type StereoModeEnum = "M3" | "M6" | "AB";
 // @ts-ignore
-class LoudnessProcessor extends AudioWorkletProcessor {
+class DBFSPeakProcessor extends AudioWorkletProcessor {
     process(
         inputs: Float32Array[][],
         outputs: Float32Array[][],
@@ -38,7 +38,7 @@ class LoudnessProcessor extends AudioWorkletProcessor {
     }
 }
 
-class PeakProcessor extends AudioWorkletProcessor {
+class PPMPeakProcessor extends AudioWorkletProcessor {
     intermediateValue: number[] = [0.0, 0.0];
     lockonfract = (1.0 - LOCK_ON_FACTOR) ** (1.0 / (sampleRate * LOCK_ON_TIME));
     drop = DROP_FACTOR ** (1.0 / (sampleRate / DROP_TIME));
@@ -93,4 +93,4 @@ class PeakProcessor extends AudioWorkletProcessor {
 }
 
 // @ts-ignore
-registerProcessor("loudness-processor", PeakProcessor);
+registerProcessor("loudness-processor", DBFSPeakProcessor);

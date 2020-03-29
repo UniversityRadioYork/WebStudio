@@ -34,7 +34,6 @@ finalCompressor.ratio.value = 20; //brickwall destination comressor
 finalCompressor.threshold.value = -0.5;
 finalCompressor.attack.value = 0;
 finalCompressor.release.value = 0.2;
-finalCompressor.connect(audioContext.destination);
 
 export const destination = audioContext.createMediaStreamDestination();
 console.log("final destination", destination);
@@ -454,6 +453,7 @@ export const load = (
 		// THIS IS BAD
 		(wavesurfer as any).backend.gainNode.disconnect();
 		(wavesurfer as any).backend.gainNode.connect(finalCompressor);
+		(wavesurfer as any).backend.gainNode.connect(audioContext.destination);
 
 		// Double-check we haven't been aborted since
 		if (signal.aborted) {
@@ -653,12 +653,12 @@ export const openMicrophone = (micID:string): AppThunk => async (dispatch, getSt
 	micCompressor.threshold.value = -18;
 	micCompressor.attack.value = 0.01;
 	micCompressor.release.value = 0.1;
-	// TODO: for testing we're connecting mic output to main out
-	// When streaming works we don't want to do this, because the latency is high enough to speech-jam
 	micSource
 		.connect(micGain)
 		.connect(micCompressor)
 		.connect(finalCompressor);
+	// TODO remove this
+	micCompressor.connect(audioContext.destination);
 	dispatch(mixerState.actions.micOpen(micID));
 };
 
@@ -674,7 +674,7 @@ export const setMicVolume = (
 
 let cancelLoudnessMeasurement: (() => void) | null = null;
 
-const CALIBRATE_THE_CALIBRATOR = true;
+const CALIBRATE_THE_CALIBRATOR = false;
 
 export const startMicCalibration =  (): AppThunk => async (dispatch, getState) => {
 	if (!getState().mixer.mic.open) {
@@ -689,7 +689,7 @@ export const startMicCalibration =  (): AppThunk => async (dispatch, getState) =
 		sauce.load();
 		input = audioContext.createMediaElementSource(sauce);
 	} else {
-		input = micSource!;
+		input = micCompressor!;
 	}
 	cancelLoudnessMeasurement = await createLoudnessMeasurement(
 		input,
