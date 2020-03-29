@@ -1,29 +1,22 @@
-import React, { useState, useReducer, useRef, useEffect, memo } from "react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import HTML5Backend from "react-dnd-html5-backend";
-import { ContextMenu, ContextMenuTrigger, MenuItem } from "react-contextmenu";
+import React, { useState, useReducer, useEffect, memo } from "react";
+import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
+import { MYRADIO_NON_API_BASE } from "../api"
 
 import {
-  showPlanResource,
-  Showplan,
   TimeslotItem,
-  Track,
-  searchForTracks
 } from "../api";
-import { XYCoord } from "dnd-core";
+
 import {
   Droppable,
   DragDropContext,
-  Draggable,
   DropResult,
   ResponderProvided
 } from "react-beautiful-dnd";
-import useDebounce from "../lib/useDebounce";
+
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 import {
-  Plan,
   PlanItem,
   getShowplan,
   itemId,
@@ -31,181 +24,22 @@ import {
   addItem,
   removeItem
 } from "./state";
-import { secToHHMM } from "../utils";
 
 import * as MixerState from "../mixer/state";
 import * as BroadcastState from "../broadcast/state";
 
 import appLogo from "../assets/images/webstudio.svg";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
-import { CentralMusicLibrary, CML_CACHE, AuxLibrary, AUX_CACHE } from "./libraries";
+import {
+  CentralMusicLibrary,
+  CML_CACHE,
+  AuxLibrary,
+  AUX_CACHE
+} from "./libraries";
+import { Player, USE_REAL_GAIN_VALUE } from "./Player";
+import { MicCalibrationModal } from "../mixer/MicCalibrationModal";
 
-const USE_REAL_GAIN_VALUE = false;
-
-function Player({ id }: { id: number }) {
-  const playerState = useSelector(
-    (state: RootState) => state.mixer.players[id]
-  );
-  const dispatch = useDispatch();
-
-  return (
-    <div
-      className={
-        playerState.loadedItem !== null && playerState.loading == false
-          ? "player loaded"
-          : "player"
-      }
-    >
-      <div className="card text-center">
-        <div className="row m-0 p-1 card-header channelButtons">
-          <button
-            className={
-              (playerState.autoAdvance
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() => dispatch(MixerState.toggleAutoAdvance(id))}
-          >
-            <i className="fa fa-level-down-alt"></i>&nbsp; Auto Advance
-          </button>
-          <button
-            className={
-              (playerState.playOnLoad
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() => dispatch(MixerState.togglePlayOnLoad(id))}
-          >
-            <i className="far fa-play-circle"></i>&nbsp; Play on Load
-          </button>
-          <button
-            className={
-              (playerState.repeat != "none"
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() => dispatch(MixerState.toggleRepeat(id))}
-          >
-            <i className="fa fa-redo"></i>&nbsp; Repeat {playerState.repeat}
-          </button>
-        </div>
-        <div className="card-body p-0">
-          <span className="card-title">
-            <strong>
-              {playerState.loadedItem !== null && !playerState.loading
-                ? playerState.loadedItem.title
-                : playerState.loading
-                ? `LOADING`
-                : "No Media Selected"}
-            </strong>
-            <small
-              className={
-                "border rounded border-danger text-danger p-1 m-1" +
-                (playerState.loadedItem !== null &&
-                !playerState.loading &&
-                "clean" in playerState.loadedItem &&
-                !playerState.loadedItem.clean
-                  ? ""
-                  : " d-none")
-              }
-            >
-              Explicit
-            </small>
-          </span>
-          <br />
-          <span className="text-muted">
-            {playerState.loadedItem !== null && !playerState.loading
-              ? "artist" in playerState.loadedItem &&
-                playerState.loadedItem.artist
-              : ""}
-            &nbsp;
-          </span>
-          <div className="mediaButtons">
-            <button
-              onClick={() => dispatch(MixerState.play(id))}
-              className={
-                playerState.state === "playing"
-                  ? playerState.timeRemaining <= 15
-                    ? "sp-state-playing sp-ending-soon"
-                    : "sp-state-playing"
-                  : ""
-              }
-            >
-              <i className="fas fa-play"></i>
-            </button>
-            <button
-              onClick={() => dispatch(MixerState.pause(id))}
-              className={
-                playerState.state === "paused" ? "sp-state-paused" : ""
-              }
-            >
-              <i className="fas fa-pause"></i>
-            </button>
-            <button
-              onClick={() => dispatch(MixerState.stop(id))}
-              className={
-                playerState.state === "stopped" ? "sp-state-stopped" : ""
-              }
-            >
-              <i className="fas fa-stop"></i>
-            </button>
-          </div>
-        </div>
-
-        <div className="p-0 card-footer waveform">
-          <span id={"current-" + id} className="m-0 current bypass-click">
-            {secToHHMM(playerState.timeCurrent)}
-          </span>
-          <span id={"length-" + id} className="m-0 length bypass-click">
-            {secToHHMM(playerState.timeLength)}
-          </span>
-          <span id={"remaining-" + id} className="m-0 remaining bypass-click">
-            {secToHHMM(playerState.timeRemaining)}
-          </span>
-          {playerState.loadedItem !== null &&
-            "intro" in playerState.loadedItem && (
-              <span className="m-0 intro bypass-click">
-                {playerState.loadedItem !== null
-                  ? secToHHMM(
-                      playerState.loadedItem.intro
-                        ? playerState.loadedItem.intro
-                        : 0
-                    )
-                  : "00:00:00"}{" "}
-                - in
-              </span>
-            )}
-          <span className="m-0 outro bypass-click">out - 00:00:00</span>
-          {playerState.loadedItem !== null && playerState.timeLength === 0 && (
-            <span className="m-0 loading bypass-click">LOADING</span>
-          )}
-          <div className="m-0 graph" id={"waveform-" + id}></div>
-        </div>
-      </div>
-
-      <div className="sp-mixer-buttons">
-        <div
-          className="sp-mixer-buttons-backdrop"
-          style={{
-            width:
-              (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
-                100 +
-              "%"
-          }}
-        ></div>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
-          Off
-        </button>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
-          Bed
-        </button>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
-          Full
-        </button>
-      </div>
-    </div>
-  );
-}
+import { timestampToDateTime } from "../lib/utils";
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -242,7 +76,7 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
 }
 
 // TODO: this shouldn't have to be hardcoded
-const AUX_LIBRARIES: {[key: string]: string} = {
+const AUX_LIBRARIES: { [key: string]: string } = {
   "aux-11": "Ambiences/Soundscapes",
   "aux-3": "Artist Drops",
   "aux-1": "Beds",
@@ -273,7 +107,11 @@ function LibraryColumn() {
         </option>
         <option value={"CentralMusicLibrary"}>Central Music Library</option>
         <option disabled>Resources</option>
-        {Object.keys(AUX_LIBRARIES).map(libId => <option key={libId} value={libId}>{AUX_LIBRARIES[libId]}</option>)}
+        {Object.keys(AUX_LIBRARIES).map(libId => (
+          <option key={libId} value={libId}>
+            {AUX_LIBRARIES[libId]}
+          </option>
+        ))}
       </select>
       <div className="border-top my-3"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
@@ -342,6 +180,9 @@ function MicControl() {
           })
         }
       </select>
+      <button disabled={!state.open} onClick={() => dispatch(MixerState.startMicCalibration())}>
+        Calibrate Trim
+      </button>
       {state.openError !== null && (
         <div className="sp-alert">
           {state.openError === "NO_PERMISSION"
@@ -370,9 +211,10 @@ function MicControl() {
 }
 
 function NavBar() {
-  const userName = "Matthew Stratford";
   const dispatch = useDispatch();
+  const sessionState = useSelector((state: RootState) => state.session);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
+  const redirect_url = encodeURIComponent(window.location.toString());
   return (
     <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
       <nav className="container">
@@ -403,41 +245,74 @@ function NavBar() {
 
         <ul className="nav navbar-nav navbar-right">
           <li className="nav-item nav-link">
-            <button className="" onClick={() => dispatch(BroadcastState.toggleTracklisting())}>{broadcastState.tracklisting ? "Tracklisting!" : "Not Tracklisting"} </button>
-          </li>
-          <li className="nav-item">
-            <a
-              className="nav-link"
-              target="_blank"
-              href="https://ury.org.uk/myradio/MyRadio/timeslot/?next=/webstudio"
+            <button
+              className=""
+              onClick={() => dispatch(BroadcastState.toggleTracklisting())}
             >
-              <span className="fa fa-clock-o"></span>&nbsp; Timeslot Time
-            </a>
+              {broadcastState.tracklisting
+                ? "Tracklisting!"
+                : "Not Tracklisting"}{" "}
+            </button>
+          </li>
+          <li className="nav-item nav-link">
+            <button
+              className=""
+              onClick={() =>
+                dispatch(
+                  broadcastState.connectionState === "NOT_CONNECTED"
+                    ? BroadcastState.connect()
+                    : BroadcastState.disconnect()
+                )
+              }
+            >
+              {broadcastState.connectionState}
+            </button>
           </li>
           <li className="nav-item dropdown">
             <a
               className="nav-link dropdown-toggle"
-              href="https://ury.org.uk/myradio/Profile/default/"
+              href={MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url}
+              id="timeslotDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot && sessionState.currentTimeslot.start_time}
+            </a>
+            <div className="dropdown-menu" aria-labelledby="timeslotDropdown">
+              <a
+                className="dropdown-item"
+                href={MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url}
+              >
+                Switch Timeslot
+              </a>
+              <h6 className="dropdown-header">{sessionState.currentTimeslot?.title}</h6>
+              <h6 className="dropdown-header">ID: {sessionState.currentTimeslot?.timeslot_id}</h6>
+            </div>
+          </li>
+          <li className="nav-item dropdown">
+            <a
+              className="nav-link dropdown-toggle"
+              href={MYRADIO_NON_API_BASE + "/Profile/default/"}
               id="dropdown07"
               data-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false"
             >
-              <span className="fa fa-user-o"></span>&nbsp;
-              {userName}
+              <i className="fa fa-user-o"></i>&nbsp;
+              {sessionState.currentUser?.fname} {sessionState.currentUser?.sname}
             </a>
             <div className="dropdown-menu" aria-labelledby="dropdown07">
               <a
                 className="dropdown-item"
                 target="_blank"
-                href="https://ury.org.uk/myradio/Profile/default/"
+                href={MYRADIO_NON_API_BASE + "/Profile/default/"}
               >
                 My Profile
               </a>
               <a
                 className="dropdown-item"
-                target="_blank"
-                href="https://ury.org.uk/myradio/MyRadio/logout/"
+                href={MYRADIO_NON_API_BASE + "/MyRadio/logout/"}
               >
                 Logout
               </a>
@@ -468,13 +343,16 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
-  }, [timeslotId]);
+  }, [dispatch, timeslotId]);
+
+
 
   function toggleSidebar() {
     var element = document.getElementById("sidebar");
     if (element) {
       element.classList.toggle("active");
     }
+    setTimeout(function () {dispatch(MixerState.redrawWavesurfers())}, 500);
   }
 
   const [insertIndex, increment] = useReducer(incrReducer, 0);
@@ -532,7 +410,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   if (showplan === null) {
     return (
       <div className="sp-container">
-        <h1>Show Planner</h1>
+        <h1>Getting show plan...</h1>
         {planLoading && (
           <b>Your plan is loading, please wait just a second...</b>
         )}
@@ -564,14 +442,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <Column id={1} data={showplan} />
           <Column id={2} data={showplan} />
           <div className="sp-main-col sidebar-toggle">
-            <button
+            <span
               id="sidebarCollapse"
-              className="btn btn-sm ml-auto"
-              type="button"
+              className="btn btn-outline-dark btn-sm mb-0"
               onClick={() => toggleSidebar()}
             >
-              <i className="fas fa-align-justify"></i> Show Sidebar
-            </button>
+              <i className="fas fa-align-justify mb-2"></i>Toggle Sidebar
+            </span>
           </div>
           <div id="sidebar" className="sp-main-col">
             <LibraryColumn />
@@ -582,6 +459,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
       </ContextMenu>
+      <MicCalibrationModal />
     </div>
   );
 };

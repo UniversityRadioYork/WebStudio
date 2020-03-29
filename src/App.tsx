@@ -1,15 +1,20 @@
-import React, { useReducer, useState, Suspense } from "react";
+import React, { useReducer, useState, Suspense, useEffect, } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import qs from "qs";
 import "./App.css";
 import Showplanner from "./showplanner";
+import SessionHandler from "./session";
+import { RootState } from "./rootReducer";
+
 
 const forceReducer = (state: boolean) => !state;
 function useForceUpdate() {
-  const [_, action] = useReducer(forceReducer, false);
+  const [, action] = useReducer(forceReducer, false);
   return () => action(null);
 }
 
 const App: React.FC = () => {
+
   const [inputVal, setInputVal] = useState("");
   const force = useForceUpdate();
 
@@ -19,33 +24,55 @@ const App: React.FC = () => {
   }
 
   function enterKeyCont(key: string) {
-      if (key == 'Enter'){
+      if (key === 'Enter'){
         cont()
       }
   }
 
   const q = qs.parse(window.location.search, { ignoreQueryPrefix: true });
-  if ("timeslot_id" in q) {
+
+  const {
+    currentUser,
+    userLoading,
+    currentTimeslot,
+    timeslotLoading
+  } = useSelector((state: RootState) => state.session);
+
+  if (currentUser == null || userLoading || currentTimeslot == null || timeslotLoading) {
     return (
-      <Suspense fallback={<div>Loading...</div>}>
-        <Showplanner timeslotId={q.timeslot_id} />
-      </Suspense>
+    <Suspense fallback={<div>Loading...</div>}>
+      <SessionHandler />
+    </Suspense>
     );
   } else {
-    return (
-      <div style={{marginLeft:"1.5%"}}>
-        <h1>Welcome to BAPS3</h1>
-        <input
-          type="text"
-          placeholder="enter a timeslot id"
-          value={inputVal}
-          onChange={e => setInputVal(e.target.value)}
-          onKeyPress={e=>enterKeyCont(e.key)}
-          autoFocus
-        />
-        <button onClick={cont}>Continue</button>
-      </div>
-    );
+    var timeslotid = null;
+    if ("timeslot_id" in q) {
+      timeslotid = q.timeslot_id;
+    } else if (currentTimeslot.timeslot_id != null) {
+      timeslotid = currentTimeslot.timeslot_id;
+    }
+    if (timeslotid !== null) {
+      return (
+        <Suspense fallback={<div>Loading...</div>}>
+          <Showplanner timeslotId={timeslotid} />
+        </Suspense>
+      );
+    } else {
+      return (
+        <div style={{marginLeft:"1.5%"}}>
+          <h1>Welcome to WebStudio</h1>
+          <input
+            type="text"
+            placeholder="enter a timeslot id"
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value)}
+            onKeyPress={e=>enterKeyCont(e.key)}
+            autoFocus
+          />
+          <button onClick={cont}>Continue</button>
+        </div>
+      );
+    }
   }
 };
 

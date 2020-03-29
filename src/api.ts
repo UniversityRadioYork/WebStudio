@@ -1,5 +1,4 @@
 import qs from "qs";
-import { convertModelToFormData, urlEncode } from "./lib/utils";
 
 export const MYRADIO_NON_API_BASE =
   process.env.REACT_APP_MYRADIO_NONAPI_BASE ||
@@ -107,7 +106,6 @@ export function getShowplan(showId: number): Promise<Showplan> {
     "GET",
     {}
   ).then(res => {
-    console.log(res);
     return Object.keys(res).map(x => res[x]);
   });
 }
@@ -210,3 +208,41 @@ export function updateShowplan(
     set: ops
   });
 }
+
+
+
+export interface Timeslot {
+  timeslot_id: number,
+  time: number,
+  start_time: string,
+  title: string
+}
+
+
+
+export function getCurrentApiTimeslot(): Promise<Timeslot> {
+  return myradioApiRequest(`/timeslot/userselectedtimeslot`, "GET", {}
+  ).then(res => {
+    return res;
+  });
+};
+
+
+export interface User {
+  memberid: number,
+  fname: string,
+  sname: string,
+  url: string,
+  photo: string
+}
+
+
+
+export function getCurrentApiUser(): Promise<User> {
+  return myradioApiRequest(`/user/currentuser`, "GET", {}
+  ).then(res => {
+    return res;
+  });
+};
+
+
