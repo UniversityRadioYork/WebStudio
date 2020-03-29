@@ -212,8 +212,9 @@ export function updateShowplan(
 
 
 export interface Timeslot {
-  timeslotid: number,
-  starttime: number,
+  timeslot_id: number,
+  time: number,
+  start_time: string,
   title: string
 }
 
