@@ -5,7 +5,7 @@ import {
 import { AppThunk } from "../store";
 import { myradioApiRequest } from "../api";
 import { WebRTCStreamer } from "./rtc_streamer";
-import { destination } from "../mixer/state";
+import * as MixerState from "../mixer/state";
 import { ConnectionStateEnum, Streamer } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 
@@ -50,7 +50,8 @@ export const toggleTracklisting = (): AppThunk => dispatch => {
 export const tracklistStart = (player: number, trackid: number): AppThunk =>async (dispatch, getState) => {
   if (getState().broadcast.tracklisting) {
     console.log("Attempting to tracklist: " + trackid);
-    getState().mixer.players[player].tracklistItemID = (await sendTracklistStart(trackid)).audiologid;
+    var tracklistitemid = (await sendTracklistStart(trackid)).audiologid;
+    dispatch(MixerState.setTracklistItemID(player, tracklistitemid))
   }
 };
 
@@ -73,7 +74,7 @@ export function sendTracklistStart(
 };
 
 export const connect = (): AppThunk => async dispatch => {
-  streamer = new WebRTCStreamer(destination.stream);
+  streamer = new WebRTCStreamer(MixerState.destination.stream);
   streamer.addConnectionStateListener(state => {
     dispatch(broadcastState.actions.setConnectionState(state));
   });
