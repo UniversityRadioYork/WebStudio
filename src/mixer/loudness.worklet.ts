@@ -24,6 +24,9 @@ class DBFSPeakProcessor extends AudioWorkletProcessor {
         for (let channel = 0; channel < sampleData.length; channel++) {
             const buf = sampleData[channel];
             for (let i = 0; i < buf.length; i++) {
+                if (Math.random() * 128 < 1) {
+                    console.log(buf[i]);
+                }
                 const dbFS = 20 * Math.log10(Math.abs(buf[i]));
                 if (dbFS > peak) {
                     peak = dbFS;

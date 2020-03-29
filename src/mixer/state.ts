@@ -62,18 +62,13 @@ interface PlayerState {
 	tracklistItemID: number;
 }
 
-interface MicCalibrationState {
-	peak: number;
-	loudness: number;
-}
-
 interface MicState {
 	open: boolean;
 	openError: null | MicErrorEnum;
 	volume: number;
 	gain: number;
 	id: string | null;
-	calibration: MicCalibrationState | null;
+	calibration: boolean;
 }
 
 interface MixerState {
@@ -140,7 +135,7 @@ const mixerState = createSlice({
 			gain: 1,
 			openError: null,
 			id: null,
-			calibration: null
+			calibration: false
 		}
 	} as MixerState,
 	reducers: {
@@ -278,20 +273,11 @@ const mixerState = createSlice({
 				action.payload.id;
 		},
 		startMicCalibration(state) {
-			state.mic.calibration = {
-				peak: -Infinity,
-				loudness: -16
-			};
+			state.mic.calibration = true;
 		},
 		stopMicCalibration(state) {
-			state.mic.calibration = null;
+			state.mic.calibration = false;
 		},
-		setMicLoudness(state, action: PayloadAction<{peak: number, loudness: number }>) {
-			if (state.mic.calibration) {
-				state.mic.calibration.peak = action.payload.peak;
-				state.mic.calibration.loudness = action.payload.loudness;
-			}
-		}
 	}
 });
 
@@ -525,15 +511,17 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 	}
 };
 
-export const { toggleAutoAdvance, togglePlayOnLoad, toggleRepeat } = mixerState.actions;
+export const {
+	toggleAutoAdvance,
+	togglePlayOnLoad,
+	toggleRepeat
+} = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
-	wavesurfers.forEach(
-		function(item) {
-			item.drawBuffer();
-		}
-	)
-}
+	wavesurfers.forEach(function(item) {
+		item.drawBuffer();
+	});
+};
 
 export const { setTracklistItemID } = mixerState.actions;
 
@@ -611,9 +599,12 @@ export const setVolume = (
 	};
 };
 
-export const openMicrophone = (micID:string): AppThunk => async (dispatch, getState) => {
+export const openMicrophone = (micID: string): AppThunk => async (
+	dispatch,
+	getState
+) => {
 	if (getState().mixer.mic.open) {
-		micSource?.disconnect()
+		micSource?.disconnect();
 	}
 	dispatch(mixerState.actions.setMicError(null));
 	if (!("mediaDevices" in navigator)) {
@@ -624,7 +615,7 @@ export const openMicrophone = (micID:string): AppThunk => async (dispatch, getSt
 	try {
 		micMedia = await navigator.mediaDevices.getUserMedia({
 			audio: {
-				deviceId:{exact: micID},
+				deviceId: { exact: micID },
 				echoCancellation: false,
 				autoGainControl: false,
 				noiseSuppression: false,
@@ -672,18 +663,23 @@ export const setMicVolume = (
 	);
 };
 
-let cancelLoudnessMeasurement: (() => void) | null = null;
+let analyser: AnalyserNode | null = null;
 
 const CALIBRATE_THE_CALIBRATOR = false;
 
-export const startMicCalibration =  (): AppThunk => async (dispatch, getState) => {
+export const startMicCalibration = (): AppThunk => async (
+	dispatch,
+	getState
+) => {
 	if (!getState().mixer.mic.open) {
 		return;
 	}
 	dispatch(mixerState.actions.startMicCalibration());
 	let input: AudioNode;
 	if (CALIBRATE_THE_CALIBRATOR) {
-		const sauce = new Audio("https://ury.org.uk/myradio/NIPSWeb/managed_play/?managedid=6489") // URY 1K Sine -2.5dbFS PPM5
+		const sauce = new Audio(
+			"https://ury.org.uk/myradio/NIPSWeb/managed_play/?managedid=6489"
+		); // URY 1K Sine -2.5dbFS PPM5
 		sauce.crossOrigin = "use-credentials";
 		sauce.autoplay = true;
 		sauce.load();
@@ -691,12 +687,28 @@ export const startMicCalibration =  (): AppThunk => async (dispatch, getState) =
 	} else {
 		input = micCompressor!;
 	}
-	cancelLoudnessMeasurement = await createLoudnessMeasurement(
-		input,
-		loudness => {
-			dispatch(mixerState.actions.setMicLoudness(loudness));
+	analyser = audioContext.createAnalyser();
+	input.connect(analyser);
+};
+
+let float: Float32Array | null = null;
+
+export function getMicAnalysis() {
+	if (!analyser) {
+		throw new Error();
+	}
+	if (!float) {
+		float = new Float32Array(analyser.fftSize);
+	}
+	analyser.getFloatFrequencyData(float);
+	let peak = -Infinity;
+	for (let i = 0; i < float.length; i++) {
+		const dbFS = float[i];
+		if (dbFS > peak && dbFS !== 0) {
+			peak = dbFS;
 		}
-	);
+	}
+	return peak;
 }
 
 export const stopMicCalibration = (): AppThunk => (dispatch, getState) => {
@@ -704,7 +716,7 @@ export const stopMicCalibration = (): AppThunk => (dispatch, getState) => {
 		return;
 	}
 	dispatch(mixerState.actions.stopMicCalibration());
-}
+};
 
 export const mixerMiddleware: Middleware<
 	{},
