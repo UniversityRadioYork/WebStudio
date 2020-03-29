@@ -140,7 +140,7 @@ const mixerState = createSlice({
 			volume: 1,
 			gain: 1,
 			openError: null,
-			id: null
+			id: null,
 			calibration: null
 		}
 	} as MixerState,
