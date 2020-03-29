@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
-import { secToHHMM } from "../utils";
+import { secToHHMM } from "../lib/utils";
 
 export const USE_REAL_GAIN_VALUE = false;
 

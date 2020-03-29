@@ -4,7 +4,7 @@ import {
 } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { User, getCurrentApiUser, Timeslot, getCurrentApiTimeslot } from "../api";
-import { timestampToDateTime } from "../utils";
+import { timestampToDateTime } from "../lib/utils";
 
 
 interface sessionState {
@@ -52,9 +52,6 @@ const sessionState = createSlice({
       state.timeslotLoading = false;
       state.timeslotLoadError = null;
       state.currentTimeslot = action.payload;
-      if (action.payload != null) {
-        state.currentTimeslot.starttimeStr = timestampToDateTime(action.payload.starttime);
-      }
     },
     getTimeslotError(state, action: PayloadAction<string>) {
       state.timeslotLoading = false;
@@ -71,7 +68,6 @@ export default sessionState.reducer;
 export const updateCurrentUser = (
   user: User | null
 ): AppThunk => async (dispatch, getState) => {
-  console.log("hello")
   dispatch(sessionState.actions.setCurrentUser({user}));
 };
 

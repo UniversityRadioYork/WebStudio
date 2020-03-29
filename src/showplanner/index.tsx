@@ -24,7 +24,6 @@ import {
   addItem,
   removeItem
 } from "./state";
-import { secToHHMM } from "../utils";
 
 import * as MixerState from "../mixer/state";
 import * as BroadcastState from "../broadcast/state";
@@ -39,6 +38,8 @@ import {
 } from "./libraries";
 import { Player, USE_REAL_GAIN_VALUE } from "./Player";
 import { MicCalibrationModal } from "../mixer/MicCalibrationModal";
+
+import { timestampToDateTime } from "../lib/utils";
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -235,7 +236,7 @@ function NavBar() {
               aria-haspopup="true"
               aria-expanded="false"
             >
-              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot?.starttimeStr}
+              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot && timestampToDateTime(sessionState.currentTimeslot.starttime)}
             </a>
             <div className="dropdown-menu" aria-labelledby="timeslotDropdown">
               <a

@@ -214,7 +214,6 @@ export function updateShowplan(
 export interface Timeslot {
   timeslotid: number,
   starttime: number,
-  starttimeStr: string,
   title: string
 }
 
