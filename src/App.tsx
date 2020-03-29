@@ -48,8 +48,8 @@ const App: React.FC = () => {
     var timeslotid = null;
     if ("timeslot_id" in q) {
       timeslotid = q.timeslot_id;
-    } else if (currentTimeslot.timeslotid != null) {
-      timeslotid = currentTimeslot.timeslotid;
+    } else if (currentTimeslot.timeslot_id != null) {
+      timeslotid = currentTimeslot.timeslot_id;
     }
     if (timeslotid !== null) {
       return (

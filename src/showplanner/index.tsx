@@ -236,7 +236,7 @@ function NavBar() {
               aria-haspopup="true"
               aria-expanded="false"
             >
-              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot && timestampToDateTime(sessionState.currentTimeslot.starttime)}
+              <span className="fa fa-clock-o"></span>&nbsp;{sessionState.currentTimeslot && sessionState.currentTimeslot.start_time}
             </a>
             <div className="dropdown-menu" aria-labelledby="timeslotDropdown">
               <a
@@ -246,7 +246,7 @@ function NavBar() {
                 Switch Timeslot
               </a>
               <h6 className="dropdown-header">{sessionState.currentTimeslot?.title}</h6>
-              <h6 className="dropdown-header">ID: {sessionState.currentTimeslot?.timeslotid}</h6>
+              <h6 className="dropdown-header">ID: {sessionState.currentTimeslot?.timeslot_id}</h6>
             </div>
           </li>
           <li className="nav-item dropdown">
