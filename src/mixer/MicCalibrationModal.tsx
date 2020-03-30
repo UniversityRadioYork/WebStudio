@@ -61,14 +61,13 @@ export function MicCalibrationModal() {
 							value={state.gain}
 							onChange={e =>
 								dispatch(
-									MixerState.setMicLevels({
-										volume: parseFloat(e.target.value),
-										gain: parseFloat(e.target.value)
-									})
+									MixerState.setMicBaseGain(
+										parseFloat(e.target.value)
+									)
 								)
 							}
 						/>
-						<b>{state.gain.toFixed(1)}</b>
+						<b>{state.baseGain.toFixed(1)}</b>
 					</div>
 					<button
 						onClick={() =>

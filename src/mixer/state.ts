@@ -65,6 +65,7 @@ interface MicState {
 	openError: null | MicErrorEnum;
 	volume: number;
 	gain: number;
+	baseGain: number;
 	id: string | null;
 	calibration: boolean;
 }
@@ -131,6 +132,7 @@ const mixerState = createSlice({
 			open: false,
 			volume: 1,
 			gain: 1,
+			baseGain: 1,
 			openError: null,
 			id: null,
 			calibration: false
@@ -196,6 +198,9 @@ const mixerState = createSlice({
 		) {
 			state.mic.volume = action.payload.volume;
 			state.mic.gain = action.payload.gain;
+		},
+		setMicBaseGain(state, action: PayloadAction<number>) {
+			state.mic.baseGain = action.payload;
 		},
 		setTimeCurrent(
 			state,
@@ -275,13 +280,13 @@ const mixerState = createSlice({
 		},
 		stopMicCalibration(state) {
 			state.mic.calibration = false;
-		},
+		}
 	}
 });
 
 export default mixerState.reducer;
 
-export const { setMicLevels } = mixerState.actions;
+export const { setMicBaseGain } = mixerState.actions;
 
 export const load = (
 	player: number,
@@ -589,7 +594,9 @@ export const setVolume = (
 			}
 		})
 		.on("complete", () => {
-			dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
+			dispatch(
+				mixerState.actions.setPlayerGain({ player, gain: volume })
+			);
 			// clean up when done
 			delete playerGainTweens[player];
 		});
@@ -640,6 +647,8 @@ export const openMicrophone = (micID: string): AppThunk => async (
 	// Okay, we have a mic stream, time to do some audio nonsense
 	micSource = audioContext.createMediaStreamSource(micMedia);
 	micGain = audioContext.createGain();
+	const state = getState().mixer.mic;
+	micGain.gain.value = state.gain * state.baseGain;
 	micCompressor = audioContext.createDynamicsCompressor();
 	micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
 	micCompressor.threshold.value = -18;
@@ -704,8 +713,8 @@ export function getMicAnalysis() {
 	let sumOfSquares = 0;
 	let peak = 0;
 	for (let i = 0; i < float.length; i++) {
-		peak = Math.max(peak, float[i]**2)
-		sumOfSquares += float[i]**2;
+		peak = Math.max(peak, float[i] ** 2);
+		sumOfSquares += float[i] ** 2;
 	}
 	return 10 * Math.log10(peak);
 }
@@ -732,8 +741,12 @@ export const mixerMiddleware: Middleware<
 			}
 		}
 	});
-	if (newState.mic.gain !== oldState.mic.gain && micGain !== null) {
-		micGain.gain.value = newState.mic.gain;
+	if (
+		(newState.mic.gain !== oldState.mic.gain ||
+			newState.mic.baseGain !== oldState.mic.baseGain) &&
+		micGain !== null
+	) {
+		micGain.gain.value = newState.mic.gain * newState.mic.baseGain;
 	}
 	return result;
 };

@@ -69,8 +69,14 @@ export function sendTracklistStart(
   })
 };
 
+const RECORD = true;
+
 export const connect = (): AppThunk => async dispatch => {
-  streamer = new WebRTCStreamer(MixerState.destination.stream);
+  if (RECORD) {
+    streamer = new RecordingStreamer(MixerState.destination.stream);
+  } else {
+    streamer = new WebRTCStreamer(MixerState.destination.stream);
+  }
   streamer.addConnectionStateListener(state => {
     dispatch(broadcastState.actions.setConnectionState(state));
   });
