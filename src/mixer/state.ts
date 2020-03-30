@@ -576,7 +576,6 @@ export const setVolume = (
 	const volumeTween = new Between(currentLevel, uiLevel)
 		.time(FADE_TIME_SECONDS * 1000)
 		.on("update", (val: number) => {
-			console.log(val);
 			dispatch(
 				mixerState.actions.setPlayerVolume({ player, volume: val })
 			);
@@ -585,10 +584,12 @@ export const setVolume = (
 		.time(FADE_TIME_SECONDS * 1000)
 		.easing((Between as any).Easing.Exponential.InOut)
 		.on("update", (val: number) => {
-			console.log(val);
-			dispatch(mixerState.actions.setPlayerGain({ player, gain: val }));
+			if (typeof wavesurfers[player] !== "undefined") {
+				wavesurfers[player].setVolume(val);
+			}
 		})
 		.on("complete", () => {
+			dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
 			// clean up when done
 			delete playerGainTweens[player];
 		});
