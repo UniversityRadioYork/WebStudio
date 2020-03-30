@@ -451,6 +451,7 @@ export const load = (
 			throw new DOMException("abort load", "AbortError");
 		}
 
+		wavesurfer.setVolume(getState().mixer.players[player].gain);
 		wavesurfers[player] = wavesurfer;
 		delete loadAbortControllers[player];
 	} catch (e) {
