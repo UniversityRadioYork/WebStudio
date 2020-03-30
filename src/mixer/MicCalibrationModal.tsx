@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Modal from "react-modal";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
@@ -7,42 +7,69 @@ import * as MixerState from "./state";
 import { VUMeter } from "./VUMeter";
 
 export function MicCalibrationModal() {
-	const state = useSelector(
-		(state: RootState) => state.mixer.mic.calibration
-	);
+	const state = useSelector((state: RootState) => state.mixer.mic);
+	const rafRef = useRef<number | null>(null);
 	const [peak, setPeak] = useState(-Infinity);
 
 	const animate = () => {
-		if (state) {
+		if (state.calibration) {
 			const result = MixerState.getMicAnalysis();
-			console.log(result);
 			setPeak(result);
-			requestAnimationFrame(animate);
+			rafRef.current = requestAnimationFrame(animate);
+		} else if (rafRef.current !== null) {
+			cancelAnimationFrame(rafRef.current);
+			rafRef.current = null;
 		}
 	};
 
 	useEffect(() => {
-		requestAnimationFrame(animate);
-	}, [state]);
+		if (state.calibration) {
+			rafRef.current = requestAnimationFrame(animate);
+		} else if (rafRef.current !== null) {
+			cancelAnimationFrame(rafRef.current);
+			rafRef.current = null;
+		}
+	}, [state.calibration]);
 	const dispatch = useDispatch();
 	return (
 		<Modal
-			isOpen={state}
+			isOpen={state.calibration}
 			onRequestClose={() => dispatch(MixerState.stopMicCalibration())}
 		>
-			{state !== null && (
+			{state.calibration && (
 				<>
 					<b>
 						Speak into the microphone at a normal volume. Adjust the
-						gain slider until the bar below is green when you're speaking.
+						gain slider until the bar below is green when you're
+						speaking.
 					</b>
-					<VUMeter
-						width={400}
-						height={40}
-						value={peak}
-						range={[-70, 0]}
-						greenRange={[-3.5, -1.5]}
-					/>
+					<div>
+						<VUMeter
+							width={400}
+							height={40}
+							value={peak}
+							range={[-70, 0]}
+							greenRange={[-20, -7]}
+						/>
+					</div>
+					<div>
+						<input
+							type="range"
+							min={1 / 10}
+							max={3}
+							step={0.05}
+							value={state.gain}
+							onChange={e =>
+								dispatch(
+									MixerState.setMicLevels({
+										volume: parseFloat(e.target.value),
+										gain: parseFloat(e.target.value)
+									})
+								)
+							}
+						/>
+						<b>{state.gain.toFixed(1)}</b>
+					</div>
 					<button
 						onClick={() =>
 							dispatch(MixerState.stopMicCalibration())

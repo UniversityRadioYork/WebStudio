@@ -14,8 +14,6 @@ import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
 import { createLoudnessMeasurement } from "./loudness";
 
-console.log(Between);
-
 const audioContext = new AudioContext();
 const wavesurfers: WaveSurfer[] = [];
 const playerGainTweens: Array<{
@@ -282,6 +280,8 @@ const mixerState = createSlice({
 });
 
 export default mixerState.reducer;
+
+export const { setMicLevels } = mixerState.actions;
 
 export const load = (
 	player: number,
@@ -649,8 +649,6 @@ export const openMicrophone = (micID: string): AppThunk => async (
 		.connect(micGain)
 		.connect(micCompressor)
 		.connect(finalCompressor);
-	// TODO remove this
-	micCompressor.connect(audioContext.destination);
 	dispatch(mixerState.actions.micOpen(micID));
 };
 
@@ -689,6 +687,7 @@ export const startMicCalibration = (): AppThunk => async (
 		input = micCompressor!;
 	}
 	analyser = audioContext.createAnalyser();
+	analyser.fftSize = 8192;
 	input.connect(analyser);
 };
 
@@ -701,15 +700,14 @@ export function getMicAnalysis() {
 	if (!float) {
 		float = new Float32Array(analyser.fftSize);
 	}
-	analyser.getFloatFrequencyData(float);
-	let peak = -Infinity;
+	analyser.getFloatTimeDomainData(float);
+	let sumOfSquares = 0;
+	let peak = 0;
 	for (let i = 0; i < float.length; i++) {
-		const dbFS = float[i];
-		if (dbFS > peak && dbFS !== 0) {
-			peak = dbFS;
-		}
+		peak = Math.max(peak, float[i]**2)
+		sumOfSquares += float[i]**2;
 	}
-	return peak;
+	return 10 * Math.log10(peak);
 }
 
 export const stopMicCalibration = (): AppThunk => (dispatch, getState) => {
