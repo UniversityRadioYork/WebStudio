@@ -69,7 +69,7 @@ export function sendTracklistStart(
   })
 };
 
-const RECORD = true;
+const RECORD = false;
 
 export const connect = (): AppThunk => async dispatch => {
   if (RECORD) {
