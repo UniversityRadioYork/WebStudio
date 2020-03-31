@@ -25,15 +25,26 @@ pipeline {
     when {
       branch 'production'
     }
-    environment {
-      REACT_APP_MYRADIO_NONAPI_BASE = 'https://ury.org.uk/myradio'
-      REACT_APP_MYRADIO_BASE = 'https://ury.org.uk/api/v2'
-    }
-    steps {
-      sh 'sed -i -e \'s/ury.org.uk\\/webstudio-dev/ury.org.uk\\/webstudio/\' package.json'
-      sh 'yarn build'
-      sshagent(credentials: ['ury']) {
-       sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio'
+    parallel {
+      stage('Deploy prod client') {
+        environment {
+          REACT_APP_MYRADIO_NONAPI_BASE = 'https://ury.org.uk/myradio'
+          REACT_APP_MYRADIO_BASE = 'https://ury.org.uk/api/v2'
+        }
+        steps {
+          sh 'sed -i -e \'s/ury.org.uk\\/webstudio-dev/ury.org.uk\\/webstudio/\' package.json'
+          sh 'yarn build'
+          sshagent(credentials: ['ury']) {
+           sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio'
+          }
+        }
+      }
+      stage('Deploy server') {
+        steps {
+          sshagent(credentials: ['ury']) {
+           sh 'scp -v server.py liquidsoap@urysteve.ury:/opt/webstudioserver/server.py'
+          }
+        }
       }
     }
   }
