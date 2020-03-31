@@ -18,8 +18,8 @@ def info(msg):
     print('Info:', msg)
 
 jack = Jack.Client('webstudio')
-out1 = jack.outports.register('out_1')
-out2 = jack.outports.register('out_2')
+out1 = jack.outports.register('out_0')
+out2 = jack.outports.register('out_1')
 
 transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
 transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
