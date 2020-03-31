@@ -42,7 +42,7 @@ pipeline {
       stage('Deploy server') {
         steps {
           sshagent(credentials: ['ury']) {
-           sh 'scp -v server.py liquidsoap@urysteve.ury:/opt/webstudioserver/server.py'
+           sh 'scp -v server.py liquidsoap@dolby.ury:/opt/webstudioserver/server.py'
           }
         }
       }
