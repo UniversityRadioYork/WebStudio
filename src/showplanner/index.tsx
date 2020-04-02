@@ -131,7 +131,7 @@ function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
   const [micList, setMicList] = useState<MediaDeviceInfo[]>([]);
   const dispatch = useDispatch();
-  const [nextMicSource, setNextMicSource] = useState("None") // next mic source
+  const [nextMicSource, setNextMicSource] = useState("default") // next mic source
   const [lock, setLock] = useState(false)
 
   useEffect(()=>{
