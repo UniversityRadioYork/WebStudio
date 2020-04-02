@@ -106,6 +106,7 @@ class Session(object):
 
         @self.pc.on("track")
         async def on_track(track):
+            global current_session
             print(connection_id, "Received track")
             if track.kind == "audio":
                 print(connection_id, "Adding to Jack.")
