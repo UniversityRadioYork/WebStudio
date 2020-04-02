@@ -21,8 +21,11 @@ jack = Jack.Client('webstudio')
 out1 = jack.outports.register('out_0')
 out2 = jack.outports.register('out_1')
 
-transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
-transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
+def init_buffers():
+    global transfer_buffer1, transfer_buffer2
+    transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
+    transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
+init_buffers()
 
 @jack.set_process_callback
 def process(frames):
@@ -53,9 +56,16 @@ class JackSender(object):
             transfer_buffer1.write(new_frame.planes[0])
             transfer_buffer2.write(new_frame.planes[1])
 
+current_session = None
 
 class Session(object):
+    async def end():
+        await self.pc.close()
+        init_buffers()
+        await self.websocket.send(json.dumps({ "kind": "REPLACED" }))
+
     async def connect(self, websocket):
+        self.websocket = websocket
         connection_id = uuid.uuid4();
         print(connection_id, "Connected")
         await websocket.send(json.dumps({"kind": "HELLO", "connectionId": str(connection_id)}))
@@ -88,11 +98,17 @@ class Session(object):
             print(connection_id, "Received track")
             if track.kind == "audio":
                 print(connection_id, "Adding to Jack.")
-                sender = JackSender(track)
+
                 @track.on("ended")
                 async def on_ended():
                     print(connection_id, "Track {} ended".format(track.kind))
-                await sender.process()
+                    init_buffers()
+
+                self.sender = JackSender(track)
+                if current_session is not None:
+                    await current_session.end()
+                current_session = self
+                await self.sender.process()
                 
 
         await self.pc.setRemoteDescription(offer)
