@@ -5,7 +5,7 @@ import uuid
 import av
 import struct
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
-from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
+from aiortc.contrib.media import MediaBlackhole, MediaPlayer
 import jack as Jack
 
 @Jack.set_error_function
@@ -40,9 +40,15 @@ class JackSender(object):
     def __init__(self, track):
         self.track = track
         self.resampler = None
+        self.ended = False
+
+    def end():
+        self.ended = True
 
     async def process(self):
         while True:
+            if self.ended:
+                break
             frame = await self.track.recv()
             # Right, depending on the format, we may need to do some fuckery.
             # Jack expects all audio to be 32 bit floating point
@@ -59,7 +65,14 @@ class JackSender(object):
 current_session = None
 
 class Session(object):
+    def __init__(self):
+        self.websocket = None
+        self.sender = None
+        self.pc = None
+
     async def end():
+        if self.sender is not None:
+            self.sender.end()
         await self.pc.close()
         init_buffers()
         await self.websocket.send(json.dumps({ "kind": "REPLACED" }))
@@ -77,8 +90,6 @@ class Session(object):
         print(connection_id, "Received offer")
 
         self.pc = RTCPeerConnection()
-
-        self.recorder = MediaRecorder("/home/marks/test.opus")
 
         @self.pc.on("signalingstatechange")
         async def on_signalingstatechange():
