@@ -176,7 +176,7 @@ function MicControl() {
         <option value={"None"} disabled label="Choose a microphone"></option>
         {
           micList.map(function(e,i) {
-            return <option value={e.deviceId} key={i}>{e.label}</option>;
+            return <option value={e.deviceId} key={i}>{e.label !== "" ? e.label : e.deviceId}</option>;
           })
         }
       </select>
