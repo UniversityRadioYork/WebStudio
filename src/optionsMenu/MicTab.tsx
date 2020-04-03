@@ -92,6 +92,7 @@ export function MicTab() {
 				style={{ width: "100%" }}
 				value={nextMicSource}
 				onChange={(e) => setMicSource(e.target.value)}
+				disabled={micList === null}
 			>
 				<option
 					value={"$NONE"}
