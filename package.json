@@ -111,6 +111,7 @@
     ]
   },
   "devDependencies": {
+    "node-sass": "^4.13.1",
     "prettier": "^1.19.1"
   },
   "jest": {
