@@ -470,6 +470,7 @@ export const play = (player: number): AppThunk => async (dispatch, getState) => 
 		return;
 	}
 	if (audioContext.state !== "running") {
+		console.log("Resuming AudioContext because Chrome bad");
 		await audioContext.resume();
 	}
 	var state = getState().mixer.players[player];
@@ -621,6 +622,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
 	// 	micSource?.disconnect();
 	// }
 	if (audioContext.state !== "running") {
+		console.log("Resuming AudioContext because Chrome bad");
 		await audioContext.resume();
 	}
 	dispatch(mixerState.actions.setMicError(null));
