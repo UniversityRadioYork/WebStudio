@@ -464,10 +464,13 @@ export const load = (
 	}
 };
 
-export const play = (player: number): AppThunk => (dispatch, getState) => {
+export const play = (player: number): AppThunk => async (dispatch, getState) => {
 	if (typeof wavesurfers[player] === "undefined") {
 		console.log("nothing loaded");
 		return;
+	}
+	if (audioContext.state !== "running") {
+		await audioContext.resume();
 	}
 	var state = getState().mixer.players[player];
 	if (state.loading) {
@@ -612,8 +615,13 @@ export const openMicrophone = (micID: string): AppThunk => async (
 	dispatch,
 	getState
 ) => {
-	if (getState().mixer.mic.open) {
-		micSource?.disconnect();
+	// TODO: not sure why this is here, and I have a hunch it may break shit, so disabling
+	// File a ticket if it breaks stuff. -Marks
+	// if (getState().mixer.mic.open) {
+	// 	micSource?.disconnect();
+	// }
+	if (audioContext.state !== "running") {
+		await audioContext.resume();
 	}
 	dispatch(mixerState.actions.setMicError(null));
 	if (!("mediaDevices" in navigator)) {
