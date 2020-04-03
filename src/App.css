@@ -263,3 +263,7 @@ button{
   0% { }
   50% { background-color: rgb(199, 255, 199); }
 }
+
+.ReactModal__Overlay {
+  z-index: 10000;
+}

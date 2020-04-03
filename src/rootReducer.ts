@@ -5,13 +5,15 @@ import MixerReducer from "./mixer/state";
 import BroadcastReducer from "./broadcast/state";
 import sessionReducer from "./session/state";
 import NavbarReducer from "./navbar/state";
+import OptionsMenuReducer from "./optionsMenu/state";
 
 const rootReducer = combineReducers({
     showplan: ShowplanReducer,
     mixer: MixerReducer,
     broadcast: BroadcastReducer,
     session: sessionReducer,
-    navbar: NavbarReducer
+    navbar: NavbarReducer,
+    optionsMenu: OptionsMenuReducer
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

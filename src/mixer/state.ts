@@ -41,7 +41,7 @@ type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
-type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
+export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
 interface PlayerState {
 	loadedItem: PlanItem | Track | AuxItem | null;
@@ -660,6 +660,11 @@ export const openMicrophone = (micID: string): AppThunk => async (
 		.connect(micCompressor)
 		.connect(finalCompressor);
 	dispatch(mixerState.actions.micOpen(micID));
+
+	const state2 = getState();
+	if (state2.optionsMenu.open && state2.optionsMenu.currentTab === "mic") {
+		dispatch(startMicCalibration());
+	}
 };
 
 export const setMicVolume = (

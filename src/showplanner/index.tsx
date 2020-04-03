@@ -1,17 +1,15 @@
 import React, { useState, useReducer, useEffect, memo } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { MYRADIO_NON_API_BASE } from "../api"
+import { MYRADIO_NON_API_BASE } from "../api";
 
-import {
-  TimeslotItem,
-} from "../api";
+import { TimeslotItem } from "../api";
 
 import {
   Droppable,
   DragDropContext,
   DropResult,
-  ResponderProvided
+  ResponderProvided,
 } from "react-beautiful-dnd";
 
 import { useSelector, useDispatch } from "react-redux";
@@ -22,23 +20,24 @@ import {
   itemId,
   moveItem,
   addItem,
-  removeItem
+  removeItem,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
 import * as BroadcastState from "../broadcast/state";
+import * as OptionsMenuState from "../optionsMenu/state";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
 import {
   CentralMusicLibrary,
   CML_CACHE,
   AuxLibrary,
-  AUX_CACHE
+  AUX_CACHE,
 } from "./libraries";
 import { Player, USE_REAL_GAIN_VALUE } from "./Player";
-import { MicCalibrationModal } from "../mixer/MicCalibrationModal";
 
 import { timestampToDateTime } from "../lib/utils";
 import { CombinedNavAlertBar } from "../navbar";
+import { OptionsMenu } from "../optionsMenu";
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -54,7 +53,7 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
               {typeof data[id] === "undefined"
                 ? null
                 : data
-                    .filter(x => x.channel === id)
+                    .filter((x) => x.channel === id)
                     .sort((a, b) => a.weight - b.weight)
                     .map((x, index) => (
                       <Item
@@ -88,7 +87,7 @@ const AUX_LIBRARIES: { [key: string]: string } = {
   "aux-12": "Roses 2018",
   "aux-10": "Sound Effects",
   "aux-8": "Speech",
-  "aux-9": "Teasers"
+  "aux-9": "Teasers",
 };
 
 function LibraryColumn() {
@@ -99,14 +98,14 @@ function LibraryColumn() {
         className="form-control"
         style={{ width: "100%" }}
         value={sauce}
-        onChange={e => setSauce(e.target.value)}
+        onChange={(e) => setSauce(e.target.value)}
       >
         <option value={"None"} disabled>
           Choose a library
         </option>
         <option value={"CentralMusicLibrary"}>Central Music Library</option>
         <option disabled>Resources</option>
-        {Object.keys(AUX_LIBRARIES).map(libId => (
+        {Object.keys(AUX_LIBRARIES).map((libId) => (
           <option key={libId} value={libId}>
             {AUX_LIBRARIES[libId]}
           </option>
@@ -128,74 +127,17 @@ function LibraryColumn() {
 
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
-  const [micList, setMicList] = useState<MediaDeviceInfo[]>([]);
   const dispatch = useDispatch();
-  const [nextMicSource, setNextMicSource] = useState("default") // next mic source
-  const [lock, setLock] = useState(false)
-
-  useEffect(()=>{
-    navigator.mediaDevices.enumerateDevices()
-    .then((devices)=>{
-      setMicList(reduceToInputs(devices))
-    })
-    .catch(() => {console.log("Could not fetch devices");})
-  }, [])
-
-  function reduceToInputs(devices:MediaDeviceInfo[]){
-    var temp: MediaDeviceInfo[] = []
-    devices.forEach((device)=>{
-      if (device.kind == "audioinput") {
-        temp.push(device)
-      }
-    })
-    return temp
-  }
-
-  function toggleCheck(){setLock(!lock)}
 
   return (
     <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
       <h2>Microphone</h2>
-      <button
-        disabled={state.id == nextMicSource || lock}
-        onClick={() => dispatch(MixerState.openMicrophone(nextMicSource))}
-      >
-        Open
-      </button>
-      <div className="custom-control custom-checkbox">
-      <input className="custom-control-input" type="checkbox" id="micLock" onChange={toggleCheck}></input>
-      <label className="custom-control-label" htmlFor="micLock" style={{marginLeft:"8px"}}> Lock Microphone</label>
-      </div>
-      <select
-        className="form-control"
-        style={{ width: "100%" }}
-        value={nextMicSource}
-        onChange={e => setNextMicSource(e.target.value)}
-      >
-        <option value={"None"} disabled label="Choose a microphone"></option>
-        {
-          micList.map(function(e,i) {
-            return <option value={e.deviceId} key={i}>{e.label !== "" ? e.label : e.deviceId}</option>;
-          })
-        }
-      </select>
-      <button disabled={!state.open} onClick={() => dispatch(MixerState.startMicCalibration())}>
-        Calibrate Trim
-      </button>
-      {state.openError !== null && (
-        <div className="sp-alert">
-          {state.openError === "NO_PERMISSION"
-            ? "Please grant this page permission to use your microphone and try again."
-            : state.openError === "NOT_SECURE_CONTEXT"
-            ? "We can't open the microphone. Please make sure the address bar has a https:// at the start and try again."
-            : "An error occurred when opening the microphone. Please try again."}
-        </div>
-      )}
       <div className="sp-mixer-buttons">
         <div
           className="sp-mixer-buttons-backdrop"
           style={{
-            width: (USE_REAL_GAIN_VALUE ? state.gain : state.volume) * 100 + "%"
+            width:
+              (USE_REAL_GAIN_VALUE ? state.gain : state.volume) * 100 + "%",
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
@@ -204,6 +146,9 @@ function MicControl() {
         <button onClick={() => dispatch(MixerState.setMicVolume("full"))}>
           Full
         </button>
+      </div>
+      <div>
+        <button onClick={() => dispatch(OptionsMenuState.open())}>Options</button>
       </div>
     </div>
   );
@@ -219,25 +164,25 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     planLoadError,
     planLoading,
     planSaveError,
-    planSaving
+    planSaving,
   } = useSelector((state: RootState) => state.showplan);
 
   const dispatch = useDispatch();
 
-  useBeforeunload(event => event.preventDefault());
+  useBeforeunload((event) => event.preventDefault());
 
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
   }, [dispatch, timeslotId]);
-
-
 
   function toggleSidebar() {
     var element = document.getElementById("sidebar");
     if (element) {
       element.classList.toggle("active");
     }
-    setTimeout(function () {dispatch(MixerState.redrawWavesurfers())}, 500);
+    setTimeout(function() {
+      dispatch(MixerState.redrawWavesurfers());
+    }, 500);
   }
 
   const [insertIndex, increment] = useReducer(incrReducer, 0);
@@ -259,7 +204,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
-        ...data
+        ...data,
       };
       dispatch(addItem(timeslotId, newItem));
       increment(null);
@@ -273,7 +218,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
-        ...data
+        ...data,
       };
       dispatch(addItem(timeslotId, newItem));
       increment(null);
@@ -282,7 +227,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       dispatch(
         moveItem(timeslotId, result.draggableId, [
           parseInt(result.destination.droppableId, 10),
-          result.destination.index
+          result.destination.index,
         ])
       );
     }
@@ -344,7 +289,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
       </ContextMenu>
-      <MicCalibrationModal />
+      <OptionsMenu />
     </div>
   );
 };
