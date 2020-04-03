@@ -664,9 +664,9 @@ module.exports = function(webpackEnv) {
         new WorkboxWebpackPlugin.GenerateSW({
           clientsClaim: true,
           exclude: [/\.map$/, /asset-manifest\.json$/],
-          importWorkboxFrom: "cdn",
+          // importWorkboxFrom: "cdn",
           navigateFallback: publicUrl + "/index.html",
-          navigateFallbackBlacklist: [
+          navigateFallbackDenylist: [
             // Exclude URLs starting with /_, as they're likely an API call
             new RegExp("^/_"),
             // Exclude any URLs whose last part seems to be a file extension
@@ -674,6 +674,12 @@ module.exports = function(webpackEnv) {
             // URLs containing a "?" character won't be blacklisted as they're likely
             // a route with query params (e.g. auth callbacks).
             new RegExp("/[^/?]+\\.[^/]+$")
+          ],
+          runtimeCaching: [
+            {
+              urlPattern: /NIPSWeb\/(secure|managed)_play/,
+              handler: "CacheFirst"
+            }
           ]
         }),
       // TypeScript type checking
