@@ -71,6 +71,7 @@ class Session(object):
         self.pc = None
 
     async def end():
+        print(self.connection_id, "going away")
         if self.sender is not None:
             self.sender.end()
         await self.pc.close()
@@ -79,25 +80,25 @@ class Session(object):
 
     async def connect(self, websocket):
         self.websocket = websocket
-        connection_id = uuid.uuid4();
-        print(connection_id, "Connected")
-        await websocket.send(json.dumps({"kind": "HELLO", "connectionId": str(connection_id)}))
+        self.connection_id = uuid.uuid4();
+        print(self.connection_id, "Connected")
+        await websocket.send(json.dumps({"kind": "HELLO", "connectionId": str(self.connection_id)}))
         sdp_offer = json.loads(await websocket.recv())
         if sdp_offer["kind"] != "OFFER":
             await websocket.close(1008)
             return
         offer = RTCSessionDescription(sdp=sdp_offer["sdp"], type=sdp_offer["type"])
-        print(connection_id, "Received offer")
+        print(self.connection_id, "Received offer")
 
         self.pc = RTCPeerConnection()
 
         @self.pc.on("signalingstatechange")
         async def on_signalingstatechange():
-            print(connection_id, "Signaling state is {}".format(self.pc.signalingState))
+            print(self.connection_id, "Signaling state is {}".format(self.pc.signalingState))
 
         @self.pc.on("iceconnectionstatechange")
         async def on_iceconnectionstatechange():
-            print(connection_id, "ICE connection state is {}".format(self.pc.iceConnectionState))
+            print(self.connection_id, "ICE connection state is {}".format(self.pc.iceConnectionState))
             if self.pc.iceConnectionState == "failed":
                 await self.pc.close()
                 self.pc = None
@@ -107,13 +108,13 @@ class Session(object):
         @self.pc.on("track")
         async def on_track(track):
             global current_session
-            print(connection_id, "Received track")
+            print(self.connection_id, "Received track")
             if track.kind == "audio":
-                print(connection_id, "Adding to Jack.")
+                print(self.connection_id, "Adding to Jack.")
 
                 @track.on("ended")
                 async def on_ended():
-                    print(connection_id, "Track {} ended".format(track.kind))
+                    print(self.connection_id, "Track {} ended".format(track.kind))
                     init_buffers()
 
                 self.sender = JackSender(track)
@@ -137,10 +138,10 @@ class Session(object):
                 }
             )
         )
-        print(connection_id, "Sent answer")
+        print(self.connection_id, "Sent answer")
 
         async for msg in websocket:
-            print(connection_id, msg)
+            print(self.connection_id, msg)
 
 
 async def serve(websocket, path):
@@ -151,8 +152,12 @@ async def serve(websocket, path):
         pass
 
 
+WS_PORT = 8079
+
 jack.activate()
-start_server = websockets.serve(serve, "localhost", 8079)
+start_server = websockets.serve(serve, "localhost", WS_PORT)
+
+print("Shittyserver starting on port {}.".format(WS_PORT))
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
