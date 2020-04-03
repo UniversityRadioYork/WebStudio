@@ -25,7 +25,7 @@ export function MicTab() {
 	const state = useSelector((state: RootState) => state.mixer.mic);
 	const [micList, setMicList] = useState<null | MediaDeviceInfo[]>(null);
 	const dispatch = useDispatch();
-	const [nextMicSource, setNextMicSource] = useState("default");
+	const [nextMicSource, setNextMicSource] = useState("$NONE");
 	const [openError, setOpenError] = useState<null | MicErrorEnum>(null);
 
 	async function fetchMicNames() {
@@ -94,7 +94,7 @@ export function MicTab() {
 				onChange={(e) => setMicSource(e.target.value)}
 			>
 				<option
-					value={"None"}
+					value={"$NONE"}
 					disabled
 					label="Choose a microphone"
 				></option>
