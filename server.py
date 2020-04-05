@@ -7,6 +7,29 @@ import struct
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaBlackhole, MediaPlayer
 import jack as Jack
+import os
+import re
+
+
+file_contents_ex = re.compile(r"^ws=\d$")
+
+
+def write_ob_status(status):
+    if not os.path.exists("/music/ob_state.conf"):
+        print("OB State file does not exist. Bailing.")
+        return
+    with open("/music/ob_state.conf", "r") as fd:
+        content = fd.read()
+        if "ws" in content:
+            content = re.sub(file_contents_ex, "ws=" + str(1 if status else 0), content)
+        else:
+            if content[len(content) - 1] != "\n":
+                content += "\n"
+            content += "ws=" + (1 if status else 0) + "\n"
+        fd.seek(0)
+        fd.write(content)
+        fd.truncate()
+
 
 @Jack.set_error_function
 def error(msg):
@@ -76,6 +99,7 @@ class Session(object):
             self.sender.end()
         await self.pc.close()
         init_buffers()
+        write_ob_status(False)
         await self.websocket.send(json.dumps({ "kind": "REPLACED" }))
 
     async def connect(self, websocket):
@@ -115,12 +139,14 @@ class Session(object):
                 @track.on("ended")
                 async def on_ended():
                     print(self.connection_id, "Track {} ended".format(track.kind))
-                    init_buffers()
+                    # TODO: this doesn't exactly handle reconnecting gracefully
+                    self.end()
 
                 self.sender = JackSender(track)
                 if current_session is not None:
                     await current_session.end()
                 current_session = self
+                write_ob_status(True)
                 await self.sender.process()
                 
 
