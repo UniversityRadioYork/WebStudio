@@ -15,7 +15,7 @@ export function Player({ id }: { id: number }) {
   return (
     <div
       className={
-        playerState.loadedItem !== null && playerState.loading == false
+        playerState.loadedItem !== null && playerState.loading === -1
           ? "player loaded"
           : "player"
       }
@@ -56,9 +56,9 @@ export function Player({ id }: { id: number }) {
         <div className="card-body p-0">
           <span className="card-title">
             <strong>
-              {playerState.loadedItem !== null && !playerState.loading
+              {playerState.loadedItem !== null && playerState.loading === -1
                 ? playerState.loadedItem.title
-                : playerState.loading
+                : playerState.loading !== -1
                 ? `LOADING`
                 : playerState.loadError
                 ? "LOAD FAILED"
@@ -68,7 +68,7 @@ export function Player({ id }: { id: number }) {
               className={
                 "border rounded border-danger text-danger p-1 m-1" +
                 (playerState.loadedItem !== null &&
-                !playerState.loading &&
+                playerState.loading === -1 &&
                 "clean" in playerState.loadedItem &&
                 !playerState.loadedItem.clean
                   ? ""
@@ -80,7 +80,7 @@ export function Player({ id }: { id: number }) {
           </span>
           <br />
           <span className="text-muted">
-            {playerState.loadedItem !== null && !playerState.loading
+            {playerState.loadedItem !== null && playerState.loading === -1
               ? "artist" in playerState.loadedItem &&
                 playerState.loadedItem.artist
               : ""}
@@ -141,7 +141,9 @@ export function Player({ id }: { id: number }) {
                 - in
               </span>
             )}
-          <div className="m-0 graph" id={"waveform-" + id}></div>
+          <div className={"m-0 graph" + ((playerState.loading !== -1) ? " loading" : "")} id={"waveform-" + id} style={{
+            width: (playerState.loading*100) + "%"}}>
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import {
 	Dispatch,
 	Middleware
 } from "@reduxjs/toolkit";
+import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
 import { PlanItem } from "../showplanner/state";
 import * as BroadcastState from "../broadcast/state";
@@ -45,7 +46,7 @@ export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
 interface PlayerState {
 	loadedItem: PlanItem | Track | AuxItem | null;
-	loading: boolean;
+	loading: number;
 	loadError: boolean;
 	state: PlayerStateEnum;
 	volume: number;
@@ -81,7 +82,7 @@ const mixerState = createSlice({
 		players: [
 			{
 				loadedItem: null,
-				loading: false,
+				loading: -1,
 				state: "stopped",
 				volume: 1,
 				gain: 1,
@@ -97,7 +98,7 @@ const mixerState = createSlice({
 			},
 			{
 				loadedItem: null,
-				loading: false,
+				loading: -1,
 				state: "stopped",
 				volume: 1,
 				gain: 1,
@@ -113,7 +114,7 @@ const mixerState = createSlice({
 			},
 			{
 				loadedItem: null,
-				loading: false,
+				loading: -1,
 				state: "stopped",
 				volume: 1,
 				gain: 1,
@@ -148,17 +149,20 @@ const mixerState = createSlice({
 		) {
 			state.players[action.payload.player].loadedItem =
 				action.payload.item;
-			state.players[action.payload.player].loading = true;
+			state.players[action.payload.player].loading = 0;
 			state.players[action.payload.player].timeCurrent = 0;
 			state.players[action.payload.player].timeLength = 0;
 			state.players[action.payload.player].tracklistItemID = -1;
 			state.players[action.payload.player].loadError = false;
 		},
+		itemLoadPercentage(state, action: PayloadAction<{ player: number, percent: number }>) {
+			state.players[action.payload.player].loading = action.payload.percent;
+		},
 		itemLoadComplete(state, action: PayloadAction<{ player: number }>) {
-			state.players[action.payload.player].loading = false;
+			state.players[action.payload.player].loading = -1;
 		},
 		itemLoadError(state, action: PayloadAction<{ player: number }>) {
-			state.players[action.payload.player].loading = false;
+			state.players[action.payload.player].loading = -1;
 			state.players[action.payload.player].loadError = true;
 		},
 		setPlayerState(
@@ -432,7 +436,18 @@ export const load = (
 		const result = await fetch(url, {
 			credentials: "include",
 			signal
-		});
+		}).then(
+				fetchProgress({
+						// implement onProgress method
+						onProgress(progress: FetchProgressData) {
+							const percent = progress.transferred / progress.total;
+							if (percent !== 1) {
+								console.log({ progress });
+								dispatch(mixerState.actions.itemLoadPercentage({ player, percent}));
+							}
+						},
+				})
+		);
 		const rawData = await result.arrayBuffer();
 		const blob = new Blob([rawData]);
 		const objectUrl = URL.createObjectURL(blob);
@@ -474,7 +489,7 @@ export const play = (player: number): AppThunk => async (dispatch, getState) => 
 		await audioContext.resume();
 	}
 	var state = getState().mixer.players[player];
-	if (state.loading) {
+	if (state.loading !== -1) {
 		console.log("not ready");
 		return;
 	}
@@ -510,7 +525,7 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 		return;
 	}
 	var state = getState().mixer.players[player];
-	if (state.loading) {
+	if (state.loading !== -1) {
 		console.log("not ready");
 		return;
 	}
