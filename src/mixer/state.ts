@@ -151,6 +151,7 @@ const mixerState = createSlice({
 				action.payload.item;
 			state.players[action.payload.player].loading = 0;
 			state.players[action.payload.player].timeCurrent = 0;
+			state.players[action.payload.player].timeRemaining = 0;
 			state.players[action.payload.player].timeLength = 0;
 			state.players[action.payload.player].tracklistItemID = -1;
 			state.players[action.payload.player].loadError = false;
