@@ -352,15 +352,15 @@ export const load = (
 	wavesurfer.on("ready", () => {
 		dispatch(mixerState.actions.itemLoadComplete({ player }));
 		dispatch(
-			mixerState.actions.setTimeCurrent({
-				player,
-				time: 0
-			})
-		);
-		dispatch(
 			mixerState.actions.setTimeLength({
 				player,
 				time: wavesurfer.getDuration()
+			})
+		);
+		dispatch(
+			mixerState.actions.setTimeCurrent({
+				player,
+				time: 0
 			})
 		);
 		const state = getState().mixer.players[player];
