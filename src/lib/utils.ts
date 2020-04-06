@@ -42,7 +42,7 @@ export function secToHHMM(sec: number = 0) {
   d.setHours(0);
   d.setMinutes(0);
   d.setSeconds(0);
-  d = new Date(Math.round(d.getTime()) + sec * 1000);
+  d = new Date(d.getTime() + Math.ceil(sec) * 1000);
   return d.toLocaleString('en-GB').split(' ')[1];
 };
 
