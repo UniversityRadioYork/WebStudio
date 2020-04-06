@@ -93,6 +93,14 @@ export class WebRTCStreamer extends Streamer {
 		}
 	}
 
+	async getStatistics() {
+		if (this.pc) {
+			return await this.pc.getStats();
+		} else {
+			return null;
+		}
+	}
+
 	// TODO: supporting trickle ICE would be nICE
 	waitForIceCandidates() {
 		return new Promise(resolve => {
