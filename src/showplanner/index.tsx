@@ -1,7 +1,7 @@
 import React, { useState, useReducer, useEffect, memo } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { MYRADIO_NON_API_BASE } from "../api";
+import { MYRADIO_NON_API_BASE, getUserPlaylists, getAuxPlaylists, ManagedPlaylist } from "../api";
 
 import { TimeslotItem } from "../api";
 
@@ -21,6 +21,7 @@ import {
   moveItem,
   addItem,
   removeItem,
+  getPlaylists,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
@@ -73,25 +74,18 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
   );
 }
 
-// TODO: this shouldn't have to be hardcoded
-const AUX_LIBRARIES: { [key: string]: string } = {
-  "aux-11": "Ambiences/Soundscapes",
-  "aux-3": "Artist Drops",
-  "aux-1": "Beds",
-  "aux-7": "Daily News Bulletins",
-  "aux-13": "Event Resources",
-  "aux-2": "Jingles",
-  "aux-4": "News",
-  "aux-5": "Presenter Idents",
-  "aux-6": "Promos",
-  "aux-12": "Roses 2018",
-  "aux-10": "Sound Effects",
-  "aux-8": "Speech",
-  "aux-9": "Teasers",
-};
-
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
+  const dispatch = useDispatch();
+  const {
+    auxPlaylists,
+    userPlaylists
+  } = useSelector((state: RootState) => state.showplan);
+
+  useEffect(() => {
+    dispatch(getPlaylists());
+  }, [dispatch]);
+
   return (
     <div className="sp-col" style={{ height: "48%", marginBottom: "1%" }}>
       <select
@@ -104,16 +98,22 @@ function LibraryColumn() {
           Choose a library
         </option>
         <option value={"CentralMusicLibrary"}>Central Music Library</option>
-        <option disabled>Resources</option>
-        {Object.keys(AUX_LIBRARIES).map((libId) => (
-          <option key={libId} value={libId}>
-            {AUX_LIBRARIES[libId]}
+        <option disabled>Personal Resources</option>
+        {userPlaylists.map((playlist) => (
+            <option key={playlist.managedid} value={playlist.managedid}>
+              { playlist.title }
+            </option>
+        ))}
+        <option disabled>Shared Resources</option>
+        {auxPlaylists.map(playlist => (
+          <option key={"aux-" + playlist.managedid} value={"aux-" + playlist.managedid}>
+            { playlist.title }
           </option>
         ))}
       </select>
       <div className="border-top my-3"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
-      {sauce.startsWith("aux-") && <AuxLibrary libraryId={sauce} />}
+      {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && <AuxLibrary libraryId={sauce} />}
       <span
         className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
       >

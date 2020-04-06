@@ -42,6 +42,8 @@ interface ShowplanState {
   plan: null | PlanItem[];
   planSaving: boolean;
   planSaveError: string | null;
+  auxPlaylists: api.ManagedPlaylist[];
+  userPlaylists: api.ManagedPlaylist[];
 }
 
 const initialState: ShowplanState = {
@@ -49,7 +51,9 @@ const initialState: ShowplanState = {
   planLoadError: null,
   plan: null,
   planSaving: false,
-  planSaveError: null
+  planSaveError: null,
+  auxPlaylists: [],
+  userPlaylists: []
 };
 
 const showplan = createSlice({
@@ -121,7 +125,13 @@ const showplan = createSlice({
         throw new Error();
       }
       state.plan![idx] = action.payload.newItemData;
-    }
+    },
+    addUserPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
+      state.userPlaylists = state.userPlaylists.concat(action.payload);
+    },
+    addAuxPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
+      state.auxPlaylists = state.auxPlaylists.concat(action.payload);
+    },
   }
 });
 
@@ -417,5 +427,23 @@ export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {
   } catch (e) {
     console.error(e);
     dispatch(showplan.actions.getShowplanError(e.toString()));
+  }
+};
+
+export const getPlaylists = (): AppThunk => async dispatch => {
+  try {
+    const userPlaylists = await api.getUserPlaylists();
+
+    dispatch(showplan.actions.addUserPlaylists(userPlaylists));
+  } catch (e) {
+    console.error(e);
+  }
+
+  try {
+    const auxPlaylists = await api.getAuxPlaylists();
+
+    dispatch(showplan.actions.addAuxPlaylists(auxPlaylists));
+  } catch (e) {
+    console.error(e);
   }
 };

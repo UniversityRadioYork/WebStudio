@@ -167,6 +167,22 @@ export function searchForTracks(
   });
 }
 
+
+export interface ManagedPlaylist {
+  type: "userPlaylist";
+  title: string;
+  managedid: string;
+  folder: string;
+}
+
+export function getUserPlaylists(): Promise<Array<ManagedPlaylist>> {
+  return myradioApiRequest("/nipswebUserPlaylist/allmanageduserplaylists", "GET", {});
+}
+
+export function getAuxPlaylists(): Promise<Array<ManagedPlaylist>> {
+  return myradioApiRequest("/nipswebPlaylist/allmanagedplaylists", "GET", {});
+}
+
 export function loadAuxLibrary(libraryId: string): Promise<AuxItem[]> {
   return myradioRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
     libraryid: libraryId
