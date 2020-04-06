@@ -9,7 +9,7 @@ import * as MixerState from "../mixer/state";
 import { ConnectionStateEnum, Streamer } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 
-let streamer: Streamer | null = null;
+export let streamer: Streamer | null = null;
 
 interface BroadcastState {
   tracklisting: boolean;

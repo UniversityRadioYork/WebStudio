@@ -8,7 +8,7 @@ import { RootState } from "../rootReducer";
 
 import * as MixerState from "../mixer/state";
 
-export type OptionsTabIDsEnum = "mic" | "about";
+export type OptionsTabIDsEnum = "mic" | "about" | "stats";
 
 const optionsMenuState = createSlice({
 	name: "optionsMenu",

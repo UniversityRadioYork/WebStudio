@@ -7,6 +7,7 @@ import { RootState } from "../rootReducer";
 import * as OptionsState from "./state";
 import { MicTab } from "./MicTab";
 import { AboutTab } from "./AboutTab";
+import { StatsTab } from "./StatsTab";
 
 export function OptionsMenu() {
 	const state = useSelector((state: RootState) => state.optionsMenu);
@@ -27,6 +28,14 @@ export function OptionsMenu() {
 				</NavItem>
 				<NavItem>
 					<NavLink
+						className={state.currentTab === "stats" ? "active" : ""}
+						onClick={() => dispatch(OptionsState.changeTab("stats"))}
+					>
+						Stream Statistics
+					</NavLink>
+				</NavItem>
+				<NavItem>
+					<NavLink
 						className={state.currentTab === "about" ? "active" : ""}
 						onClick={() => dispatch(OptionsState.changeTab("about"))}
 					>
@@ -36,6 +45,7 @@ export function OptionsMenu() {
 			</Nav>
 			<TabContent activeTab={state.currentTab}>
 				<TabPane tabId="mic"><MicTab /></TabPane>
+				<TabPane tabId="stats"><StatsTab /></TabPane>
 				<TabPane tabId="about"><AboutTab /></TabPane>
 			</TabContent>
 			<footer>
