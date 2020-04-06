@@ -141,8 +141,10 @@ export function Player({ id }: { id: number }) {
                 - in
               </span>
             )}
-          <div className={"m-0 graph" + ((playerState.loading !== -1) ? " loading" : "")} id={"waveform-" + id} style={{
-            width: (playerState.loading*100) + "%"}}>
+          <div className={"m-0 graph" + ((playerState.loading !== -1) ? " loading" : "")} id={"waveform-" + id}
+            style={(playerState.loading !== -1) ? {
+            width: (playerState.loading*100) + "%"} : {}}
+          >
           </div>
         </div>
       </div>
