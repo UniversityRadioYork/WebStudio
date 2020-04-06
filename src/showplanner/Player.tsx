@@ -141,10 +141,6 @@ export function Player({ id }: { id: number }) {
                 - in
               </span>
             )}
-          <span className="m-0 outro bypass-click">out - 00:00:00</span>
-          {playerState.loadedItem !== null && playerState.timeLength === 0 && (
-            <span className="m-0 loading bypass-click">LOADING</span>
-          )}
           <div className="m-0 graph" id={"waveform-" + id}></div>
         </div>
       </div>
