@@ -1,11 +1,10 @@
-import React, { useReducer, useState, Suspense, useEffect, } from "react";
+import React, { useReducer, useState, Suspense, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import qs from "qs";
 import "./App.css";
 import Showplanner from "./showplanner";
 import SessionHandler from "./session";
 import { RootState } from "./rootReducer";
-
 
 const forceReducer = (state: boolean) => !state;
 function useForceUpdate() {
@@ -14,7 +13,6 @@ function useForceUpdate() {
 }
 
 const App: React.FC = () => {
-
   const [inputVal, setInputVal] = useState("");
   const force = useForceUpdate();
 
@@ -24,9 +22,9 @@ const App: React.FC = () => {
   }
 
   function enterKeyCont(key: string) {
-      if (key === 'Enter'){
-        cont()
-      }
+    if (key === "Enter") {
+      cont();
+    }
   }
 
   const q = qs.parse(window.location.search, { ignoreQueryPrefix: true });
@@ -35,15 +33,16 @@ const App: React.FC = () => {
     currentUser,
     userLoading,
     currentTimeslot,
-    timeslotLoading
+    timeslotLoading,
   } = useSelector((state: RootState) => state.session);
 
-  if (currentUser == null || userLoading || currentTimeslot == null || timeslotLoading) {
-    return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <SessionHandler />
-    </Suspense>
-    );
+  if (
+    currentUser == null ||
+    userLoading ||
+    currentTimeslot == null ||
+    timeslotLoading
+  ) {
+    return <SessionHandler />;
   } else {
     var timeslotid = null;
     if ("timeslot_id" in q) {
@@ -52,21 +51,17 @@ const App: React.FC = () => {
       timeslotid = currentTimeslot.timeslot_id;
     }
     if (timeslotid !== null) {
-      return (
-        <Suspense fallback={<div>Loading...</div>}>
-          <Showplanner timeslotId={timeslotid} />
-        </Suspense>
-      );
+      return <Showplanner timeslotId={timeslotid} />;
     } else {
       return (
-        <div style={{marginLeft:"1.5%"}}>
+        <div style={{ marginLeft: "1.5%" }}>
           <h1>Welcome to WebStudio</h1>
           <input
             type="text"
             placeholder="enter a timeslot id"
             value={inputVal}
-            onChange={e => setInputVal(e.target.value)}
-            onKeyPress={e=>enterKeyCont(e.key)}
+            onChange={(e) => setInputVal(e.target.value)}
+            onKeyPress={(e) => enterKeyCont(e.key)}
             autoFocus
           />
           <button onClick={cont}>Continue</button>
