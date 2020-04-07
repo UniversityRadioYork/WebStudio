@@ -16,7 +16,7 @@ pipeline {
     stage('Python') {
       steps {
         sh '/usr/local/bin/python3.7 -m venv env'
-        sh 'env/bin/pip install -r requirements.txt'
+        sh 'env/bin/pip install -r requirements.ci.txt'
      }
     }
    }
