@@ -1,10 +1,9 @@
 import qs from "qs";
 
 export const MYRADIO_NON_API_BASE =
-  process.env.REACT_APP_MYRADIO_NONAPI_BASE ||
-  "https://ury.org.uk/myradio-staging";
+  process.env.REACT_APP_MYRADIO_NONAPI_BASE!;
 export const MYRADIO_BASE_URL =
-  process.env.REACT_APP_MYRADIO_BASE || "https://ury.org.uk/api-staging/v2";
+  process.env.REACT_APP_MYRADIO_BASE!;
 const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
 class ApiException extends Error {}
