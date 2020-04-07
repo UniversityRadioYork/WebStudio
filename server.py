@@ -20,7 +20,7 @@ def write_ob_status(status: bool) -> None:
     if not os.path.exists("/music/ob_state.conf"):
         print("OB State file does not exist. Bailing.")
         return
-    with open("/music/ob_state.conf", "r") as fd:
+    with open("/music/ob_state.conf", "w") as fd:
         content = fd.read()
         if "ws" in content:
             content = re.sub(file_contents_ex, "ws=" + str(1 if status else 0), content)
