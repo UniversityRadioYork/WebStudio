@@ -16,8 +16,7 @@ pipeline {
     stage('Python') {
       steps {
         sh '/usr/local/bin/python3.7 -m venv env'
-        sh '. env/bin/activate'
-        sh 'pip install -r requirements.txt'
+        sh 'env/bin/pip install -r requirements.txt'
      }
     }
    }
@@ -32,7 +31,7 @@ pipeline {
       }
       stage('MyPy') {
         steps {
-          sh 'mypy server.py'
+          sh 'env/bin/mypy server.py'
         }
       }
     }
