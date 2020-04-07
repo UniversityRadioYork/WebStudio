@@ -135,7 +135,7 @@ class Session(object):
             if self.pc.iceConnectionState == "failed":
                 await self.pc.close()
                 self.pc = None
-                await websocket.close(1008)
+                await self.websocket.close(1008)
                 return
 
         @self.pc.on("track")
