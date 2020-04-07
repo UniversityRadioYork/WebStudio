@@ -24,3 +24,6 @@ yarn-error.log*
 
 .env.local
 .yarn/
+
+.mypy_cache/
+env/

@@ -2,20 +2,21 @@ import asyncio
 import websockets
 import json
 import uuid
-import av
+import av # type: ignore
 import struct
-from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
-from aiortc.contrib.media import MediaBlackhole, MediaPlayer
-import jack as Jack
+from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription # type: ignore
+from aiortc.contrib.media import MediaBlackhole, MediaPlayer # type: ignore
+import jack as Jack # type: ignore
 import os
 import re
 from datetime import datetime
+from typing import Optional, Any
 
 
 file_contents_ex = re.compile(r"^ws=\d$")
 
 
-def write_ob_status(status):
+def write_ob_status(status: bool) -> None:
     if not os.path.exists("/music/ob_state.conf"):
         print("OB State file does not exist. Bailing.")
         return
@@ -26,19 +27,19 @@ def write_ob_status(status):
         else:
             if content[len(content) - 1] != "\n":
                 content += "\n"
-            content += "ws=" + (1 if status else 0) + "\n"
+            content += "ws=" + str(1 if status else 0) + "\n"
         fd.seek(0)
         fd.write(content)
         fd.truncate()
 
 
-@Jack.set_error_function
-def error(msg):
+@Jack.set_error_function # type: ignore
+def error(msg: str) -> None:
     print("Error:", msg)
 
 
-@Jack.set_info_function
-def info(msg):
+@Jack.set_info_function # type: ignore
+def info(msg: str) -> None:
     print("Info:", msg)
 
 
@@ -46,8 +47,10 @@ jack = Jack.Client("webstudio")
 out1 = jack.outports.register("out_0")
 out2 = jack.outports.register("out_1")
 
+transfer_buffer1: Any = None
+transfer_buffer2: Any = None
 
-def init_buffers():
+def init_buffers() -> None:
     global transfer_buffer1, transfer_buffer2
     transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
     transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
@@ -56,8 +59,8 @@ def init_buffers():
 init_buffers()
 
 
-@jack.set_process_callback
-def process(frames):
+@jack.set_process_callback # type: ignore
+def process(frames: int) -> None:
     buf1 = out1.get_buffer()
     piece1 = transfer_buffer1.read(len(buf1))
     buf1[: len(piece1)] = piece1
@@ -67,15 +70,16 @@ def process(frames):
 
 
 class JackSender(object):
-    def __init__(self, track):
+    resampler: Any
+    def __init__(self, track: MediaStreamTrack) -> None:
         self.track = track
         self.resampler = None
         self.ended = False
 
-    def end():
+    def end(self) -> None:
         self.ended = True
 
-    async def process(self):
+    async def process(self) -> None:
         while True:
             if self.ended:
                 break
@@ -99,13 +103,18 @@ current_session = None
 
 
 class Session(object):
-    def __init__(self):
+    websocket: Optional[websockets.WebSocketServerProtocol]
+    sender: Optional[JackSender]
+    connection_state: Optional[str]
+    pc: Optional[Any]
+
+    def __init__(self) -> None:
         self.websocket = None
         self.sender = None
         self.pc = None
         self.connection_state = None
 
-    async def end():
+    async def end(self) -> None:
         print(self.connection_id, "going away")
         if self.sender is not None:
             self.sender.end()
@@ -116,18 +125,21 @@ class Session(object):
         if self.websocket is not None:
             await self.websocket.send(json.dumps({"kind": "REPLACED"}))
 
-    def create_peerconnection(self):
+    def create_peerconnection(self) -> None:
         self.pc = RTCPeerConnection()
+        assert self.pc is not None
 
-        @self.pc.on("signalingstatechange")
-        async def on_signalingstatechange():
+        @self.pc.on("signalingstatechange") # type: ignore
+        async def on_signalingstatechange() -> None:
+            assert self.pc is not None
             print(
                 self.connection_id,
                 "Signaling state is {}".format(self.pc.signalingState),
             )
 
-        @self.pc.on("iceconnectionstatechange")
-        async def on_iceconnectionstatechange():
+        @self.pc.on("iceconnectionstatechange") # type: ignore
+        async def on_iceconnectionstatechange() -> None:
+            assert self.pc is not None
             print(
                 self.connection_id,
                 "ICE connection state is {}".format(self.pc.iceConnectionState),
@@ -135,18 +147,19 @@ class Session(object):
             if self.pc.iceConnectionState == "failed":
                 await self.pc.close()
                 self.pc = None
-                await self.websocket.close(1008)
+                if self.websocket is not None:
+                    await self.websocket.close(1008)
                 return
 
-        @self.pc.on("track")
-        async def on_track(track):
+        @self.pc.on("track") # type: ignore
+        async def on_track(track: MediaStreamTrack) -> None:
             global current_session
             print(self.connection_id, "Received track")
             if track.kind == "audio":
                 print(self.connection_id, "Adding to Jack.")
 
-                @track.on("ended")
-                async def on_ended():
+                @track.on("ended") # type: ignore
+                async def on_ended() -> None:
                     print(self.connection_id, "Track {} ended".format(track.kind))
                     # TODO: this doesn't exactly handle reconnecting gracefully
                     self.end()
@@ -158,16 +171,20 @@ class Session(object):
                 write_ob_status(True)
                 await self.sender.process()
 
-    async def process_ice(self, message):
+    async def process_ice(self, message: Any) -> None:
         if self.connection_state == "HELLO" and message["kind"] == "OFFER":
             offer = RTCSessionDescription(sdp=message["sdp"], type=message["type"])
             print(self.connection_id, "Received offer")
+
             self.create_peerconnection()
+            assert self.pc is not None
+
             await self.pc.setRemoteDescription(offer)
 
             answer = await self.pc.createAnswer()
             await self.pc.setLocalDescription(answer)
 
+            assert self.websocket is not None
             await self.websocket.send(
                 json.dumps(
                     {
@@ -187,7 +204,7 @@ class Session(object):
                 ),
             )
 
-    async def connect(self, websocket):
+    async def connect(self, websocket: websockets.WebSocketServerProtocol) -> None:
         self.websocket = websocket
         self.connection_id = uuid.uuid4()
         self.connection_state = "HELLO"
@@ -210,7 +227,7 @@ class Session(object):
                 )
 
 
-async def serve(websocket, path):
+async def serve(websocket: websockets.WebSocketServerProtocol, path: str) -> None:
     if path == "/stream":
         session = Session()
         await session.connect(websocket)

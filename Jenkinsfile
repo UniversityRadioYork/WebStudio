@@ -7,9 +7,35 @@ pipeline {
 
  stages {
   stage('Install dependencies') {
-   steps {
-    sh 'CI=true npm_config_python=/usr/local/bin/python2.7 yarn --no-progress --non-interactive --skip-integrity-check --frozen-lockfile install'
+   parallel {
+    stage('JavaScript') {
+      steps {
+      sh 'CI=true npm_config_python=/usr/local/bin/python2.7 yarn --no-progress --non-interactive --skip-integrity-check --frozen-lockfile install'
+     }
+    }
+    stage('Python') {
+      steps {
+        sh '/usr/local/bin/python3.7 -m venv env'
+        sh 'source env/bin/activate'
+        sh 'pip install -r requirements.txt'
+     }
+    }
    }
+  }
+
+  stage('Type checks') {
+    parallel {
+      stage('TypeScript') {
+        steps {
+          sh 'node_modules/.bin/tsc -p tsconfig.json --noEmit --extendedDiagnostics'
+        }
+      }
+      stage('MyPy') {
+        steps {
+          sh 'mypy server.py'
+        }
+      }
+    }
   }
 
   stage('Build and deploy to dev instance') {
@@ -21,6 +47,7 @@ pipeline {
     }
    }
   }
+  
   stage('Build and deploy for production') {
     when {
       branch 'production'
