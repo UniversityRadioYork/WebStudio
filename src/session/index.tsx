@@ -21,7 +21,7 @@ const SessionHandler: React.FC<{ }> = function () {
   }, [dispatch]);
 
   function redirectToLogin() {
-    window.location.replace(MYRADIO_NON_API_BASE + "/MyRadio/login/?next=" + redirect_url);
+    window.location.replace(MYRADIO_NON_API_BASE + "/MyRadio/login/?next=" + encodeURIComponent(MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url));
   }
 
   function redirectToTimeslotSelect() {
