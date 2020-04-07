@@ -25,7 +25,7 @@ def write_ob_status(status: bool) -> None:
         if "ws" in content:
             content = re.sub(file_contents_ex, "ws=" + str(1 if status else 0), content)
         else:
-            if content[len(content) - 1] != "\n":
+            if len(content) > 0 and content[len(content) - 1] != "\n":
                 content += "\n"
             content += "ws=" + str(1 if status else 0) + "\n"
         fd.seek(0)
