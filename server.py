@@ -20,7 +20,7 @@ def write_ob_status(status: bool) -> None:
     if not os.path.exists("/music/ob_state.conf"):
         print("OB State file does not exist. Bailing.")
         return
-    with open("/music/ob_state.conf", "w") as fd:
+    with open("/music/ob_state.conf", "r+") as fd:
         content = fd.read()
         if "ws" in content:
             content = re.sub(file_contents_ex, "ws=" + str(1 if status else 0), content)
@@ -139,17 +139,19 @@ class Session(object):
 
         @self.pc.on("iceconnectionstatechange") # type: ignore
         async def on_iceconnectionstatechange() -> None:
-            assert self.pc is not None
-            print(
-                self.connection_id,
-                "ICE connection state is {}".format(self.pc.iceConnectionState),
-            )
-            if self.pc.iceConnectionState == "failed":
-                await self.pc.close()
-                self.pc = None
-                if self.websocket is not None:
-                    await self.websocket.close(1008)
-                return
+            if self.pc is None:
+                print(self.connection_id, "ICE connection state change, but the PC is None!")
+            else:
+                print(
+                    self.connection_id,
+                    "ICE connection state is {}".format(self.pc.iceConnectionState),
+                )
+                if self.pc.iceConnectionState == "failed":
+                    await self.pc.close()
+                    self.pc = None
+                    if self.websocket is not None:
+                        await self.websocket.close(1008)
+                    return
 
         @self.pc.on("track") # type: ignore
         async def on_track(track: MediaStreamTrack) -> None:
