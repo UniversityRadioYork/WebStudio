@@ -16,7 +16,7 @@ pipeline {
     stage('Python') {
       steps {
         sh '/usr/local/bin/python3.7 -m venv env'
-        sh 'source env/bin/activate'
+        sh '. env/bin/activate'
         sh 'pip install -r requirements.txt'
      }
     }
