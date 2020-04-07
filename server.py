@@ -109,10 +109,12 @@ class Session(object):
         print(self.connection_id, "going away")
         if self.sender is not None:
             self.sender.end()
-        await self.pc.close()
+        if self.pc is not None:
+            await self.pc.close()
         init_buffers()
         write_ob_status(False)
-        await self.websocket.send(json.dumps({"kind": "REPLACED"}))
+        if self.websocket is not None:
+            await self.websocket.send(json.dumps({"kind": "REPLACED"}))
 
     def create_peerconnection(self):
         self.pc = RTCPeerConnection()
@@ -166,7 +168,7 @@ class Session(object):
             answer = await self.pc.createAnswer()
             await self.pc.setLocalDescription(answer)
 
-            await websocket.send(
+            await self.websocket.send(
                 json.dumps(
                     {
                         "kind": "ANSWER",
