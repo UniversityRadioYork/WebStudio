@@ -39,6 +39,7 @@ import { Player, USE_REAL_GAIN_VALUE } from "./Player";
 import { timestampToDateTime } from "../lib/utils";
 import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
+import { WelcomeModal } from "./WelcomeModal";
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -166,6 +167,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     planSaveError,
     planSaving,
   } = useSelector((state: RootState) => state.showplan);
+  const session = useSelector((state: RootState) => state.session);
+
+  const [showWelcomeModal, setShowWelcomeModal] = useState(!session.userCanBroadcast);
 
   const dispatch = useDispatch();
 
@@ -290,6 +294,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
       </ContextMenu>
       <OptionsMenu />
+      <WelcomeModal isOpen={showWelcomeModal} close={() => setShowWelcomeModal(false)} />
     </div>
   );
 };

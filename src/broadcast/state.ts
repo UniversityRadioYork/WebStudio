@@ -1,11 +1,9 @@
-import {
-  createSlice,
-  PayloadAction
-} from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { myradioApiRequest } from "../api";
 import { WebRTCStreamer } from "./rtc_streamer";
 import * as MixerState from "../mixer/state";
+import * as NavbarState from "../navbar/state";
 import { ConnectionStateEnum, Streamer } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 
@@ -20,73 +18,87 @@ const broadcastState = createSlice({
   name: "Broadcast",
   initialState: {
     tracklisting: false,
-    connectionState: "NOT_CONNECTED"
+    connectionState: "NOT_CONNECTED",
   } as BroadcastState,
   reducers: {
-    toggleTracklisting(
-      state
-    ) {
+    toggleTracklisting(state) {
       state.tracklisting = !state.tracklisting;
     },
     setConnectionState(state, action: PayloadAction<ConnectionStateEnum>) {
       state.connectionState = action.payload;
-    }
-  }
+    },
+  },
 });
 
 export default broadcastState.reducer;
 
-
 export interface TrackListItem {
-  audiologid: number
+  audiologid: number;
 }
 
 export const { toggleTracklisting } = broadcastState.actions;
 
-export const tracklistStart = (player: number, trackid: number): AppThunk =>async (dispatch, getState) => {
+export const tracklistStart = (
+  player: number,
+  trackid: number
+): AppThunk => async (dispatch, getState) => {
   if (getState().broadcast.tracklisting) {
     console.log("Attempting to tracklist: " + trackid);
     var id = (await sendTracklistStart(trackid)).audiologid;
-    dispatch(MixerState.setTracklistItemID({player, id}))
+    dispatch(MixerState.setTracklistItemID({ player, id }));
   }
 };
 
-export const tracklistEnd = (tracklistitemid: number): AppThunk => async (dispatch, getState) => {
+export const tracklistEnd = (tracklistitemid: number): AppThunk => async (
+  dispatch,
+  getState
+) => {
   if (getState().broadcast.tracklisting) {
     console.log("Attempting to end tracklistitem: " + tracklistitemid);
-    myradioApiRequest("/tracklistItem/" + tracklistitemid + "/endtime", "PUT", {});
+    myradioApiRequest(
+      "/tracklistItem/" + tracklistitemid + "/endtime",
+      "PUT",
+      {}
+    );
   }
 };
 
-export function sendTracklistStart(
-  trackid: number
-): Promise<TrackListItem> {
-  return myradioApiRequest("/tracklistItem", "POST",
-  {
+export function sendTracklistStart(trackid: number): Promise<TrackListItem> {
+  return myradioApiRequest("/tracklistItem", "POST", {
     trackid: trackid,
-    source: 'w',
-    state: 'c'
-  })
-};
+    source: "w",
+    state: "c",
+  });
+}
 
 const RECORD = false;
 
-export const connect = (): AppThunk => async dispatch => {
+export const connect = (): AppThunk => async (dispatch, getState) => {
   if (RECORD) {
     streamer = new RecordingStreamer(MixerState.destination.stream);
   } else {
+    if (!getState().session.userCanBroadcast) {
+      dispatch(
+        NavbarState.showAlert({
+          color: "warning",
+          content: "You are not WebStudio Trained and cannot go live.",
+          closure: 7000,
+        })
+      );
+      return;
+    }
     streamer = new WebRTCStreamer(MixerState.destination.stream);
   }
-  streamer.addConnectionStateListener(state => {
+  streamer.addConnectionStateListener((state) => {
     dispatch(broadcastState.actions.setConnectionState(state));
   });
   await streamer.start();
 };
 
-export const disconnect = (): AppThunk => async dispatch => {
+export const disconnect = (): AppThunk => async (dispatch) => {
   if (streamer) {
     await streamer.stop();
   } else {
     console.warn("disconnect called with no streamer!");
   }
-}
+};

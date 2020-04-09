@@ -3,13 +3,15 @@ import {
   PayloadAction
 } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
-import { User, getCurrentApiUser, Timeslot, getCurrentApiTimeslot } from "../api";
+import { User, getCurrentApiUser, Timeslot, getCurrentApiTimeslot, doesCurrentUserHavePermission } from "../api";
 import { timestampToDateTime } from "../lib/utils";
 
+const BROADCAST_PERMISSION_ID = 340;
 
 interface sessionState {
   currentUser: User | null;
   currentTimeslot: Timeslot | null;
+  userCanBroadcast: boolean;
   userLoading: boolean;
   userLoadError: string | null;
   timeslotLoading: boolean;
@@ -19,25 +21,27 @@ interface sessionState {
 const sessionState = createSlice({
   name: "Session",
   initialState: {
-    currentUser: null
+    currentUser: null,
+    currentTimeslot: null,
+    userCanBroadcast: false,
+    userLoading: false,
+    userLoadError: null,
+    timeslotLoading: false,
+    timeslotLoadError: null
   } as sessionState,
   reducers: {
     setCurrentUser(
       state,
-      action: PayloadAction<{ user: User | null }>
+      action: PayloadAction<{ user: User | null, canBroadcast: boolean }>
     ) {
+      state.userLoading = false;
+      state.userLoadError = null;
       state.currentUser = action.payload.user;
-      console.log("state")
+      state.userCanBroadcast = action.payload.canBroadcast;
     },
     getUserStarting(state) {
       state.userLoadError = null;
       state.userLoading = true;
-    },
-    getUserSuccess(state, action: PayloadAction<User>) {
-      console.log("Getting user succeeded.")
-      state.userLoading = false;
-      state.userLoadError = null;
-      state.currentUser = action.payload;
     },
     getUserError(state, action: PayloadAction<string>) {
       state.userLoading = false;
@@ -65,12 +69,6 @@ const sessionState = createSlice({
 
 export default sessionState.reducer;
 
-export const updateCurrentUser = (
-  user: User | null
-): AppThunk => async (dispatch, getState) => {
-  dispatch(sessionState.actions.setCurrentUser({user}));
-};
-
 export const getCurrentUser = (
 ): AppThunk => async (dispatch, getState) => {
   return getState().session.currentUser;
@@ -79,8 +77,8 @@ export const getCurrentUser = (
 export const getUser = (): AppThunk => async dispatch => {
   dispatch(sessionState.actions.getUserStarting());
   try {
-    const user = await getCurrentApiUser();
-    dispatch(sessionState.actions.getUserSuccess(user));
+    const [user, canBroadcast] = await Promise.all([ getCurrentApiUser(), doesCurrentUserHavePermission(BROADCAST_PERMISSION_ID) ]);
+    dispatch(sessionState.actions.setCurrentUser({user, canBroadcast}));
   } catch (e) {
     console.log("failed to get user. " + e.toString())
     dispatch(sessionState.actions.getUserError(e.toString()));

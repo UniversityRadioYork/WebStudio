@@ -261,3 +261,6 @@ export function getCurrentApiUser(): Promise<User> {
 };
 
 
+export function doesCurrentUserHavePermission(id: number): Promise<boolean> {
+  return myradioApiRequest("/auth/haspermission/" + id.toString(10), "GET", {});
+}
