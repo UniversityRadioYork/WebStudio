@@ -1550,6 +1550,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/sdp-transform@^2.4.3":
+  version "2.4.3"
+  resolved "https://registry.yarnpkg.com/@types/sdp-transform/-/sdp-transform-2.4.3.tgz#67cb3e8319f2de37e95e376002b89e870e19c69e"
+  integrity sha512-DaDNfnjtnO2KMw0XxO3cUEs9G6wioOCWnUTG/g24zh1jccCsV5hzHILZoDRds0LLFhKcMEJfoC7YFuMAYL51uw==
+
 "@types/shallowequal@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/shallowequal/-/shallowequal-1.1.1.tgz#aad262bb3f2b1257d94c71d545268d592575c9b1"
@@ -9537,6 +9542,11 @@ scss-tokenizer@^0.2.3:
   dependencies:
     js-base64 "^2.1.8"
     source-map "^0.4.2"
+
+sdp-transform@^2.14.0:
+  version "2.14.0"
+  resolved "https://registry.yarnpkg.com/sdp-transform/-/sdp-transform-2.14.0.tgz#222452e79e335f000fb9a9a2850021265d1da12d"
+  integrity sha512-8ZYOau/o9PzRhY0aMuRzvmiM6/YVQR8yjnBScvZHSdBnywK5oZzAJK+412ZKkDq29naBmR3bRw8MFu0C01Gehg==
 
 select-hose@^2.0.0:
   version "2.0.0"

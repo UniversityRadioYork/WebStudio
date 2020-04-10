@@ -1,3 +1,5 @@
+import SdpTransform from "sdp-transform";
+
 import {
 	Streamer,
 	ConnectionStateListener,
@@ -70,7 +72,24 @@ export class WebRTCStreamer extends Streamer {
 					this.ws!.close();
 				}
 				const offer = await this.pc.createOffer();
-				// TODO do some fun SDP fuckery to get quality
+				
+				// Do some fun SDP fuckery to get better quality
+				const parsed = SdpTransform.parse(offer.sdp!);
+				console.log("Old SDP", parsed);
+				parsed.media.forEach(track => {
+					let opusIndex = 0;
+					for (let i = 0; i < track.rtp.length; i++) {
+						if (track.rtp[i].codec === "opus") {
+							opusIndex = i;
+						}
+						// TODO: maybe delete non-Opus candidates?
+					}
+					track.fmtp[opusIndex].config += `; maxaveragebitrate=${192 * 2 * 1024}; stereo=1; sprop-stereo=1 ; cbr=1`;
+				});
+
+				offer.sdp = SdpTransform.write(parsed);
+				console.log("New SDP", offer.sdp);
+
 				await this.pc.setLocalDescription(offer);
 				await this.waitForIceCandidates();
 				this.ws!.send(

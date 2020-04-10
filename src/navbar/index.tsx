@@ -69,7 +69,9 @@ export function NavBar() {
 						onClick={() =>
 							dispatch(
 								broadcastState.connectionState ===
-									"NOT_CONNECTED"
+									"NOT_CONNECTED" ||
+									broadcastState.connectionState ===
+										"CONNECTION_LOST"
 									? BroadcastState.startStreaming()
 									: BroadcastState.stopStreaming()
 							)
