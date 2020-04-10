@@ -6,6 +6,7 @@ import {
 	mixerKeyboardShortcutsMiddleware,
 } from "./mixer/state";
 import { tabSyncMiddleware } from "./optionsMenu/state";
+import { persistStore } from "redux-persist";
 
 const store = configureStore({
 	reducer: rootReducer,
@@ -23,6 +24,8 @@ if (process.env.NODE_ENV === "development" && module.hot) {
 		store.replaceReducer(newRootReducer);
 	});
 }
+
+export const persistor = persistStore(store);
 
 export type AppDispatch = typeof store.dispatch;
 export type AppThunk = ThunkAction<void, RootState, null, Action<string>>;
