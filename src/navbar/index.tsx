@@ -31,6 +31,9 @@ export function NavBar() {
 			</div>
 
 			<ul className="nav navbar-nav navbar-right">
+				{/*
+				hidden by marks polakovs
+				stratford pls remove
 				<li className="nav-item nav-link">
 					<button
 						className=""
@@ -42,7 +45,7 @@ export function NavBar() {
 							? "Tracklisting!"
 							: "Not Tracklisting"}{" "}
 					</button>
-				</li>
+				</li>*/}
 				{settings.enableRecording && (
 					<li className="nav-item nav-link">
 						<button
@@ -56,7 +59,7 @@ export function NavBar() {
 								)
 							}
 						>
-							Rec: {broadcastState.recordingState}
+							R: {broadcastState.recordingState}
 						</button>
 					</li>
 				)}
@@ -72,7 +75,7 @@ export function NavBar() {
 							)
 						}
 					>
-						Str: {broadcastState.connectionState}
+						S: {broadcastState.connectionState}
 					</button>
 				</li>
 				<li className="nav-item dropdown">
