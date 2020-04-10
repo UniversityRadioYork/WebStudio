@@ -13,7 +13,7 @@ export const TS_ITEM_MENU_ID = "SongMenu";
 export const Item = memo(function Item({
   item: x,
   index,
-  column
+  column,
 }: {
   item: PlanItem | Track | AuxItem;
   index: number;
@@ -26,6 +26,10 @@ export const Item = memo(function Item({
 
   const playerState = useSelector(
     (state: RootState) => state.mixer.players[column]
+  );
+
+  const showDebug = useSelector(
+    (state: RootState) => state.settings.showDebugInfo
   );
 
   function triggerClick() {
@@ -55,17 +59,22 @@ export const Item = memo(function Item({
             id={isReal ? TS_ITEM_MENU_ID : ""}
             collect={() => ({ id })}
           >
-            <i className={"fa fa-circle " + (x.type)}></i>&nbsp;
+            <i className={"fa fa-circle " + x.type}></i>&nbsp;
             {x.title}
             {"artist" in x && " - " + x.artist}
-            <small className=
-              {"border rounded border-danger text-danger p-1 m-1" + (
-                "clean" in x && x.clean === false ? "" : " d-none")}>
+            <small
+              className={
+                "border rounded border-danger text-danger p-1 m-1" +
+                ("clean" in x && x.clean === false ? "" : " d-none")
+              }
+            >
               Explicit
             </small>
-            <code>
-              {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
-            </code>
+            {showDebug && (
+              <code>
+                {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
+              </code>
+            )}
           </ContextMenuTrigger>
         </div>
       )}

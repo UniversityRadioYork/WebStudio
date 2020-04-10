@@ -1469,6 +1469,11 @@
   resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.1.tgz#937fab3194766256ee09fcd40b781740758617e7"
   integrity sha512-lhbQXx9HKZAPgBkISrBcmAcMpZsmpe/Cd/hY7LGZS5OfkySUBItnPZHgQPssWYUET8elF+yCFBbP1Q0RZPTdaw==
 
+"@types/raygun4js@^2.13.2":
+  version "2.13.2"
+  resolved "https://registry.yarnpkg.com/@types/raygun4js/-/raygun4js-2.13.2.tgz#5ca323687c6a2e7e0f744d176e81ff3c3b35f28f"
+  integrity sha512-lcEfBC5dIoSuRT5A9JaUXD5HetgXYnFJaj3+5e9FfEer1Z2Hr7UzSMCbRbF91x86IW1IhbTpH7CpZx1LvoNOIQ==
+
 "@types/react-beautiful-dnd@^11.0.3":
   version "11.0.5"
   resolved "https://registry.yarnpkg.com/@types/react-beautiful-dnd/-/react-beautiful-dnd-11.0.5.tgz#2f5bc733dd46da28312c8ee0c126ab7202b90247"
@@ -1530,6 +1535,13 @@
   dependencies:
     "@types/react" "*"
     popper.js "^1.14.1"
+
+"@types/redux-persist@^4.3.1":
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/@types/redux-persist/-/redux-persist-4.3.1.tgz#aa4c876859e0bea5155e5f7980e5b8c4699dc2e6"
+  integrity sha1-qkyHaFngvqUVXl95gOW4xGmdwuY=
+  dependencies:
+    redux-persist "*"
 
 "@types/resolve@0.0.8":
   version "0.0.8"
@@ -8715,6 +8727,11 @@ raw-body@2.4.0:
     iconv-lite "0.4.24"
     unpipe "1.0.0"
 
+raygun4js@^2.18.3:
+  version "2.18.3"
+  resolved "https://registry.yarnpkg.com/raygun4js/-/raygun4js-2.18.3.tgz#204a403dcc95d6e449d58952d0a6ade0bde2ca98"
+  integrity sha512-JVVAIYOqUcU9zqMhUJ34Wuh2U45ZY8E/S0v6FVieOku0boZYRMh+8jh7g/OQ8JqAXDjjMpF+GJCcdeVAXHIUeg==
+
 react-app-polyfill@^1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/react-app-polyfill/-/react-app-polyfill-1.0.6.tgz#890f8d7f2842ce6073f030b117de9130a5f385f0"
@@ -9010,6 +9027,11 @@ redux-immutable-state-invariant@^2.1.0:
   dependencies:
     invariant "^2.1.0"
     json-stringify-safe "^5.0.1"
+
+redux-persist@*, redux-persist@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/redux-persist/-/redux-persist-6.0.0.tgz#b4d2972f9859597c130d40d4b146fecdab51b3a8"
+  integrity sha512-71LLMbUq2r02ng2We9S215LtPu3fY0KgaGE0k8WRgl6RkqxtGfl7HUozz1Dftwsb0D/5mZ8dwAaPbtnzfvbEwQ==
 
 redux-thunk@^2.3.0:
   version "2.3.0"
