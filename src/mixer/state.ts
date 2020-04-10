@@ -509,7 +509,7 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
 		console.log("nothing loaded");
 		return;
 	}
-	if (getState().mixer.players[player].loading) {
+	if (getState().mixer.players[player].loading !== -1) {
 		console.log("not ready");
 		return;
 	}
