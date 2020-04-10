@@ -12,6 +12,7 @@ export function NavBar() {
 	const dispatch = useDispatch();
 	const sessionState = useSelector((state: RootState) => state.session);
 	const broadcastState = useSelector((state: RootState) => state.broadcast);
+	const settings = useSelector((state: RootState) => state.settings);
 	const redirect_url = encodeURIComponent(window.location.toString());
 	return (
 		<>
@@ -42,6 +43,25 @@ export function NavBar() {
 							: "Not Tracklisting"}{" "}
 					</button>
 				</li>
+				{settings.enableRecording && (
+					<li className="nav-item nav-link">
+						<button
+							className=""
+							onClick={() =>
+								dispatch(
+									broadcastState.recordingState ===
+										"NOT_CONNECTED"
+										? BroadcastState.startRecording()
+										: BroadcastState.stopRecording()
+								)
+							}
+						>
+							{broadcastState.recordingState === "NOT_CONNECTED"
+								? "Start Recording"
+								: "Stop Recording"}
+						</button>
+					</li>
+				)}
 				<li className="nav-item nav-link">
 					<button
 						className=""
@@ -49,8 +69,8 @@ export function NavBar() {
 							dispatch(
 								broadcastState.connectionState ===
 									"NOT_CONNECTED"
-									? BroadcastState.connect()
-									: BroadcastState.disconnect()
+									? BroadcastState.startStreaming()
+									: BroadcastState.stopStreaming()
 							)
 						}
 					>

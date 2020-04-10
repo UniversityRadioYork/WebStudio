@@ -70,6 +70,7 @@ pipeline {
         steps {
           sshagent(credentials: ['ury']) {
            sh 'scp -v -o StrictHostKeyChecking=no server.py liquidsoap@dolby.ury:/opt/webstudioserver/server.py'
+           sh 'scp -v -o StrictHostKeyChecking=no requirements.txt liquidsoap@dolby.ury:/opt/webstudioserver/requirements.txt'
           }
         }
       }
