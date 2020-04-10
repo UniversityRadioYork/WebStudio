@@ -27,6 +27,24 @@ export function AdvancedTab() {
 					Show showplan debugging information
 				</label>
 			</div>
+			<div className="form-check">
+				<input
+					className="form-check-input"
+					type="checkbox"
+					checked={settings.enableRecording}
+					onChange={(e) =>
+						dispatch(
+							changeSetting({
+								key: "enableRecording",
+								val: e.target.checked,
+							})
+						)
+					}
+				/>
+				<label className="form-check-label">
+					Enable recording
+				</label>
+			</div>
 		</>
 	);
 }
