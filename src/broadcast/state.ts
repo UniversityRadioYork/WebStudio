@@ -107,7 +107,7 @@ let recorder: RecordingStreamer;
 export const startRecording = (): AppThunk => async dispatch => {
   recorder = new RecordingStreamer(MixerState.destination.stream);
   recorder.addConnectionStateListener((state) => {
-    dispatch(broadcastState.actions.setConnectionState(state));
+    dispatch(broadcastState.actions.setRecordingState(state));
   });
   await recorder.start();
 }
