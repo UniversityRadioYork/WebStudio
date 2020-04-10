@@ -133,7 +133,7 @@ function MicControl() {
   return (
     <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
       <h2>Microphone</h2>
-      <div className="sp-mixer-buttons">
+      <div className={`sp-mixer-buttons ${!state.open && "disabled"}`}>
         <div
           className="sp-mixer-buttons-backdrop"
           style={{

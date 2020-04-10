@@ -186,6 +186,10 @@ button{
   background-color: #78acf1;
 }
 
+.sp-mixer-buttons.disabled .sp-mixer-buttons-backdrop {
+  background-color: #999;
+}
+
 .sp-mixer-buttons button {
   flex: 1;
   background: transparent;
