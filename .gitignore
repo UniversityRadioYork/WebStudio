@@ -27,3 +27,5 @@ yarn-error.log*
 
 .mypy_cache/
 env/
+
+shittyserver.ini

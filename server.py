@@ -10,7 +10,21 @@ import jack as Jack # type: ignore
 import os
 import re
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, Type
+from types import TracebackType
+import sys
+from raygun4py import raygunprovider # type: ignore
+
+import configparser
+
+config = configparser.ConfigParser()
+config.read("shittyserver.ini")
+
+def handle_exception(exc_type: Type[BaseException], exc_value: BaseException, exc_traceback: TracebackType) -> None:
+  cl = raygunprovider.RaygunSender(config["raygun"]["key"])
+  cl.send_exception(exc_info=(exc_type, exc_value, exc_traceback))
+
+sys.excepthook = handle_exception
 
 
 file_contents_ex = re.compile(r"^ws=\d$")
@@ -211,6 +225,7 @@ class Session(object):
         self.connection_id = uuid.uuid4()
         self.connection_state = "HELLO"
         print(self.connection_id, "Connected")
+        # TODO Raygun user ID
         await websocket.send(
             json.dumps({"kind": "HELLO", "connectionId": str(self.connection_id)})
         )
