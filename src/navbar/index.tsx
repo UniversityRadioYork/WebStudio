@@ -56,9 +56,7 @@ export function NavBar() {
 								)
 							}
 						>
-							{broadcastState.recordingState === "NOT_CONNECTED"
-								? "Start Recording"
-								: "Stop Recording"}
+							Rec: {broadcastState.recordingState}
 						</button>
 					</li>
 				)}
@@ -74,7 +72,7 @@ export function NavBar() {
 							)
 						}
 					>
-						{broadcastState.connectionState}
+						Str: {broadcastState.connectionState}
 					</button>
 				</li>
 				<li className="nav-item dropdown">
