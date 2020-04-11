@@ -135,15 +135,15 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
 				value={title}
 				onChange={e => setTitle(e.target.value)}
 			/>
-			<Droppable droppableId="$CML">
+			<Droppable droppableId="$AUX">
 				{(provided, snapshot) => (
 					<div ref={provided.innerRef} {...provided.droppableProps}>
 						{items
 							.filter(
 								its =>
-									its.summary
+									its.title.toString()
 										.toLowerCase()
-										.indexOf(its.summary.toLowerCase()) > -1
+										.indexOf(its.title.toString().toLowerCase()) > -1
 							)
 							.map((item, index) => (
 								<Item

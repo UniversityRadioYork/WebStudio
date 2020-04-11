@@ -60,7 +60,7 @@ export const Item = memo(function Item({
             collect={() => ({ id })}
           >
             <i className={"fa fa-circle " + x.type}></i>&nbsp;
-            {x.title}
+            {x.title.toString()}
             {"artist" in x && " - " + x.artist}
             <small
               className={

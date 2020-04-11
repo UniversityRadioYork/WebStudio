@@ -79,8 +79,8 @@ interface TimeslotItemCentral {
 
 export interface AuxItem {
   type: "aux";
-  summary: string;
-  title?: string;
+  summary: string | number;
+  title: string | number;
   managedid: number;
   length: string;
   trackid: number;
