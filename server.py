@@ -146,6 +146,7 @@ class Session(object):
     connection_state: Optional[str]
     pc: Optional[Any]
     connection_id: str
+    lock: asyncio.Lock
 
     def __init__(self) -> None:
         self.websocket = None
@@ -154,6 +155,7 @@ class Session(object):
         self.connection_state = None
         self.connection_id = str(uuid.uuid4())
         self.ended = False
+        self.lock = asyncio.Lock()
 
     def to_dict(self) -> Dict[str, str]:
         return {"connection_id": self.connection_id}
@@ -169,33 +171,37 @@ class Session(object):
     async def end(self) -> None:
         global active_sessions
 
-        if self.ended:
-            print(self.connection_id, "already over")
-        else:
-            print(self.connection_id, "going away")
-
-            if self.sender is not None:
-                self.sender.end()
-
-            if self.pc is not None:
-                await self.pc.close()
-
-            init_buffers()
-
-            if self.websocket is not None and self.websocket.state == websockets.protocol.State.OPEN:
-                await self.websocket.send(json.dumps({"kind": "REPLACED"}))
-                await self.websocket.close(1008)
-
-            if self.connection_id in active_sessions:
-                del active_sessions[self.connection_id]
-                if len(active_sessions) == 0:
-                    write_ob_status(False)
+        async with self.lock:
+            if self.ended:
+                print(self.connection_id, "already over")
             else:
-                print(self.connection_id, "wasn't in active_sessions!")
+                print(self.connection_id, "going away")
 
-            await notify_mattserver_about_sessions()
-            print(self.connection_id, "bye bye")
-        self.ended = True
+                if self.sender is not None:
+                    self.sender.end()
+
+                if self.pc is not None:
+                    await self.pc.close()
+
+                init_buffers()
+
+                if self.websocket is not None and self.websocket.state == websockets.protocol.State.OPEN:
+                    await self.websocket.send(json.dumps({"kind": "REPLACED"}))
+                    await self.websocket.close(1008)
+
+                if self.connection_id in active_sessions:
+                    del active_sessions[self.connection_id]
+                    if len(active_sessions) == 0:
+                        write_ob_status(False)
+                else:
+                    print(self.connection_id, "wasn't in active_sessions!")
+
+                if live_session == self:
+                    live_session = None
+
+                await notify_mattserver_about_sessions()
+                print(self.connection_id, "bye bye")
+            self.ended = True
 
     def create_peerconnection(self) -> None:
         self.pc = RTCPeerConnection()
@@ -333,10 +339,10 @@ async def telnet_server(
         print(parts)
 
         if parts[0] == "Q":
-            data: Dict[str, Dict[str, str]] = {}
+            result: Dict[str, Dict[str, str]] = {}
             for sid, sess in active_sessions.items():
-                data[sid] = sess.to_dict()
-            writer.write((json.dumps(data) + "\r\n").encode("utf-8"))
+                result[sid] = sess.to_dict()
+            writer.write((json.dumps(result) + "\r\n").encode("utf-8"))
 
         elif parts[0] == "SEL":
             sid = parts[1]
