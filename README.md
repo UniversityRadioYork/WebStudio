@@ -1,44 +1,39 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# WebStudio
 
-## Available Scripts
+WebStudio is URY's big fun machine for doing radio shows from home, using Web Audio and WebRTC.
 
-In the project directory, you can run:
+The clientside is written in TypeScript using React and Redux, the serverside is Python using AsyncIO and JACK.
 
-### `yarn start`
+## Development
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Installing
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+Clone the repo and run `yarn`.
 
-### `yarn test`
+You'll probably want to change the values in `.env` to reflect the MyRadio environment and/or where the server is running (e.g. if you're running the server locally, change `REACT_APP_WS_URL` to `ws://localhost:8079/stream`).
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+If you want to hack on the server, create a virtualenv and install Python packages:
 
-### `yarn build`
+```sh
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt
+```
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Hacking
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+Start the client by running `yarn start`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Start the server by running `python3 server.py`.
 
-### `yarn eject`
+Don't forget to ensure that both TypeScript and MyPy pass, as your code will be rejected by CI otherwise - run `tsc --noEmit` and/or `mypy server.py` to check.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Releasing a new version
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Every push to `master` is deployed automatically by Jenkins to https://ury.org.uk/webstudio-dev.
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Deploying to https://ury.org.uk/webstudio is also automated but slightly more involved:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Change the `version` field in `package.json` to ensure the "about" page is up to date
+2. Push up your version bump and create a pull request to the `production` branch - https://github.com/UniversityRadioYork/WebStudio/compare/production...master
+3. Once your changes are merged into `production` they'll get deployed automatically (although you will need to restart the server - ssh to Dolby and run `sudo systemctl restart webstudioserver`)
