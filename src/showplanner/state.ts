@@ -359,10 +359,10 @@ export const removeItem = (
     ops.push({
       op: "MoveItem",
       timeslotitemid: itemId(movingItem),
-      oldchannel: item.channel,
-      oldweight: item.weight,
-      channel: item.channel,
-      weight: item.weight - 1
+      oldchannel: movingItem.channel,
+      oldweight: movingItem.weight,
+      channel: movingItem.channel,
+      weight: movingItem.weight - 1
     });
     movingItem.weight -= 1;
   }
