@@ -141,9 +141,9 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
 						{items
 							.filter(
 								its =>
-									its.title
+									its.summary
 										.toLowerCase()
-										.indexOf(title.toLowerCase()) > -1
+										.indexOf(its.summary.toLowerCase()) > -1
 							)
 							.map((item, index) => (
 								<Item

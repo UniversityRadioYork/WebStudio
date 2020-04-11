@@ -223,7 +223,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         weight: result.destination.index,
         clean: true,
         ...data,
-      };
+      } as any;
       dispatch(addItem(timeslotId, newItem));
       increment(null);
     } else {
