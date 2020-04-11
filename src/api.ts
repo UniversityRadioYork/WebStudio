@@ -4,19 +4,22 @@ export const MYRADIO_NON_API_BASE =
   process.env.REACT_APP_MYRADIO_NONAPI_BASE!;
 export const MYRADIO_BASE_URL =
   process.env.REACT_APP_MYRADIO_BASE!;
+export const BROADCAST_API_BASE_URL =
+  process.env.REACT_APP_BROADCAST_API_BASE!;
 const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
 class ApiException extends Error {}
 
-export async function myradioRequest(
+export async function apiRequest(
   url: string,
   method: "GET" | "POST" | "PUT",
-  params: any
+  params: any,
+  need_auth: boolean = true
 ): Promise<Response> {
   let req = null;
   if (method === "GET") {
     req = fetch(url + qs.stringify(params, { addQueryPrefix: true }), {
-      credentials: "include"
+      credentials: (need_auth ? "include" : "omit")
     });
   } else {
     const body = JSON.stringify(params);
@@ -27,7 +30,7 @@ export async function myradioRequest(
       headers: {
         "Content-Type": "application/json; charset=UTF-8"
       },
-      credentials: "include"
+      credentials: (need_auth ? "include" : "omit")
     });
   }
   return await req;
@@ -38,7 +41,22 @@ export async function myradioApiRequest(
   method: "GET" | "POST" | "PUT",
   params: any
 ): Promise<any> {
-  const res = await myradioRequest(MYRADIO_BASE_URL + endpoint, method, params);
+  const res = await apiRequest(MYRADIO_BASE_URL + endpoint, method, params);
+  const json = await res.json();
+  if (json.status === "OK") {
+    return json.payload;
+  } else {
+    console.error(json.payload);
+    throw new ApiException("Request failed!");
+  }
+}
+
+export async function broadcastApiRequest(
+  endpoint: string,
+  method: "GET" | "POST" | "PUT",
+  params: any
+): Promise<any> {
+  const res = await apiRequest(BROADCAST_API_BASE_URL + endpoint, method, params, false);
   const json = await res.json();
   if (json.status === "OK") {
     return json.payload;
@@ -183,7 +201,7 @@ export function getAuxPlaylists(): Promise<Array<ManagedPlaylist>> {
 }
 
 export function loadAuxLibrary(libraryId: string): Promise<AuxItem[]> {
-  return myradioRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
+  return apiRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
     libraryid: libraryId
   }).then(res => res.json());
 }

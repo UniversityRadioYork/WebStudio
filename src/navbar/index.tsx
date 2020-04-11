@@ -1,5 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import Clock from 'react-live-clock';
+
 import { RootState } from "../rootReducer";
 
 import * as BroadcastState from "../broadcast/state";
@@ -16,7 +18,7 @@ export function NavBar() {
 	const redirect_url = encodeURIComponent(window.location.toString());
 	return (
 		<>
-			<div className="navbar-nav">
+			<div className="navbar-nav navbar-">
 				<a className="navbar-brand" href="/">
 					<img
 						src="//ury.org.uk/myradio/img/URY.svg"
@@ -28,6 +30,26 @@ export function NavBar() {
 				<a className="navbar-brand" href="/">
 					<img src={appLogo} height="28" alt="Web Studio Logo" />
 				</a>
+				<div id="timelord" onClick={() => {
+					switch (broadcastState.stage) {
+						case "NOT_REGISTERED":
+							dispatch(
+								BroadcastState.registerTimeslot()
+							)
+							break;
+						case "REGISTERED":
+							dispatch(
+								BroadcastState.cancelTimeslot()
+							)
+							break;
+					}
+				}}>
+					<div className="time"><Clock format={'HH:mm:ss'} ticking={true} timezone={'EU/London'} /></div>
+					<div className="message">
+						{broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
+						{broadcastState.stage === "REGISTERED" && "Cancel show"}
+					</div>
+				</div>
 			</div>
 
 			<ul className="nav navbar-nav navbar-right">
@@ -193,7 +215,7 @@ export function CombinedNavAlertBar() {
 		<>
 			<AlertBar />
 			<header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
-				<nav className="container">
+				<nav className="container-fluid">
 					<button
 						className="navbar-toggler"
 						type="button"
