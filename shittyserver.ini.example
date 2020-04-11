@@ -1,2 +1,5 @@
 [raygun]
 key = CHANGEME
+
+[mattserver]
+notify_url = https://ent9s2r5u77vj.x.pipedream.net
