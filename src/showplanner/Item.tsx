@@ -28,6 +28,8 @@ export const Item = memo(function Item({
     (state: RootState) => state.mixer.players[column]
   );
 
+  const isLoaded = playerState.loadedItem !== null && itemId(playerState.loadedItem) === id;
+
   const showDebug = useSelector(
     (state: RootState) => state.settings.showDebugInfo
   );
@@ -39,7 +41,7 @@ export const Item = memo(function Item({
   }
 
   return (
-    <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
+    <Draggable draggableId={id} index={index} isDragDisabled={isGhost || isLoaded}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
