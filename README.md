@@ -6,6 +6,16 @@ The clientside is written in TypeScript using React and Redux, the serverside is
 
 ## Development
 
+### Requirements
+
+Client:
+
+ * Node.js and Yarn (Yarn 1, 2 isn't supported very well by webpack/typescript/anything really)
+
+Server:
+
+* Python >=3.7
+
 ### Installing
 
 Clone the repo and run `yarn`.
