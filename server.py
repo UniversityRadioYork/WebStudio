@@ -93,6 +93,9 @@ def process(frames: int) -> None:
     buf2[: len(piece2)] = piece2
 
 
+tasky_boi: Optional[asyncio.Task] = None
+
+
 class JackSender(object):
     resampler: Any
 
@@ -335,7 +338,7 @@ print("Shittyserver WS starting on port {}.".format(config.get("ports", "websock
 async def telnet_server(
     reader: asyncio.StreamReader, writer: asyncio.StreamWriter
 ) -> None:
-    global active_sessions, live_session
+    global active_sessions, live_session, tasky_boi
     while True:
         data = await reader.read(128)
         if not data:
@@ -367,6 +370,8 @@ async def telnet_server(
             if sid == "NUL":
                 if live_session is not None:
                     await live_session.end()
+                    if tasky_boi is not None:
+                        await tasky_boi.result()
                     writer.write("OKAY\r\n".encode("utf-8"))
                 else:
                     writer.write("WONT\r\n".encode("utf-8"))
@@ -376,11 +381,13 @@ async def telnet_server(
                 else:
                     session = active_sessions[sid]
                     if session is None:
-                        writer.write("FAIL\r\n".encode("utf-8"))
+                        writer.write("FAIL no_such_session\r\n".encode("utf-8"))
+                    elif live_session is not None and live_session.connection_id == sid:
+                        writer.write("WONT already_live\r\n".encode("utf-8"))
                     else:
                         if live_session is not None:
                             await live_session.end()
-                        asyncio.ensure_future(session.activate())
+                        tasky_boi = asyncio.create_task(session.activate())
                         live_session = session
                         writer.write("OKAY\r\n".encode("utf-8"))
         else:
