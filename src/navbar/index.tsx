@@ -44,7 +44,7 @@ export function NavBar() {
 							break;
 					}
 				}}>
-					<div className="time"><Clock format={'HH:mm:ss'} ticking={true} timezone={'EU/London'} /></div>
+					<div className="time"><Clock format={'HH:mm:ss'} ticking={true} timezone={'europe/london'} /></div>
 					<div className="message">
 						{broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
 						{broadcastState.stage === "REGISTERED" && "Cancel show"}
