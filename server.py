@@ -169,7 +169,7 @@ class Session(object):
             await self.sender.process()
 
     async def end(self) -> None:
-        global active_sessions
+        global active_sessions, live_session
 
         async with self.lock:
             if self.ended:
@@ -235,7 +235,6 @@ class Session(object):
 
         @self.pc.on("track")  # type: ignore
         async def on_track(track: MediaStreamTrack) -> None:
-            global active_sessions
             print(self.connection_id, "Received track")
             if track.kind == "audio":
                 print(self.connection_id, "Adding to Jack.")
