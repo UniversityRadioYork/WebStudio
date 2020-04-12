@@ -5,6 +5,7 @@ import uuid
 import av  # type: ignore
 import struct
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
+from aiortc.mediastreams import MediaStreamError # type: ignore
 from aiortc.contrib.media import MediaBlackhole, MediaPlayer  # type: ignore
 import jack as Jack  # type: ignore
 import os
@@ -226,12 +227,15 @@ class Session(object):
                 @track.on("ended")  # type: ignore
                 async def on_ended() -> None:
                     print(self.connection_id, "Track {} ended".format(track.kind))
-                    # TODO: this doesn't exactly handle reconnecting gracefully
                     await self.end()
 
                 write_ob_status(True)
                 while True:
-                    frame = await track.recv()
+                    try:
+                        frame = await track.recv()
+                    except MediaStreamError as e:
+                        print(self.connection_id, e)
+                        await self.end()
                     if self.running:
                         # Right, depending on the format, we may need to do some fuckery.
                         # Jack expects all audio to be 32 bit floating point
