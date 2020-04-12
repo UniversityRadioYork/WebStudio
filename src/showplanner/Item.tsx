@@ -25,10 +25,10 @@ export const Item = memo(function Item({
   const isGhost = "ghostid" in x;
 
   const playerState = useSelector(
-    (state: RootState) => state.mixer.players[column]
+    (state: RootState) => column > -1 ? state.mixer.players[column] : undefined
   );
 
-  const isLoaded = playerState.loadedItem !== null && itemId(playerState.loadedItem) === id;
+  const isLoaded = playerState && playerState.loadedItem !== null && itemId(playerState.loadedItem) === id;
 
   const showDebug = useSelector(
     (state: RootState) => state.settings.showDebugInfo
@@ -48,6 +48,7 @@ export const Item = memo(function Item({
           key={id}
           className={`sp-track ${
             column >= 0 &&
+            playerState &&
             playerState.loadedItem !== null &&
             itemId(playerState.loadedItem) === id
               ? "sp-track-active"
