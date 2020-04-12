@@ -93,7 +93,7 @@ def process(frames: int) -> None:
     buf2[: len(piece2)] = piece2
 
 
-tasky_boi: Optional[asyncio.Task[Any]] = None
+tasky_boi: Optional['asyncio.Task'[Any]] = None
 
 
 class JackSender(object):
