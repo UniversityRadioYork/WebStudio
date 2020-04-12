@@ -49,8 +49,6 @@ const broadcastState = createSlice({
   reducers: {
     changeSetting<K extends keyof BroadcastState>(state: BroadcastState, action: PayloadAction<{ key: K, val: BroadcastState[K] }>) {
       state[action.payload.key] = action.payload.val;
-      console.log("Changing timeslot broadcast options.")
-      changeTimeslot()
     },
     toggleTracklisting(state) {
       state.tracklisting = !state.tracklisting;
