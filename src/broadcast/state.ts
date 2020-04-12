@@ -209,6 +209,7 @@ export const startStreaming = (): AppThunk => async (dispatch, getState) => {
 export const stopStreaming = (): AppThunk => async (dispatch) => {
   if (streamer) {
     await streamer.stop();
+    streamer = null;
   } else {
     console.warn("disconnect called with no streamer!");
   }

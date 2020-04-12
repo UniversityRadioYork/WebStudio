@@ -59,8 +59,10 @@ export class WebRTCStreamer extends Streamer {
 	async stop(): Promise<void> {
 		if (this.ws) {
 			this.ws.close();
+			this.ws = null as any;
 		}
 		this.pc.close();
+		this.pc = null as any;
 	}
 
 	async onMessage(evt: MessageEvent) {
