@@ -371,15 +371,18 @@ async def telnet_server(
                 else:
                     writer.write("WONT\r\n".encode("utf-8"))
             else:
-                session = active_sessions[sid]
-                if session is None:
-                    writer.write("FAIL\r\n".encode("utf-8"))
+                if sid not in active_sessions:
+                    writer.write("WONT\r\n".encode("utf-8"))
                 else:
-                    if live_session is not None:
-                        await live_session.end()
-                    asyncio.ensure_future(session.activate())
-                    live_session = session
-                    writer.write("OKAY\r\n".encode("utf-8"))
+                    session = active_sessions[sid]
+                    if session is None:
+                        writer.write("FAIL\r\n".encode("utf-8"))
+                    else:
+                        if live_session is not None:
+                            await live_session.end()
+                        asyncio.ensure_future(session.activate())
+                        live_session = session
+                        writer.write("OKAY\r\n".encode("utf-8"))
         else:
             writer.write("WHAT\r\n".encode("utf-8"))
             await writer.drain()
