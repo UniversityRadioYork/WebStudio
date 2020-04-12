@@ -15,6 +15,7 @@ from types import TracebackType
 import sys
 import aiohttp
 from raygun4py import raygunprovider  # type: ignore
+from concurrent.futures import ProcessPoolExecutor
 
 import configparser
 
@@ -91,6 +92,9 @@ def process(frames: int) -> None:
     buf2 = out2.get_buffer()
     piece2 = transfer_buffer2.read(len(buf2))
     buf2[: len(piece2)] = piece2
+
+
+executor = ProcessPoolExecutor(2)
 
 
 class JackSender(object):
@@ -335,7 +339,7 @@ print("Shittyserver WS starting on port {}.".format(config.get("ports", "websock
 async def telnet_server(
     reader: asyncio.StreamReader, writer: asyncio.StreamWriter
 ) -> None:
-    global active_sessions, live_session
+    global active_sessions, live_session, executor
     while True:
         data = await reader.read(128)
         if not data:
@@ -369,18 +373,20 @@ async def telnet_server(
                     await live_session.end()
                     writer.write("OKAY\r\n".encode("utf-8"))
                 else:
-                    writer.write("WONT\r\n".encode("utf-8"))
+                    writer.write("WONT no_live_session\r\n".encode("utf-8"))
             else:
                 if sid not in active_sessions:
-                    writer.write("WONT\r\n".encode("utf-8"))
+                    writer.write("WONT no_such_session\r\n".encode("utf-8"))
                 else:
                     session = active_sessions[sid]
                     if session is None:
-                        writer.write("FAIL\r\n".encode("utf-8"))
+                        writer.write("FAIL no_such_session\r\n".encode("utf-8"))
+                    elif live_session is not None and live_session.connection_id == sid:
+                        writer.write("WONT already_live\r\n".encode("utf-8"))
                     else:
                         if live_session is not None:
                             await live_session.end()
-                        asyncio.ensure_future(session.activate())
+                        asyncio.create_task(asyncio.get_event_loop().run_in_executor(executor, session.activate))
                         live_session = session
                         writer.write("OKAY\r\n".encode("utf-8"))
         else:
