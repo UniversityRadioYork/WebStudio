@@ -15,6 +15,7 @@ from types import TracebackType
 import sys
 import aiohttp
 from raygun4py import raygunprovider  # type: ignore
+import struct
 
 import configparser
 
@@ -78,6 +79,9 @@ def init_buffers() -> None:
     global transfer_buffer1, transfer_buffer2
     transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
     transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
+
+    transfer_buffer1.write(struct.pack('f', *([0] * jack.samplerate)))
+    transfer_buffer2.write(struct.pack('f', *([0] * jack.samplerate)))
 
 
 init_buffers()
