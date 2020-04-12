@@ -368,23 +368,29 @@ async def telnet_server(
             if sid == "NUL":
                 if live_session is not None:
                     await live_session.deactivate()
+                    print("OKAY")
                     writer.write("OKAY\r\n".encode("utf-8"))
                 else:
-                    writer.write("WONT\r\n".encode("utf-8"))
+                    print("WONT no_live_session")
+                    writer.write("WONT no_live_session\r\n".encode("utf-8"))
             else:
                 if sid not in active_sessions:
-                    writer.write("WONT\r\n".encode("utf-8"))
+                    print("WONT no_such_session")
+                    writer.write("WONT no_such_session\r\n".encode("utf-8"))
                 else:
                     session = active_sessions[sid]
                     if session is None:
-                        writer.write("FAIL no_such_session\r\n".encode("utf-8"))
+                        print("OOPS no_such_session")
+                        writer.write("OOPS no_such_session\r\n".encode("utf-8"))
                     elif live_session is not None and live_session.connection_id == sid:
+                        print("WONT already_live")
                         writer.write("WONT already_live\r\n".encode("utf-8"))
                     else:
                         if live_session is not None:
                             await live_session.deactivate()
                         await session.activate()
                         live_session = session
+                        print("OKAY")
                         writer.write("OKAY\r\n".encode("utf-8"))
         else:
             writer.write("WHAT\r\n".encode("utf-8"))
