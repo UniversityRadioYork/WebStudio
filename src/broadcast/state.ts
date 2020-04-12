@@ -18,6 +18,10 @@ export type BroadcastStageEnum =
 interface BroadcastState {
   stage: BroadcastStageEnum;
   connID: number | null;
+  sourceID: number;
+  autoNewsBeginning: boolean;
+  autoNewsMiddle: boolean;
+  autoNewsEnd: boolean;
   tracklisting: boolean;
   connectionState: ConnectionStateEnum;
   recordingState: ConnectionStateEnum;
@@ -34,11 +38,20 @@ const broadcastState = createSlice({
   initialState: {
     stage: "NOT_REGISTERED",
     connID: null,
+    sourceID: 5,
+    autoNewsBeginning: true,
+    autoNewsMiddle: true,
+    autoNewsEnd: true,
     tracklisting: false,
     connectionState: "NOT_CONNECTED",
     recordingState: "NOT_CONNECTED"
   } as BroadcastState,
   reducers: {
+    changeSetting<K extends keyof BroadcastState>(state: BroadcastState, action: PayloadAction<{ key: K, val: BroadcastState[K] }>) {
+      state[action.payload.key] = action.payload.val;
+      console.log("Changing timeslot broadcast options.")
+      changeTimeslot()
+    },
     toggleTracklisting(state) {
       state.tracklisting = !state.tracklisting;
     },
@@ -61,12 +74,16 @@ const broadcastState = createSlice({
 
 export default broadcastState.reducer;
 
+
 export interface TrackListItem {
   audiologid: number;
 }
 
 
-
+export const changeBroadcastSetting = <K extends keyof BroadcastState>(key: K, val: BroadcastState[K]): AppThunk => async (dispatch, getState) => {
+    dispatch(broadcastState.actions.changeSetting({key: key, val: val}));
+    dispatch(changeTimeslot());
+  }
 
 
 
@@ -76,7 +93,7 @@ export const registerTimeslot = (): AppThunk => async (dispatch, getState) => {
     const memberid = state.currentUser?.memberid;
     const timeslotid = state.currentTimeslot?.timeslot_id;
     console.log("Attempting to Register for Broadcast.");
-    var sourceid = 4; // TODO: make UI for this.
+    var sourceid = getState().broadcast.sourceID;
     var connID = (await sendBroadcastRegister(timeslotid, memberid, sourceid));
     if (connID !== undefined) {
       dispatch(broadcastState.actions.setConnID(connID["connid"]));
@@ -98,6 +115,15 @@ export const cancelTimeslot = (): AppThunk => async (dispatch, getState) => {
   }
 };
 
+export const changeTimeslot = (): AppThunk => async (dispatch, getState) => {
+  var state = getState().broadcast;
+  if (state.stage === "REGISTERED") {
+    console.log("Attempting to Change Broadcast Options.");
+    var response = (await sendBroadcastChange(state.connID, state.sourceID, state.autoNewsBeginning, state.autoNewsMiddle, state.autoNewsEnd));
+
+  }
+};
+
 export function sendBroadcastRegister(timeslotid: number | undefined, memberid: number | undefined, sourceid: number): Promise<any> {
   return broadcastApiRequest("/registerTimeslot", "POST", {
     memberid: memberid,
@@ -108,6 +134,16 @@ export function sendBroadcastRegister(timeslotid: number | undefined, memberid: 
 export function sendBroadcastCancel(connid: number | null): Promise<string | null> {
   return broadcastApiRequest("/cancelTimeslot", "POST", {
     connid: connid
+  });
+}
+
+export function sendBroadcastChange(connid: number | null, sourceid: number, beginning: boolean, middle: boolean, end: boolean): Promise<any> {
+  return broadcastApiRequest("/changeTimeslot", "POST", {
+    connid: connid,
+    sourceid: sourceid,
+    beginning: beginning,
+    middle: middle,
+    end: end
   });
 }
 
