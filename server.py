@@ -93,40 +93,6 @@ def process(frames: int) -> None:
     buf2[: len(piece2)] = piece2
 
 
-tasky_boi: Optional['asyncio.Task'[Any]] = None
-
-
-class JackSender(object):
-    resampler: Any
-
-    def __init__(self, track: MediaStreamTrack) -> None:
-        self.track = track
-        self.resampler = None
-        self.ended = False
-
-    def end(self) -> None:
-        self.ended = True
-
-    async def process(self) -> None:
-        while True:
-            if self.ended:
-                break
-            frame = await self.track.recv()
-            # Right, depending on the format, we may need to do some fuckery.
-            # Jack expects all audio to be 32 bit floating point
-            # while PyAV may give us audio in any format
-            # (my testing has shown it to be signed 16-bit)
-            # We use PyAV to resample it into the right format
-            if self.resampler is None:
-                self.resampler = av.audio.resampler.AudioResampler(
-                    format="fltp", layout="stereo", rate=jack.samplerate
-                )
-            frame.pts = None  # DIRTY HACK
-            new_frame = self.resampler.resample(frame)
-            transfer_buffer1.write(new_frame.planes[0])
-            transfer_buffer2.write(new_frame.planes[1])
-
-
 active_sessions: Dict[str, "Session"] = {}
 live_session: Optional["Session"] = None
 
@@ -146,11 +112,13 @@ class NotReadyException(BaseException):
 
 class Session(object):
     websocket: Optional[websockets.WebSocketServerProtocol]
-    sender: Optional[JackSender]
     connection_state: Optional[str]
     pc: Optional[Any]
     connection_id: str
     lock: asyncio.Lock
+    running: bool
+    ended: bool
+    resampler: Optional[Any]
 
     def __init__(self) -> None:
         self.websocket = None
@@ -160,17 +128,14 @@ class Session(object):
         self.connection_id = str(uuid.uuid4())
         self.ended = False
         self.lock = asyncio.Lock()
+        self.running = False
 
     def to_dict(self) -> Dict[str, str]:
         return {"connection_id": self.connection_id}
 
     async def activate(self) -> None:
         print(self.connection_id, "Activating")
-        if self.sender is None:
-            print(self.connection_id, "... but we don't have a sender!")
-            raise NotReadyException()
-        else:
-            await self.sender.process()
+        self.running = True
 
     async def end(self) -> None:
         global active_sessions, live_session
@@ -181,8 +146,8 @@ class Session(object):
             else:
                 print(self.connection_id, "going away")
 
-                if self.sender is not None:
-                    self.sender.end()
+                self.ended = True
+                self.running = False
 
                 if self.pc is not None:
                     await self.pc.close()
@@ -239,9 +204,10 @@ class Session(object):
 
         @self.pc.on("track")  # type: ignore
         async def on_track(track: MediaStreamTrack) -> None:
+            global live_session, transfer_buffer1, transfer_buffer2
             print(self.connection_id, "Received track")
             if track.kind == "audio":
-                print(self.connection_id, "Adding to Jack.")
+                print(self.connection_id, "It's audio.")
 
                 await notify_mattserver_about_sessions()
 
@@ -251,8 +217,24 @@ class Session(object):
                     # TODO: this doesn't exactly handle reconnecting gracefully
                     await self.end()
 
-                self.sender = JackSender(track)
                 write_ob_status(True)
+                while True:
+                    frame = await track.recv()
+                    if self.running:
+                        # Right, depending on the format, we may need to do some fuckery.
+                        # Jack expects all audio to be 32 bit floating point
+                        # while PyAV may give us audio in any format
+                        # (my testing has shown it to be signed 16-bit)
+                        # We use PyAV to resample it into the right format
+                        if self.resampler is None:
+                            self.resampler = av.audio.resampler.AudioResampler(
+                                format="fltp", layout="stereo", rate=jack.samplerate
+                            )
+                        frame.pts = None  # DIRTY HACK
+                        new_frame = self.resampler.resample(frame)
+                        transfer_buffer1.write(new_frame.planes[0])
+                        transfer_buffer2.write(new_frame.planes[1])
+
 
     async def process_ice(self, message: Any) -> None:
         if self.connection_state == "HELLO" and message["kind"] == "OFFER":
@@ -339,7 +321,7 @@ print("Shittyserver WS starting on port {}.".format(config.get("ports", "websock
 async def telnet_server(
     reader: asyncio.StreamReader, writer: asyncio.StreamWriter
 ) -> None:
-    global active_sessions, live_session, tasky_boi
+    global active_sessions, live_session
     while True:
         data = await reader.read(128)
         if not data:
@@ -375,8 +357,6 @@ async def telnet_server(
             if sid == "NUL":
                 if live_session is not None:
                     await live_session.end()
-                    if tasky_boi is not None:
-                        await tasky_boi.result()
                     writer.write("OKAY\r\n".encode("utf-8"))
                 else:
                     writer.write("WONT\r\n".encode("utf-8"))
@@ -392,9 +372,7 @@ async def telnet_server(
                     else:
                         if live_session is not None:
                             await live_session.end()
-                            if tasky_boi is not None:
-                                await tasky_boi.result()
-                        tasky_boi = asyncio.create_task(session.activate())
+                        await session.activate()
                         live_session = session
                         writer.write("OKAY\r\n".encode("utf-8"))
         else:
