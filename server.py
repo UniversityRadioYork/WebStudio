@@ -136,7 +136,8 @@ async def notify_mattserver_about_sessions() -> None:
         data: Dict[str, Dict[str, str]] = {}
         for sid, sess in active_sessions.items():
             data[sid] = sess.to_dict()
-        await session.post(config.get("mattserver", "notify_url"), json=data)
+        async with session.post(config.get("mattserver", "notify_url"), json=data) as response:
+            print("Mattserver response", response)
 
 
 class NotReadyException(BaseException):
@@ -343,7 +344,11 @@ async def telnet_server(
         data = await reader.read(128)
         if not data:
             break
-        data_str = data.decode("utf-8")
+        try:
+            data_str = data.decode("utf-8")
+        except UnicodeDecodeError as e:
+            print(e)
+            continue
         parts = data_str.rstrip().split(" ")
         print(parts)
 
