@@ -332,7 +332,7 @@ async def telnet_server(
 ) -> None:
     global active_sessions, live_session
     while True:
-        data = await reader.read(128)
+        data = await reader.readline()
         if not data:
             break
         try:
