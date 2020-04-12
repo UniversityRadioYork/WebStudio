@@ -23,14 +23,14 @@ config.read("shittyserver.ini")
 
 ENABLE_EXCEPTION_LOGGING = False
 
-if ENABLE_EXCEPTION_LOGGING:
+if config.get("raygun", "enable") == "True":
 
     def handle_exception(
         exc_type: Type[BaseException],
         exc_value: BaseException,
         exc_traceback: TracebackType,
     ) -> None:
-        cl = raygunprovider.RaygunSender(config["raygun"]["key"])
+        cl = raygunprovider.RaygunSender(config.get("raygun", "key"))
         cl.send_exception(exc_info=(exc_type, exc_value, exc_traceback))
 
     sys.excepthook = handle_exception
@@ -125,7 +125,7 @@ class JackSender(object):
 
 
 active_sessions: Dict[str, "Session"] = {}
-live_session: Optional['Session'] = None
+live_session: Optional["Session"] = None
 
 
 async def notify_mattserver_about_sessions() -> None:
@@ -133,7 +133,7 @@ async def notify_mattserver_about_sessions() -> None:
         data: Dict[str, Dict[str, str]] = {}
         for sid, sess in active_sessions.items():
             data[sid] = sess.to_dict()
-        await session.post(config["mattserver"]["notify_url"], json=data)
+        await session.post(config.get("mattserver", "notify_url"), json=data)
 
 
 class NotReadyException(BaseException):
@@ -185,7 +185,10 @@ class Session(object):
 
                 init_buffers()
 
-                if self.websocket is not None and self.websocket.state == websockets.protocol.State.OPEN:
+                if (
+                    self.websocket is not None
+                    and self.websocket.state == websockets.protocol.State.OPEN
+                ):
                     await self.websocket.send(json.dumps({"kind": "REPLACED"}))
                     await self.websocket.close(1008)
 
@@ -301,7 +304,9 @@ class Session(object):
                     await self.process_ice(data)
                 elif data["kind"] == "TIME":
                     time = datetime.now().time()
-                    await websocket.send(json.dumps({"kind": "TIME", "time": str(time)}))
+                    await websocket.send(
+                        json.dumps({"kind": "TIME", "time": str(time)})
+                    )
                 else:
                     print(self.connection_id, "Unknown kind {}".format(data["kind"]))
                     await websocket.send(
@@ -321,9 +326,11 @@ async def serve(websocket: websockets.WebSocketServerProtocol, path: str) -> Non
         pass
 
 
-start_server = websockets.serve(serve, "localhost", int(config["ports"]["websocket"]))
+start_server = websockets.serve(
+    serve, "localhost", int(config.get("ports", "websocket"))
+)
 
-print("Shittyserver WS starting on port {}.".format(config["ports"]["websocket"]))
+print("Shittyserver WS starting on port {}.".format(config.get("ports", "websocket")))
 
 
 async def telnet_server(
@@ -342,7 +349,19 @@ async def telnet_server(
             result: Dict[str, Dict[str, str]] = {}
             for sid, sess in active_sessions.items():
                 result[sid] = sess.to_dict()
-            writer.write((json.dumps(result) + "\r\n").encode("utf-8"))
+            writer.write(
+                (
+                    json.dumps(
+                        {
+                            "live": live_session.to_dict()
+                            if live_session is not None
+                            else None,
+                            "active": result,
+                        }
+                    )
+                    + "\r\n"
+                ).encode("utf-8")
+            )
 
         elif parts[0] == "SEL":
             sid = parts[1]
@@ -370,15 +389,17 @@ async def telnet_server(
 
 async def run_telnet_server() -> None:
     server = await asyncio.start_server(
-        telnet_server, "localhost", int(config["ports"]["telnet"])
+        telnet_server, "localhost", int(config.get("ports", "telnet"))
     )
     await server.serve_forever()
 
 
 jack.activate()
 
-print("Shittyserver TELNET starting on port {}".format(config["ports"]["telnet"]))
+print("Shittyserver TELNET starting on port {}".format(config.get("ports", "telnet")))
 asyncio.get_event_loop().run_until_complete(notify_mattserver_about_sessions())
 
-asyncio.get_event_loop().run_until_complete(asyncio.gather(start_server, run_telnet_server()))
+asyncio.get_event_loop().run_until_complete(
+    asyncio.gather(start_server, run_telnet_server())
+)
 asyncio.get_event_loop().run_forever()
