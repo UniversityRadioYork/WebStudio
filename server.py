@@ -80,9 +80,6 @@ def init_buffers() -> None:
     transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
     transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
 
-    transfer_buffer1.write(struct.pack('f', 0))
-    transfer_buffer2.write(struct.pack('f', 0))
-
 
 init_buffers()
 
@@ -90,11 +87,19 @@ init_buffers()
 @jack.set_process_callback  # type: ignore
 def process(frames: int) -> None:
     buf1 = out1.get_buffer()
-    piece1 = transfer_buffer1.read(len(buf1))
-    buf1[: len(piece1)] = piece1
+    if transfer_buffer1.read_space == 0:
+        for i in range(len(buf1)):
+            buf1[i] = b'\x00'
+    else:
+        piece1 = transfer_buffer1.read(len(buf1))
+        buf1[: len(piece1)] = piece1
     buf2 = out2.get_buffer()
-    piece2 = transfer_buffer2.read(len(buf2))
-    buf2[: len(piece2)] = piece2
+    if transfer_buffer2.read_space == 0:
+        for i in range(len(buf2)):
+            buf2[i] = b'\x00'
+    else:
+        piece2 = transfer_buffer2.read(len(buf2))
+        buf2[: len(piece2)] = piece2
 
 
 active_sessions: Dict[str, "Session"] = {}
