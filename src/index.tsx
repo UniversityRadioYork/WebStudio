@@ -11,6 +11,9 @@ import { Provider } from "react-redux";
 
 raygun("apiKey", "mtj24r3YzPoYyCG8cVArA");
 raygun("enableCrashReporting", true);
+if (typeof process.env.REACT_APP_VERSION === "string" && process.env.REACT_APP_VERSION.length > 0) {
+	raygun("setVersion", process.env.REACT_APP_VERSION);
+}
 
 function render() {
 	ReactDOM.render(
