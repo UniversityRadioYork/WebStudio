@@ -2,7 +2,8 @@ export type ConnectionStateEnum =
 	| "NOT_CONNECTED"
 	| "CONNECTING"
 	| "CONNECTED"
-	| "CONNECTION_LOST";
+	| "CONNECTION_LOST"
+	| "CONNECTION_LOST_RECONNECTING";
 export type ConnectionStateListener = (val: ConnectionStateEnum) => any;
 
 export abstract class Streamer {

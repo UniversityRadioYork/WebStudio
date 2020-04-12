@@ -146,7 +146,6 @@ export class WebRTCStreamer extends Streamer {
 		switch (this.pc.iceConnectionState) {
 			case "connected":
 			case "completed":
-			case "disconnected": // using this here because disconnected may happen intermittently
 				return "CONNECTED";
 			case "new":
 				if (this.ws) {
@@ -165,6 +164,8 @@ export class WebRTCStreamer extends Streamer {
 				}
 			case "checking":
 				return "CONNECTING";
+			case "disconnected":
+				return "CONNECTION_LOST_RECONNECTING";
 			case "failed":
 				return "CONNECTION_LOST";
 			case "closed":
