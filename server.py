@@ -124,6 +124,7 @@ class Session(object):
         self.websocket = None
         self.sender = None
         self.pc = None
+        self.resampler = None
         self.connection_state = None
         self.connection_id = str(uuid.uuid4())
         self.ended = False
@@ -234,7 +235,6 @@ class Session(object):
                         new_frame = self.resampler.resample(frame)
                         transfer_buffer1.write(new_frame.planes[0])
                         transfer_buffer2.write(new_frame.planes[1])
-
 
     async def process_ice(self, message: Any) -> None:
         if self.connection_state == "HELLO" and message["kind"] == "OFFER":
