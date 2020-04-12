@@ -147,6 +147,9 @@ class Session(object):
         print(self.connection_id, "Activating")
         self.running = True
 
+    async def deactivate(self) -> None:
+        self.running = False
+
     async def end(self) -> None:
         global active_sessions, live_session
 
@@ -157,12 +160,10 @@ class Session(object):
                 print(self.connection_id, "going away")
 
                 self.ended = True
-                self.running = False
+                await self.deactivate()
 
                 if self.pc is not None:
                     await self.pc.close()
-
-                init_buffers()
 
                 if (
                     self.websocket is not None
@@ -365,7 +366,7 @@ async def telnet_server(
             sid = parts[1]
             if sid == "NUL":
                 if live_session is not None:
-                    await live_session.end()
+                    await live_session.deactivate()
                     writer.write("OKAY\r\n".encode("utf-8"))
                 else:
                     writer.write("WONT\r\n".encode("utf-8"))
@@ -380,7 +381,7 @@ async def telnet_server(
                         writer.write("WONT already_live\r\n".encode("utf-8"))
                     else:
                         if live_session is not None:
-                            await live_session.end()
+                            await live_session.deactivate()
                         await session.activate()
                         live_session = session
                         writer.write("OKAY\r\n".encode("utf-8"))
