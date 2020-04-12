@@ -368,6 +368,7 @@ async def telnet_server(
             if sid == "NUL":
                 if live_session is not None:
                     await live_session.deactivate()
+                    live_session = None
                     print("OKAY")
                     writer.write("OKAY\r\n".encode("utf-8"))
                 else:
