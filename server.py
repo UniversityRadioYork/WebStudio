@@ -387,6 +387,8 @@ async def telnet_server(
                     else:
                         if live_session is not None:
                             await live_session.end()
+                            if tasky_boi is not None:
+                                await tasky_boi.result()
                         tasky_boi = asyncio.create_task(session.activate())
                         live_session = session
                         writer.write("OKAY\r\n".encode("utf-8"))
