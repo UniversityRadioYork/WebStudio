@@ -80,8 +80,8 @@ def init_buffers() -> None:
     transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
     transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
 
-    transfer_buffer1.write(struct.pack('f', *([0] * jack.samplerate)))
-    transfer_buffer2.write(struct.pack('f', *([0] * jack.samplerate)))
+    transfer_buffer1.write(struct.pack('f', 0))
+    transfer_buffer2.write(struct.pack('f', 0))
 
 
 init_buffers()
