@@ -148,6 +148,7 @@ class Session(object):
         self.running = True
 
     async def deactivate(self) -> None:
+        print(self.connection_id, "Deactivating")
         self.running = False
 
     async def end(self) -> None:
