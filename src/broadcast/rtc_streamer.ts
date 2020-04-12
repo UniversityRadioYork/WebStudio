@@ -35,8 +35,8 @@ export class WebRTCStreamer extends Streamer {
 				}
 			]
 		});
-		this.pc.onconnectionstatechange = e => {
-			console.log("Connection state change: " + this.pc.connectionState);
+		this.pc.oniceconnectionstatechange = e => {
+			console.log("ICE Connection state change: " + this.pc.iceConnectionState);
 			this.onStateChange(this.mapStateToConnectionState());
 		};
 		console.log("Stream tracks", stream.getAudioTracks());
@@ -143,30 +143,32 @@ export class WebRTCStreamer extends Streamer {
 	}
 
 	mapStateToConnectionState(): ConnectionStateEnum {
-		switch (this.pc.connectionState) {
+		switch (this.pc.iceConnectionState) {
 			case "connected":
+			case "completed":
+			case "disconnected": // using this here because disconnected may happen intermittently
 				return "CONNECTED";
-			case "connecting":
-				return "CONNECTING";
-			case "disconnected":
-				return "CONNECTION_LOST";
-			case "failed":
-				return "CONNECTION_LOST";
-			default:
+			case "new":
 				if (this.ws) {
 					switch (this.ws.readyState) {
+						case 0:
+							return "NOT_CONNECTED";
 						case 1:
 							return "CONNECTING";
 						case 2:
 						case 3:
 							return "CONNECTION_LOST";
-						case 0:
-							return "NOT_CONNECTED";
-						default:
-							throw new Error();
+						default: throw new Error();
 					}
+				} else {
+					return "NOT_CONNECTED";
 				}
-				return "NOT_CONNECTED";
+			case "checking":
+				return "CONNECTING";
+			case "failed":
+				return "CONNECTION_LOST";
+			case "closed":
+				return "NOT_CONNECTED"
 		}
 	}
 }
