@@ -21,7 +21,7 @@ interface BroadcastState {
   autoNewsBeginning: boolean;
   autoNewsMiddle: boolean;
   autoNewsEnd: boolean;
-  tracklisting: boolean;
+  liveForThePurposesOfTracklisting: boolean;
   connectionState: ConnectionStateEnum;
   recordingState: ConnectionStateEnum;
 }
@@ -41,7 +41,7 @@ const broadcastState = createSlice({
     autoNewsBeginning: true,
     autoNewsMiddle: true,
     autoNewsEnd: true,
-    tracklisting: false,
+    liveForThePurposesOfTracklisting: false,
     connectionState: "NOT_CONNECTED",
     recordingState: "NOT_CONNECTED"
   } as BroadcastState,
@@ -53,10 +53,10 @@ const broadcastState = createSlice({
       state[action.payload.key] = action.payload.val;
     },
     toggleTracklisting(state) {
-      state.tracklisting = !state.tracklisting;
+      state.liveForThePurposesOfTracklisting = !state.liveForThePurposesOfTracklisting;
     },
     setTracklisting(state, action: PayloadAction<boolean>) {
-      state.tracklisting = action.payload;
+      state.liveForThePurposesOfTracklisting = action.payload;
     },
     setConnID(state, action: PayloadAction<number | null>) {
       state.connID = action.payload;
@@ -207,11 +207,28 @@ export function sendBroadcastChange(
 
 export const { toggleTracklisting, setTracklisting } = broadcastState.actions;
 
+function shouldTracklist(
+  optionValue: "always" | "while_live" | "never",
+  stateValue: boolean
+) {
+  if (optionValue === "while_live") {
+    return stateValue;
+  } else {
+    return optionValue === "always";
+  }
+}
+
 export const tracklistStart = (
   player: number,
   trackid: number
 ): AppThunk => async (dispatch, getState) => {
-  if (getState().broadcast.tracklisting) {
+  const state = getState();
+  if (
+    shouldTracklist(
+      state.settings.tracklist,
+      state.broadcast.liveForThePurposesOfTracklisting
+    )
+  ) {
     console.log("Attempting to tracklist: " + trackid);
     var id = (await sendTracklistStart(trackid)).audiologid;
     dispatch(MixerState.setTracklistItemID({ player, id }));
@@ -222,7 +239,13 @@ export const tracklistEnd = (tracklistitemid: number): AppThunk => async (
   dispatch,
   getState
 ) => {
-  if (getState().broadcast.tracklisting) {
+  const state = getState();
+  if (
+    shouldTracklist(
+      state.settings.tracklist,
+      state.broadcast.liveForThePurposesOfTracklisting
+    )
+  ) {
     console.log("Attempting to end tracklistitem: " + tracklistitemid);
     myradioApiRequest(
       "/tracklistItem/" + tracklistitemid + "/endtime",
