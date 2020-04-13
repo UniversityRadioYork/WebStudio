@@ -465,7 +465,6 @@ export const load = (
         onProgress(progress: FetchProgressData) {
           const percent = progress.transferred / progress.total;
           if (percent !== 1) {
-            console.log({ progress });
             dispatch(
               mixerState.actions.itemLoadPercentage({ player, percent })
             );
