@@ -13,6 +13,7 @@ crc32c==2.0
 cryptography==2.8
 Flask==1.1.2
 Flask-Cors==3.0.8
+gunicorn==20.0.4
 idna==2.9
 itsdangerous==1.1.0
 JACK-Client==0.5.2
