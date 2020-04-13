@@ -238,9 +238,10 @@ class Session(object):
                     try:
                         frame = await track.recv()
                     except MediaStreamError as e:
-                        print(self.connection_id, e)
+                        print(self.connection_id, "MediaStreamError")
+                        print(e)
                         await self.end()
-                        raise e
+                        break
                     if self.running:
                         # Right, depending on the format, we may need to do some fuckery.
                         # Jack expects all audio to be 32 bit floating point
