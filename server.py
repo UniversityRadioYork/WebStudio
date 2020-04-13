@@ -147,12 +147,14 @@ class Session(object):
     async def activate(self) -> None:
         print(self.connection_id, "Activating")
         self.running = True
-        await self.websocket.send(json.dumps({"kind": "ACTIVATED"}))
+        if self.websocket is not None:
+            await self.websocket.send(json.dumps({"kind": "ACTIVATED"}))
 
     async def deactivate(self) -> None:
         print(self.connection_id, "Deactivating")
         self.running = False
-        await self.websocket.send(json.dumps({"kind": "DEACTIVATED"}))
+        if self.websocket is not None:
+            await self.websocket.send(json.dumps({"kind": "DEACTIVATED"}))
 
     async def end(self) -> None:
         global active_sessions, live_session
