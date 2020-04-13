@@ -5,6 +5,7 @@ import uuid
 import av  # type: ignore
 import struct
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
+from aiortc.mediastreams import MediaStreamError # type: ignore
 from aiortc.contrib.media import MediaBlackhole, MediaPlayer  # type: ignore
 import jack as Jack  # type: ignore
 import os
@@ -15,6 +16,7 @@ from types import TracebackType
 import sys
 import aiohttp
 from raygun4py import raygunprovider  # type: ignore
+import struct
 
 import configparser
 
@@ -23,14 +25,14 @@ config.read("shittyserver.ini")
 
 ENABLE_EXCEPTION_LOGGING = False
 
-if ENABLE_EXCEPTION_LOGGING:
+if config.get("raygun", "enable") == "True":
 
     def handle_exception(
         exc_type: Type[BaseException],
         exc_value: BaseException,
         exc_traceback: TracebackType,
     ) -> None:
-        cl = raygunprovider.RaygunSender(config["raygun"]["key"])
+        cl = raygunprovider.RaygunSender(config.get("raygun", "key"))
         cl.send_exception(exc_info=(exc_type, exc_value, exc_traceback))
 
     sys.excepthook = handle_exception
@@ -86,46 +88,23 @@ init_buffers()
 @jack.set_process_callback  # type: ignore
 def process(frames: int) -> None:
     buf1 = out1.get_buffer()
-    piece1 = transfer_buffer1.read(len(buf1))
-    buf1[: len(piece1)] = piece1
+    if transfer_buffer1.read_space == 0:
+        for i in range(len(buf1)):
+            buf1[i] = b'\x00'
+    else:
+        piece1 = transfer_buffer1.read(len(buf1))
+        buf1[: len(piece1)] = piece1
     buf2 = out2.get_buffer()
-    piece2 = transfer_buffer2.read(len(buf2))
-    buf2[: len(piece2)] = piece2
-
-
-class JackSender(object):
-    resampler: Any
-
-    def __init__(self, track: MediaStreamTrack) -> None:
-        self.track = track
-        self.resampler = None
-        self.ended = False
-
-    def end(self) -> None:
-        self.ended = True
-
-    async def process(self) -> None:
-        while True:
-            if self.ended:
-                break
-            frame = await self.track.recv()
-            # Right, depending on the format, we may need to do some fuckery.
-            # Jack expects all audio to be 32 bit floating point
-            # while PyAV may give us audio in any format
-            # (my testing has shown it to be signed 16-bit)
-            # We use PyAV to resample it into the right format
-            if self.resampler is None:
-                self.resampler = av.audio.resampler.AudioResampler(
-                    format="fltp", layout="stereo", rate=jack.samplerate
-                )
-            frame.pts = None  # DIRTY HACK
-            new_frame = self.resampler.resample(frame)
-            transfer_buffer1.write(new_frame.planes[0])
-            transfer_buffer2.write(new_frame.planes[1])
+    if transfer_buffer2.read_space == 0:
+        for i in range(len(buf2)):
+            buf2[i] = b'\x00'
+    else:
+        piece2 = transfer_buffer2.read(len(buf2))
+        buf2[: len(piece2)] = piece2
 
 
 active_sessions: Dict[str, "Session"] = {}
-live_session: Optional['Session'] = None
+live_session: Optional["Session"] = None
 
 
 async def notify_mattserver_about_sessions() -> None:
@@ -133,7 +112,8 @@ async def notify_mattserver_about_sessions() -> None:
         data: Dict[str, Dict[str, str]] = {}
         for sid, sess in active_sessions.items():
             data[sid] = sess.to_dict()
-        await session.post(config["mattserver"]["notify_url"], json=data)
+        async with session.post(config.get("mattserver", "notify_url"), json=data) as response:
+            print("Mattserver response", response)
 
 
 class NotReadyException(BaseException):
@@ -142,34 +122,38 @@ class NotReadyException(BaseException):
 
 class Session(object):
     websocket: Optional[websockets.WebSocketServerProtocol]
-    sender: Optional[JackSender]
     connection_state: Optional[str]
     pc: Optional[Any]
     connection_id: str
     lock: asyncio.Lock
+    running: bool
+    ended: bool
+    resampler: Optional[Any]
 
     def __init__(self) -> None:
         self.websocket = None
         self.sender = None
         self.pc = None
+        self.resampler = None
         self.connection_state = None
         self.connection_id = str(uuid.uuid4())
         self.ended = False
         self.lock = asyncio.Lock()
+        self.running = False
 
     def to_dict(self) -> Dict[str, str]:
         return {"connection_id": self.connection_id}
 
     async def activate(self) -> None:
         print(self.connection_id, "Activating")
-        if self.sender is None:
-            print(self.connection_id, "... but we don't have a sender!")
-            raise NotReadyException()
-        else:
-            await self.sender.process()
+        self.running = True
+
+    async def deactivate(self) -> None:
+        print(self.connection_id, "Deactivating")
+        self.running = False
 
     async def end(self) -> None:
-        global active_sessions
+        global active_sessions, live_session
 
         async with self.lock:
             if self.ended:
@@ -177,15 +161,16 @@ class Session(object):
             else:
                 print(self.connection_id, "going away")
 
-                if self.sender is not None:
-                    self.sender.end()
+                self.ended = True
+                await self.deactivate()
 
                 if self.pc is not None:
                     await self.pc.close()
 
-                init_buffers()
-
-                if self.websocket is not None and self.websocket.state == websockets.protocol.State.OPEN:
+                if (
+                    self.websocket is not None
+                    and self.websocket.state == websockets.protocol.State.OPEN
+                ):
                     await self.websocket.send(json.dumps({"kind": "REPLACED"}))
                     await self.websocket.close(1008)
 
@@ -232,21 +217,39 @@ class Session(object):
 
         @self.pc.on("track")  # type: ignore
         async def on_track(track: MediaStreamTrack) -> None:
-            global active_sessions
+            global live_session, transfer_buffer1, transfer_buffer2
             print(self.connection_id, "Received track")
             if track.kind == "audio":
-                print(self.connection_id, "Adding to Jack.")
+                print(self.connection_id, "It's audio.")
 
                 await notify_mattserver_about_sessions()
 
                 @track.on("ended")  # type: ignore
                 async def on_ended() -> None:
                     print(self.connection_id, "Track {} ended".format(track.kind))
-                    # TODO: this doesn't exactly handle reconnecting gracefully
                     await self.end()
 
-                self.sender = JackSender(track)
                 write_ob_status(True)
+                while True:
+                    try:
+                        frame = await track.recv()
+                    except MediaStreamError as e:
+                        print(self.connection_id, e)
+                        await self.end()
+                    if self.running:
+                        # Right, depending on the format, we may need to do some fuckery.
+                        # Jack expects all audio to be 32 bit floating point
+                        # while PyAV may give us audio in any format
+                        # (my testing has shown it to be signed 16-bit)
+                        # We use PyAV to resample it into the right format
+                        if self.resampler is None:
+                            self.resampler = av.audio.resampler.AudioResampler(
+                                format="fltp", layout="stereo", rate=jack.samplerate
+                            )
+                        frame.pts = None  # DIRTY HACK
+                        new_frame = self.resampler.resample(frame)
+                        transfer_buffer1.write(new_frame.planes[0])
+                        transfer_buffer2.write(new_frame.planes[1])
 
     async def process_ice(self, message: Any) -> None:
         if self.connection_state == "HELLO" and message["kind"] == "OFFER":
@@ -301,7 +304,9 @@ class Session(object):
                     await self.process_ice(data)
                 elif data["kind"] == "TIME":
                     time = datetime.now().time()
-                    await websocket.send(json.dumps({"kind": "TIME", "time": str(time)}))
+                    await websocket.send(
+                        json.dumps({"kind": "TIME", "time": str(time)})
+                    )
                 else:
                     print(self.connection_id, "Unknown kind {}".format(data["kind"]))
                     await websocket.send(
@@ -321,9 +326,11 @@ async def serve(websocket: websockets.WebSocketServerProtocol, path: str) -> Non
         pass
 
 
-start_server = websockets.serve(serve, "localhost", int(config["ports"]["websocket"]))
+start_server = websockets.serve(
+    serve, "localhost", int(config.get("ports", "websocket"))
+)
 
-print("Shittyserver WS starting on port {}.".format(config["ports"]["websocket"]))
+print("Shittyserver WS starting on port {}.".format(config.get("ports", "websocket")))
 
 
 async def telnet_server(
@@ -331,10 +338,14 @@ async def telnet_server(
 ) -> None:
     global active_sessions, live_session
     while True:
-        data = await reader.read(128)
+        data = await reader.readline()
         if not data:
             break
-        data_str = data.decode("utf-8")
+        try:
+            data_str = data.decode("utf-8")
+        except UnicodeDecodeError as e:
+            print(e)
+            continue
         parts = data_str.rstrip().split(" ")
         print(parts)
 
@@ -342,26 +353,50 @@ async def telnet_server(
             result: Dict[str, Dict[str, str]] = {}
             for sid, sess in active_sessions.items():
                 result[sid] = sess.to_dict()
-            writer.write((json.dumps(result) + "\r\n").encode("utf-8"))
+            writer.write(
+                (
+                    json.dumps(
+                        {
+                            "live": live_session.to_dict()
+                            if live_session is not None
+                            else None,
+                            "active": result,
+                        }
+                    )
+                    + "\r\n"
+                ).encode("utf-8")
+            )
 
         elif parts[0] == "SEL":
             sid = parts[1]
             if sid == "NUL":
                 if live_session is not None:
-                    await live_session.end()
+                    await live_session.deactivate()
+                    live_session = None
+                    print("OKAY")
                     writer.write("OKAY\r\n".encode("utf-8"))
                 else:
-                    writer.write("WONT\r\n".encode("utf-8"))
+                    print("WONT no_live_session")
+                    writer.write("WONT no_live_session\r\n".encode("utf-8"))
             else:
-                session = active_sessions[sid]
-                if session is None:
-                    writer.write("FAIL\r\n".encode("utf-8"))
+                if sid not in active_sessions:
+                    print("WONT no_such_session")
+                    writer.write("WONT no_such_session\r\n".encode("utf-8"))
                 else:
-                    if live_session is not None:
-                        await live_session.end()
-                    asyncio.ensure_future(session.activate())
-                    live_session = session
-                    writer.write("OKAY\r\n".encode("utf-8"))
+                    session = active_sessions[sid]
+                    if session is None:
+                        print("OOPS no_such_session")
+                        writer.write("OOPS no_such_session\r\n".encode("utf-8"))
+                    elif live_session is not None and live_session.connection_id == sid:
+                        print("WONT already_live")
+                        writer.write("WONT already_live\r\n".encode("utf-8"))
+                    else:
+                        if live_session is not None:
+                            await live_session.deactivate()
+                        await session.activate()
+                        live_session = session
+                        print("OKAY")
+                        writer.write("OKAY\r\n".encode("utf-8"))
         else:
             writer.write("WHAT\r\n".encode("utf-8"))
             await writer.drain()
@@ -370,15 +405,17 @@ async def telnet_server(
 
 async def run_telnet_server() -> None:
     server = await asyncio.start_server(
-        telnet_server, "localhost", int(config["ports"]["telnet"])
+        telnet_server, "localhost", int(config.get("ports", "telnet"))
     )
     await server.serve_forever()
 
 
 jack.activate()
 
-print("Shittyserver TELNET starting on port {}".format(config["ports"]["telnet"]))
+print("Shittyserver TELNET starting on port {}".format(config.get("ports", "telnet")))
 asyncio.get_event_loop().run_until_complete(notify_mattserver_about_sessions())
 
-asyncio.get_event_loop().run_until_complete(asyncio.gather(start_server, run_telnet_server()))
+asyncio.get_event_loop().run_until_complete(
+    asyncio.gather(start_server, run_telnet_server())
+)
 asyncio.get_event_loop().run_forever()
