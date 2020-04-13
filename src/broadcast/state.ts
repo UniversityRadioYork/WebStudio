@@ -87,6 +87,16 @@ export const changeBroadcastSetting = <K extends keyof BroadcastState>(
 };
 
 export const registerTimeslot = (): AppThunk => async (dispatch, getState) => {
+  if (!getState().session.userCanBroadcast) {
+    dispatch(
+      NavbarState.showAlert({
+        color: "warning",
+        content: "You are not WebStudio Trained and cannot go live.",
+        closure: 7000
+      })
+    );
+    return;
+  }
   if (getState().broadcast.stage === "NOT_REGISTERED") {
     var state = getState().session;
     const memberid = state.currentUser?.memberid;
@@ -95,6 +105,7 @@ export const registerTimeslot = (): AppThunk => async (dispatch, getState) => {
     var sourceid = getState().broadcast.sourceID;
     try {
       var connID = await sendBroadcastRegister(timeslotid, memberid, sourceid);
+      console.log(connID);
       if (connID !== undefined) {
         dispatch(broadcastState.actions.setConnID(connID["connid"]));
         dispatch(startStreaming());
@@ -227,19 +238,14 @@ export function sendTracklistStart(trackid: number): Promise<TrackListItem> {
 }
 
 export const startStreaming = (): AppThunk => async (dispatch, getState) => {
-  if (!getState().session.userCanBroadcast) {
-    dispatch(
-      NavbarState.showAlert({
-        color: "warning",
-        content: "You are not WebStudio Trained and cannot go live.",
-        closure: 7000
-      })
-    );
-    return;
-  }
+  console.log("starting streamer.");
   streamer = new WebRTCStreamer(MixerState.destination.stream);
   streamer.addConnectionStateListener(state => {
     dispatch(broadcastState.actions.setConnectionState(state));
+    if (state === "CONNECTION_LOST") {
+      // un-register if we drop, let the user manually reconnect
+      dispatch(broadcastState.actions.setConnID(null));
+    }
   });
   await streamer.start();
 };

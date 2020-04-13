@@ -190,7 +190,7 @@ class Session(object):
 
                 await notify_mattserver_about_sessions()
                 print(self.connection_id, "bye bye")
-            self.ended = True
+                self.ended = True
 
     def create_peerconnection(self) -> None:
         self.pc = RTCPeerConnection()
@@ -240,6 +240,7 @@ class Session(object):
                     except MediaStreamError as e:
                         print(self.connection_id, e)
                         await self.end()
+                        raise e
                     if self.running:
                         # Right, depending on the format, we may need to do some fuckery.
                         # Jack expects all audio to be 32 bit floating point

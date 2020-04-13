@@ -21,6 +21,7 @@ export class WebRTCStreamer extends Streamer {
   }
 
   async start(): Promise<void> {
+    console.log("RTCStreamer start");
     this.pc = new RTCPeerConnection({
       iceServers: [
         {
@@ -52,6 +53,7 @@ export class WebRTCStreamer extends Streamer {
     };
     this.stream.getAudioTracks().forEach(track => this.pc!.addTrack(track));
 
+    console.log("PC created");
     this.ws = new WebSocket(process.env.REACT_APP_WS_URL!);
     this.ws.onopen = e => {
       console.log("WS open");
@@ -62,6 +64,7 @@ export class WebRTCStreamer extends Streamer {
       this.onStateChange(this.mapStateToConnectionState());
     };
     this.ws.addEventListener("message", this.onMessage.bind(this));
+    console.log("WS created");
   }
 
   async stop(): Promise<void> {
