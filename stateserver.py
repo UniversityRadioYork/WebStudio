@@ -13,7 +13,7 @@ import random
 from telnetlib import Telnet
 import configparser
 
-config = configparser.ConfigParser()
+config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
 
 api_key = config.get("stateserver", "myradio_key")

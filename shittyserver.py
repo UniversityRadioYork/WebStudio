@@ -17,7 +17,7 @@ from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  #
 from aiortc.mediastreams import MediaStreamError  # type: ignore
 from raygun4py import raygunprovider  # type: ignore
 
-config = configparser.ConfigParser()
+config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
 
 ENABLE_EXCEPTION_LOGGING = False
