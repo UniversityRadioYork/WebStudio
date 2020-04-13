@@ -8,7 +8,7 @@ export const BROADCAST_API_BASE_URL =
   process.env.REACT_APP_BROADCAST_API_BASE!;
 const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
-class ApiException extends Error {}
+export class ApiException extends Error {}
 
 export async function apiRequest(
   url: string,
@@ -47,7 +47,7 @@ export async function myradioApiRequest(
     return json.payload;
   } else {
     console.error(json.payload);
-    throw new ApiException("Request failed!");
+    throw new ApiException(json.payload);
   }
 }
 
@@ -61,8 +61,8 @@ export async function broadcastApiRequest(
   if (json.status === "OK") {
     return json.payload;
   } else {
-    console.error(json.payload);
-    throw new ApiException("Request failed!");
+    console.error(json.reason);
+    throw new ApiException(json.reason);
   }
 }
 
