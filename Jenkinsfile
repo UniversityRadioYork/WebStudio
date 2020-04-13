@@ -29,9 +29,14 @@ pipeline {
           sh 'node_modules/.bin/tsc -p tsconfig.json --noEmit --extendedDiagnostics'
         }
       }
-      stage('MyPy') {
+      stage('MyPy (stateserver)') {
         steps {
-          sh 'env/bin/mypy server.py'
+          sh 'env/bin/mypy stateserver.py'
+        }
+      }
+      stage('MyPy (shittyserver)') {
+        steps {
+          sh 'env/bin/mypy shittyserver.py'
         }
       }
     }
@@ -69,7 +74,8 @@ pipeline {
       stage('Deploy server') {
         steps {
           sshagent(credentials: ['ury']) {
-           sh 'scp -v -o StrictHostKeyChecking=no server.py liquidsoap@dolby.ury:/opt/webstudioserver/server.py'
+           sh 'scp -v -o StrictHostKeyChecking=no stateserver.py liquidsoap@dolby.ury:/opt/webstudioserver/stateserver.py'
+           sh 'scp -v -o StrictHostKeyChecking=no shittyserver.py liquidsoap@dolby.ury:/opt/webstudioserver/shittyserver.py'
            sh 'scp -v -o StrictHostKeyChecking=no requirements.txt liquidsoap@dolby.ury:/opt/webstudioserver/requirements.txt'
           }
         }

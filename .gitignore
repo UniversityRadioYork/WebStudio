@@ -27,7 +27,8 @@ yarn-error.log*
 
 .mypy_cache/
 env/
+env.ci/
 
-shittyserver.ini
+serverconfig.ini
 
 .idea/

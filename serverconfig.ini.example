@@ -1,0 +1,12 @@
+[raygun]
+key = CHANGEME
+enable = False
+
+[shittyserver]
+notify_url = https://example.com
+websocket_port = 8079
+telnet_port = 8078
+
+[stateserver]
+myradio_key = CHANGEME
+sustainer_autonews = True

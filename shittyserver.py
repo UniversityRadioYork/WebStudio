@@ -1,27 +1,24 @@
 import asyncio
-import websockets
+import configparser
 import json
-import uuid
-import av  # type: ignore
-import struct
-from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
-from aiortc.mediastreams import MediaStreamError # type: ignore
-from aiortc.contrib.media import MediaBlackhole, MediaPlayer  # type: ignore
-import jack as Jack  # type: ignore
 import os
 import re
-from datetime import datetime
-from typing import Optional, Any, Type, Dict
-from types import TracebackType
 import sys
-import aiohttp
-from raygun4py import raygunprovider  # type: ignore
-import struct
+import uuid
+from datetime import datetime
+from types import TracebackType
+from typing import Optional, Any, Type, Dict
 
-import configparser
+import aiohttp
+import av  # type: ignore
+import jack as Jack  # type: ignore
+import websockets
+from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
+from aiortc.mediastreams import MediaStreamError  # type: ignore
+from raygun4py import raygunprovider  # type: ignore
 
 config = configparser.ConfigParser()
-config.read("shittyserver.ini")
+config.read("serverconfig.ini")
 
 ENABLE_EXCEPTION_LOGGING = False
 
@@ -112,7 +109,7 @@ async def notify_mattserver_about_sessions() -> None:
         data: Dict[str, Dict[str, str]] = {}
         for sid, sess in active_sessions.items():
             data[sid] = sess.to_dict()
-        async with session.post(config.get("mattserver", "notify_url"), json=data) as response:
+        async with session.post(config.get("shittyserver", "notify_url"), json=data) as response:
             print("Mattserver response", response)
 
 
@@ -339,10 +336,10 @@ async def serve(websocket: websockets.WebSocketServerProtocol, path: str) -> Non
 
 
 start_server = websockets.serve(
-    serve, "localhost", int(config.get("ports", "websocket"))
+    serve, "localhost", int(config.get("shittyserver", "websocket_port"))
 )
 
-print("Shittyserver WS starting on port {}.".format(config.get("ports", "websocket")))
+print("Shittyserver WS starting on port {}.".format(config.get("shittyserver", "websocket_port")))
 
 
 async def telnet_server(
@@ -417,14 +414,14 @@ async def telnet_server(
 
 async def run_telnet_server() -> None:
     server = await asyncio.start_server(
-        telnet_server, "localhost", int(config.get("ports", "telnet"))
+        telnet_server, "localhost", int(config.get("shittyserver", "telnet_port"))
     )
     await server.serve_forever()
 
 
 jack.activate()
 
-print("Shittyserver TELNET starting on port {}".format(config.get("ports", "telnet")))
+print("Shittyserver TELNET starting on port {}".format(config.get("shittyserver", "telnet_port")))
 asyncio.get_event_loop().run_until_complete(notify_mattserver_about_sessions())
 
 asyncio.get_event_loop().run_until_complete(
