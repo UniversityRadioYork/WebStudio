@@ -86,7 +86,7 @@ export function AdvancedTab() {
               changeSetting({
                 key: "tracklist",
                 // @ts-ignore
-                value: e.target.value
+                val: e.target.value
               })
             )
           }

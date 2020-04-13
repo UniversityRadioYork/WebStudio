@@ -354,9 +354,6 @@ def post_wsSessions() -> Any:
                 # they're late, bring them on air now
                 do_ws_srv_telnet(conn["wsid"])
                 subprocess.Popen(['sel', '5'])
-        #         # time.sleep(5)
-        #         do_ws_srv_telnet(conn["wsid"])
-        #         subprocess.Popen(['sel', '5'])
 
         if conn["wsid"] in wsids_to_remove:
             conn["wsid"] = None

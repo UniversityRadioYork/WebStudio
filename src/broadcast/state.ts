@@ -211,6 +211,7 @@ function shouldTracklist(
   optionValue: "always" | "while_live" | "never",
   stateValue: boolean
 ) {
+  console.log(optionValue, stateValue);
   if (optionValue === "while_live") {
     return stateValue;
   } else {
@@ -232,6 +233,8 @@ export const tracklistStart = (
     console.log("Attempting to tracklist: " + trackid);
     var id = (await sendTracklistStart(trackid)).audiologid;
     dispatch(MixerState.setTracklistItemID({ player, id }));
+  } else {
+    console.log("not gonna tracklist that one after all");
   }
 };
 
