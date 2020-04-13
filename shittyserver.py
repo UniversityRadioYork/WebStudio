@@ -20,8 +20,6 @@ from raygun4py import raygunprovider  # type: ignore
 config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
 
-ENABLE_EXCEPTION_LOGGING = False
-
 if config.get("raygun", "enable") == "True":
 
     def handle_exception(
@@ -29,6 +27,7 @@ if config.get("raygun", "enable") == "True":
         exc_value: BaseException,
         exc_traceback: TracebackType,
     ) -> None:
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
         cl = raygunprovider.RaygunSender(config.get("raygun", "key"))
         cl.send_exception(exc_info=(exc_type, exc_value, exc_traceback))
 
