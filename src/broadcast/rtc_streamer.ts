@@ -99,6 +99,7 @@ export class WebRTCStreamer extends Streamer {
         minutes: 59,
         seconds: 45
       });
+      console.log("news time", newsTime);
       const delta = newsTime.valueOf() - now.valueOf();
       this.newsInTimeout = window.setTimeout(async () => {
         await MixerState.playNewsIntro();
@@ -113,6 +114,7 @@ export class WebRTCStreamer extends Streamer {
         minutes: 0,
         seconds: 55
       });
+      console.log("end time", newsEndTime);
       const delta = newsEndTime.valueOf() - now.valueOf();
       this.newsOutTimeout = window.setTimeout(async () => {
         await MixerState.playNewsEnd();
