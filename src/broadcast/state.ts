@@ -242,7 +242,7 @@ export function sendTracklistStart(trackid: number): Promise<TrackListItem> {
 
 export const startStreaming = (): AppThunk => async (dispatch, getState) => {
   console.log("starting streamer.");
-  streamer = new WebRTCStreamer(MixerState.destination.stream);
+  streamer = new WebRTCStreamer(MixerState.destination.stream, dispatch);
   streamer.addConnectionStateListener(state => {
     dispatch(broadcastState.actions.setConnectionState(state));
     if (state === "CONNECTION_LOST") {

@@ -9,7 +9,7 @@ import {
   ConnectionStateListener,
   ConnectionStateEnum
 } from "./streamer";
-import store from "../store";
+import { Dispatch } from "redux";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
@@ -19,13 +19,15 @@ export class WebRTCStreamer extends Streamer {
   ws: WebSocket | undefined;
   state: StreamerState = "HELLO";
   isActive = false;
+  dispatch: Dispatch<any>;
 
   newsInTimeout?: number;
   newsOutTimeout?: number;
 
-  constructor(stream: MediaStream) {
+  constructor(stream: MediaStream, dispatch: Dispatch<any>) {
     super();
     this.stream = stream;
+    this.dispatch = dispatch;
   }
 
   async start(): Promise<void> {
@@ -186,12 +188,12 @@ export class WebRTCStreamer extends Streamer {
       case "ACTIVATED":
         this.isActive = true;
         this.onStateChange("LIVE");
-        store.dispatch(BroadcastState.setTracklisting(true));
+        this.dispatch(BroadcastState.setTracklisting(true));
         break;
       case "DEACTIVATED":
         this.isActive = false;
         this.onStateChange(this.mapStateToConnectionState());
-        store.dispatch(BroadcastState.setTracklisting(false));
+        this.dispatch(BroadcastState.setTracklisting(false));
         break;
       case "DIED":
         // oo-er
