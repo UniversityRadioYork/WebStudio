@@ -23,6 +23,11 @@ function nicifyConnectionState(state: ConnectionStateEnum): string {
       return "Connection lost. Reconnecting...";
     case "NOT_CONNECTED":
       return "Not Connected";
+    case "LIVE":
+      return "Live!";
+    default:
+      console.warn("unhandled", state);
+      return state as string;
   }
 }
 
