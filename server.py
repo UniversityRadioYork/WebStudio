@@ -175,8 +175,11 @@ class Session(object):
                     self.websocket is not None
                     and self.websocket.state == websockets.protocol.State.OPEN
                 ):
-                    await self.websocket.send(json.dumps({"kind": "DIED"}))
-                    await self.websocket.close(1008)
+                    try:
+                        await self.websocket.send(json.dumps({"kind": "DIED"}))
+                        await self.websocket.close(1008)
+                    except websockets.exceptions.ConnectionClosedError:
+                        print(self.connection_id, "socket already closed, no died message")
 
                 if self.connection_id in active_sessions:
                     print(self.connection_id, "removing from active_sessions")
