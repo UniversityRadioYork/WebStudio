@@ -525,7 +525,11 @@ export const play = (player: number): AppThunk => async (
   if (state.loadedItem && "album" in state.loadedItem) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
-    dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
+    if (getState().mixer.players[player].tracklistItemID !== -1) {
+      dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
+    } else {
+      console.log("not tracklisting because already tracklisted");
+    }
   }
 };
 
