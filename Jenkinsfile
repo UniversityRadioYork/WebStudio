@@ -43,6 +43,12 @@ pipeline {
   }
 
   stage('Build and deploy to dev instance') {
+   when {
+    anyOf {
+     branch 'master'
+     branch 'production'
+    }
+   }
    steps {
     sh 'sed -i -e \'s/ury.org.uk\\/webstudio/ury.org.uk\\/webstudio-dev/\' package.json'
     sh 'yarn build'
