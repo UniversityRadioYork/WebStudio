@@ -7,6 +7,7 @@ import {
 import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
 import { PlanItem } from "../showplanner/state";
+import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
@@ -15,7 +16,6 @@ import WaveSurfer from "wavesurfer.js";
 
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
-import { tracklistEnd, tracklistStart } from "../broadcast/tracklist_state";
 
 const audioContext = new AudioContext();
 const wavesurfers: WaveSurfer[] = [];
@@ -86,6 +86,7 @@ interface PlayerState {
   playOnLoad: Boolean;
   autoAdvance: Boolean;
   repeat: PlayerRepeatEnum;
+  tracklistItemID: number;
 }
 
 interface MicState {
@@ -120,6 +121,7 @@ const mixerState = createSlice({
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
+        tracklistItemID: -1,
         loadError: false
       },
       {
@@ -135,6 +137,7 @@ const mixerState = createSlice({
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
+        tracklistItemID: -1,
         loadError: false
       },
       {
@@ -150,6 +153,7 @@ const mixerState = createSlice({
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
+        tracklistItemID: -1,
         loadError: false
       }
     ],
@@ -176,6 +180,7 @@ const mixerState = createSlice({
       state.players[action.payload.player].timeCurrent = 0;
       state.players[action.payload.player].timeRemaining = 0;
       state.players[action.payload.player].timeLength = 0;
+      state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
     },
     itemLoadPercentage(
@@ -292,6 +297,15 @@ const mixerState = createSlice({
       }
       state.players[action.payload.player].repeat = playVal;
     },
+    setTracklistItemID(
+      state,
+      action: PayloadAction<{
+        player: number;
+        id: number;
+      }>
+    ) {
+      state.players[action.payload.player].tracklistItemID = action.payload.id;
+    },
     startMicCalibration(state) {
       state.mic.calibration = true;
     },
@@ -395,9 +409,8 @@ export const load = (
   wavesurfer.on("finish", () => {
     dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
     const state = getState().mixer.players[player];
-    const tracklistItemId = getState().tracklist.itemIds[player];
-    if (tracklistItemId !== -1) {
-      dispatch(tracklistEnd(tracklistItemId));
+    if (state.tracklistItemID !== -1) {
+      dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
     }
     if (state.repeat === "one") {
       wavesurfer.play();
@@ -512,7 +525,7 @@ export const play = (player: number): AppThunk => async (
 
   if (state.loadedItem && "album" in state.loadedItem) {
     //track
-    dispatch(tracklistStart(player, state.loadedItem.trackid));
+    dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
   }
 };
 
@@ -544,10 +557,8 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
   }
   wavesurfers[player].stop();
 
-  const tracklistItemId = getState().tracklist.itemIds[player];
-
-  if (tracklistItemId !== -1) {
-    dispatch(tracklistEnd(tracklistItemId));
+  if (state.tracklistItemID !== -1) {
+    dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
   }
 };
 
@@ -562,6 +573,8 @@ export const redrawWavesurfers = (): AppThunk => () => {
     item.drawBuffer();
   });
 };
+
+export const { setTracklistItemID } = mixerState.actions;
 
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (

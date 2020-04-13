@@ -4,7 +4,7 @@ import { myradioApiRequest, broadcastApiRequest, ApiException } from "../api";
 import { WebRTCStreamer } from "./rtc_streamer";
 import * as MixerState from "../mixer/state";
 import * as NavbarState from "../navbar/state";
-import { ConnectionStateEnum } from "./streamer";
+import { ConnectionStateEnum, Streamer } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 
 export let streamer: WebRTCStreamer | null = null;
@@ -21,6 +21,7 @@ interface BroadcastState {
   autoNewsBeginning: boolean;
   autoNewsMiddle: boolean;
   autoNewsEnd: boolean;
+  tracklisting: boolean;
   connectionState: ConnectionStateEnum;
   recordingState: ConnectionStateEnum;
 }
@@ -40,6 +41,7 @@ const broadcastState = createSlice({
     autoNewsBeginning: true,
     autoNewsMiddle: true,
     autoNewsEnd: true,
+    tracklisting: false,
     connectionState: "NOT_CONNECTED",
     recordingState: "NOT_CONNECTED"
   } as BroadcastState,
@@ -49,6 +51,12 @@ const broadcastState = createSlice({
       action: PayloadAction<{ key: K; val: BroadcastState[K] }>
     ) {
       state[action.payload.key] = action.payload.val;
+    },
+    toggleTracklisting(state) {
+      state.tracklisting = !state.tracklisting;
+    },
+    setTracklisting(state, action: PayloadAction<boolean>) {
+      state.tracklisting = action.payload;
     },
     setConnID(state, action: PayloadAction<number | null>) {
       state.connID = action.payload;
@@ -194,6 +202,41 @@ export function sendBroadcastChange(
     beginning: beginning,
     middle: middle,
     end: end
+  });
+}
+
+export const { toggleTracklisting, setTracklisting } = broadcastState.actions;
+
+export const tracklistStart = (
+  player: number,
+  trackid: number
+): AppThunk => async (dispatch, getState) => {
+  if (getState().broadcast.tracklisting) {
+    console.log("Attempting to tracklist: " + trackid);
+    var id = (await sendTracklistStart(trackid)).audiologid;
+    dispatch(MixerState.setTracklistItemID({ player, id }));
+  }
+};
+
+export const tracklistEnd = (tracklistitemid: number): AppThunk => async (
+  dispatch,
+  getState
+) => {
+  if (getState().broadcast.tracklisting) {
+    console.log("Attempting to end tracklistitem: " + tracklistitemid);
+    myradioApiRequest(
+      "/tracklistItem/" + tracklistitemid + "/endtime",
+      "PUT",
+      {}
+    );
+  }
+};
+
+export function sendTracklistStart(trackid: number): Promise<TrackListItem> {
+  return myradioApiRequest("/tracklistItem", "POST", {
+    trackid: trackid,
+    source: "w",
+    state: "c"
   });
 }
 
