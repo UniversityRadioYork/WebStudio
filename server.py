@@ -179,7 +179,10 @@ class Session(object):
                     await self.websocket.close(1008)
 
                 if self.connection_id in active_sessions:
+                    print(self.connection_id, "removing from active_sessions")
                     del active_sessions[self.connection_id]
+                    print("active_sessions now")
+                    print(active_sessions)
                     if len(active_sessions) == 0:
                         write_ob_status(False)
                 else:
