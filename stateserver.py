@@ -346,14 +346,14 @@ def post_wsSessions() -> Any:
     print("wsSessions which have appeared:", wsids_to_add)
 
     for conn in connections:
+        if conn["connid"] == lastConnectionIDToRegister:
+            if conn["wsid"] is None and len(wsids_to_add) == 1:
+                conn["wsid"] = wsids_to_add[0]
         if conn["wsid"] in wsids_to_add:
             if conn["startTimestamp"] + 120 < datetime.datetime.now().timestamp():
                 # they're late, bring them on air now
                 do_ws_srv_telnet(conn["wsid"])
                 subprocess.Popen(['sel', '5'])
-        # if conn["connid"] == lastConnectionIDToRegister:
-        #     if conn["wsid"] == None and len(wsids_to_add) == 1:
-        #         conn["wsid"] = wsids_to_add[0]
         #         # time.sleep(5)
         #         do_ws_srv_telnet(conn["wsid"])
         #         subprocess.Popen(['sel', '5'])
