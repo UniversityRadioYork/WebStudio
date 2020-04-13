@@ -115,7 +115,7 @@ export class WebRTCStreamer extends Streamer {
       (now.getMinutes() === 1 && now.getSeconds() < 50)
     ) {
       let newsEndTime = DateFns.set(now, {
-        minutes: 0,
+        minutes: 1,
         seconds: 55
       });
       if (now.getMinutes() > 2) {
