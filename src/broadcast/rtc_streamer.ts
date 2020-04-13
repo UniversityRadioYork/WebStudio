@@ -1,4 +1,7 @@
 import SdpTransform from "sdp-transform";
+import * as DateFns from "date-fns";
+
+import * as MixerState from "../mixer/state";
 
 import {
   Streamer,
@@ -14,6 +17,9 @@ export class WebRTCStreamer extends Streamer {
   ws: WebSocket | undefined;
   state: StreamerState = "HELLO";
   isActive = false;
+
+  newsInTimeout?: number;
+  newsOutTimeout?: number;
 
   constructor(stream: MediaStream) {
     super();
@@ -50,6 +56,9 @@ export class WebRTCStreamer extends Streamer {
       }
       console.log("ICE Connection state change: " + this.pc.iceConnectionState);
       this.onStateChange(this.mapStateToConnectionState());
+      if (this.mapStateToConnectionState() === "CONNECTED") {
+        this.doTheNews();
+      }
     };
     this.stream.getAudioTracks().forEach(track => this.pc!.addTrack(track));
 
@@ -75,6 +84,39 @@ export class WebRTCStreamer extends Streamer {
     if (this.pc) {
       this.pc.close();
       this.pc = null;
+    }
+  }
+
+  doTheNews() {
+    window.clearTimeout(this.newsInTimeout);
+    window.clearTimeout(this.newsOutTimeout);
+    const now = new Date();
+    if (
+      now.getMinutes() < 59 ||
+      (now.getMinutes() === 59 && now.getSeconds() < 45)
+    ) {
+      const newsTime = DateFns.set(now, {
+        minutes: 59,
+        seconds: 45
+      });
+      const delta = newsTime.valueOf() - now.valueOf();
+      this.newsInTimeout = window.setTimeout(async () => {
+        await MixerState.playNewsIntro();
+      }, delta);
+    }
+    if (
+      now.getMinutes() < 1 ||
+      now.getMinutes() >= 2 ||
+      (now.getMinutes() === 1 && now.getSeconds() < 50)
+    ) {
+      const newsEndTime = DateFns.set(now, {
+        minutes: 0,
+        seconds: 55
+      });
+      const delta = newsEndTime.valueOf() - now.valueOf();
+      this.newsOutTimeout = window.setTimeout(async () => {
+        await MixerState.playNewsEnd();
+      }, delta);
     }
   }
 
@@ -136,9 +178,11 @@ export class WebRTCStreamer extends Streamer {
         break;
       case "ACTIVATED":
         this.isActive = true;
+        this.onStateChange("LIVE");
         break;
       case "DEACTIVATED":
         this.isActive = false;
+        this.onStateChange(this.mapStateToConnectionState());
         break;
       case "DIED":
         // oo-er
