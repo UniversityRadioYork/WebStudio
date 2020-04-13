@@ -1,6 +1,7 @@
 import SdpTransform from "sdp-transform";
 import * as DateFns from "date-fns";
 
+import * as BroadcastState from "./state";
 import * as MixerState from "../mixer/state";
 
 import {
@@ -8,6 +9,7 @@ import {
   ConnectionStateListener,
   ConnectionStateEnum
 } from "./streamer";
+import store from "../store";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
@@ -110,10 +112,13 @@ export class WebRTCStreamer extends Streamer {
       now.getMinutes() >= 2 ||
       (now.getMinutes() === 1 && now.getSeconds() < 50)
     ) {
-      const newsEndTime = DateFns.set(now, {
+      let newsEndTime = DateFns.set(now, {
         minutes: 0,
         seconds: 55
       });
+      if (now.getMinutes() > 2) {
+        newsEndTime = DateFns.add(newsEndTime, { hours: 1 });
+      }
       console.log("end time", newsEndTime);
       const delta = newsEndTime.valueOf() - now.valueOf();
       this.newsOutTimeout = window.setTimeout(async () => {
@@ -181,10 +186,12 @@ export class WebRTCStreamer extends Streamer {
       case "ACTIVATED":
         this.isActive = true;
         this.onStateChange("LIVE");
+        store.dispatch(BroadcastState.setTracklisting(true));
         break;
       case "DEACTIVATED":
         this.isActive = false;
         this.onStateChange(this.mapStateToConnectionState());
+        store.dispatch(BroadcastState.setTracklisting(false));
         break;
       case "DIED":
         // oo-er

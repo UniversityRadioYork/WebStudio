@@ -55,6 +55,9 @@ const broadcastState = createSlice({
     toggleTracklisting(state) {
       state.tracklisting = !state.tracklisting;
     },
+    setTracklisting(state, action: PayloadAction<boolean>) {
+      state.tracklisting = action.payload;
+    },
     setConnID(state, action: PayloadAction<number | null>) {
       state.connID = action.payload;
       if (action.payload != null) {
@@ -202,7 +205,7 @@ export function sendBroadcastChange(
   });
 }
 
-export const { toggleTracklisting } = broadcastState.actions;
+export const { toggleTracklisting, setTracklisting } = broadcastState.actions;
 
 export const tracklistStart = (
   player: number,
