@@ -9,12 +9,18 @@ import {
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
 export class WebRTCStreamer extends Streamer {
-  pc: RTCPeerConnection | null;
+  stream: MediaStream;
+  pc: RTCPeerConnection | null = null;
   ws: WebSocket | undefined;
   state: StreamerState = "HELLO";
+  isActive = false;
 
   constructor(stream: MediaStream) {
     super();
+    this.stream = stream;
+  }
+
+  async start(): Promise<void> {
     this.pc = new RTCPeerConnection({
       iceServers: [
         {
@@ -44,11 +50,8 @@ export class WebRTCStreamer extends Streamer {
       console.log("ICE Connection state change: " + this.pc.iceConnectionState);
       this.onStateChange(this.mapStateToConnectionState());
     };
-    console.log("Stream tracks", stream.getAudioTracks());
-    stream.getAudioTracks().forEach(track => this.pc!.addTrack(track));
-  }
+    this.stream.getAudioTracks().forEach(track => this.pc!.addTrack(track));
 
-  async start(): Promise<void> {
     this.ws = new WebSocket(process.env.REACT_APP_WS_URL!);
     this.ws.onopen = e => {
       console.log("WS open");
@@ -128,6 +131,18 @@ export class WebRTCStreamer extends Streamer {
         await this.pc.setRemoteDescription(answer);
         this.state = "ANSWER";
         break;
+      case "ACTIVATED":
+        this.isActive = true;
+        break;
+      case "DEACTIVATED":
+        this.isActive = false;
+        break;
+      case "DIED":
+        // oo-er
+        // server thinks we've lost connection
+        // kill it on our end and trigger a reconnect
+        await this.stop();
+        await this.start();
     }
   }
 

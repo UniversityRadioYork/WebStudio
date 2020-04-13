@@ -21,20 +21,6 @@
   color: #09d3ac;
 }
 
-#timelord {
-  background: black;
-  border:red 1px solid;
-  padding:0;
-  margin:0;
-  color: white;
-  width: 300px;
-  max-width: 40vw;
-}
-#timelord .time {
-  font-weight: bold;
-  font-size: 1.1em;
-}
-
 .sp-container {
   display: flex;
   flex-direction: column;
