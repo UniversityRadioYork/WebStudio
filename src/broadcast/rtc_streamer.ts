@@ -1,7 +1,7 @@
 import SdpTransform from "sdp-transform";
 import * as DateFns from "date-fns";
 
-import * as BroadcastState from "./state";
+import * as TracklistState from "./tracklist_state";
 import * as MixerState from "../mixer/state";
 
 import {
@@ -186,12 +186,12 @@ export class WebRTCStreamer extends Streamer {
       case "ACTIVATED":
         this.isActive = true;
         this.onStateChange("LIVE");
-        store.dispatch(BroadcastState.setTracklisting(true));
+        store.dispatch(TracklistState.setTracklisting(true));
         break;
       case "DEACTIVATED":
         this.isActive = false;
         this.onStateChange(this.mapStateToConnectionState());
-        store.dispatch(BroadcastState.setTracklisting(false));
+        store.dispatch(TracklistState.setTracklisting(false));
         break;
       case "DIED":
         // oo-er

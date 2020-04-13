@@ -11,24 +11,26 @@ import sessionReducer from "./session/state";
 import NavbarReducer from "./navbar/state";
 import OptionsMenuReducer from "./optionsMenu/state";
 import SettingsState from "./optionsMenu/settingsState";
+import TracklistReducer from "./broadcast/tracklist_state";
 
 const rootReducer = combineReducers({
-    showplan: ShowplanReducer,
-    mixer: MixerReducer,
-    broadcast: BroadcastReducer,
-    session: sessionReducer,
-    navbar: NavbarReducer,
-    optionsMenu: OptionsMenuReducer,
-    settings: SettingsState,
+  showplan: ShowplanReducer,
+  mixer: MixerReducer,
+  broadcast: BroadcastReducer,
+  session: sessionReducer,
+  navbar: NavbarReducer,
+  optionsMenu: OptionsMenuReducer,
+  settings: SettingsState,
+  tracklist: TracklistReducer
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
 
 const persistenceConfig: PersistConfig<RootState> = {
-	key: "root",
-	storage: webStorage,
-	whitelist: ["settings"],
-	stateReconciler: autoMergeLevel2
+  key: "root",
+  storage: webStorage,
+  whitelist: ["settings"],
+  stateReconciler: autoMergeLevel2
 };
 
 const persistedReducer = persistReducer(persistenceConfig, rootReducer);
