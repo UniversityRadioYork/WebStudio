@@ -150,7 +150,11 @@ class Session(object):
         print(self.connection_id, "Deactivating")
         self.running = False
         if self.websocket is not None:
-            await self.websocket.send(json.dumps({"kind": "DEACTIVATED"}))
+            try:
+                await self.websocket.send(json.dumps({"kind": "DEACTIVATED"}))
+            except websockets.exceptions.ConnectionClosedError:
+                print(self.connection_id, "not sending DEACTIVATED as it's already closed")
+                pass
 
     async def end(self) -> None:
         global active_sessions, live_session
