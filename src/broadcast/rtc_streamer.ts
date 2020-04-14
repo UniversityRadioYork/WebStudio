@@ -24,6 +24,7 @@ export class WebRTCStreamer extends Streamer {
 
   newsInTimeout?: number;
   newsOutTimeout?: number;
+  newsInterval?: number;
 
   constructor(stream: MediaStream, dispatch: Dispatch<any>) {
     super();
@@ -61,11 +62,16 @@ export class WebRTCStreamer extends Streamer {
       }
       console.log("ICE Connection state change: " + this.pc.iceConnectionState);
       this.onStateChange(this.mapStateToConnectionState());
-      if (this.mapStateToConnectionState() === "CONNECTED") {
-        this.doTheNews();
-      }
     };
     this.stream.getAudioTracks().forEach(track => this.pc!.addTrack(track));
+
+    this.addConnectionStateListener(state => {
+      if (state === "CONNECTED") {
+        this.newsInterval = window.setInterval(this.doTheNews, 1000 * 60);
+      } else if (state === "CONNECTION_LOST" || state === "NOT_CONNECTED") {
+        window.clearInterval(this.newsInterval);
+      }
+    });
 
     console.log("PC created");
     this.ws = new WebSocket(process.env.REACT_APP_WS_URL!);
@@ -99,7 +105,7 @@ export class WebRTCStreamer extends Streamer {
     const now = new Date();
     if (
       now.getMinutes() < 59 ||
-      (now.getMinutes() === 59 && now.getSeconds() < 45)
+      (now.getMinutes() === 59 && now.getSeconds() < 44)
     ) {
       const newsTime = DateFns.set(now, {
         minutes: 59,
@@ -114,7 +120,7 @@ export class WebRTCStreamer extends Streamer {
     if (
       now.getMinutes() < 1 ||
       now.getMinutes() >= 2 ||
-      (now.getMinutes() === 1 && now.getSeconds() < 50)
+      (now.getMinutes() === 1 && now.getSeconds() < 54)
     ) {
       let newsEndTime = DateFns.set(now, {
         minutes: 1,
