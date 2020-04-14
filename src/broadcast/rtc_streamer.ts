@@ -20,6 +20,7 @@ export class WebRTCStreamer extends Streamer {
   state: StreamerState = "HELLO";
   isActive = false;
   dispatch: Dispatch<any>;
+  unexpectedDeath = false;
 
   newsInTimeout?: number;
   newsOutTimeout?: number;
@@ -89,6 +90,7 @@ export class WebRTCStreamer extends Streamer {
       this.pc.close();
       this.pc = null;
     }
+    this.unexpectedDeath = false;
   }
 
   doTheNews() {
@@ -201,6 +203,8 @@ export class WebRTCStreamer extends Streamer {
         // kill it on our end and trigger a reconnect
         await this.stop();
         await this.start();
+        this.unexpectedDeath = true;
+        break;
     }
   }
 
@@ -241,7 +245,11 @@ export class WebRTCStreamer extends Streamer {
 
   mapStateToConnectionState(): ConnectionStateEnum {
     if (!this.pc) {
-      return "NOT_CONNECTED";
+      if (this.unexpectedDeath) {
+        return "CONNECTION_LOST";
+      } else {
+        return "NOT_CONNECTED";
+      }
     }
     switch (this.pc.iceConnectionState) {
       case "connected":
