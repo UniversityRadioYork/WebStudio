@@ -1,7 +1,12 @@
 import React, { useState, useReducer, useEffect, memo } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { MYRADIO_NON_API_BASE, getUserPlaylists, getAuxPlaylists, ManagedPlaylist } from "../api";
+import {
+  MYRADIO_NON_API_BASE,
+  getUserPlaylists,
+  getAuxPlaylists,
+  ManagedPlaylist
+} from "../api";
 
 import { TimeslotItem } from "../api";
 
@@ -9,7 +14,7 @@ import {
   Droppable,
   DragDropContext,
   DropResult,
-  ResponderProvided,
+  ResponderProvided
 } from "react-beautiful-dnd";
 
 import { useSelector, useDispatch } from "react-redux";
@@ -21,7 +26,7 @@ import {
   moveItem,
   addItem,
   removeItem,
-  getPlaylists,
+  getPlaylists
 } from "./state";
 
 import * as MixerState from "../mixer/state";
@@ -32,11 +37,10 @@ import {
   CentralMusicLibrary,
   CML_CACHE,
   AuxLibrary,
-  AUX_CACHE,
+  AUX_CACHE
 } from "./libraries";
 import { Player, USE_REAL_GAIN_VALUE } from "./Player";
 
-import { timestampToDateTime } from "../lib/utils";
 import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
@@ -55,7 +59,7 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
               {typeof data[id] === "undefined"
                 ? null
                 : data
-                    .filter((x) => x.channel === id)
+                    .filter(x => x.channel === id)
                     .sort((a, b) => a.weight - b.weight)
                     .map((x, index) => (
                       <Item
@@ -78,10 +82,9 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   const dispatch = useDispatch();
-  const {
-    auxPlaylists,
-    userPlaylists
-  } = useSelector((state: RootState) => state.showplan);
+  const { auxPlaylists, userPlaylists } = useSelector(
+    (state: RootState) => state.showplan
+  );
 
   useEffect(() => {
     dispatch(getPlaylists());
@@ -93,28 +96,33 @@ function LibraryColumn() {
         className="form-control"
         style={{ width: "100%" }}
         value={sauce}
-        onChange={(e) => setSauce(e.target.value)}
+        onChange={e => setSauce(e.target.value)}
       >
         <option value={"None"} disabled>
           Choose a library
         </option>
         <option value={"CentralMusicLibrary"}>Central Music Library</option>
         <option disabled>Personal Resources</option>
-        {userPlaylists.map((playlist) => (
-            <option key={playlist.managedid} value={playlist.managedid}>
-              { playlist.title }
-            </option>
+        {userPlaylists.map(playlist => (
+          <option key={playlist.managedid} value={playlist.managedid}>
+            {playlist.title}
+          </option>
         ))}
         <option disabled>Shared Resources</option>
         {auxPlaylists.map(playlist => (
-          <option key={"aux-" + playlist.managedid} value={"aux-" + playlist.managedid}>
-            { playlist.title }
+          <option
+            key={"aux-" + playlist.managedid}
+            value={"aux-" + playlist.managedid}
+          >
+            {playlist.title}
           </option>
         ))}
       </select>
       <div className="border-top my-3"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
-      {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && <AuxLibrary libraryId={sauce} />}
+      {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
+        <AuxLibrary libraryId={sauce} />
+      )}
       <span
         className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
       >
@@ -137,8 +145,7 @@ function MicControl() {
         <div
           className="sp-mixer-buttons-backdrop"
           style={{
-            width:
-              (USE_REAL_GAIN_VALUE ? state.gain : state.volume) * 100 + "%",
+            width: (USE_REAL_GAIN_VALUE ? state.gain : state.volume) * 100 + "%"
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
@@ -149,10 +156,20 @@ function MicControl() {
         </button>
       </div>
       <div>
-        <button onClick={() => dispatch(OptionsMenuState.open())}>Options</button>
+        <button onClick={() => dispatch(OptionsMenuState.open())}>
+          Options
+        </button>
       </div>
     </div>
   );
+}
+
+function MicLiveIndicator() {
+  const micState = useSelector((state: RootState) => state.mixer.mic);
+  if (micState.open && micState.volume > 0) {
+    return <div className="sp-mic-live" />;
+  }
+  return null;
 }
 
 function incrReducer(state: number, action: any) {
@@ -165,15 +182,17 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     planLoadError,
     planLoading,
     planSaveError,
-    planSaving,
+    planSaving
   } = useSelector((state: RootState) => state.showplan);
   const session = useSelector((state: RootState) => state.session);
 
-  const [showWelcomeModal, setShowWelcomeModal] = useState(!session.userCanBroadcast);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(
+    !session.userCanBroadcast
+  );
 
   const dispatch = useDispatch();
 
-  useBeforeunload((event) => event.preventDefault());
+  useBeforeunload(event => event.preventDefault());
 
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
@@ -208,7 +227,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
-        ...data,
+        ...data
       };
       dispatch(addItem(timeslotId, newItem));
       increment(null);
@@ -222,7 +241,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
-        ...data,
+        ...data
       } as any;
       dispatch(addItem(timeslotId, newItem));
       increment(null);
@@ -231,7 +250,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       dispatch(
         moveItem(timeslotId, result.draggableId, [
           parseInt(result.destination.droppableId, 10),
-          result.destination.index,
+          result.destination.index
         ])
       );
     }
@@ -294,7 +313,11 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
       </ContextMenu>
       <OptionsMenu />
-      <WelcomeModal isOpen={showWelcomeModal} close={() => setShowWelcomeModal(false)} />
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        close={() => setShowWelcomeModal(false)}
+      />
+      <MicLiveIndicator />
     </div>
   );
 };
