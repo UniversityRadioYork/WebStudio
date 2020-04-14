@@ -324,6 +324,7 @@ def post_settingsCheck() -> Any:
 def post_wsSessions() -> Any:
     global connections
     global wsSessions
+    global lastConnectionIDToRegister
     content = request.json
     # if not content:
     #    return genFail("No parameters provided.")
@@ -349,13 +350,17 @@ def post_wsSessions() -> Any:
         if conn["connid"] == lastConnectionIDToRegister:
             if conn["wsid"] is None and len(wsids_to_add) == 1:
                 conn["wsid"] = wsids_to_add[0]
+                print("({}, {}) hello".format(conn["connid"], conn["wsid"]))
+
         if conn["wsid"] in wsids_to_add:
             if conn["startTimestamp"] + 120 < datetime.datetime.now().timestamp():
                 # they're late, bring them on air now
+                print("({}, {}) late, bringing on air now".format(conn["connid"], conn["wsid"]))
                 do_ws_srv_telnet(conn["wsid"])
                 subprocess.Popen(['sel', '5'])
 
         if conn["wsid"] in wsids_to_remove:
+            print("({}, {}) gone".format(conn["connid"], conn["wsid"]))
             conn["wsid"] = None
             # TODO Make this actually do a disconnect sequence if this is the current show.
             # time.sleep(5)
