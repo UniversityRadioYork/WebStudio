@@ -17,6 +17,7 @@ export type BroadcastStageEnum =
 interface BroadcastState {
   stage: BroadcastStageEnum;
   connID: number | null;
+  wsID: string | null;
   sourceID: number;
   autoNewsBeginning: boolean;
   autoNewsMiddle: boolean;
@@ -37,6 +38,7 @@ const broadcastState = createSlice({
   initialState: {
     stage: "NOT_REGISTERED",
     connID: null,
+    wsID: null,
     sourceID: 5,
     autoNewsBeginning: true,
     autoNewsMiddle: true,
@@ -66,6 +68,9 @@ const broadcastState = createSlice({
         state.stage = "NOT_REGISTERED";
       }
     },
+    setWsID(state, action: PayloadAction<string | null>) {
+      state.wsID = action.payload;
+    },
     setConnectionState(state, action: PayloadAction<ConnectionStateEnum>) {
       state.connectionState = action.payload;
     },
@@ -76,6 +81,12 @@ const broadcastState = createSlice({
 });
 
 export default broadcastState.reducer;
+
+export const {
+  toggleTracklisting,
+  setTracklisting,
+  setWsID
+} = broadcastState.actions;
 
 export interface TrackListItem {
   audiologid: number;
@@ -89,7 +100,8 @@ export const changeBroadcastSetting = <K extends keyof BroadcastState>(
   dispatch(changeTimeslot());
 };
 
-export const registerTimeslot = (): AppThunk => async (dispatch, getState) => {
+// intentionally renamed to break all existing callsites
+export const registerForShow = (): AppThunk => async (dispatch, getState) => {
   if (!getState().session.userCanBroadcast) {
     dispatch(
       NavbarState.showAlert({
@@ -104,14 +116,22 @@ export const registerTimeslot = (): AppThunk => async (dispatch, getState) => {
     var state = getState().session;
     const memberid = state.currentUser?.memberid;
     const timeslotid = state.currentTimeslot?.timeslot_id;
+    const wsId = getState().broadcast.wsID;
+    if (wsId === null) {
+      console.warn("Tried to register for broadcast with no wsID");
+    }
     console.log("Attempting to Register for Broadcast.");
     var sourceid = getState().broadcast.sourceID;
     try {
-      var connID = await sendBroadcastRegister(timeslotid, memberid, sourceid);
+      var connID = await sendBroadcastRegister(
+        timeslotid,
+        memberid,
+        sourceid,
+        wsId || undefined
+      );
       console.log(connID);
       if (connID !== undefined) {
         dispatch(broadcastState.actions.setConnID(connID["connid"]));
-        dispatch(startStreaming());
       }
     } catch (e) {
       if (e instanceof ApiException) {
@@ -173,13 +193,18 @@ export const changeTimeslot = (): AppThunk => async (dispatch, getState) => {
 export function sendBroadcastRegister(
   timeslotid: number | undefined,
   memberid: number | undefined,
-  sourceid: number
+  sourceid: number,
+  wsID?: string
 ): Promise<any> {
-  return broadcastApiRequest("/registerTimeslot", "POST", {
+  const payload = {
     memberid: memberid,
     timeslotid: timeslotid,
     sourceid: sourceid
-  });
+  } as any;
+  if (typeof wsID === "string") {
+    payload["wsid"] = wsID;
+  }
+  return broadcastApiRequest("/registerTimeslot", "POST", payload);
 }
 export function sendBroadcastCancel(
   connid: number | null
@@ -204,8 +229,6 @@ export function sendBroadcastChange(
     end: end
   });
 }
-
-export const { toggleTracklisting, setTracklisting } = broadcastState.actions;
 
 function shouldTracklist(
   optionValue: "always" | "while_live" | "never",
@@ -266,7 +289,17 @@ export function sendTracklistStart(trackid: number): Promise<TrackListItem> {
   });
 }
 
-export const startStreaming = (): AppThunk => async (dispatch, getState) => {
+export const goOnAir = (): AppThunk => async (dispatch, getState) => {
+  if (!getState().session.userCanBroadcast) {
+    dispatch(
+      NavbarState.showAlert({
+        color: "warning",
+        content: "You are not WebStudio Trained and cannot go live.",
+        closure: 7000
+      })
+    );
+    return;
+  }
   console.log("starting streamer.");
   streamer = new WebRTCStreamer(MixerState.destination.stream, dispatch);
   streamer.addConnectionStateListener(state => {
@@ -274,6 +307,9 @@ export const startStreaming = (): AppThunk => async (dispatch, getState) => {
     if (state === "CONNECTION_LOST") {
       // un-register if we drop, let the user manually reconnect
       dispatch(broadcastState.actions.setConnID(null));
+    } else if (state === "CONNECTED") {
+      // okay, we've connected
+      dispatch(registerForShow());
     }
   });
   await streamer.start();

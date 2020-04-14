@@ -285,6 +285,14 @@ def post_registerCheck() -> Any:
         'autoNewsEnd': True,
         'wsid': None
     }
+    if "wsid" in content:
+        connection["wsid"] = content["wsid"]
+        if start_time > now_time + datetime.timedelta(minutes=2):
+            # they're late, bring them live now
+            print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
+            do_ws_srv_telnet(connection["wsid"])
+            subprocess.Popen(['sel', '5'])
+
     connections.append(connection)
     print(connections)
 

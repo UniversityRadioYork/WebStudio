@@ -73,7 +73,7 @@ export function NavBar() {
             onClick={() => {
               switch (broadcastState.stage) {
                 case "NOT_REGISTERED":
-                  dispatch(BroadcastState.registerTimeslot());
+                  dispatch(BroadcastState.goOnAir());
                   break;
                 case "REGISTERED":
                   dispatch(BroadcastState.cancelTimeslot());

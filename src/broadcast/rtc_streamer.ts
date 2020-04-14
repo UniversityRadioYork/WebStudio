@@ -142,6 +142,7 @@ export class WebRTCStreamer extends Streamer {
     switch (data.kind) {
       case "HELLO":
         console.log("WS HELLO, our client ID is " + data.connectionId);
+        this.dispatch(BroadcastState.setWsID(data.connectionId));
         if (this.state !== "HELLO") {
           this.ws!.close();
         }
