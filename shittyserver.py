@@ -152,7 +152,7 @@ class Session(object):
         if self.websocket is not None:
             try:
                 await self.websocket.send(json.dumps({"kind": "DEACTIVATED"}))
-            except websockets.exceptions.ConnectionClosedError:
+            except websockets.exceptions.ConnectionClosed:
                 print(self.connection_id, "not sending DEACTIVATED as it's already closed")
                 pass
 
@@ -178,7 +178,7 @@ class Session(object):
                     try:
                         await self.websocket.send(json.dumps({"kind": "DIED"}))
                         await self.websocket.close(1008)
-                    except websockets.exceptions.ConnectionClosedError:
+                    except websockets.exceptions.ConnectionClosed:
                         print(self.connection_id, "socket already closed, no died message")
 
                 if self.connection_id in active_sessions:
@@ -326,7 +326,7 @@ class Session(object):
                         json.dumps({"kind": "ERROR", "error": "unknown_kind"})
                     )
 
-        except websockets.exceptions.ConnectionClosedError:
+        except websockets.exceptions.ConnectionClosed:
             print(self.connection_id, "WebSocket closed")
             await self.end()
 
