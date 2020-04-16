@@ -223,6 +223,7 @@ class Session(object):
                     "ICE connection state is {}".format(self.pc.iceConnectionState),
                 )
                 if self.pc.iceConnectionState == "failed":
+                    print(self.connection_id, "Ending due to ICE connection failure")
                     await self.end()
 
         @self.pc.on("track")  # type: ignore
@@ -236,7 +237,7 @@ class Session(object):
 
                 @track.on("ended")  # type: ignore
                 async def on_ended() -> None:
-                    print(self.connection_id, "Track {} ended".format(track.kind))
+                    print(self.connection_id, "Ending due to {} track end".format(track.kind))
                     await self.end()
 
                 write_ob_status(True)
@@ -244,7 +245,7 @@ class Session(object):
                     try:
                         frame = await track.recv()
                     except MediaStreamError as e:
-                        print(self.connection_id, "MediaStreamError")
+                        print(self.connection_id, "Ending due to MediaStreamError")
                         print(e)
                         await self.end()
                         break
@@ -327,7 +328,7 @@ class Session(object):
                     )
 
         except websockets.exceptions.ConnectionClosed:
-            print(self.connection_id, "WebSocket closed")
+            print(self.connection_id, "Ending due to dead WebSocket")
             await self.end()
 
 
