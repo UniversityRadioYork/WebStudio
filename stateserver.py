@@ -287,7 +287,7 @@ def post_registerCheck() -> Any:
     }
     if "wsid" in content:
         connection["wsid"] = content["wsid"]
-        if start_time > now_time + datetime.timedelta(minutes=2):
+        if start_time + datetime.timedelta(minutes=2) < now_time:
             # they're late, bring them live now
             print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
             do_ws_srv_telnet(connection["wsid"])
