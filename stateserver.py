@@ -270,7 +270,7 @@ def post_registerCheck() -> Any:
 
     end_time = start_time + duration_time
 
-    now_time = datetime.datetime.utcnow()
+    now_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     if start_time - now_time > datetime.timedelta(hours=1):
         return genFail("This show too far away, please try again within an hour of starting your show.")
 
