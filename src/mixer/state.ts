@@ -719,9 +719,20 @@ export const setMicVolume = (
 ): AppThunk => dispatch => {
   // no tween fuckery here, just cut the level
   const levelVal = level === "full" ? 1 : 0;
-  dispatch(
-    mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
-  );
+  // actually, that's a lie - if we're turning it off we delay it a little to compensate for
+  // processing latency
+  if (levelVal !== 0) {
+    dispatch(
+      mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
+    );
+  } else {
+    window.setTimeout(() => {
+      dispatch(
+        mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
+      );
+      // latency, plus a little buffer
+    }, audioContext.baseLatency * 1000 + 150);
+  }
 };
 
 let analyser: AnalyserNode | null = null;
