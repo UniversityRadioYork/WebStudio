@@ -9,6 +9,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS # type: ignore
 import requests
 import datetime
+import pytz
 import random
 from telnetlib import Telnet
 import configparser
@@ -21,6 +22,8 @@ app = Flask(__name__)
 CORS(app)  # Enable Cors access-all
 
 SUSTAINER_AUTONEWS = config.get("stateserver", "sustainer_autonews") == "True"
+
+LOCAL_TIME = pytz.timezone(config.get("time", "local_timezone"))
 
 
 def do_ws_srv_telnet(source: str) -> None:
@@ -53,7 +56,7 @@ def myradioApiRequest(url: str) -> Any:
 
 
 def getNextHourTimestamp() -> int:
-    current = datetime.datetime.now()
+    current = datetime.datetime.utcnow()
     currentPlusHour = current + datetime.timedelta(hours=1)
     nextHourStart = currentPlusHour.replace(minute=0, second=0)
     nextTimestamp = int(nextHourStart.timestamp())
@@ -85,7 +88,7 @@ lastConnectionIDToRegister = -1
 
 def getCurrentShowConnection() -> Optional[Connection]:
     for connection in connections:
-        if (connection["startTimestamp"] <= datetime.datetime.now().timestamp()) and (
+        if (connection["startTimestamp"] <= datetime.datetime.utcnow().timestamp()) and (
                 connection["endTimestamp"] >= getNextHourTimestamp()):
             return connection
     return None
@@ -111,7 +114,7 @@ def getNextHourConnection() -> Optional[Connection]:
 def cleanOldConnections() -> None:
     global connections
     for i in range(len(connections)):
-        if connections[i]["endTimestamp"] < datetime.datetime.now().timestamp():
+        if connections[i]["endTimestamp"] < datetime.datetime.utcnow().timestamp():
             connections.pop(i)
 
 
@@ -260,13 +263,14 @@ def post_registerCheck() -> Any:
             return genPayload(conn)
 
     start_time = datetime.datetime.strptime(timeslot["start_time"], "%d/%m/%Y %H:%M")
+    start_time = LOCAL_TIME.localize(start_time).astimezone(pytz.utc)
 
     duration = timeslot["duration"].split(":")
     duration_time = datetime.timedelta(hours=int(duration[0]), minutes=int(duration[1]))
 
     end_time = start_time + duration_time
 
-    now_time = datetime.datetime.now()
+    now_time = datetime.datetime.utcnow()
     if start_time - now_time > datetime.timedelta(hours=1):
         return genFail("This show too far away, please try again within an hour of starting your show.")
 
@@ -286,6 +290,7 @@ def post_registerCheck() -> Any:
         'wsid': None
     }
     if "wsid" in content:
+        print("got wsid from client! {}".format(content["wsid"]))
         connection["wsid"] = content["wsid"]
         if start_time > now_time + datetime.timedelta(minutes=2):
             # they're late, bring them live now
@@ -361,7 +366,7 @@ def post_wsSessions() -> Any:
                 print("({}, {}) hello".format(conn["connid"], conn["wsid"]))
 
         if conn["wsid"] in wsids_to_add:
-            if conn["startTimestamp"] + 120 < datetime.datetime.now().timestamp():
+            if conn["startTimestamp"] + 120 < datetime.datetime.utcnow().timestamp():
                 # they're late, bring them on air now
                 print("({}, {}) late, bringing on air now".format(conn["connid"], conn["wsid"]))
                 do_ws_srv_telnet(conn["wsid"])
