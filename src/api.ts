@@ -1,11 +1,8 @@
 import qs from "qs";
 
-export const MYRADIO_NON_API_BASE =
-  process.env.REACT_APP_MYRADIO_NONAPI_BASE!;
-export const MYRADIO_BASE_URL =
-  process.env.REACT_APP_MYRADIO_BASE!;
-export const BROADCAST_API_BASE_URL =
-  process.env.REACT_APP_BROADCAST_API_BASE!;
+export const MYRADIO_NON_API_BASE = process.env.REACT_APP_MYRADIO_NONAPI_BASE!;
+export const MYRADIO_BASE_URL = process.env.REACT_APP_MYRADIO_BASE!;
+export const BROADCAST_API_BASE_URL = process.env.REACT_APP_BROADCAST_API_BASE!;
 const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
 export class ApiException extends Error {}
@@ -19,7 +16,7 @@ export async function apiRequest(
   let req = null;
   if (method === "GET") {
     req = fetch(url + qs.stringify(params, { addQueryPrefix: true }), {
-      credentials: (need_auth ? "include" : "omit")
+      credentials: need_auth ? "include" : "omit"
     });
   } else {
     const body = JSON.stringify(params);
@@ -30,7 +27,7 @@ export async function apiRequest(
       headers: {
         "Content-Type": "application/json; charset=UTF-8"
       },
-      credentials: (need_auth ? "include" : "omit")
+      credentials: need_auth ? "include" : "omit"
     });
   }
   return await req;
@@ -51,12 +48,17 @@ export async function myradioApiRequest(
   }
 }
 
-export async function broadcastApiRequest(
+export async function broadcastApiRequest<TRes = any>(
   endpoint: string,
   method: "GET" | "POST" | "PUT",
   params: any
-): Promise<any> {
-  const res = await apiRequest(BROADCAST_API_BASE_URL + endpoint, method, params, false);
+): Promise<TRes> {
+  const res = await apiRequest(
+    BROADCAST_API_BASE_URL + endpoint,
+    method,
+    params,
+    false
+  );
   const json = await res.json();
   if (json.status === "OK") {
     return json.payload;
@@ -184,7 +186,6 @@ export function searchForTracks(
   });
 }
 
-
 export interface ManagedPlaylist {
   type: "userPlaylist";
   title: string;
@@ -193,7 +194,11 @@ export interface ManagedPlaylist {
 }
 
 export function getUserPlaylists(): Promise<Array<ManagedPlaylist>> {
-  return myradioApiRequest("/nipswebUserPlaylist/allmanageduserplaylists", "GET", {});
+  return myradioApiRequest(
+    "/nipswebUserPlaylist/allmanageduserplaylists",
+    "GET",
+    {}
+  );
 }
 
 export function getAuxPlaylists(): Promise<Array<ManagedPlaylist>> {
@@ -242,42 +247,34 @@ export function updateShowplan(
   });
 }
 
-
-
 export interface Timeslot {
-  timeslot_id: number,
-  time: number,
-  start_time: string,
-  title: string
+  timeslot_id: number;
+  time: number;
+  start_time: string;
+  title: string;
 }
-
-
 
 export function getCurrentApiTimeslot(): Promise<Timeslot> {
-  return myradioApiRequest(`/timeslot/userselectedtimeslot`, "GET", {}
-  ).then(res => {
-    return res;
-  });
-};
-
-
-export interface User {
-  memberid: number,
-  fname: string,
-  sname: string,
-  url: string,
-  photo: string
+  return myradioApiRequest(`/timeslot/userselectedtimeslot`, "GET", {}).then(
+    res => {
+      return res;
+    }
+  );
 }
 
-
+export interface User {
+  memberid: number;
+  fname: string;
+  sname: string;
+  url: string;
+  photo: string;
+}
 
 export function getCurrentApiUser(): Promise<User> {
-  return myradioApiRequest(`/user/currentuser`, "GET", {}
-  ).then(res => {
+  return myradioApiRequest(`/user/currentuser`, "GET", {}).then(res => {
     return res;
   });
-};
-
+}
 
 export function doesCurrentUserHavePermission(id: number): Promise<boolean> {
   return myradioApiRequest("/auth/haspermission/" + id.toString(10), "GET", {});

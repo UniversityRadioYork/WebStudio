@@ -1,5 +1,5 @@
 import SdpTransform from "sdp-transform";
-import * as DateFns from "date-fns";
+import * as later from "later";
 
 import * as BroadcastState from "./state";
 import * as MixerState from "../mixer/state";
@@ -10,6 +10,7 @@ import {
   ConnectionStateEnum
 } from "./streamer";
 import { Dispatch } from "redux";
+import { broadcastApiRequest } from "../api";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
@@ -22,9 +23,7 @@ export class WebRTCStreamer extends Streamer {
   dispatch: Dispatch<any>;
   unexpectedDeath = false;
 
-  newsInTimeout?: number;
-  newsOutTimeout?: number;
-  newsInterval?: number;
+  newsInterval?: later.Timer;
 
   constructor(stream: MediaStream, dispatch: Dispatch<any>) {
     super();
@@ -67,9 +66,15 @@ export class WebRTCStreamer extends Streamer {
 
     this.addConnectionStateListener(state => {
       if (state === "CONNECTED") {
-        this.newsInterval = window.setInterval(this.doTheNews, 1000 * 60);
+        this.newsInterval = later.setInterval(
+          this.doTheNews,
+          later.parse
+            .recur()
+            .on(59)
+            .minute()
+        );
       } else if (state === "CONNECTION_LOST" || state === "NOT_CONNECTED") {
-        window.clearInterval(this.newsInterval);
+        this.newsInterval?.clear();
       }
     });
 
@@ -99,41 +104,41 @@ export class WebRTCStreamer extends Streamer {
     this.unexpectedDeath = false;
   }
 
-  doTheNews() {
-    window.clearTimeout(this.newsInTimeout);
-    window.clearTimeout(this.newsOutTimeout);
-    const now = new Date();
-    if (
-      now.getMinutes() < 59 ||
-      (now.getMinutes() === 59 && now.getSeconds() < 44)
-    ) {
-      const newsTime = DateFns.set(now, {
-        minutes: 59,
-        seconds: 45
-      });
-      console.log("news time", newsTime);
-      const delta = newsTime.valueOf() - now.valueOf();
-      this.newsInTimeout = window.setTimeout(async () => {
-        await MixerState.playNewsIntro();
-      }, delta);
-    }
-    if (
-      now.getMinutes() < 1 ||
-      now.getMinutes() >= 2 ||
-      (now.getMinutes() === 1 && now.getSeconds() < 54)
-    ) {
-      let newsEndTime = DateFns.set(now, {
-        minutes: 1,
-        seconds: 55
-      });
-      if (now.getMinutes() > 2) {
-        newsEndTime = DateFns.add(newsEndTime, { hours: 1 });
+  async doTheNews() {
+    const transition = await broadcastApiRequest<{
+      autoNews: boolean;
+      selSource: number;
+      switchAudioAtMin: number;
+    }>("/nextTransition", "GET", {});
+    if (transition.autoNews) {
+      // Sanity check
+      const now = new Date();
+      if (now.getSeconds() < 45) {
+        later.setTimeout(
+          async () => {
+            await MixerState.playNewsIntro();
+          },
+          later.parse
+            .recur()
+            .on(59)
+            .minute()
+            .on(45)
+            .second()
+        );
       }
-      console.log("end time", newsEndTime);
-      const delta = newsEndTime.valueOf() - now.valueOf();
-      this.newsOutTimeout = window.setTimeout(async () => {
-        await MixerState.playNewsEnd();
-      }, delta);
+      if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
+        later.setTimeout(
+          async () => {
+            await MixerState.playNewsEnd();
+          },
+          later.parse
+            .recur()
+            .on(1)
+            .minute()
+            .on(55)
+            .second()
+        );
+      }
     }
   }
 
