@@ -2,9 +2,6 @@
 key = CHANGEME
 enable = False
 
-[time]
-local_timezone = Europe/London
-
 [shittyserver]
 notify_url = https://example.com
 websocket_port = 8079
