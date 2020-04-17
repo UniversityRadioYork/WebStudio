@@ -273,6 +273,9 @@ def post_registerCheck() -> Any:
     if start_time + duration_time < now_time:
         return genFail("This show has already ended.")
 
+    if start_time - datetime.timedelta(minutes=1) < now_time < start_time + datetime.timedelta(minutes=2):
+        return genFail("You registered too late. Please re-register after the news.")
+
     random.seed(a=timeslot["timeslot_id"], version=2)
     connection = {
         "connid": random.randint(0, 100000000),  # TODO: this is horrible. I'll sort this later.
