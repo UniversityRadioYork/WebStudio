@@ -560,6 +560,8 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
     return;
   }
   wavesurfers[player].stop();
+  // Incase wavesurver wasn't playing, it won't 'finish', so just make sure the UI is stopped.
+  dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
 
   if (state.tracklistItemID !== -1) {
     dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
