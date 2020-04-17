@@ -263,41 +263,36 @@ def post_registerCheck() -> Any:
 
     now_time = datetime.datetime.now()
 
+    connection: Optional[Connection] = None
     for conn in connections:
         if content["timeslotid"] == conn["timeslotid"]:
             # they've already registered, return the existing session
-            # but first, check if it has a nulled-out wsID
-            # TODO: duplicate of fragment below
-            if "wsid" in content:
-                conn["wsid"] = content["wsid"]
-                if start_time + datetime.timedelta(minutes=2) < now_time:
-                    # they're late, bring them live now
-                    print("({}, {}) rejoined late, bringing on air now".format(conn["connid"], conn["wsid"]))
-                    do_ws_srv_telnet(conn["wsid"])
-                    subprocess.Popen(['sel', '5'])
-            return genPayload(conn)
+            print("found existing connection {} for {}".format(conn["connid"], conn["timeslotid"]))
+            connection = conn
 
-    if start_time - now_time > datetime.timedelta(hours=1):
-        return genFail("This show too far away, please try again within an hour of starting your show.")
+    if connection is None:
+        if start_time - now_time > datetime.timedelta(hours=1):
+            return genFail("This show too far away, please try again within an hour of starting your show.")
 
-    if start_time + duration_time < now_time:
-        return genFail("This show has already ended.")
+        if start_time + duration_time < now_time:
+            return genFail("This show has already ended.")
 
-    if start_time - datetime.timedelta(minutes=1) < now_time < start_time + datetime.timedelta(minutes=2):
-        return genFail("You registered too late. Please re-register after the news.")
+        if start_time - datetime.timedelta(minutes=1) < now_time < start_time + datetime.timedelta(minutes=2):
+            return genFail("You registered too late. Please re-register after the news.")
 
-    random.seed(a=timeslot["timeslot_id"], version=2)
-    connection = {
-        "connid": random.randint(0, 100000000),  # TODO: this is horrible. I'll sort this later.
-        "timeslotid": timeslot["timeslot_id"],
-        "startTimestamp": int(start_time.timestamp()),
-        "endTimestamp": int(end_time.timestamp()),
-        "sourceid": content["sourceid"],
-        'autoNewsBeginning': True,
-        'autoNewsMiddle': True,
-        'autoNewsEnd': True,
-        'wsid': None
-    }
+        random.seed(a=timeslot["timeslot_id"], version=2)
+        connection = {
+            "connid": random.randint(0, 100000000),  # TODO: this is horrible. I'll sort this later.
+            "timeslotid": timeslot["timeslot_id"],
+            "startTimestamp": int(start_time.timestamp()),
+            "endTimestamp": int(end_time.timestamp()),
+            "sourceid": content["sourceid"],
+            'autoNewsBeginning': True,
+            'autoNewsMiddle': True,
+            'autoNewsEnd': True,
+            'wsid': None
+        }
+
     if "wsid" in content:
         connection["wsid"] = content["wsid"]
         if start_time + datetime.timedelta(minutes=2) < now_time:
@@ -306,6 +301,7 @@ def post_registerCheck() -> Any:
             do_ws_srv_telnet(connection["wsid"])
             subprocess.Popen(['sel', '5'])
 
+    assert connection is not None
     connections.append(connection)
     print(connections)
 
