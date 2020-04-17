@@ -211,9 +211,13 @@ def post_cancelCheck() -> Any:
     if currentShow and currentShow["connid"] == content["connid"]:
         # this show is (at least supposed to be) live now.
         # kill their show
-        do_ws_srv_telnet("NUL")
-        switch_proc = subprocess.Popen(["sel", str(SOURCE_JUKEBOX)])
-        pass
+        # but don't kill it during the news, to avoid unexpected jukeboxing
+        now = datetime.datetime.now().timestamp()
+        if now < (currentShow["endTimestamp"] - 45):
+            do_ws_srv_telnet("NUL")
+            subprocess.Popen(["sel", str(SOURCE_JUKEBOX)])
+
+    # yeet the connection
     for i in range(len(connections)):
         if connections[i]["connid"] == content["connid"]:
             connections.pop(i)
