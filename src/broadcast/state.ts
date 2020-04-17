@@ -142,6 +142,9 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
             closure: 10000
           })
         );
+        if (streamer) {
+          await streamer.stop();
+        }
       } else {
         // let raygun handle it
         throw e;
