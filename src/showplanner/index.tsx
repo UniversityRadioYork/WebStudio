@@ -44,6 +44,7 @@ import { Player, USE_REAL_GAIN_VALUE } from "./Player";
 import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
+import {PisModal} from "./PISModal";
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -190,6 +191,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     !session.userCanBroadcast
   );
 
+  const [showPisModal, setShowPisModal] = useState(session.userCanBroadcast);
+
   const dispatch = useDispatch();
 
   useBeforeunload(event => event.preventDefault());
@@ -317,6 +320,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         isOpen={showWelcomeModal}
         close={() => setShowWelcomeModal(false)}
       />
+      <PisModal close={() => setShowPisModal(false)} isOpen={showPisModal} />
       <MicLiveIndicator />
     </div>
   );

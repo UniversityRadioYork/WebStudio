@@ -82,7 +82,7 @@ export function NavBar() {
             }}
           >
             {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
-            {broadcastState.stage === "REGISTERED" && "Cancel show"}
+            {broadcastState.stage === "REGISTERED" && "Cancel registration"}
           </button>
         </li>
         {settings.enableRecording && (

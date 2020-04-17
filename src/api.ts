@@ -279,3 +279,15 @@ export function getCurrentApiUser(): Promise<User> {
 export function doesCurrentUserHavePermission(id: number): Promise<boolean> {
   return myradioApiRequest("/auth/haspermission/" + id.toString(10), "GET", {});
 }
+
+export interface NewsEntry {
+  newsentryid: string;
+  author: string;
+  posted: string;
+  content: string;
+  seen?: boolean;
+}
+
+export function getLatestNewsItem(newsFeedId: number): Promise<NewsEntry | null> {
+  return myradioApiRequest(`/news/latestnewsitem/${newsFeedId}`, "GET", {});
+}
