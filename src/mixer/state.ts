@@ -406,6 +406,14 @@ export const load = (
       })
     );
   });
+  wavesurfer.on("seek", () => {
+    dispatch(
+      mixerState.actions.setTimeCurrent({
+        player,
+        time: wavesurfer.getCurrentTime()
+      })
+    );
+  })
   wavesurfer.on("finish", () => {
     dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
     const state = getState().mixer.players[player];
