@@ -275,7 +275,11 @@ def post_registerCheck() -> Any:
             print("found existing connection {} for {}".format(conn["connid"], conn["timeslotid"]))
             connection = conn
 
+    new_connection = False
     if connection is None:
+
+        new_connection = True
+
         if start_time - now_time > datetime.timedelta(hours=1):
             return genFail("This show too far away, please try again within an hour of starting your show.")
 
@@ -305,7 +309,8 @@ def post_registerCheck() -> Any:
         subprocess.Popen(['sel', '5'])
 
     assert connection is not None
-    connections.append(connection)
+    if new_connection:
+        connections.append(connection)
     print(connections)
 
     return genPayload(connection)
