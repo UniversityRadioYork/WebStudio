@@ -254,11 +254,6 @@ def post_registerCheck() -> Any:
     if not found_credit:
         return genFail("You are not authorised to broadcast for this timeslot.")
 
-    for conn in connections:
-        if content["timeslotid"] == conn["timeslotid"]:
-            # they've already registered, return the existing session
-            return genPayload(conn)
-
     start_time = datetime.datetime.strptime(timeslot["start_time"], "%d/%m/%Y %H:%M")
 
     duration = timeslot["duration"].split(":")
@@ -267,6 +262,21 @@ def post_registerCheck() -> Any:
     end_time = start_time + duration_time
 
     now_time = datetime.datetime.now()
+
+    for conn in connections:
+        if content["timeslotid"] == conn["timeslotid"]:
+            # they've already registered, return the existing session
+            # but first, check if it has a nulled-out wsID
+            # TODO: duplicate of fragment below
+            if "wsid" in content:
+                conn["wsid"] = content["wsid"]
+                if start_time + datetime.timedelta(minutes=2) < now_time:
+                    # they're late, bring them live now
+                    print("({}, {}) rejoined late, bringing on air now".format(conn["connid"], conn["wsid"]))
+                    do_ws_srv_telnet(conn["wsid"])
+                    subprocess.Popen(['sel', '5'])
+            return genPayload(conn)
+
     if start_time - now_time > datetime.timedelta(hours=1):
         return genFail("This show too far away, please try again within an hour of starting your show.")
 
