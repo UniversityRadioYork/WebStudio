@@ -109,7 +109,8 @@ def getNextHourConnection() -> Optional[Connection]:
 
 def cleanOldConnections() -> None:
     global connections
-    for i in range(len(connections)):
+    #Go backwards round the loop so that pop's don't interfere with the index.
+    for i in range(len(connections)-1,-1,-1):
         if connections[i]["endTimestamp"] < datetime.datetime.now().timestamp():
             connections.pop(i)
 
