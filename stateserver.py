@@ -213,7 +213,7 @@ def post_cancelCheck() -> Any:
         # kill their show
         # but don't kill it during the news, to avoid unexpected jukeboxing
         now = datetime.datetime.now().timestamp()
-        if now < (currentShow["endTimestamp"] - 45):
+        if now < (currentShow["endTimestamp"] - 15):
             do_ws_srv_telnet("NUL")
             subprocess.Popen(["sel", str(SOURCE_JUKEBOX)])
 
