@@ -2,6 +2,8 @@ import React, { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
 
+import { FaClock, FaUser } from "react-icons/fa";
+
 import { RootState } from "../rootReducer";
 
 import * as BroadcastState from "../broadcast/state";
@@ -112,7 +114,8 @@ export function NavBar() {
             aria-haspopup="true"
             aria-expanded="false"
           >
-            <span className="fa fa-clock-o"></span>&nbsp;
+            <FaClock />
+            &nbsp;
             {sessionState.currentTimeslot &&
               sessionState.currentTimeslot.start_time}
           </a>
@@ -142,7 +145,8 @@ export function NavBar() {
             aria-haspopup="true"
             aria-expanded="false"
           >
-            <i className="fa fa-user-o"></i>&nbsp;
+            <FaUser />
+            &nbsp;
             {sessionState.currentUser?.fname} {sessionState.currentUser?.sname}
           </a>
           <div className="dropdown-menu" aria-labelledby="dropdown07">

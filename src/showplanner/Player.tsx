@@ -1,5 +1,13 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
+import {
+  FaLevelDownAlt,
+  FaPlayCircle,
+  FaRedo,
+  FaPlay,
+  FaPause,
+  FaStop
+} from "react-icons/fa";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { secToHHMM } from "../lib/utils";
@@ -28,9 +36,12 @@ export function Player({ id }: { id: number }) {
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
-            onClick={() => dispatch(MixerState.toggleAutoAdvance({player: id}))}
+            onClick={() =>
+              dispatch(MixerState.toggleAutoAdvance({ player: id }))
+            }
           >
-            <i className="fa fa-level-down-alt"></i>&nbsp; Auto Advance
+            <FaLevelDownAlt />
+            &nbsp; Auto Advance
           </button>
           <button
             className={
@@ -38,9 +49,12 @@ export function Player({ id }: { id: number }) {
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
-            onClick={() => dispatch(MixerState.togglePlayOnLoad({ player: id }))}
+            onClick={() =>
+              dispatch(MixerState.togglePlayOnLoad({ player: id }))
+            }
           >
-            <i className="far fa-play-circle"></i>&nbsp; Play on Load
+            <FaPlayCircle />
+            &nbsp; Play on Load
           </button>
           <button
             className={
@@ -50,7 +64,8 @@ export function Player({ id }: { id: number }) {
             }
             onClick={() => dispatch(MixerState.toggleRepeat({ player: id }))}
           >
-            <i className="fa fa-redo"></i>&nbsp; Repeat {playerState.repeat}
+            <FaRedo />
+            &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
         <div className="card-body p-0">
@@ -97,7 +112,7 @@ export function Player({ id }: { id: number }) {
                   : ""
               }
             >
-              <i className="fas fa-play"></i>
+              <FaPlay />
             </button>
             <button
               onClick={() => dispatch(MixerState.pause(id))}
@@ -105,7 +120,7 @@ export function Player({ id }: { id: number }) {
                 playerState.state === "paused" ? "sp-state-paused" : ""
               }
             >
-              <i className="fas fa-pause"></i>
+              <FaPause />
             </button>
             <button
               onClick={() => dispatch(MixerState.stop(id))}
@@ -113,7 +128,7 @@ export function Player({ id }: { id: number }) {
                 playerState.state === "stopped" ? "sp-state-stopped" : ""
               }
             >
-              <i className="fas fa-stop"></i>
+              <FaStop />
             </button>
           </div>
         </div>
@@ -141,11 +156,19 @@ export function Player({ id }: { id: number }) {
                 - in
               </span>
             )}
-          <div className={"m-0 graph" + ((playerState.loading !== -1) ? " loading" : "")} id={"waveform-" + id}
-            style={(playerState.loading !== -1) ? {
-            width: (playerState.loading*100) + "%"} : {}}
-          >
-          </div>
+          <div
+            className={
+              "m-0 graph" + (playerState.loading !== -1 ? " loading" : "")
+            }
+            id={"waveform-" + id}
+            style={
+              playerState.loading !== -1
+                ? {
+                    width: playerState.loading * 100 + "%"
+                  }
+                : {}
+            }
+          ></div>
         </div>
       </div>
 

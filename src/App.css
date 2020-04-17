@@ -95,16 +95,23 @@
   background-color: #78acf1;
 }
 
+.sp-track .circle {
+  height: 16px;
+  width: 16px;
+  display: inline-block;
+  border-radius: 50%;
+}
+
 .sp-track .central {
-  color: green;
+  background-color: green;
 }
 
 .sp-track .aux {
-  color: #07F;
+  background-color: #07F;
 }
 
 .sp-track .ghost {
-  color: gray;
+  background-color: gray;
 }
 
 .sp-track-active {

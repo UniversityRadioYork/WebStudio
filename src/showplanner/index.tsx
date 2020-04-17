@@ -1,12 +1,7 @@
 import React, { useState, useReducer, useEffect, memo } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import {
-  MYRADIO_NON_API_BASE,
-  getUserPlaylists,
-  getAuxPlaylists,
-  ManagedPlaylist
-} from "../api";
+import { FaCaretSquareDown, FaAlignJustify } from "react-icons/fa";
 
 import { TimeslotItem } from "../api";
 
@@ -44,7 +39,7 @@ import { Player, USE_REAL_GAIN_VALUE } from "./Player";
 import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
-import {PisModal} from "./PISModal";
+import { PisModal } from "./PISModal";
 
 function Column({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -127,7 +122,7 @@ function LibraryColumn() {
       <span
         className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
       >
-        <i className="far fa-2x fa-caret-square-down"></i>
+        <FaCaretSquareDown />
         <br />
         Select a library to search.
       </span>
@@ -303,7 +298,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
               className="btn btn-outline-dark btn-sm mb-0"
               onClick={() => toggleSidebar()}
             >
-              <i className="fas fa-align-justify mb-2"></i>Toggle Sidebar
+              <FaAlignJustify />
+              Toggle Sidebar
             </span>
           </div>
           <div id="sidebar" className="sp-main-col">
