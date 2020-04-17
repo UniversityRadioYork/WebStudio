@@ -118,7 +118,7 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
     const timeslotid = state.currentTimeslot?.timeslot_id;
     const wsId = getState().broadcast.wsID;
     if (wsId === null) {
-      console.warn("Tried to register for broadcast with no wsID");
+      throw new Error("Tried to register for broadcast with no wsID");
     }
     console.log("Attempting to Register for Broadcast.");
     var sourceid = getState().broadcast.sourceID;
@@ -127,7 +127,7 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
         timeslotid,
         memberid,
         sourceid,
-        wsId || undefined
+        wsId
       );
       console.log(connID);
       if (connID !== undefined) {
@@ -197,16 +197,14 @@ export function sendBroadcastRegister(
   timeslotid: number | undefined,
   memberid: number | undefined,
   sourceid: number,
-  wsID?: string
+  wsID: string
 ): Promise<any> {
   const payload = {
     memberid: memberid,
     timeslotid: timeslotid,
-    sourceid: sourceid
+    sourceid: sourceid,
+    wsid: wsID
   } as any;
-  if (typeof wsID === "string") {
-    payload["wsid"] = wsID;
-  }
   return broadcastApiRequest("/registerTimeslot", "POST", payload);
 }
 export function sendBroadcastCancel(

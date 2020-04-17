@@ -80,7 +80,6 @@ SOURCES = [SOURCE_JUKEBOX, SOURCE_OB, SOURCE_WS, SOURCE_OFFAIR]
 # This array will only hold connections we've validated to be authorised to broadcast.
 connections: List[Connection] = []
 wsSessions: Dict[str, Dict[str, str]] = {}
-lastConnectionIDToRegister = -1
 
 
 def getCurrentShowConnection() -> Optional[Connection]:
@@ -228,7 +227,6 @@ def post_cancelCheck() -> Any:
 @app.route('/api/v1/registerTimeslot', methods=['POST'])
 def post_registerCheck() -> Any:
     global connections
-    global lastConnectionIDToRegister
 
     content = request.json
     if not content:
@@ -241,6 +239,8 @@ def post_registerCheck() -> Any:
         return genFail("Request missing valid source.")
     if not content["sourceid"] in SOURCES:
         return genFail("Request missing valid source.")
+    if not isinstance(content["wsid"], str):
+        return genFail("Request missing valid wsID")
 
     member = myradioApiRequest("user/" + str(content["memberid"]))
     if not member:
@@ -294,22 +294,18 @@ def post_registerCheck() -> Any:
             'autoNewsBeginning': True,
             'autoNewsMiddle': True,
             'autoNewsEnd': True,
-            'wsid': None
+            'wsid': content["wsid"]
         }
 
-    if "wsid" in content:
-        connection["wsid"] = content["wsid"]
-        if start_time + datetime.timedelta(minutes=2) < now_time:
-            # they're late, bring them live now
-            print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
-            do_ws_srv_telnet(connection["wsid"])
-            subprocess.Popen(['sel', '5'])
+    if start_time + datetime.timedelta(minutes=2) < now_time:
+        # they're late, bring them live now
+        print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
+        do_ws_srv_telnet(connection["wsid"])
+        subprocess.Popen(['sel', '5'])
 
     assert connection is not None
     connections.append(connection)
     print(connections)
-
-    lastConnectionIDToRegister = connection["connid"]
 
     return genPayload(connection)
 
@@ -345,7 +341,6 @@ def post_settingsCheck() -> Any:
 def post_wsSessions() -> Any:
     global connections
     global wsSessions
-    global lastConnectionIDToRegister
     content = request.json
     # if not content:
     #    return genFail("No parameters provided.")
@@ -368,11 +363,6 @@ def post_wsSessions() -> Any:
     print("wsSessions which have appeared:", wsids_to_add)
 
     for conn in connections:
-        if conn["connid"] == lastConnectionIDToRegister:
-            if conn["wsid"] is None and len(wsids_to_add) == 1:
-                conn["wsid"] = wsids_to_add[0]
-                print("({}, {}) hello".format(conn["connid"], conn["wsid"]))
-
         if conn["wsid"] in wsids_to_add:
             if conn["startTimestamp"] + 120 < datetime.datetime.now().timestamp():
                 # they're late, bring them on air now
