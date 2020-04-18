@@ -1,0 +1,45 @@
+.sp {
+  display: grid;
+  grid-template-areas: "channels sb-tg sb";
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: 100%;
+  overflow: hidden;
+
+  .channels {
+    display: grid;
+    grid-area: channels;
+    grid-template-areas: "ch-0 ch-1 ch-2";
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 100%;
+    grid-gap: 10px;
+    padding: 10px;
+
+    #channel-0 {
+      grid-area: ch-0;
+    }
+
+    #channel-1 {
+      grid-area: ch-1;
+    }
+
+    #channel-2 {
+      grid-area: ch-2;
+    }
+  }
+
+  #sidebar {
+    width: 250px;
+    transition: all 0.3s;
+    grid-area: sb;
+
+    &.active {
+      width: 0;
+    }
+  }
+
+  #sidebar-toggle {
+    grid-area: sb-tg;
+    writing-mode: vertical-rl;
+    height: 100%;
+  }
+}

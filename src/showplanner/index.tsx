@@ -40,15 +40,15 @@ import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
+import './channel.scss';
 
-function Column({ id, data }: { id: number; data: PlanItem[] }) {
+function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
-    <div className="sp-main-col">
-      <div className="sp-col shadow">
+    <div className="channel" id={'channel-'+ id}>
         <Droppable droppableId={id.toString(10)}>
           {(provided, snapshot) => (
             <div
-              className="sp-col-inner"
+              className="channel-track-list"
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
@@ -69,7 +69,6 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
             </div>
           )}
         </Droppable>
-      </div>
       <Player id={id} />
     </div>
   );
@@ -289,20 +288,20 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       </div>
       <div className="sp">
         <DragDropContext onDragEnd={onDragEnd}>
-          <Column id={0} data={showplan} />
-          <Column id={1} data={showplan} />
-          <Column id={2} data={showplan} />
-          <div className="sp-main-col sidebar-toggle">
+          <div className="channels">
+            <Channel id={0} data={showplan} />
+            <Channel id={1} data={showplan} />
+            <Channel id={2} data={showplan} />
+          </div>
             <span
-              id="sidebarCollapse"
+              id="sidebar-toggle"
               className="btn btn-outline-dark btn-sm mb-0"
               onClick={() => toggleSidebar()}
             >
               <FaAlignJustify />
               Toggle Sidebar
             </span>
-          </div>
-          <div id="sidebar" className="sp-main-col">
+          <div id="sidebar">
             <LibraryColumn />
             <MicControl />
           </div>

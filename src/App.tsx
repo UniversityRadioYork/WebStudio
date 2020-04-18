@@ -5,6 +5,7 @@ import "./App.css";
 import Showplanner from "./showplanner";
 import SessionHandler from "./session";
 import { RootState } from "./rootReducer";
+import './App.scss';
 
 const forceReducer = (state: boolean) => !state;
 function useForceUpdate() {

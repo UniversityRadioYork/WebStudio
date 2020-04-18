@@ -29,96 +29,10 @@
   margin-right: .5%;
 }
 
-.sp {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  height: calc(100% - 60px);
-  align-items: stretch;
-  overflow: hidden;
-}
-
-.sp-col {
-  display: flex;
-  overflow-y: scroll;
-  margin-left: .2vw;
-  margin-right: .2vw;
-  padding: .2vw;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  flex-grow: 1;
-
-}
-
-.sp-main-col{
-  display: flex;
-  flex: 1;
-  justify-content: flex-end;
-  flex-direction: column;
-}
-
-#sidebar {
-  min-width: 250px;
-  max-width: 250px;
-  transition: all 0.3s;
-}
-.sidebar-toggle {
-  flex-grow: 0;
-  width: auto;
-
-}
-.sidebar-toggle .btn {
-  writing-mode: vertical-rl;
-  flex: 1;
-}
-
 .sp-main-col.active {
   margin-right: -250px;
 }
 
-.sp-col-inner {
-  flex: 1;
-}
-
-.sp-track {
-  display: block;
-  /* overflow-x: hidden; */
-  /* height: 1.6em; */
-  margin: 0.2em 0;
-  /* overflow: hidden; */
-  /* height: 1.3em; */
-  cursor: pointer;
-}
-
-.sp-track:hover {
-  background-color: #78acf1;
-}
-
-.sp-track .circle {
-  margin: auto auto;
-  margin-top: 2px;
-  height: 16px;
-  width: 16px;
-  display: inline-block;
-  border-radius: 50%;
-}
-
-.sp-track .central {
-  background-color: green;
-}
-
-.sp-track .aux {
-  background-color: #07F;
-}
-
-.sp-track .ghost {
-  background-color: gray;
-}
-
-.sp-track-active {
-  background-color: #10c998 !important;
-}
 
 html, body, #root {
   padding: 0;

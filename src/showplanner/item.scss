@@ -1,0 +1,31 @@
+.track {
+  display: block;
+  cursor: pointer;
+  padding: 0.2em 5px;
+
+  &:hover {
+    background-color: #78acf1;
+  }
+  &.active {
+    background-color: #10c998 !important;
+  }
+
+  .icon {
+    margin: auto auto;
+    margin-top: 2px;
+    height: 16px;
+    width: 16px;
+    display: inline-block;
+    border-radius: 50%;
+
+    &.central {
+      background-color: green;
+    }
+    &.aux {
+      background-color: #07f;
+    }
+    &.ghost {
+      background-color: gray;
+    }
+  }
+}
