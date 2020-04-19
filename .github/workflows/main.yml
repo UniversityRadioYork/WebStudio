@@ -30,7 +30,7 @@ jobs:
 
     # ESLint
     - name: ESLint Action
-      uses: hallee/eslint-action@1.0.1
+      run: node_modules/.bin/eslint src/ --ext .ts,.tsx
 
     # Prettier
     - name: Prettify the JS Code
@@ -40,7 +40,3 @@ jobs:
         branch: master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    # TODO
-    - name: todo-actions
-      uses: dtinth/todo-actions@v0.2.0
