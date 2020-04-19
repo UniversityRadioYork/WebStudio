@@ -21,6 +21,10 @@
   color: #09d3ac;
 }
 
+.sp {
+  flex-grow: 1
+}
+
 .sp-container {
   display: flex;
   flex-direction: column;
