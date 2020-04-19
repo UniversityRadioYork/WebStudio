@@ -25,16 +25,17 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  margin-left: .5%;
-  margin-right: .5%;
+  margin-left: 0.5%;
+  margin-right: 0.5%;
 }
 
 .sp-main-col.active {
   margin-right: -250px;
 }
 
-
-html, body, #root {
+html,
+body,
+#root {
   padding: 0;
   margin: 0;
   width: 100%;
@@ -56,10 +57,10 @@ html, body, #root {
   cursor: not-allowed;
 }
 
-.mediaButtons button{
+.mediaButtons button {
   width: 32%;
   border-style: none;
-  margin: .5%;
+  margin: 0.5%;
   padding: 2%;
 }
 
@@ -75,7 +76,7 @@ html, body, #root {
   background-color: #db2c2c;
 }
 
-button{
+button {
   background-color: rgb(199, 199, 199);
 }
 
@@ -92,19 +93,20 @@ button{
   display: block;
   z-index: 5;
   /* padding: 1px; */
-
 }
-.waveform .current, .waveform .remaining, .waveform .length {
-
+.waveform .current,
+.waveform .remaining,
+.waveform .length {
   font-weight: 800;
-
 }
-.waveform .remaining, .waveform .outro {
+.waveform .remaining,
+.waveform .outro {
   right: 0;
   position: absolute;
-
 }
-.waveform .intro, .waveform .outro, .waveform .length  {
+.waveform .intro,
+.waveform .outro,
+.waveform .length {
   bottom: 0;
   position: absolute;
 }
@@ -125,7 +127,7 @@ button{
   height: 6vh !important;
 }
 .waveform .loading {
-  background: #CCCCFF;
+  background: #ccccff;
 }
 
 .bypass-click {
@@ -134,30 +136,38 @@ button{
 
 /* Flash class and keyframe animation */
 .sp-ending-soon {
-	-webkit-animation: green-flash steps(1) 0.5s infinite;
-	animation: green-flash steps(1) 0.5s infinite;
+  -webkit-animation: green-flash steps(1) 0.5s infinite;
+  animation: green-flash steps(1) 0.5s infinite;
 }
 @-webkit-keyframes green-flash {
-	0% { }
-	50% { background-color: rgb(199, 255, 199); }
+  0% {
+  }
+  50% {
+    background-color: rgb(199, 255, 199);
+  }
 }
 @keyframes green-flash {
-  0% { }
-  50% { background-color: rgb(199, 255, 199); }
+  0% {
+  }
+  50% {
+    background-color: rgb(199, 255, 199);
+  }
 }
 
 /* Flash class and keyframe animation */
-.sp-muted-player {
-	-webkit-animation: red-flash steps(1) 0.5s infinite;
-	animation: red-flash steps(1) 0.5s infinite;
-}
 @-webkit-keyframes red-flash {
-	0% { }
-	50% { background-color: rgb(255, 199, 199); }
+  0% {
+  }
+  50% {
+    background-color: rgb(255, 199, 199);
+  }
 }
 @keyframes red-flash {
-  0% { }
-  50% { background-color: rgb(255, 199, 199); }
+  0% {
+  }
+  50% {
+    background-color: rgb(255, 199, 199);
+  }
 }
 
 .ReactModal__Overlay {

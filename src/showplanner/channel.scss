@@ -36,6 +36,11 @@
     z-index: 100;
   }
 
+  &.error-animation {
+    -webkit-animation: red-flash steps(1) 0.5s infinite;
+    animation: red-flash steps(1) 0.5s infinite;
+  }
+
   .mixer-buttons-backdrop {
     position: absolute;
     top: 0;

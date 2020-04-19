@@ -179,7 +179,7 @@ export function Player({ id }: { id: number }) {
         className={
           "mixer-buttons " +
           (playerState.state === "playing" && playerState.volume === 0
-            ? "sp-muted-player"
+            ? "error-animation"
             : "")
         }
       >
