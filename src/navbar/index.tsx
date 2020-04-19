@@ -153,6 +153,7 @@ export function NavBar() {
             <a
               className="dropdown-item"
               target="_blank"
+              rel="noopener noreferrer"
               href={MYRADIO_NON_API_BASE + "/Profile/default/"}
             >
               My Profile
@@ -183,7 +184,7 @@ function AlertBar() {
         dispatch(closeAlert());
       }, state.closure);
     }
-  }, [state?.closure, dispatch]);
+  }, [dispatch, state]);
   return (
     <div
       className={`alertbar alert alert-${state?.color} ${

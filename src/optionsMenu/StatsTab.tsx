@@ -24,7 +24,7 @@ export function StatsTab() {
 				window.clearTimeout(intervalRef.current);
 			}
 		};
-	}, []);
+	}, [update]);
 
 	if (!(streamer instanceof WebRTCStreamer)) {
 		return <b>Not connected to server</b>;

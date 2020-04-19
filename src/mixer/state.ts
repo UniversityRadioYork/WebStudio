@@ -375,7 +375,7 @@ export const load = (
   console.log("loading");
 
   let waveform = document.getElementById("waveform-" + player.toString());
-  if (waveform != undefined) {
+  if (waveform !== null) {
     waveform.innerHTML = "";
   }
   const wavesurfer = WaveSurfer.create({

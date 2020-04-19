@@ -58,7 +58,7 @@ export function Player({ id }: { id: number }) {
           </button>
           <button
             className={
-              (playerState.repeat != "none"
+              (playerState.repeat !== "none"
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
@@ -175,11 +175,14 @@ export function Player({ id }: { id: number }) {
         </div>
       </div>
 
-      <div className={"sp-mixer-buttons " +
-        (playerState.state === "playing" && playerState.volume === 0
+      <div
+        className={
+          "sp-mixer-buttons " +
+          (playerState.state === "playing" && playerState.volume === 0
             ? "sp-muted-player"
             : "")
-      }>
+        }
+      >
         <div
           className="sp-mixer-buttons-backdrop"
           style={{

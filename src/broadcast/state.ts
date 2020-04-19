@@ -4,7 +4,7 @@ import { myradioApiRequest, broadcastApiRequest, ApiException } from "../api";
 import { WebRTCStreamer } from "./rtc_streamer";
 import * as MixerState from "../mixer/state";
 import * as NavbarState from "../navbar/state";
-import { ConnectionStateEnum, Streamer } from "./streamer";
+import { ConnectionStateEnum } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 
 export let streamer: WebRTCStreamer | null = null;
@@ -183,7 +183,7 @@ export const changeTimeslot = (): AppThunk => async (dispatch, getState) => {
   var state = getState().broadcast;
   if (state.stage === "REGISTERED") {
     console.log("Attempting to Change Broadcast Options.");
-    var response = await sendBroadcastChange(
+    await sendBroadcastChange(
       state.connID,
       state.sourceID,
       state.autoNewsBeginning,
