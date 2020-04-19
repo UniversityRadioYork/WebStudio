@@ -86,7 +86,7 @@ function LibraryColumn() {
   }, [dispatch]);
 
   return (
-    <div className="sp-col" style={{ height: "48%", marginBottom: "1%" }}>
+    <div className="library-column">
       <select
         className="form-control"
         style={{ width: "100%" }}
@@ -122,7 +122,6 @@ function LibraryColumn() {
         className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
       >
         <FaCaretSquareDown />
-        <br />
         Select a library to search.
       </span>
     </div>
@@ -134,7 +133,7 @@ function MicControl() {
   const dispatch = useDispatch();
 
   return (
-    <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
+    <div className="mic-control">
       <h2>Microphone</h2>
       <div className={`mixer-buttons ${!state.open && "disabled"}`}>
         <div

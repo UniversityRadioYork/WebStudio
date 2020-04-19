@@ -36,6 +36,17 @@
     &.active {
       width: 0;
     }
+
+    .library-column {
+      height: 50%;
+      overflow-y: scroll;
+      background: var(--sidebar-background);
+    }
+
+    .mic-control {
+      height: 50%;
+      background: var(--sidebar-background);
+    }
   }
 
   #sidebar-toggle {
