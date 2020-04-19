@@ -7,6 +7,7 @@ import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { ContextMenuTrigger } from "react-contextmenu";
+import "./item.scss";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
 
@@ -53,12 +54,12 @@ export const Item = memo(function Item({
         <div
           ref={provided.innerRef}
           key={id}
-          className={`sp-track ${
+          className={`item ${
             column >= 0 &&
             playerState &&
             playerState.loadedItem !== null &&
             itemId(playerState.loadedItem) === id
-              ? "sp-track-active"
+              ? "active"
               : ""
           }`}
           onClick={triggerClick}
@@ -69,7 +70,7 @@ export const Item = memo(function Item({
             id={isReal ? TS_ITEM_MENU_ID : ""}
             collect={() => ({ id })}
           >
-            <span className={"circle " + x.type} />
+            <span className={"icon " + x.type} />
             &nbsp;
             {x.title.toString()}
             {"artist" in x && " - " + x.artist}

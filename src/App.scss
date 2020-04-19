@@ -1,0 +1,53 @@
+@import "./scss/base";
+
+$sidebar-width: 250px;
+$number-of-channels: 3;
+
+.sp {
+  display: grid;
+  grid-template-areas: "channels sb-tg sb";
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: 100%;
+  overflow: hidden;
+  background: var(--background);
+
+  .channels {
+    display: grid;
+    grid-area: channels;
+    grid-template-columns: repeat($number-of-channels, 1fr);
+    grid-template-rows: 100%;
+    grid-gap: 10px;
+    padding: 10px;
+  }
+
+  #sidebar {
+    grid-area: sb;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: $sidebar-width;
+    transition: all 0.3s;
+
+    &.hidden {
+      margin-right: -$sidebar-width;
+    }
+
+    .library-column {
+      flex-grow: 1;
+      min-height: 0;
+      background: var(--sidebar-background);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mic-control {
+      background: var(--sidebar-background);
+    }
+  }
+
+  #sidebar-toggle {
+    grid-area: sb-tg;
+    writing-mode: vertical-rl;
+    height: 100%;
+  }
+}

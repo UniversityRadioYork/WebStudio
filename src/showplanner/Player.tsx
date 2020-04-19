@@ -175,17 +175,16 @@ export function Player({ id }: { id: number }) {
           ></div>
         </div>
       </div>
-
       <div
         className={
-          "sp-mixer-buttons " +
+          "mixer-buttons " +
           (playerState.state === "playing" && playerState.volume === 0
-            ? "sp-muted-player"
+            ? "error-animation"
             : "")
         }
       >
         <div
-          className="sp-mixer-buttons-backdrop"
+          className="mixer-buttons-backdrop"
           style={{
             width:
               (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *

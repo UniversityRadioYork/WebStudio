@@ -39,36 +39,30 @@ import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
+import "./channel.scss";
 
-function Column({ id, data }: { id: number; data: PlanItem[] }) {
+function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
-    <div className="sp-main-col">
-      <div className="sp-col shadow">
-        <Droppable droppableId={id.toString(10)}>
-          {(provided, snapshot) => (
-            <div
-              className="sp-col-inner"
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
-              {typeof data[id] === "undefined"
-                ? null
-                : data
-                    .filter((x) => x.channel === id)
-                    .sort((a, b) => a.weight - b.weight)
-                    .map((x, index) => (
-                      <Item
-                        key={itemId(x)}
-                        item={x}
-                        index={index}
-                        column={id}
-                      />
-                    ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </div>
+    <div className="channel" id={"channel-" + id}>
+      <Droppable droppableId={id.toString(10)}>
+        {(provided, snapshot) => (
+          <div
+            className="channel-item-list"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {typeof data[id] === "undefined"
+              ? null
+              : data
+                  .filter((x) => x.channel === id)
+                  .sort((a, b) => a.weight - b.weight)
+                  .map((x, index) => (
+                    <Item key={itemId(x)} item={x} index={index} column={id} />
+                  ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
       <Player id={id} />
     </div>
   );
@@ -86,7 +80,7 @@ function LibraryColumn() {
   }, [dispatch]);
 
   return (
-    <div className="sp-col" style={{ height: "48%", marginBottom: "1%" }}>
+    <div className="library-column">
       <select
         className="form-control"
         style={{ width: "100%" }}
@@ -122,7 +116,6 @@ function LibraryColumn() {
         className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
       >
         <FaCaretSquareDown />
-        <br />
         Select a library to search.
       </span>
     </div>
@@ -134,11 +127,11 @@ function MicControl() {
   const dispatch = useDispatch();
 
   return (
-    <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
+    <div className="mic-control">
       <h2>Microphone</h2>
-      <div className={`sp-mixer-buttons ${!state.open && "disabled"}`}>
+      <div className={`mixer-buttons ${!state.open && "disabled"}`}>
         <div
-          className="sp-mixer-buttons-backdrop"
+          className="mixer-buttons-backdrop"
           style={{
             width: state.volume * 100 + "%",
           }}
@@ -198,7 +191,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   function toggleSidebar() {
     var element = document.getElementById("sidebar");
     if (element) {
-      element.classList.toggle("active");
+      element.classList.toggle("hidden");
     }
     setTimeout(function() {
       dispatch(MixerState.redrawWavesurfers());
@@ -288,20 +281,20 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       </div>
       <div className="sp">
         <DragDropContext onDragEnd={onDragEnd}>
-          <Column id={0} data={showplan} />
-          <Column id={1} data={showplan} />
-          <Column id={2} data={showplan} />
-          <div className="sp-main-col sidebar-toggle">
-            <span
-              id="sidebarCollapse"
-              className="btn btn-outline-dark btn-sm mb-0"
-              onClick={() => toggleSidebar()}
-            >
-              <FaAlignJustify />
-              Toggle Sidebar
-            </span>
+          <div className="channels">
+            <Channel id={0} data={showplan} />
+            <Channel id={1} data={showplan} />
+            <Channel id={2} data={showplan} />
           </div>
-          <div id="sidebar" className="sp-main-col">
+          <span
+            id="sidebar-toggle"
+            className="btn btn-outline-dark btn-sm mb-0"
+            onClick={() => toggleSidebar()}
+          >
+            <FaAlignJustify />
+            Toggle Sidebar
+          </span>
+          <div id="sidebar">
             <LibraryColumn />
             <MicControl />
           </div>

@@ -5,6 +5,7 @@ import { itemId } from "./state";
 import { Droppable } from "react-beautiful-dnd";
 import { FaCog, FaSearch, FaTimesCircle } from "react-icons/fa";
 import { Item } from "./Item";
+import "./libraries.scss";
 
 export const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
@@ -45,7 +46,7 @@ export function CentralMusicLibrary() {
     });
   }, [debouncedTrack, debouncedArtist, artist, track]);
   return (
-    <>
+    <div className="library library-central">
       <input
         className="form-control"
         type="text"
@@ -68,7 +69,6 @@ export function CentralMusicLibrary() {
         {state === "not-searching" && <FaSearch />}
         {state === "searching" && <FaCog className="fa-spin" />}
         {state === "no-results" && <FaTimesCircle />}
-        <br />
         {state === "not-searching"
           ? "Enter a search term."
           : state === "searching"
@@ -79,7 +79,11 @@ export function CentralMusicLibrary() {
       </span>
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
-          <div ref={provided.innerRef} {...provided.droppableProps}>
+          <div
+            className="library-item-list"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
             {items.map((item, index) => (
               <Item key={itemId(item)} item={item} index={index} column={-1} />
             ))}
@@ -87,7 +91,7 @@ export function CentralMusicLibrary() {
           </div>
         )}
       </Droppable>
-    </>
+    </div>
   );
 }
 
@@ -111,7 +115,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
     load();
   }, [libraryId]);
   return (
-    <>
+    <div className="library library-aux">
       <input
         className="form-control"
         type="text"
@@ -119,9 +123,14 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
+
       <Droppable droppableId="$AUX">
         {(provided, snapshot) => (
-          <div ref={provided.innerRef} {...provided.droppableProps}>
+          <div
+            className="library-item-list"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
             {items
               .filter(
                 (its) =>
@@ -142,6 +151,6 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
           </div>
         )}
       </Droppable>
-    </>
+    </div>
   );
 }
