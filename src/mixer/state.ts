@@ -438,9 +438,9 @@ export const load = (
     } else if (state.repeat === "all") {
       if ("channel" in item) {
         // it's not in the CML/libraries "column"
-        const itsChannel = getState().showplan.plan!.filter(
-          (x) => x.channel === item.channel
-        );
+        const itsChannel = getState()
+          .showplan.plan!.filter((x) => x.channel === item.channel)
+          .sort((x, y) => x.weight - y.weight);
         const itsIndex = itsChannel.indexOf(item);
         if (itsIndex === itsChannel.length - 1) {
           dispatch(load(player, itsChannel[0]));
@@ -449,9 +449,9 @@ export const load = (
     } else if (state.autoAdvance) {
       if ("channel" in item) {
         // it's not in the CML/libraries "column"
-        const itsChannel = getState().showplan.plan!.filter(
-          (x) => x.channel === item.channel
-        );
+        const itsChannel = getState()
+          .showplan.plan!.filter((x) => x.channel === item.channel)
+          .sort((x, y) => x.weight - y.weight);
         const itsIndex = itsChannel.indexOf(item);
         if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
           dispatch(load(player, itsChannel[itsIndex + 1]));
