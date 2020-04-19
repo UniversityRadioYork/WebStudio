@@ -83,7 +83,6 @@ interface PlayerState {
   state: PlayerStateEnum;
   volume: number;
   gain: number;
-  wavesurfer: WaveSurfer | null;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -118,7 +117,6 @@ const mixerState = createSlice({
         state: "stopped",
         volume: 1,
         gain: 1,
-        wavesurfer: null,
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
@@ -135,7 +133,6 @@ const mixerState = createSlice({
         state: "stopped",
         volume: 1,
         gain: 1,
-        wavesurfer: null,
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
@@ -152,7 +149,6 @@ const mixerState = createSlice({
         state: "stopped",
         volume: 1,
         gain: 1,
-        wavesurfer: null,
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
