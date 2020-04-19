@@ -7,7 +7,7 @@ import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { ContextMenuTrigger } from "react-contextmenu";
-import './item.scss';
+import "./item.scss";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
 

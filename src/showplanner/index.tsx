@@ -39,35 +39,30 @@ import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
-import './channel.scss';
+import "./channel.scss";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
-    <div className="channel" id={'channel-'+ id}>
-        <Droppable droppableId={id.toString(10)}>
-          {(provided, snapshot) => (
-            <div
-              className="channel-track-list"
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
-              {typeof data[id] === "undefined"
-                ? null
-                : data
-                    .filter((x) => x.channel === id)
-                    .sort((a, b) => a.weight - b.weight)
-                    .map((x, index) => (
-                      <Item
-                        key={itemId(x)}
-                        item={x}
-                        index={index}
-                        column={id}
-                      />
-                    ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
+    <div className="channel" id={"channel-" + id}>
+      <Droppable droppableId={id.toString(10)}>
+        {(provided, snapshot) => (
+          <div
+            className="channel-track-list"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {typeof data[id] === "undefined"
+              ? null
+              : data
+                  .filter((x) => x.channel === id)
+                  .sort((a, b) => a.weight - b.weight)
+                  .map((x, index) => (
+                    <Item key={itemId(x)} item={x} index={index} column={id} />
+                  ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
       <Player id={id} />
     </div>
   );
@@ -291,14 +286,14 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
             <Channel id={1} data={showplan} />
             <Channel id={2} data={showplan} />
           </div>
-            <span
-              id="sidebar-toggle"
-              className="btn btn-outline-dark btn-sm mb-0"
-              onClick={() => toggleSidebar()}
-            >
-              <FaAlignJustify />
-              Toggle Sidebar
-            </span>
+          <span
+            id="sidebar-toggle"
+            className="btn btn-outline-dark btn-sm mb-0"
+            onClick={() => toggleSidebar()}
+          >
+            <FaAlignJustify />
+            Toggle Sidebar
+          </span>
           <div id="sidebar">
             <LibraryColumn />
             <MicControl />
