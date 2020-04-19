@@ -2,44 +2,45 @@
  * Taken from http://stackoverflow.com/a/36289507/995325 */
 @media (max-width: 991px) {
   .navbar-header {
-      float: none;
+    float: none;
   }
-  .navbar-left, .navbar-right {
-      float: none !important;
+  .navbar-left,
+  .navbar-right {
+    float: none !important;
   }
   .navbar-toggle {
-      display: block;
+    display: block;
   }
   .navbar-collapse {
-      border-top: 1px solid transparent;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-top: 1px solid transparent;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
   .navbar-fixed-top {
-      top: 0;
-      border-width: 0 0 1px;
+    top: 0;
+    border-width: 0 0 1px;
   }
   .navbar-collapse.collapse {
-      display: none !important;
+    display: none !important;
   }
   .navbar-nav {
-      float: none !important;
-      margin-top: 7.5px;
+    float: none !important;
+    margin-top: 7.5px;
   }
   .navbar-nav > li {
-      float: none;
+    float: none;
   }
   .navbar-nav > li > a {
-      padding-top: 10px;
-      padding-bottom: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
   .collapse.in {
-      display: block !important;
+    display: block !important;
   }
 }
 /** MyRadio bootstrap navbar overides taken from http://work.smarchal.com/twbscolor/css/2D425F2D425Fffffffe1e1e11 **/
 .navbar-ury {
-  background-color: #2D333C;
-  border-color: #2D425F;
+  background-color: #2d333c;
+  border-color: #2d425f;
   border: none;
   height: 60px;
   max-height: 7vh;
@@ -47,9 +48,8 @@
 .navbar-ury .navbar-brand {
   color: #ffffff;
   padding: 10px 15px; /** added to center the logo **/
-  line-height: 30px;  /** added to center the logo **/
+  line-height: 30px; /** added to center the logo **/
   margin-right: 0;
-
 }
 .navbar-ury .navbar-brand img {
   max-height: 100%;
@@ -90,10 +90,10 @@
 .navbar-ury .navbar-nav > li > a:hover,
 .navbar-ury .navbar-nav > li > a:focus {
   color: #e1e1e1;
-  background-color: #2D425F;
+  background-color: #2d425f;
 }
 .navbar-ury .navbar-nav > li > .dropdown-menu {
-  background-color: #2D333C;
+  background-color: #2d333c;
   border-top: none;
 }
 .navbar-ury .navbar-nav > li > .dropdown-menu > a {
@@ -102,35 +102,35 @@
 .navbar-ury .navbar-nav > li > .dropdown-menu > a:hover,
 .navbar-ury .navbar-nav > li > .dropdown-menu > a:focus {
   color: #e1e1e1;
-  background-color: #2D425F;
+  background-color: #2d425f;
 }
 .navbar-ury .navbar-nav > li > .dropdown-menu > .divider {
-  background-color: #2D425F;
+  background-color: #2d425f;
 }
 .navbar-ury .navbar-nav .open .dropdown-menu > .active > a,
 .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:hover,
 .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:focus {
   color: #e1e1e1;
-  background-color: #2D333C;
+  background-color: #2d333c;
 }
 .navbar-ury .navbar-nav > .active > a,
 .navbar-ury .navbar-nav > .active > a:hover,
 .navbar-ury .navbar-nav > .active > a:focus {
   color: #e1e1e1;
-  background-color: #2D333C;
+  background-color: #2d333c;
 }
 .navbar-ury .navbar-nav > .open > a,
 .navbar-ury .navbar-nav > .open > a:hover,
 .navbar-ury .navbar-nav > .open > a:focus {
   color: #e1e1e1;
-  background-color: #2D425F !important;
+  background-color: #2d425f !important;
 }
 .navbar-ury .navbar-toggle {
-  border-color: #2D425F;
+  border-color: #2d425f;
 }
 .navbar-ury .navbar-toggle:hover,
 .navbar-ury .navbar-toggle:focus {
-  background-color: #2D425F;
+  background-color: #2d425f;
 }
 .navbar-ury .navbar-toggle .icon-bar {
   background-color: #ffffff;
@@ -147,7 +147,7 @@
 }
 .navbar-ury .navbar-brand:hover {
   color: #e1e1e1;
-  background-color: #2D425F !important;
+  background-color: #2d425f !important;
 }
 
 @media (max-width: 767px) {
@@ -162,22 +162,22 @@
   .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:hover,
   .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:focus {
     color: #e1e1e1;
-    background-color: #2D425F;
+    background-color: #2d425f;
   }
 }
 
 .alertbar {
-	position: fixed !important;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	min-height: 38.5px;
-	z-index: 99999;
-	transform: translateY(-50px);
-	transition: 400ms transform;
-	&.visible {
-		transform: translateY(0);
-	}
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  min-height: 38.5px;
+  z-index: 99999;
+  transform: translateY(-50px);
+  transition: 400ms transform;
+  &.visible {
+    transform: translateY(0);
+  }
 }
 
 #timelord {

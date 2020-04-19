@@ -32,7 +32,7 @@ export class WebRTCStreamer extends Streamer {
     this.pc = new RTCPeerConnection({
       iceServers: [
         {
-          urls: ["stun:eu-turn4.xirsys.com"]
+          urls: ["stun:eu-turn4.xirsys.com"],
         },
         {
           username:
@@ -44,12 +44,12 @@ export class WebRTCStreamer extends Streamer {
             "turn:eu-turn4.xirsys.com:80?transport=tcp",
             "turn:eu-turn4.xirsys.com:3478?transport=tcp",
             "turns:eu-turn4.xirsys.com:443?transport=tcp",
-            "turns:eu-turn4.xirsys.com:5349?transport=tcp"
-          ]
-        }
-      ]
+            "turns:eu-turn4.xirsys.com:5349?transport=tcp",
+          ],
+        },
+      ],
     });
-    this.pc.oniceconnectionstatechange = e => {
+    this.pc.oniceconnectionstatechange = (e) => {
       if (!this.pc) {
         throw new Error(
           "Received ICEConnectionStateChange but PC was null?????"
@@ -58,16 +58,13 @@ export class WebRTCStreamer extends Streamer {
       console.log("ICE Connection state change: " + this.pc.iceConnectionState);
       this.onStateChange(this.mapStateToConnectionState());
     };
-    this.stream.getAudioTracks().forEach(track => this.pc!.addTrack(track));
+    this.stream.getAudioTracks().forEach((track) => this.pc!.addTrack(track));
 
-    this.addConnectionStateListener(state => {
+    this.addConnectionStateListener((state) => {
       if (state === "CONNECTED") {
         this.newsInterval = later.setInterval(
           this.doTheNews,
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
+          later.parse.recur().on(59).minute()
         );
       } else if (state === "CONNECTION_LOST" || state === "NOT_CONNECTED") {
         this.newsInterval?.clear();
@@ -76,11 +73,11 @@ export class WebRTCStreamer extends Streamer {
 
     console.log("PC created");
     this.ws = new WebSocket(process.env.REACT_APP_WS_URL!);
-    this.ws.onopen = e => {
+    this.ws.onopen = (e) => {
       console.log("WS open");
       this.onStateChange(this.mapStateToConnectionState());
     };
-    this.ws.onclose = e => {
+    this.ws.onclose = (e) => {
       console.log("WS close");
       this.onStateChange(this.mapStateToConnectionState());
     };
@@ -110,30 +107,14 @@ export class WebRTCStreamer extends Streamer {
       // Sanity check
       const now = new Date();
       if (now.getSeconds() < 45) {
-        later.setTimeout(
-          async () => {
-            await MixerState.playNewsIntro();
-          },
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
-            .on(45)
-            .second()
-        );
+        later.setTimeout(async () => {
+          await MixerState.playNewsIntro();
+        }, later.parse.recur().on(59).minute().on(45).second());
       }
       if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
-        later.setTimeout(
-          async () => {
-            await MixerState.playNewsEnd();
-          },
-          later.parse
-            .recur()
-            .on(1)
-            .minute()
-            .on(55)
-            .second()
-        );
+        later.setTimeout(async () => {
+          await MixerState.playNewsEnd();
+        }, later.parse.recur().on(1).minute().on(55).second());
       }
     }
   }
@@ -157,7 +138,7 @@ export class WebRTCStreamer extends Streamer {
         // Do some fun SDP fuckery to get better quality
         const parsed = SdpTransform.parse(offer.sdp!);
         console.log("Old SDP", parsed);
-        parsed.media.forEach(track => {
+        parsed.media.forEach((track) => {
           let opusIndex = 0;
           for (let i = 0; i < track.rtp.length; i++) {
             if (track.rtp[i].codec === "opus") {
@@ -165,9 +146,9 @@ export class WebRTCStreamer extends Streamer {
             }
             // TODO: maybe delete non-Opus candidates?
           }
-          track.fmtp[opusIndex].config += `; maxaveragebitrate=${192 *
-            2 *
-            1024}; stereo=1; sprop-stereo=1 ; cbr=1`;
+          track.fmtp[opusIndex].config += `; maxaveragebitrate=${
+            192 * 2 * 1024
+          }; stereo=1; sprop-stereo=1 ; cbr=1`;
         });
 
         offer.sdp = SdpTransform.write(parsed);
@@ -179,7 +160,7 @@ export class WebRTCStreamer extends Streamer {
           JSON.stringify({
             kind: "OFFER",
             type: this.pc.localDescription!.type,
-            sdp: this.pc.localDescription!.sdp
+            sdp: this.pc.localDescription!.sdp,
           })
         );
         this.state = "OFFER";
@@ -190,7 +171,7 @@ export class WebRTCStreamer extends Streamer {
         }
         const answer = new RTCSessionDescription({
           type: data.type,
-          sdp: data.sdp
+          sdp: data.sdp,
         });
         await this.pc.setRemoteDescription(answer);
         this.state = "ANSWER";
@@ -226,7 +207,7 @@ export class WebRTCStreamer extends Streamer {
 
   // TODO: supporting trickle ICE would be nICE
   waitForIceCandidates() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (!this.pc) {
         throw new Error(
           "Tried to gather ICE Candidates with a null PeerConnection!"

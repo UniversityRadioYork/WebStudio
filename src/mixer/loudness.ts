@@ -20,9 +20,9 @@ export async function createLoudnessMeasurement(
   await input.context.audioWorklet.addModule(workletUrl);
   const processor = new AudioWorkletNode(input.context, "loudness-processor", {
     numberOfInputs: 1,
-    numberOfOutputs: 0
+    numberOfOutputs: 0,
   });
-  processor.port.onmessage = evt => {
+  processor.port.onmessage = (evt) => {
     callback(evt.data);
   };
   input.connect(processor);

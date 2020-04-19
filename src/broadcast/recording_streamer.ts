@@ -8,7 +8,7 @@ export class RecordingStreamer extends Streamer {
     super();
     this.recorder = new MediaRecorder(stream);
     this.chunks = [];
-    this.recorder.ondataavailable = e => {
+    this.recorder.ondataavailable = (e) => {
       this.chunks.push(e.data);
     };
     this.recorder.onstart = () => {
@@ -17,7 +17,7 @@ export class RecordingStreamer extends Streamer {
     this.recorder.onstop = () => {
       this.onStateChange("NOT_CONNECTED");
       const finalData = new Blob(this.chunks, {
-        type: "audio/ogg; codecs=opus"
+        type: "audio/ogg; codecs=opus",
       });
       const url = URL.createObjectURL(finalData);
 
@@ -26,7 +26,7 @@ export class RecordingStreamer extends Streamer {
       a.download = "recorded.ogg";
       a.click();
     };
-    this.recorder.onerror = e => {
+    this.recorder.onerror = (e) => {
       console.error(e.error);
       this.onStateChange("CONNECTION_LOST");
     };

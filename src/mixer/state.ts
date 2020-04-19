@@ -2,7 +2,7 @@ import {
   createSlice,
   PayloadAction,
   Dispatch,
-  Middleware
+  Middleware,
 } from "@reduxjs/toolkit";
 import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
@@ -127,7 +127,7 @@ const mixerState = createSlice({
         autoAdvance: true,
         repeat: "none",
         tracklistItemID: -1,
-        loadError: false
+        loadError: false,
       },
       {
         loadedItem: null,
@@ -144,7 +144,7 @@ const mixerState = createSlice({
         autoAdvance: true,
         repeat: "none",
         tracklistItemID: -1,
-        loadError: false
+        loadError: false,
       },
       {
         loadedItem: null,
@@ -161,8 +161,8 @@ const mixerState = createSlice({
         autoAdvance: true,
         repeat: "none",
         tracklistItemID: -1,
-        loadError: false
-      }
+        loadError: false,
+      },
     ],
     mic: {
       open: false,
@@ -171,8 +171,8 @@ const mixerState = createSlice({
       baseGain: 1,
       openError: null,
       id: "None",
-      calibration: false
-    }
+      calibration: false,
+    },
   } as MixerState,
   reducers: {
     loadItem(
@@ -254,7 +254,7 @@ const mixerState = createSlice({
       state.players[action.payload.player].timeRemaining = timeRemaining;
     },
     updateTimeEndingAt(state) {
-      state.players.forEach(player => {
+      state.players.forEach((player) => {
         let date = new Date();
         date.setSeconds(date.getSeconds() + player.timeRemaining);
         player.timeEndingAt = date.toLocaleString("en-GB").split(" ")[1];
@@ -323,8 +323,8 @@ const mixerState = createSlice({
     },
     stopMicCalibration(state) {
       state.mic.calibration = false;
-    }
-  }
+    },
+  },
 });
 
 export default mixerState.reducer;
@@ -384,8 +384,8 @@ export const load = (
     backend: "MediaElementWebAudio",
     responsive: true,
     xhr: {
-      credentials: "include"
-    } as any
+      credentials: "include",
+    } as any,
   });
 
   wavesurfer.on("ready", () => {
@@ -393,13 +393,13 @@ export const load = (
     dispatch(
       mixerState.actions.setTimeLength({
         player,
-        time: wavesurfer.getDuration()
+        time: wavesurfer.getDuration(),
       })
     );
     dispatch(
       mixerState.actions.setTimeCurrent({
         player,
-        time: 0
+        time: 0,
       })
     );
     dispatch(updateTimeEnding());
@@ -415,7 +415,7 @@ export const load = (
     dispatch(
       mixerState.actions.setPlayerState({
         player,
-        state: wavesurfer.getCurrentTime() === 0 ? "stopped" : "paused"
+        state: wavesurfer.getCurrentTime() === 0 ? "stopped" : "paused",
       })
     );
   });
@@ -423,7 +423,7 @@ export const load = (
     dispatch(
       mixerState.actions.setTimeCurrent({
         player,
-        time: wavesurfer.getCurrentTime()
+        time: wavesurfer.getCurrentTime(),
       })
     );
   });
@@ -439,7 +439,7 @@ export const load = (
       if ("channel" in item) {
         // it's not in the CML/libraries "column"
         const itsChannel = getState().showplan.plan!.filter(
-          x => x.channel === item.channel
+          (x) => x.channel === item.channel
         );
         const itsIndex = itsChannel.indexOf(item);
         if (itsIndex === itsChannel.length - 1) {
@@ -450,7 +450,7 @@ export const load = (
       if ("channel" in item) {
         // it's not in the CML/libraries "column"
         const itsChannel = getState().showplan.plan!.filter(
-          x => x.channel === item.channel
+          (x) => x.channel === item.channel
         );
         const itsIndex = itsChannel.indexOf(item);
         if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
@@ -469,7 +469,7 @@ export const load = (
       dispatch(
         mixerState.actions.setTimeCurrent({
           player,
-          time: wavesurfer.getCurrentTime()
+          time: wavesurfer.getCurrentTime(),
         })
       );
     }
@@ -479,7 +479,7 @@ export const load = (
     const signal = loadAbortControllers[player].signal; // hang on to the signal, even if its controller gets replaced
     const result = await fetch(url, {
       credentials: "include",
-      signal
+      signal,
     }).then(
       fetchProgress({
         // implement onProgress method
@@ -490,7 +490,7 @@ export const load = (
               mixerState.actions.itemLoadPercentage({ player, percent })
             );
           }
-        }
+        },
       })
     );
     const rawData = await result.arrayBuffer();
@@ -524,17 +524,11 @@ export const load = (
   }
 };
 
-export const updateTimeEnding = (): AppThunk => async dispatch => {
+export const updateTimeEnding = (): AppThunk => async (dispatch) => {
   if (!timerInterval) {
-    timerInterval = later.setInterval(
-      () => {
-        dispatch(mixerState.actions.updateTimeEndingAt());
-      },
-      later.parse
-        .recur()
-        .every(1)
-        .second()
-    );
+    timerInterval = later.setInterval(() => {
+      dispatch(mixerState.actions.updateTimeEndingAt());
+    }, later.parse.recur().every(1).second());
   }
 };
 
@@ -606,11 +600,11 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 export const {
   toggleAutoAdvance,
   togglePlayOnLoad,
-  toggleRepeat
+  toggleRepeat,
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
-  wavesurfers.forEach(function(item) {
+  wavesurfers.forEach(function (item) {
     item.drawBuffer();
   });
 };
@@ -648,7 +642,7 @@ export const setVolume = (
     // If we've just hit the button/key to go to the same value as that fade,
     // stop it and immediately cut to the target value.
     // Otherwise, stop id and start a new fade.
-    playerGainTweens[player].tweens.forEach(tween => tween.pause());
+    playerGainTweens[player].tweens.forEach((tween) => tween.pause());
     if (playerGainTweens[player].target === level) {
       delete playerGainTweens[player];
       dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
@@ -682,7 +676,7 @@ export const setVolume = (
 
   playerGainTweens[player] = {
     target: level,
-    tweens: [volumeTween, gainTween]
+    tweens: [volumeTween, gainTween],
   };
 };
 
@@ -712,8 +706,8 @@ export const openMicrophone = (micID: string): AppThunk => async (
         echoCancellation: false,
         autoGainControl: false,
         noiseSuppression: false,
-        latency: 0.01
-      }
+        latency: 0.01,
+      },
     });
   } catch (e) {
     if (e instanceof DOMException) {
@@ -758,9 +752,9 @@ export const openMicrophone = (micID: string): AppThunk => async (
   }
 };
 
-export const setMicVolume = (
-  level: MicVolumePresetEnum
-): AppThunk => dispatch => {
+export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
+  dispatch
+) => {
   // no tween fuckery here, just cut the level
   const levelVal = level === "full" ? 1 : 0;
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for
@@ -832,11 +826,9 @@ export const stopMicCalibration = (): AppThunk => (dispatch, getState) => {
   dispatch(mixerState.actions.stopMicCalibration());
 };
 
-export const mixerMiddleware: Middleware<
-  {},
-  RootState,
-  Dispatch<any>
-> = store => next => action => {
+export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
+  store
+) => (next) => (action) => {
   const oldState = store.getState().mixer;
   const result = next(action);
   const newState = store.getState().mixer;
@@ -863,7 +855,7 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   {},
   RootState,
   Dispatch<any>
-> = store => {
+> = (store) => {
   Keys("q", () => {
     store.dispatch(play(0));
   });
@@ -925,5 +917,5 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
     store.dispatch(setMicVolume(state.volume === 1 ? "off" : "full"));
   });
 
-  return next => action => next(action);
+  return (next) => (action) => next(action);
 };

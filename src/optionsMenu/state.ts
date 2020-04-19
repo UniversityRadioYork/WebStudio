@@ -2,7 +2,7 @@ import {
   createSlice,
   PayloadAction,
   Middleware,
-  Dispatch
+  Dispatch,
 } from "@reduxjs/toolkit";
 import { RootState } from "../rootReducer";
 
@@ -14,7 +14,7 @@ const optionsMenuState = createSlice({
   name: "optionsMenu",
   initialState: {
     open: false,
-    currentTab: "mic" as OptionsTabIDsEnum
+    currentTab: "mic" as OptionsTabIDsEnum,
   },
   reducers: {
     open(state) {
@@ -29,19 +29,17 @@ const optionsMenuState = createSlice({
     },
     changeTab(state, action: PayloadAction<OptionsTabIDsEnum>) {
       state.currentTab = action.payload;
-    }
-  }
+    },
+  },
 });
 
 export default optionsMenuState.reducer;
 
 export const { open, openToTab, close, changeTab } = optionsMenuState.actions;
 
-export const tabSyncMiddleware: Middleware<
-  {},
-  RootState,
-  Dispatch
-> = store => next => action => {
+export const tabSyncMiddleware: Middleware<{}, RootState, Dispatch> = (
+  store
+) => (next) => (action) => {
   const oldState = store.getState();
   const result = next(action);
   const newState = store.getState();

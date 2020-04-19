@@ -34,15 +34,15 @@ export function StatsTab() {
   }
   return (
     <>
-      {Array.from(stats).map(stat => (
+      {Array.from(stats).map((stat) => (
         <div key={stat[1].id}>
           <h2>Report: {stat[1].type}</h2>
           <div>
             <strong>ID:</strong> {stat[1].id}
           </div>
           {Object.keys(stat[1])
-            .filter(x => x !== "id" && x !== "type" && x !== "timestamp")
-            .map(key => (
+            .filter((x) => x !== "id" && x !== "type" && x !== "timestamp")
+            .map((key) => (
               <div key={key}>
                 <strong>{key}</strong>: {stat[1][key]}
               </div>

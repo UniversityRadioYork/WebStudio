@@ -21,7 +21,7 @@ interface NavbarState {
 const navbarState = createSlice({
   name: "navbar",
   initialState: {
-    currentAlert: null
+    currentAlert: null,
   } as NavbarState,
   reducers: {
     showAlert(state, action: PayloadAction<Alert>) {
@@ -29,8 +29,8 @@ const navbarState = createSlice({
     },
     closeAlert(state) {
       state.currentAlert = null;
-    }
-  }
+    },
+  },
 });
 
 export default navbarState.reducer;
