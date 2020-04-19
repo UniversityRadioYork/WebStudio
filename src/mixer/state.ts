@@ -27,8 +27,9 @@ const loadAbortControllers: AbortController[] = [];
 
 let micMedia: MediaStream | null = null;
 let micSource: MediaStreamAudioSourceNode | null = null;
-let micGain: GainNode | null = null;
+let micCalibrationGain: GainNode | null = null;
 let micCompressor: DynamicsCompressorNode | null = null;
+let micMixGain: GainNode | null = null;
 
 const finalCompressor = audioContext.createDynamicsCompressor();
 finalCompressor.ratio.value = 20; //brickwall destination comressor
@@ -92,8 +93,7 @@ interface PlayerState {
 interface MicState {
   open: boolean;
   openError: null | MicErrorEnum;
-  volume: number;
-  gain: number;
+  volume: 1 | 0;
   baseGain: number;
   id: string | null;
   calibration: boolean;
@@ -227,12 +227,8 @@ const mixerState = createSlice({
       state.mic.open = true;
       state.mic.id = action.payload;
     },
-    setMicLevels(
-      state,
-      action: PayloadAction<{ volume: number; gain: number }>
-    ) {
+    setMicLevels(state, action: PayloadAction<{ volume: 1 | 0 }>) {
       state.mic.volume = action.payload.volume;
-      state.mic.gain = action.payload.gain;
     },
     setMicBaseGain(state, action: PayloadAction<number>) {
       state.mic.baseGain = action.payload;
@@ -413,7 +409,7 @@ export const load = (
         time: wavesurfer.getCurrentTime()
       })
     );
-  })
+  });
   wavesurfer.on("finish", () => {
     dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
     const state = getState().mixer.players[player];
@@ -703,18 +699,25 @@ export const openMicrophone = (micID: string): AppThunk => async (
     return;
   }
   // Okay, we have a mic stream, time to do some audio nonsense
-  micSource = audioContext.createMediaStreamSource(micMedia);
-  micGain = audioContext.createGain();
   const state = getState().mixer.mic;
-  micGain.gain.value = state.gain * state.baseGain;
+  micSource = audioContext.createMediaStreamSource(micMedia);
+
+  micCalibrationGain = audioContext.createGain();
+  micCalibrationGain.gain.value = state.baseGain;
+
   micCompressor = audioContext.createDynamicsCompressor();
   micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
   micCompressor.threshold.value = -18;
   micCompressor.attack.value = 0.01;
   micCompressor.release.value = 0.1;
+
+  micMixGain = audioContext.createGain();
+  micMixGain.gain.value = state.volume;
+
   micSource
-    .connect(micGain)
+    .connect(micCalibrationGain)
     .connect(micCompressor)
+    .connect(micMixGain)
     .connect(finalCompressor);
   dispatch(mixerState.actions.micOpen(micID));
 
@@ -767,7 +770,7 @@ export const startMicCalibration = (): AppThunk => async (
     sauce.load();
     input = audioContext.createMediaElementSource(sauce);
   } else {
-    input = micCompressor!;
+    input = micCalibrationGain!;
   }
   analyser = audioContext.createAnalyser();
   analyser.fftSize = 8192;
@@ -784,11 +787,9 @@ export function getMicAnalysis() {
     float = new Float32Array(analyser.fftSize);
   }
   analyser.getFloatTimeDomainData(float);
-  let sumOfSquares = 0;
   let peak = 0;
   for (let i = 0; i < float.length; i++) {
     peak = Math.max(peak, float[i] ** 2);
-    sumOfSquares += float[i] ** 2;
   }
   return 10 * Math.log10(peak);
 }
@@ -816,11 +817,13 @@ export const mixerMiddleware: Middleware<
     }
   });
   if (
-    (newState.mic.gain !== oldState.mic.gain ||
-      newState.mic.baseGain !== oldState.mic.baseGain) &&
-    micGain !== null
+    newState.mic.baseGain !== oldState.mic.baseGain &&
+    micCalibrationGain !== null
   ) {
-    micGain.gain.value = newState.mic.gain * newState.mic.baseGain;
+    micCalibrationGain.gain.value = newState.mic.baseGain;
+  }
+  if (newState.mic.volume !== oldState.mic.volume && micMixGain !== null) {
+    micMixGain.gain.value = newState.mic.volume;
   }
   return result;
 };

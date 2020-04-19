@@ -141,7 +141,7 @@ function MicControl() {
         <div
           className="sp-mixer-buttons-backdrop"
           style={{
-            width: (USE_REAL_GAIN_VALUE ? state.gain : state.volume) * 100 + "%"
+            width: state.volume * 100 + "%"
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
