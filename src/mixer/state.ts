@@ -526,9 +526,15 @@ export const load = (
 
 export const updateTimeEnding = (): AppThunk => async (dispatch) => {
   if (!timerInterval) {
-    timerInterval = later.setInterval(() => {
-      dispatch(mixerState.actions.updateTimeEndingAt());
-    }, later.parse.recur().every(1).second());
+    timerInterval = later.setInterval(
+      () => {
+        dispatch(mixerState.actions.updateTimeEndingAt());
+      },
+      later.parse
+        .recur()
+        .every(1)
+        .second()
+    );
   }
 };
 
@@ -604,7 +610,7 @@ export const {
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
-  wavesurfers.forEach(function (item) {
+  wavesurfers.forEach(function(item) {
     item.drawBuffer();
   });
 };

@@ -124,6 +124,7 @@
     ]
   },
   "devDependencies": {
+    "@ury1350/prettier-config": "^1.0.0",
     "node-sass": "^4.13.1",
     "prettier": "^1.19.1"
   },
@@ -179,5 +180,6 @@
     "presets": [
       "react-app"
     ]
-  }
+  },
+  "prettier": "@ury1350/prettier-config"
 }
