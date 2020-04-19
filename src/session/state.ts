@@ -5,7 +5,7 @@ import {
   getCurrentApiUser,
   Timeslot,
   getCurrentApiTimeslot,
-  doesCurrentUserHavePermission
+  doesCurrentUserHavePermission,
 } from "../api";
 
 import raygun from "raygun4js";
@@ -31,7 +31,7 @@ const sessionState = createSlice({
     userLoading: false,
     userLoadError: null,
     timeslotLoading: false,
-    timeslotLoadError: null
+    timeslotLoadError: null,
   } as sessionState,
   reducers: {
     setCurrentUser(
@@ -67,8 +67,8 @@ const sessionState = createSlice({
     },
     getState(state) {
       return state;
-    }
-  }
+    },
+  },
 });
 
 export default sessionState.reducer;
@@ -77,17 +77,17 @@ export const getCurrentUser = (): AppThunk => async (dispatch, getState) => {
   return getState().session.currentUser;
 };
 
-export const getUser = (): AppThunk => async dispatch => {
+export const getUser = (): AppThunk => async (dispatch) => {
   dispatch(sessionState.actions.getUserStarting());
   try {
     const [user, canBroadcast] = await Promise.all([
       getCurrentApiUser(),
-      doesCurrentUserHavePermission(BROADCAST_PERMISSION_ID)
+      doesCurrentUserHavePermission(BROADCAST_PERMISSION_ID),
     ]);
     raygun("setUser", {
       identifier: user.memberid.toString(10),
       firstName: user.fname,
-      fullName: user.fname + " " + user.sname
+      fullName: user.fname + " " + user.sname,
     });
     dispatch(sessionState.actions.setCurrentUser({ user, canBroadcast }));
   } catch (e) {
@@ -96,7 +96,7 @@ export const getUser = (): AppThunk => async dispatch => {
   }
 };
 
-export const getTimeslot = (): AppThunk => async dispatch => {
+export const getTimeslot = (): AppThunk => async (dispatch) => {
   dispatch(sessionState.actions.getTimeslotStarting());
   try {
     const timeslot = await getCurrentApiTimeslot();

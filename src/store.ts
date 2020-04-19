@@ -3,7 +3,7 @@ import { configureStore, Action, getDefaultMiddleware } from "@reduxjs/toolkit";
 import { ThunkAction } from "redux-thunk";
 import {
   mixerMiddleware,
-  mixerKeyboardShortcutsMiddleware
+  mixerKeyboardShortcutsMiddleware,
 } from "./mixer/state";
 import { tabSyncMiddleware } from "./optionsMenu/state";
 import { persistStore } from "redux-persist";
@@ -14,8 +14,8 @@ const store = configureStore({
     mixerMiddleware,
     mixerKeyboardShortcutsMiddleware,
     tabSyncMiddleware,
-    ...getDefaultMiddleware()
-  ]
+    ...getDefaultMiddleware(),
+  ],
 });
 
 if (process.env.NODE_ENV === "development" && module.hot) {

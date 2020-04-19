@@ -13,7 +13,7 @@ export const TS_ITEM_MENU_ID = "SongMenu";
 export const Item = memo(function Item({
   item: x,
   index,
-  column
+  column,
 }: {
   item: PlanItem | Track | AuxItem;
   index: number;

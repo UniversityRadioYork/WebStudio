@@ -29,13 +29,13 @@ export function CentralMusicLibrary() {
     }
     setItems([]);
     setState("searching");
-    searchForTracks(artist, track).then(tracks => {
+    searchForTracks(artist, track).then((tracks) => {
       if (tracks.length === 0) {
         setState("no-results");
       } else {
         setState("results");
       }
-      tracks.forEach(track => {
+      tracks.forEach((track) => {
         const id = itemId(track);
         if (!(id in CML_CACHE)) {
           CML_CACHE[id] = track;
@@ -51,14 +51,14 @@ export function CentralMusicLibrary() {
         type="text"
         placeholder="Filter by track..."
         value={track}
-        onChange={e => setTrack(e.target.value)}
+        onChange={(e) => setTrack(e.target.value)}
       />
       <input
         className="form-control"
         type="text"
         placeholder="Filter by artist..."
         value={artist}
-        onChange={e => setArtist(e.target.value)}
+        onChange={(e) => setArtist(e.target.value)}
       />
       <span
         className={
@@ -100,7 +100,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
   useEffect(() => {
     async function load() {
       const libItems = await loadAuxLibrary(libraryId);
-      libItems.forEach(item => {
+      libItems.forEach((item) => {
         const id = itemId(item);
         if (!(id in AUX_CACHE)) {
           AUX_CACHE[id] = item;
@@ -117,14 +117,14 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
         type="text"
         placeholder="Filter..."
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)}
       />
       <Droppable droppableId="$AUX">
         {(provided, snapshot) => (
           <div ref={provided.innerRef} {...provided.droppableProps}>
             {items
               .filter(
-                its =>
+                (its) =>
                   its.title
                     .toString()
                     .toLowerCase()

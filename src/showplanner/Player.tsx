@@ -6,7 +6,7 @@ import {
   FaRedo,
   FaPlay,
   FaPause,
-  FaStop
+  FaStop,
 } from "react-icons/fa";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
@@ -168,7 +168,7 @@ export function Player({ id }: { id: number }) {
             style={
               playerState.loading !== -1
                 ? {
-                    width: playerState.loading * 100 + "%"
+                    width: playerState.loading * 100 + "%",
                   }
                 : {}
             }
@@ -190,7 +190,7 @@ export function Player({ id }: { id: number }) {
             width:
               (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
                 100 +
-              "%"
+              "%",
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>

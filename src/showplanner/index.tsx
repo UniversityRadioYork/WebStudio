@@ -9,7 +9,7 @@ import {
   Droppable,
   DragDropContext,
   DropResult,
-  ResponderProvided
+  ResponderProvided,
 } from "react-beautiful-dnd";
 
 import { useSelector, useDispatch } from "react-redux";
@@ -21,7 +21,7 @@ import {
   moveItem,
   addItem,
   removeItem,
-  getPlaylists
+  getPlaylists,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
@@ -31,7 +31,7 @@ import {
   CentralMusicLibrary,
   CML_CACHE,
   AuxLibrary,
-  AUX_CACHE
+  AUX_CACHE,
 } from "./libraries";
 import { Player } from "./Player";
 
@@ -54,7 +54,7 @@ function Column({ id, data }: { id: number; data: PlanItem[] }) {
               {typeof data[id] === "undefined"
                 ? null
                 : data
-                    .filter(x => x.channel === id)
+                    .filter((x) => x.channel === id)
                     .sort((a, b) => a.weight - b.weight)
                     .map((x, index) => (
                       <Item
@@ -91,20 +91,20 @@ function LibraryColumn() {
         className="form-control"
         style={{ width: "100%" }}
         value={sauce}
-        onChange={e => setSauce(e.target.value)}
+        onChange={(e) => setSauce(e.target.value)}
       >
         <option value={"None"} disabled>
           Choose a library
         </option>
         <option value={"CentralMusicLibrary"}>Central Music Library</option>
         <option disabled>Personal Resources</option>
-        {userPlaylists.map(playlist => (
+        {userPlaylists.map((playlist) => (
           <option key={playlist.managedid} value={playlist.managedid}>
             {playlist.title}
           </option>
         ))}
         <option disabled>Shared Resources</option>
-        {auxPlaylists.map(playlist => (
+        {auxPlaylists.map((playlist) => (
           <option
             key={"aux-" + playlist.managedid}
             value={"aux-" + playlist.managedid}
@@ -140,7 +140,7 @@ function MicControl() {
         <div
           className="sp-mixer-buttons-backdrop"
           style={{
-            width: state.volume * 100 + "%"
+            width: state.volume * 100 + "%",
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
@@ -171,13 +171,15 @@ function incrReducer(state: number, action: any) {
   return state + 1;
 }
 
-const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
+const Showplanner: React.FC<{ timeslotId: number }> = function ({
+  timeslotId,
+}) {
   const {
     plan: showplan,
     planLoadError,
     planLoading,
     planSaveError,
-    planSaving
+    planSaving,
   } = useSelector((state: RootState) => state.showplan);
   const session = useSelector((state: RootState) => state.session);
 
@@ -189,7 +191,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   const dispatch = useDispatch();
 
-  useBeforeunload(event => event.preventDefault());
+  useBeforeunload((event) => event.preventDefault());
 
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
@@ -200,7 +202,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     if (element) {
       element.classList.toggle("active");
     }
-    setTimeout(function() {
+    setTimeout(function () {
       dispatch(MixerState.redrawWavesurfers());
     }, 500);
   }
@@ -224,7 +226,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
-        ...data
+        ...data,
       };
       dispatch(addItem(timeslotId, newItem));
       increment(null);
@@ -238,7 +240,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
-        ...data
+        ...data,
       } as any;
       dispatch(addItem(timeslotId, newItem));
       increment(null);
@@ -247,7 +249,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       dispatch(
         moveItem(timeslotId, result.draggableId, [
           parseInt(result.destination.droppableId, 10),
-          result.destination.index
+          result.destination.index,
         ])
       );
     }

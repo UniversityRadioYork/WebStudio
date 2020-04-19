@@ -33,7 +33,7 @@ const App: React.FC = () => {
     currentUser,
     userLoading,
     currentTimeslot,
-    timeslotLoading
+    timeslotLoading,
   } = useSelector((state: RootState) => state.session);
 
   if (
@@ -60,8 +60,8 @@ const App: React.FC = () => {
             type="text"
             placeholder="enter a timeslot id"
             value={inputVal}
-            onChange={e => setInputVal(e.target.value)}
-            onKeyPress={e => enterKeyCont(e.key)}
+            onChange={(e) => setInputVal(e.target.value)}
+            onKeyPress={(e) => enterKeyCont(e.key)}
             autoFocus
           />
           <button onClick={cont}>Continue</button>

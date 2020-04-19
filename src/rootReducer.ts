@@ -19,7 +19,7 @@ const rootReducer = combineReducers({
   session: sessionReducer,
   navbar: NavbarReducer,
   optionsMenu: OptionsMenuReducer,
-  settings: SettingsState
+  settings: SettingsState,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
@@ -28,7 +28,7 @@ const persistenceConfig: PersistConfig<RootState> = {
   key: "root",
   storage: webStorage,
   whitelist: ["settings"],
-  stateReconciler: autoMergeLevel2
+  stateReconciler: autoMergeLevel2,
 };
 
 const persistedReducer = persistReducer(persistenceConfig, rootReducer);

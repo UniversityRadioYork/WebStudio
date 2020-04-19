@@ -34,7 +34,7 @@ class DBFSPeakProcessor extends AudioWorkletProcessor {
     }
     this.port.postMessage({
       peak,
-      loudness: -Infinity // TODO
+      loudness: -Infinity, // TODO
     });
     return true;
   }
@@ -85,7 +85,7 @@ class PPMPeakProcessor extends AudioWorkletProcessor {
     this.calcIntermediate(inputs[0]);
     this.port.postMessage({
       peak: this.convert(this.intermediateValue[0]),
-      loudness: this.intermediateValue[0]
+      loudness: this.intermediateValue[0],
     });
     return true;
   }

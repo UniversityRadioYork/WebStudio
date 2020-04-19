@@ -5,7 +5,7 @@ import { Button } from "reactstrap";
 
 export function PisModal({
   close,
-  isOpen
+  isOpen,
 }: {
   close: () => any;
   isOpen: boolean;

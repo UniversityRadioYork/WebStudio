@@ -4,7 +4,7 @@ import logo from "../assets/images/webstudio.svg";
 import {
   MYRADIO_BASE_URL,
   MYRADIO_NON_API_BASE,
-  BROADCAST_API_BASE_URL
+  BROADCAST_API_BASE_URL,
 } from "../api";
 
 export function AboutTab() {

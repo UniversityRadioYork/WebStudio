@@ -13,7 +13,7 @@ type MicErrorEnum =
 
 function reduceToInputs(devices: MediaDeviceInfo[]) {
   var temp: MediaDeviceInfo[] = [];
-  devices.forEach(device => {
+  devices.forEach((device) => {
     if (device.kind === "audioinput") {
       temp.push(device);
     }
@@ -91,11 +91,11 @@ export function MicTab() {
         className="form-control"
         style={{ width: "100%" }}
         value={nextMicSource}
-        onChange={e => setMicSource(e.target.value)}
+        onChange={(e) => setMicSource(e.target.value)}
         disabled={micList === null}
       >
         <option value={"$NONE"} disabled label="Choose a microphone" />
-        {(micList || []).map(function(e, i) {
+        {(micList || []).map(function (e, i) {
           return (
             <option value={e.deviceId} key={i}>
               {e.label !== "" ? e.label : e.deviceId}
@@ -138,7 +138,7 @@ export function MicTab() {
             max={3}
             step={0.05}
             value={state.baseGain}
-            onChange={e =>
+            onChange={(e) =>
               dispatch(MixerState.setMicBaseGain(parseFloat(e.target.value)))
             }
           />
