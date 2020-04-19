@@ -9,6 +9,12 @@ import "./libraries.scss";
 
 export const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
+type searchingStateEnum =
+| "searching"
+| "not-searching"
+| "results"
+| "no-results";
+
 export function CentralMusicLibrary() {
   const [track, setTrack] = useState("");
   const [artist, setArtist] = useState("");
@@ -16,12 +22,8 @@ export function CentralMusicLibrary() {
   const debouncedArtist = useDebounce(artist, 1000);
   const [items, setItems] = useState<Track[]>([]);
 
-  type searchingStateEnum =
-    | "searching"
-    | "not-searching"
-    | "results"
-    | "no-results";
   const [state, setState] = useState<searchingStateEnum>("not-searching");
+
   useEffect(() => {
     if (debouncedTrack === "" && debouncedArtist === "") {
       setItems([]);
@@ -61,22 +63,7 @@ export function CentralMusicLibrary() {
         value={artist}
         onChange={(e) => setArtist(e.target.value)}
       />
-      <span
-        className={
-          state !== "results" ? "mt-5 text-center text-muted" : "d-none"
-        }
-      >
-        {state === "not-searching" && <FaSearch />}
-        {state === "searching" && <FaCog className="fa-spin" />}
-        {state === "no-results" && <FaTimesCircle />}
-        {state === "not-searching"
-          ? "Enter a search term."
-          : state === "searching"
-          ? "Searching..."
-          : state === "no-results"
-          ? "No results."
-          : ""}
-      </span>
+      <ResultsPlaceholder state={state} />
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
           <div
@@ -101,8 +88,12 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
   const [title, setTitle] = useState("");
   const [items, setItems] = useState<AuxItem[]>([]);
 
+  const [state, setState] = useState<searchingStateEnum>("not-searching");
+
   useEffect(() => {
     async function load() {
+      setItems([]);
+      setState("searching");
       const libItems = await loadAuxLibrary(libraryId);
       libItems.forEach((item) => {
         const id = itemId(item);
@@ -111,6 +102,11 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
         }
       });
       setItems(libItems);
+      if (libItems.length === 0) {
+        setState("no-results");
+      } else {
+        setState("results");
+      }
     }
     load();
   }, [libraryId]);
@@ -123,7 +119,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-
+      <ResultsPlaceholder state={state} />
       <Droppable droppableId="$AUX">
         {(provided, snapshot) => (
           <div
@@ -153,4 +149,26 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
       </Droppable>
     </div>
   );
+}
+
+export function ResultsPlaceholder({ state }: { state:string }) {
+  return (
+    <span
+      className={
+        state !== "results" ? "mt-5 text-center text-muted" : "d-none"
+      }
+    >
+      {state === "not-searching" && <FaSearch size={56}/>}
+      {state === "searching" && <FaCog size={56} className="fa-spin" />}
+      {state === "no-results" && <FaTimesCircle size={56}/>}
+      <br />
+      {state === "not-searching"
+        ? "Enter a search term."
+        : state === "searching"
+        ? "Searching..."
+        : state === "no-results"
+        ? "No results."
+        : ""}
+    </span>
+  )
 }

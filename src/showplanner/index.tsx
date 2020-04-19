@@ -1,7 +1,7 @@
 import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { FaCaretSquareDown, FaAlignJustify } from "react-icons/fa";
+import { FaCaretSquareDown, FaAlignJustify, FaSwatchbook, FaBookOpen } from "react-icons/fa";
 
 import { TimeslotItem } from "../api";
 
@@ -115,7 +115,8 @@ function LibraryColumn() {
       <span
         className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
       >
-        <FaCaretSquareDown />
+        <FaBookOpen size={56} />
+        <br />
         Select a library to search.
       </span>
     </div>
