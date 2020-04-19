@@ -292,7 +292,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
             className="btn btn-outline-dark btn-sm mb-0"
             onClick={() => toggleSidebar()}
           >
-            <FaAlignJustify />
+            <FaAlignJustify style={{verticalAlign: "text-bottom"}}/>
+            &nbsp;
             Toggle Sidebar
           </span>
           <div id="sidebar">
