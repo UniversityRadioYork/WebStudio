@@ -191,7 +191,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   function toggleSidebar() {
     var element = document.getElementById("sidebar");
     if (element) {
-      element.classList.toggle("active");
+      element.classList.toggle("hidden");
     }
     setTimeout(function() {
       dispatch(MixerState.redrawWavesurfers());
