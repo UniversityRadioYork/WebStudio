@@ -10,6 +10,7 @@ $number-of-channels: 3;
   grid-template-rows: 100%;
   overflow: hidden;
   background: var(--background);
+  flex-grow: 1;
 
   .channels {
     display: grid;
