@@ -18,7 +18,7 @@
   Webcast.Encoder.Asynchronous = (function() {
     function Asynchronous(arg) {
       var blob, j, len1, script, scripts;
-      this.encoder = arg.encoder, scripts = arg.scripts;
+      (this.encoder = arg.encoder), (scripts = arg.scripts);
       this.mime = this.encoder.mime;
       this.info = this.encoder.info;
       this.channels = this.encoder.channels;
@@ -28,7 +28,12 @@
         script = scripts[j];
         this.scripts.push("'" + script + "'");
       }
-      script = "var window;\nimportScripts(" + (this.scripts.join()) + ");\nvar encoder = " + (this.encoder.toString()) + ";\nself.onmessage = function (e) {\n  var type = e.data.type;\n  var data = e.data.data;\n  if (type === \"buffer\") {\n    encoder.encode(data, function (encoded) {\n      postMessage(encoded);\n    });\n    return;\n  }\n  if (type === \"close\") {\n    encoder.close(function (buffer) {\n      postMessage({close:true, buffer:buffer});\n      self.close();\n    });\n    return;\n  }\n};";
+      script =
+        "var window;\nimportScripts(" +
+        this.scripts.join() +
+        ");\nvar encoder = " +
+        this.encoder.toString() +
+        ';\nself.onmessage = function (e) {\n  var type = e.data.type;\n  var data = e.data.data;\n  if (type === "buffer") {\n    encoder.encode(data, function (encoded) {\n      postMessage(encoded);\n    });\n    return;\n  }\n  if (type === "close") {\n    encoder.close(function (buffer) {\n      postMessage({close:true, buffer:buffer});\n      self.close();\n    });\n    return;\n  }\n};';
       blob = new Blob([script], {
         type: "text/javascript"
       });
@@ -43,7 +48,13 @@
     }
 
     Asynchronous.prototype.toString = function() {
-      return "(new Webcast.Encoder.Asynchronous({\n  encoder: " + (this.encoder.toString()) + ",\n  scripts: [" + (this.scripts.join()) + "]\n}))";
+      return (
+        "(new Webcast.Encoder.Asynchronous({\n  encoder: " +
+        this.encoder.toString() +
+        ",\n  scripts: [" +
+        this.scripts.join() +
+        "]\n}))"
+      );
     };
 
     Asynchronous.prototype.close = function(fn) {
@@ -87,12 +98,15 @@
     };
 
     return Asynchronous;
-
   })();
 
   if (typeof window !== "undefined") {
     AudioContext = window.AudioContext || window.webkitAudioContext;
-    AudioContext.prototype.createWebcastSource = function(bufferSize, channels, passThrough) {
+    AudioContext.prototype.createWebcastSource = function(
+      bufferSize,
+      channels,
+      passThrough
+    ) {
       var context, node, options;
       context = this;
       node = context.createScriptProcessor(bufferSize, channels, channels);
@@ -106,24 +120,36 @@
       node.onaudioprocess = function(buf) {
         var audio, channel, channelData, j, ref, ref1;
         audio = [];
-        for (channel = j = 0, ref = buf.inputBuffer.numberOfChannels - 1; 0 <= ref ? j <= ref : j >= ref; channel = 0 <= ref ? ++j : --j) {
+        for (
+          channel = j = 0, ref = buf.inputBuffer.numberOfChannels - 1;
+          0 <= ref ? j <= ref : j >= ref;
+          channel = 0 <= ref ? ++j : --j
+        ) {
           channelData = buf.inputBuffer.getChannelData(channel);
           audio[channel] = channelData;
           if (options.passThrough) {
             buf.outputBuffer.getChannelData(channel).set(channelData);
           } else {
-            buf.outputBuffer.getChannelData(channel).set(new Float32Array(channelData.length));
+            buf.outputBuffer
+              .getChannelData(channel)
+              .set(new Float32Array(channelData.length));
           }
         }
-        return (ref1 = options.encoder) != null ? typeof ref1.encode === "function" ? ref1.encode(audio, function(data) {
-          var ref2;
-          if (data != null) {
-            return (ref2 = options.socket) != null ? ref2.sendData(data) : void 0;
-          }
-        }) : void 0 : void 0;
+        return (ref1 = options.encoder) != null
+          ? typeof ref1.encode === "function"
+            ? ref1.encode(audio, function(data) {
+                var ref2;
+                if (data != null) {
+                  return (ref2 = options.socket) != null
+                    ? ref2.sendData(data)
+                    : void 0;
+                }
+              })
+            : void 0
+          : void 0;
       };
       node.setPassThrough = function(b) {
-        return options.passThrough = b;
+        return (options.passThrough = b);
       };
       node.connectSocket = function(encoder, url) {
         if (encoder instanceof Webcast.Recorder) {
@@ -132,16 +158,18 @@
           encoder.start(options.recoderSource.stream, function(data) {
             var ref;
             if (data != null) {
-              return (ref = options.socket) != null ? ref.sendData(data) : void 0;
+              return (ref = options.socket) != null
+                ? ref.sendData(data)
+                : void 0;
             }
           });
         }
         options.encoder = encoder;
-        return options.socket = new Webcast.Socket({
+        return (options.socket = new Webcast.Socket({
           url: url,
           mime: options.encoder.mime,
           info: options.encoder.info
-        });
+        }));
       };
       node.close = function(cb) {
         var fn, ref, ref1;
@@ -174,7 +202,9 @@
       node.sendMetadata = (function(_this) {
         return function(metadata) {
           var ref;
-          return (ref = options.socket) != null ? ref.sendMetadata(metadata) : void 0;
+          return (ref = options.socket) != null
+            ? ref.sendMetadata(metadata)
+            : void 0;
         };
       })(this);
       node.isOpen = function() {
@@ -188,7 +218,9 @@
     Mp3.prototype.mime = "audio/mpeg";
 
     function Mp3(arg) {
-      this.samplerate = arg.samplerate, this.bitrate = arg.bitrate, this.channels = arg.channels;
+      (this.samplerate = arg.samplerate),
+        (this.bitrate = arg.bitrate),
+        (this.channels = arg.channels);
       this.shine = new Shine({
         samplerate: this.samplerate,
         bitrate: this.bitrate,
@@ -207,12 +239,20 @@
     }
 
     Mp3.prototype.toString = function() {
-      return "(new Webcast.Encoder.Mp3({\n  bitrate: " + this.bitrate + ",\n  channels: " + this.channels + ",\n  samplerate: " + this.samplerate + "\n }))";
+      return (
+        "(new Webcast.Encoder.Mp3({\n  bitrate: " +
+        this.bitrate +
+        ",\n  channels: " +
+        this.channels +
+        ",\n  samplerate: " +
+        this.samplerate +
+        "\n }))"
+      );
     };
 
     Mp3.prototype.close = function(data, fn) {
       var flushed, rem;
-      rem = new Uint8Array;
+      rem = new Uint8Array();
       if (fn != null) {
         if ((data != null ? data.length : void 0) > 0) {
           rem = this.shine.encode(data);
@@ -233,13 +273,16 @@
     };
 
     return Mp3;
-
   })();
 
   Webcast.Encoder.Raw = (function() {
     function Raw(arg) {
-      this.channels = arg.channels, this.samplerate = arg.samplerate;
-      this.mime = "audio/x-raw,format=S8,channels=" + this.channels + ",layout=interleaved,rate=" + this.samplerate;
+      (this.channels = arg.channels), (this.samplerate = arg.samplerate);
+      this.mime =
+        "audio/x-raw,format=S8,channels=" +
+        this.channels +
+        ",layout=interleaved,rate=" +
+        this.samplerate;
       this.info = {
         audio: {
           channels: this.channels,
@@ -250,7 +293,13 @@
     }
 
     Raw.prototype.toString = function() {
-      return "(new Webcast.Encoder.Raw({\n  channels: " + this.channels + ",\n  samplerate: " + this.samplerate + "\n }))";
+      return (
+        "(new Webcast.Encoder.Raw({\n  channels: " +
+        this.channels +
+        ",\n  samplerate: " +
+        this.samplerate +
+        "\n }))"
+      );
     };
 
     Raw.prototype.doEncode = function(data) {
@@ -258,8 +307,16 @@
       channels = data.length;
       samples = data[0].length;
       buf = new Int8Array(channels * samples);
-      for (chan = j = 0, ref = channels - 1; 0 <= ref ? j <= ref : j >= ref; chan = 0 <= ref ? ++j : --j) {
-        for (i = k = 0, ref1 = samples - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; i = 0 <= ref1 ? ++k : --k) {
+      for (
+        chan = j = 0, ref = channels - 1;
+        0 <= ref ? j <= ref : j >= ref;
+        chan = 0 <= ref ? ++j : --j
+      ) {
+        for (
+          i = k = 0, ref1 = samples - 1;
+          0 <= ref1 ? k <= ref1 : k >= ref1;
+          i = 0 <= ref1 ? ++k : --k
+        ) {
           buf[channels * i + chan] = data[chan][i] * 127;
         }
       }
@@ -268,7 +325,7 @@
 
     Raw.prototype.close = function(data, fn) {
       var ret;
-      ret = new Uint8Array;
+      ret = new Uint8Array();
       if (fn != null) {
         if ((data != null ? data.count : void 0) > 0) {
           ret = this.doEncode(data);
@@ -284,14 +341,15 @@
     };
 
     return Raw;
-
   })();
 
   Webcast.Recorder = (function() {
     Recorder.prototype.mime = "audio/ogg";
 
     function Recorder(arg) {
-      this.samplerate = arg.samplerate, this.bitrate = arg.bitrate, this.channels = arg.channels;
+      (this.samplerate = arg.samplerate),
+        (this.bitrate = arg.bitrate),
+        (this.channels = arg.channels);
       this.info = {
         audio: {
           channels: this.channels,
@@ -305,7 +363,7 @@
     Recorder.prototype.start = function(stream, cb) {
       var recorder;
       recorder = new MediaRecorder(stream);
-      return recorder.ondataavailable = (function(_this) {
+      return (recorder.ondataavailable = (function(_this) {
         return function(e) {
           var blob;
           if (recorder.state === "recording") {
@@ -313,39 +371,57 @@
             return cb(blob);
           }
         };
-      })(this);
+      })(this));
     };
 
     return Recorder;
-
   })();
 
   Webcast.Encoder.Resample = (function() {
     function Resample(arg) {
       var i, j, ref;
-      this.encoder = arg.encoder, this.samplerate = arg.samplerate, this.type = arg.type;
+      (this.encoder = arg.encoder),
+        (this.samplerate = arg.samplerate),
+        (this.type = arg.type);
       this.mime = this.encoder.mime;
       this.info = this.encoder.info;
       this.channels = this.encoder.channels;
-      this.ratio = parseFloat(this.encoder.samplerate) / parseFloat(this.samplerate);
+      this.ratio =
+        parseFloat(this.encoder.samplerate) / parseFloat(this.samplerate);
       this.type = this.type || Samplerate.FASTEST;
       this.resamplers = [];
       this.remaining = [];
-      for (i = j = 0, ref = this.channels - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+      for (
+        i = j = 0, ref = this.channels - 1;
+        0 <= ref ? j <= ref : j >= ref;
+        i = 0 <= ref ? ++j : --j
+      ) {
         this.resamplers[i] = new Samplerate({
           type: this.type
         });
-        this.remaining[i] = new Float32Array;
+        this.remaining[i] = new Float32Array();
       }
     }
 
     Resample.prototype.toString = function() {
-      return "(new Webcast.Encoder.Resample({\n  encoder: " + (this.encoder.toString()) + ",\n  samplerate: " + this.samplerate + ",\n  type: " + this.type + "\n }))";
+      return (
+        "(new Webcast.Encoder.Resample({\n  encoder: " +
+        this.encoder.toString() +
+        ",\n  samplerate: " +
+        this.samplerate +
+        ",\n  type: " +
+        this.type +
+        "\n }))"
+      );
     };
 
     Resample.prototype.close = function(fn) {
       var data, i, j, ref;
-      for (i = j = 0, ref = this.remaining.length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+      for (
+        i = j = 0, ref = this.remaining.length - 1;
+        0 <= ref ? j <= ref : j >= ref;
+        i = 0 <= ref ? ++j : --j
+      ) {
         data = this.resamplers[i].process({
           data: this.remaining[i],
           ratio: this.ratio,
@@ -368,12 +444,18 @@
 
     Resample.prototype.encode = function(buffer, fn) {
       var data, i, j, ref, ref1, used;
-      for (i = j = 0, ref = this.channels - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+      for (
+        i = j = 0, ref = this.channels - 1;
+        0 <= ref ? j <= ref : j >= ref;
+        i = 0 <= ref ? ++j : --j
+      ) {
         buffer[i] = this.concat(this.remaining[i], buffer[i]);
-        ref1 = this.resamplers[i].process({
+        (ref1 = this.resamplers[i].process({
           data: buffer[i],
           ratio: this.ratio
-        }), data = ref1.data, used = ref1.used;
+        })),
+          (data = ref1.data),
+          (used = ref1.used);
         this.remaining[i] = buffer[i].subarray(used);
         buffer[i] = data;
       }
@@ -381,12 +463,21 @@
     };
 
     return Resample;
-
   })();
 
   Webcast.Socket = function(arg) {
-    var hello, info, key, mime, parser, password, send, socket, url, user, value;
-    url = arg.url, mime = arg.mime, info = arg.info;
+    var hello,
+      info,
+      key,
+      mime,
+      parser,
+      password,
+      send,
+      socket,
+      url,
+      user,
+      value;
+    (url = arg.url), (mime = arg.mime), (info = arg.info);
     parser = document.createElement("a");
     parser.href = url;
     user = parser.username;
@@ -399,10 +490,10 @@
     hello = {
       mime: mime
     };
-    if ((user != null) && user !== "") {
+    if (user != null && user !== "") {
       hello.user = socket.user = user;
     }
-    if ((password != null) && password !== "") {
+    if (password != null && password !== "") {
       hello.password = socket.password = password;
     }
     for (key in info) {
@@ -412,10 +503,13 @@
     send = socket.send;
     socket.send = null;
     socket.addEventListener("open", function() {
-      return send.call(socket, JSON.stringify({
-        type: "hello",
-        data: hello
-      }));
+      return send.call(
+        socket,
+        JSON.stringify({
+          type: "hello",
+          data: hello
+        })
+      );
     });
     socket.sendData = function(data) {
       if (!socket.isOpen()) {
@@ -425,7 +519,10 @@
         return;
       }
       if (!(data instanceof ArrayBuffer)) {
-        data = data.buffer.slice(data.byteOffset, data.length * data.BYTES_PER_ELEMENT);
+        data = data.buffer.slice(
+          data.byteOffset,
+          data.length * data.BYTES_PER_ELEMENT
+        );
       }
       return send.call(socket, data);
     };
@@ -433,15 +530,17 @@
       if (!socket.isOpen()) {
         return;
       }
-      return send.call(socket, JSON.stringify({
-        type: "metadata",
-        data: metadata
-      }));
+      return send.call(
+        socket,
+        JSON.stringify({
+          type: "metadata",
+          data: metadata
+        })
+      );
     };
     socket.isOpen = function() {
       return socket.readyState === WebSocket.OPEN;
     };
     return socket;
   };
-
-}).call(this);
+}.call(this));

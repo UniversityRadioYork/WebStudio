@@ -144,7 +144,8 @@ export function Player({ id }: { id: number }) {
             {secToHHMM(playerState.timeRemaining)}
           </span>
           <span id={"ends-" + id} className="m-0 outro bypass-click">
-            End - {playerState.timeEndingAt ? playerState.timeEndingAt : "00:00:00"}
+            End -{" "}
+            {playerState.timeEndingAt ? playerState.timeEndingAt : "00:00:00"}
           </span>
           {playerState.loadedItem !== null &&
             "intro" in playerState.loadedItem && (

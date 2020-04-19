@@ -2,27 +2,27 @@ import rootReducer, { RootState } from "./rootReducer";
 import { configureStore, Action, getDefaultMiddleware } from "@reduxjs/toolkit";
 import { ThunkAction } from "redux-thunk";
 import {
-	mixerMiddleware,
-	mixerKeyboardShortcutsMiddleware,
+  mixerMiddleware,
+  mixerKeyboardShortcutsMiddleware
 } from "./mixer/state";
 import { tabSyncMiddleware } from "./optionsMenu/state";
 import { persistStore } from "redux-persist";
 
 const store = configureStore({
-	reducer: rootReducer,
-	middleware: [
-		mixerMiddleware,
-		mixerKeyboardShortcutsMiddleware,
-		tabSyncMiddleware,
-		...getDefaultMiddleware(),
-	],
+  reducer: rootReducer,
+  middleware: [
+    mixerMiddleware,
+    mixerKeyboardShortcutsMiddleware,
+    tabSyncMiddleware,
+    ...getDefaultMiddleware()
+  ]
 });
 
 if (process.env.NODE_ENV === "development" && module.hot) {
-	module.hot.accept("./rootReducer", () => {
-		const newRootReducer = require("./rootReducer").default;
-		store.replaceReducer(newRootReducer);
-	});
+  module.hot.accept("./rootReducer", () => {
+    const newRootReducer = require("./rootReducer").default;
+    store.replaceReducer(newRootReducer);
+  });
 }
 
 export const persistor = persistStore(store);

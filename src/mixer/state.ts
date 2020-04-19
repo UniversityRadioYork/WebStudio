@@ -249,18 +249,16 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].timeCurrent = action.payload.time;
-      let timeRemaining = state.players[action.payload.player].timeLength - action.payload.time;
+      let timeRemaining =
+        state.players[action.payload.player].timeLength - action.payload.time;
       state.players[action.payload.player].timeRemaining = timeRemaining;
     },
-    updateTimeEndingAt(
-      state
-    ) {
+    updateTimeEndingAt(state) {
       state.players.forEach(player => {
-
-        let date = new Date()
+        let date = new Date();
         date.setSeconds(date.getSeconds() + player.timeRemaining);
-        player.timeEndingAt = date.toLocaleString('en-GB').split(' ')[1];
-      })
+        player.timeEndingAt = date.toLocaleString("en-GB").split(" ")[1];
+      });
     },
     setTimeLength(
       state,
@@ -404,9 +402,7 @@ export const load = (
         time: 0
       })
     );
-    dispatch(
-      updateTimeEnding()
-    );
+    dispatch(updateTimeEnding());
     const state = getState().mixer.players[player];
     if (state.playOnLoad) {
       wavesurfer.play();
@@ -528,21 +524,19 @@ export const load = (
   }
 };
 
-export const updateTimeEnding = (): AppThunk => async (
-  dispatch,
-) => {
+export const updateTimeEnding = (): AppThunk => async dispatch => {
   if (!timerInterval) {
-    timerInterval = later.setInterval(() => {
-      dispatch(
-        mixerState.actions.updateTimeEndingAt()
-    )},
+    timerInterval = later.setInterval(
+      () => {
+        dispatch(mixerState.actions.updateTimeEndingAt());
+      },
       later.parse
         .recur()
         .every(1)
         .second()
     );
   }
-}
+};
 
 export const play = (player: number): AppThunk => async (
   dispatch,
