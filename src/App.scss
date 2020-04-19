@@ -29,22 +29,26 @@
   }
 
   #sidebar {
+    grid-area: sb;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     width: 250px;
     transition: all 0.3s;
-    grid-area: sb;
 
     &.active {
       width: 0;
     }
 
     .library-column {
-      height: 50%;
-      overflow-y: scroll;
+      flex-grow: 1;
+      min-height: 0;
       background: var(--sidebar-background);
+      display: flex;
+      flex-direction: column;
     }
 
     .mic-control {
-      height: 50%;
       background: var(--sidebar-background);
     }
   }

@@ -5,6 +5,7 @@ import { itemId } from "./state";
 import { Droppable } from "react-beautiful-dnd";
 import { FaCog, FaSearch, FaTimesCircle } from "react-icons/fa";
 import { Item } from "./Item";
+import "./libraries.scss";
 
 export const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
@@ -29,13 +30,13 @@ export function CentralMusicLibrary() {
     }
     setItems([]);
     setState("searching");
-    searchForTracks(artist, track).then(tracks => {
+    searchForTracks(artist, track).then((tracks) => {
       if (tracks.length === 0) {
         setState("no-results");
       } else {
         setState("results");
       }
-      tracks.forEach(track => {
+      tracks.forEach((track) => {
         const id = itemId(track);
         if (!(id in CML_CACHE)) {
           CML_CACHE[id] = track;
@@ -45,20 +46,20 @@ export function CentralMusicLibrary() {
     });
   }, [debouncedTrack, debouncedArtist]);
   return (
-    <>
+    <div className="library library-central">
       <input
         className="form-control"
         type="text"
         placeholder="Filter by track..."
         value={track}
-        onChange={e => setTrack(e.target.value)}
+        onChange={(e) => setTrack(e.target.value)}
       />
       <input
         className="form-control"
         type="text"
         placeholder="Filter by artist..."
         value={artist}
-        onChange={e => setArtist(e.target.value)}
+        onChange={(e) => setArtist(e.target.value)}
       />
       <span
         className={
@@ -78,7 +79,11 @@ export function CentralMusicLibrary() {
       </span>
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
-          <div ref={provided.innerRef} {...provided.droppableProps}>
+          <div
+            className="library-track-list"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
             {items.map((item, index) => (
               <Item key={itemId(item)} item={item} index={index} column={-1} />
             ))}
@@ -86,7 +91,7 @@ export function CentralMusicLibrary() {
           </div>
         )}
       </Droppable>
-    </>
+    </div>
   );
 }
 
@@ -100,7 +105,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
   useEffect(() => {
     async function load() {
       const libItems = await loadAuxLibrary(libraryId);
-      libItems.forEach(item => {
+      libItems.forEach((item) => {
         const id = itemId(item);
         if (!(id in AUX_CACHE)) {
           AUX_CACHE[id] = item;
@@ -111,20 +116,25 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
     load();
   }, [libraryId]);
   return (
-    <>
+    <div className="library library-aux">
       <input
         className="form-control"
         type="text"
         placeholder="Filter..."
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)}
       />
+
       <Droppable droppableId="$AUX">
         {(provided, snapshot) => (
-          <div ref={provided.innerRef} {...provided.droppableProps}>
+          <div
+            className="library-track-list"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
             {items
               .filter(
-                its =>
+                (its) =>
                   its.title
                     .toString()
                     .toLowerCase()
@@ -142,6 +152,6 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
           </div>
         )}
       </Droppable>
-    </>
+    </div>
   );
 }
