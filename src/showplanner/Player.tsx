@@ -143,6 +143,9 @@ export function Player({ id }: { id: number }) {
           <span id={"remaining-" + id} className="m-0 remaining bypass-click">
             {secToHHMM(playerState.timeRemaining)}
           </span>
+          <span id={"ends-" + id} className="m-0 outro bypass-click">
+            End - {playerState.timeEndingAt ? playerState.timeEndingAt : "00:00:00"}
+          </span>
           {playerState.loadedItem !== null &&
             "intro" in playerState.loadedItem && (
               <span className="m-0 intro bypass-click">
@@ -153,7 +156,7 @@ export function Player({ id }: { id: number }) {
                         : 0
                     )
                   : "00:00:00"}{" "}
-                - in
+                - In
               </span>
             )}
           <div

@@ -13,7 +13,7 @@ import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
-
+import * as later from "later";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 
@@ -67,6 +67,8 @@ export async function playNewsIntro() {
   await newsStartCountdownEl.play();
 }
 
+let timerInterval: later.Timer;
+
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
@@ -84,6 +86,7 @@ interface PlayerState {
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
+  timeEndingAt: string | null;
   playOnLoad: Boolean;
   autoAdvance: Boolean;
   repeat: PlayerRepeatEnum;
@@ -118,6 +121,7 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
+        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -134,6 +138,7 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
+        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -150,6 +155,7 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
+        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -179,6 +185,7 @@ const mixerState = createSlice({
       state.players[action.payload.player].loading = 0;
       state.players[action.payload.player].timeCurrent = 0;
       state.players[action.payload.player].timeRemaining = 0;
+      state.players[action.payload.player].timeEndingAt = null;
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
@@ -241,8 +248,18 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].timeCurrent = action.payload.time;
-      state.players[action.payload.player].timeRemaining =
-        state.players[action.payload.player].timeLength - action.payload.time;
+      let timeRemaining = state.players[action.payload.player].timeLength - action.payload.time;
+      state.players[action.payload.player].timeRemaining = timeRemaining;
+    },
+    updateTimeEndingAt(
+      state
+    ) {
+      state.players.forEach(player => {
+
+        let date = new Date()
+        date.setSeconds(date.getSeconds() + player.timeRemaining);
+        player.timeEndingAt = date.toLocaleString('en-GB').split(' ')[1];
+      })
     },
     setTimeLength(
       state,
@@ -386,6 +403,9 @@ export const load = (
         time: 0
       })
     );
+    dispatch(
+      updateTimeEnding()
+    );
     const state = getState().mixer.players[player];
     if (state.playOnLoad) {
       wavesurfer.play();
@@ -506,6 +526,22 @@ export const load = (
     }
   }
 };
+
+export const updateTimeEnding = (): AppThunk => async (
+  dispatch,
+) => {
+  if (!timerInterval) {
+    timerInterval = later.setInterval(() => {
+      dispatch(
+        mixerState.actions.updateTimeEndingAt()
+    )},
+      later.parse
+        .recur()
+        .every(1)
+        .second()
+    );
+  }
+}
 
 export const play = (player: number): AppThunk => async (
   dispatch,
