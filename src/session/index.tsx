@@ -5,7 +5,7 @@ import { MYRADIO_NON_API_BASE } from "../api";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 
-const SessionHandler: React.FC = function () {
+const SessionHandler: React.FC = function() {
   const dispatch = useDispatch();
 
   useEffect(() => {

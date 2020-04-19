@@ -43,12 +43,7 @@ jobs:
     # ESLint
     - name: ESLint Action
       run: node_modules/.bin/eslint src/ --ext .ts,.tsx
-
+    
     # Prettier
-    - name: Prettify the JS Code
-      uses: creyD/prettier_action@v2.1
-      with:
-        prettier_options: '--write src/**/*.{js,ts,tsx,css,scss}'
-        branch: master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Prettier
+      run: node_modules/.bin/prettier -c 'src/**/*.{js,ts,tsx,css,scss}'
