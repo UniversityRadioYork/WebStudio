@@ -43,3 +43,7 @@ jobs:
     # ESLint
     - name: ESLint Action
       run: node_modules/.bin/eslint src/ --ext .ts,.tsx
+    
+    # Prettier
+    - name: Prettier
+      run: node_modules/.bin/prettier -c 'src/**/*.{js,ts,tsx,css,scss}'
