@@ -54,12 +54,12 @@ export const Item = memo(function Item({
         <div
           ref={provided.innerRef}
           key={id}
-          className={`track ${
+          className={`item ${
             column >= 0 &&
             playerState &&
             playerState.loadedItem !== null &&
             itemId(playerState.loadedItem) === id
-              ? "track-active"
+              ? "active"
               : ""
           }`}
           onClick={triggerClick}

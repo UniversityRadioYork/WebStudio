@@ -1,4 +1,4 @@
-.track {
+.item {
   display: block;
   cursor: pointer;
   padding: 0.2em 5px;
@@ -7,7 +7,7 @@
   &:hover {
     background-color: #78acf1;
   }
-  &.track-active {
+  &.active {
     background-color: #10c998 !important;
   }
 

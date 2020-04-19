@@ -80,7 +80,7 @@ export function CentralMusicLibrary() {
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
           <div
-            className="library-track-list"
+            className="library-item-list"
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
@@ -127,7 +127,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
       <Droppable droppableId="$AUX">
         {(provided, snapshot) => (
           <div
-            className="library-track-list"
+            className="library-item-list"
             ref={provided.innerRef}
             {...provided.droppableProps}
           >

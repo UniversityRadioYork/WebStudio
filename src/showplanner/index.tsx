@@ -47,7 +47,7 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
       <Droppable droppableId={id.toString(10)}>
         {(provided, snapshot) => (
           <div
-            className="channel-track-list"
+            className="channel-item-list"
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
