@@ -172,7 +172,11 @@ export function Player({ id }: { id: number }) {
         </div>
       </div>
 
-      <div className="sp-mixer-buttons">
+      <div className={"sp-mixer-buttons " +
+        (playerState.state === "playing" && playerState.volume === 0
+            ? "sp-muted-player"
+            : "")
+      }>
         <div
           className="sp-mixer-buttons-backdrop"
           style={{
