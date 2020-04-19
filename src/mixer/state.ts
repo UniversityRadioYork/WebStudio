@@ -17,7 +17,8 @@ import WaveSurfer from "wavesurfer.js";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 
-const audioContext = new AudioContext();
+const audioContext = new (window.AudioContext ||
+  (window as any).webkitAudioContext)();
 const wavesurfers: WaveSurfer[] = [];
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
