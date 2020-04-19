@@ -171,7 +171,9 @@ function incrReducer(state: number, action: any) {
   return state + 1;
 }
 
-const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
+const Showplanner: React.FC<{ timeslotId: number }> = function ({
+  timeslotId,
+}) {
   const {
     plan: showplan,
     planLoadError,
@@ -200,7 +202,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     if (element) {
       element.classList.toggle("active");
     }
-    setTimeout(function() {
+    setTimeout(function () {
       dispatch(MixerState.redrawWavesurfers());
     }, 500);
   }

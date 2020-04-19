@@ -64,10 +64,7 @@ export class WebRTCStreamer extends Streamer {
       if (state === "CONNECTED") {
         this.newsInterval = later.setInterval(
           this.doTheNews,
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
+          later.parse.recur().on(59).minute()
         );
       } else if (state === "CONNECTION_LOST" || state === "NOT_CONNECTED") {
         this.newsInterval?.clear();
@@ -110,30 +107,14 @@ export class WebRTCStreamer extends Streamer {
       // Sanity check
       const now = new Date();
       if (now.getSeconds() < 45) {
-        later.setTimeout(
-          async () => {
-            await MixerState.playNewsIntro();
-          },
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
-            .on(45)
-            .second()
-        );
+        later.setTimeout(async () => {
+          await MixerState.playNewsIntro();
+        }, later.parse.recur().on(59).minute().on(45).second());
       }
       if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
-        later.setTimeout(
-          async () => {
-            await MixerState.playNewsEnd();
-          },
-          later.parse
-            .recur()
-            .on(1)
-            .minute()
-            .on(55)
-            .second()
-        );
+        later.setTimeout(async () => {
+          await MixerState.playNewsEnd();
+        }, later.parse.recur().on(1).minute().on(55).second());
       }
     }
   }
@@ -165,9 +146,9 @@ export class WebRTCStreamer extends Streamer {
             }
             // TODO: maybe delete non-Opus candidates?
           }
-          track.fmtp[opusIndex].config += `; maxaveragebitrate=${192 *
-            2 *
-            1024}; stereo=1; sprop-stereo=1 ; cbr=1`;
+          track.fmtp[opusIndex].config += `; maxaveragebitrate=${
+            192 * 2 * 1024
+          }; stereo=1; sprop-stereo=1 ; cbr=1`;
         });
 
         offer.sdp = SdpTransform.write(parsed);

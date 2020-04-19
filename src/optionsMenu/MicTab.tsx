@@ -95,7 +95,7 @@ export function MicTab() {
         disabled={micList === null}
       >
         <option value={"$NONE"} disabled label="Choose a microphone" />
-        {(micList || []).map(function(e, i) {
+        {(micList || []).map(function (e, i) {
           return (
             <option value={e.deviceId} key={i}>
               {e.label !== "" ? e.label : e.deviceId}
