@@ -80,44 +80,9 @@ button{
 }
 
 
-/*.player div {
-  overflow-x: hidden;
-}*/
-.player {
-  opacity: 0.5;
-}
-.player.loaded {
-  opacity: 1;
-}
 
 .sp-player-button {
   height: 2em;
-}
-
-.sp-mixer-buttons {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  position: relative;
-}
-
-.sp-mixer-buttons-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background-color: #78acf1;
-}
-
-.sp-mixer-buttons.disabled .sp-mixer-buttons-backdrop {
-  background-color: #999;
-}
-
-.sp-mixer-buttons button {
-  flex: 1;
-  background: transparent;
-  border: 1px solid black;
-  z-index: 100;
 }
 
 .sp-alert {

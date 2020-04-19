@@ -2,8 +2,9 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  border: 1px solid rgba(0, 0, 0, 0.5);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  background: var(--channel-background);
+  color: var(--channel-color);
 
   .channel-track-list {
     flex-grow: 1;
@@ -12,5 +13,38 @@
 
   .player {
     height: auto;
+    background: var(--player-background);
+    color: var(--player-color);
+    opacity: 0.5;
+
+    &.loaded {
+      opacity: 1;
+    }
+  }
+}
+
+.mixer-buttons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  position: relative;
+
+  button {
+    flex: 1;
+    background: transparent;
+    border: 1px solid black;
+    z-index: 100;
+  }
+
+  .mixer-buttons-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: var(--mixer-backdrop);
+  }
+
+  &.disabled .mixer-buttons-backdrop {
+    background-color: var(--mixer-backdrop-disabled);
   }
 }
