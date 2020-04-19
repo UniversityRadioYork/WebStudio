@@ -4,11 +4,7 @@ import * as later from "later";
 import * as BroadcastState from "./state";
 import * as MixerState from "../mixer/state";
 
-import {
-  Streamer,
-  ConnectionStateListener,
-  ConnectionStateEnum
-} from "./streamer";
+import { Streamer, ConnectionStateEnum } from "./streamer";
 import { Dispatch } from "redux";
 import { broadcastApiRequest } from "../api";
 

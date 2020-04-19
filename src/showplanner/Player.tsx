@@ -58,7 +58,7 @@ export function Player({ id }: { id: number }) {
           </button>
           <button
             className={
-              (playerState.repeat != "none"
+              (playerState.repeat !== "none"
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
@@ -143,6 +143,10 @@ export function Player({ id }: { id: number }) {
           <span id={"remaining-" + id} className="m-0 remaining bypass-click">
             {secToHHMM(playerState.timeRemaining)}
           </span>
+          <span id={"ends-" + id} className="m-0 outro bypass-click">
+            End -{" "}
+            {playerState.timeEndingAt ? playerState.timeEndingAt : "00:00:00"}
+          </span>
           {playerState.loadedItem !== null &&
             "intro" in playerState.loadedItem && (
               <span className="m-0 intro bypass-click">
@@ -153,7 +157,7 @@ export function Player({ id }: { id: number }) {
                         : 0
                     )
                   : "00:00:00"}{" "}
-                - in
+                - In
               </span>
             )}
           <div
@@ -171,8 +175,14 @@ export function Player({ id }: { id: number }) {
           ></div>
         </div>
       </div>
-
-      <div className="mixer-buttons">
+      <div
+        className={
+          "mixer-buttons " +
+          (playerState.state === "playing" && playerState.volume === 0
+            ? "sp-muted-player"
+            : "")
+        }
+      >
         <div
           className="mixer-buttons-backdrop"
           style={{

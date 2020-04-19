@@ -4,7 +4,6 @@ export function convertModelToFormData(
   namespace = ""
 ): FormData {
   let formData = form || new FormData();
-  let formKey;
 
   for (let propertyName in model) {
     if (!model.hasOwnProperty(propertyName) || !model[propertyName]) continue;
@@ -43,12 +42,12 @@ export function secToHHMM(sec: number = 0) {
   d.setMinutes(0);
   d.setSeconds(0);
   d = new Date(d.getTime() + Math.ceil(sec) * 1000);
-  return d.toLocaleString('en-GB').split(' ')[1];
-};
+  return d.toLocaleString("en-GB").split(" ")[1];
+}
 
 export function timestampToDateTime(timestamp: number) {
   var date = new Date(timestamp * 1000);
-  var str = date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString("en-GB")
+  var str =
+    date.toLocaleDateString("en-GB") + " " + date.toLocaleTimeString("en-GB");
   return str;
-
 }

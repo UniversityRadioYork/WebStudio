@@ -13,11 +13,12 @@ import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
-
+import * as later from "later";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 
-const audioContext = new AudioContext();
+const audioContext = new (window.AudioContext ||
+  (window as any).webkitAudioContext)();
 const wavesurfers: WaveSurfer[] = [];
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -27,8 +28,9 @@ const loadAbortControllers: AbortController[] = [];
 
 let micMedia: MediaStream | null = null;
 let micSource: MediaStreamAudioSourceNode | null = null;
-let micGain: GainNode | null = null;
+let micCalibrationGain: GainNode | null = null;
 let micCompressor: DynamicsCompressorNode | null = null;
+let micMixGain: GainNode | null = null;
 
 const finalCompressor = audioContext.createDynamicsCompressor();
 finalCompressor.ratio.value = 20; //brickwall destination comressor
@@ -66,6 +68,8 @@ export async function playNewsIntro() {
   await newsStartCountdownEl.play();
 }
 
+let timerInterval: later.Timer;
+
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
@@ -83,6 +87,7 @@ interface PlayerState {
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
+  timeEndingAt: string | null;
   playOnLoad: Boolean;
   autoAdvance: Boolean;
   repeat: PlayerRepeatEnum;
@@ -92,8 +97,7 @@ interface PlayerState {
 interface MicState {
   open: boolean;
   openError: null | MicErrorEnum;
-  volume: number;
-  gain: number;
+  volume: 1 | 0;
   baseGain: number;
   id: string | null;
   calibration: boolean;
@@ -118,6 +122,7 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
+        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -134,6 +139,7 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
+        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -150,6 +156,7 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
+        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -179,6 +186,7 @@ const mixerState = createSlice({
       state.players[action.payload.player].loading = 0;
       state.players[action.payload.player].timeCurrent = 0;
       state.players[action.payload.player].timeRemaining = 0;
+      state.players[action.payload.player].timeEndingAt = null;
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
@@ -227,12 +235,8 @@ const mixerState = createSlice({
       state.mic.open = true;
       state.mic.id = action.payload;
     },
-    setMicLevels(
-      state,
-      action: PayloadAction<{ volume: number; gain: number }>
-    ) {
+    setMicLevels(state, action: PayloadAction<{ volume: 1 | 0 }>) {
       state.mic.volume = action.payload.volume;
-      state.mic.gain = action.payload.gain;
     },
     setMicBaseGain(state, action: PayloadAction<number>) {
       state.mic.baseGain = action.payload;
@@ -245,8 +249,16 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].timeCurrent = action.payload.time;
-      state.players[action.payload.player].timeRemaining =
+      let timeRemaining =
         state.players[action.payload.player].timeLength - action.payload.time;
+      state.players[action.payload.player].timeRemaining = timeRemaining;
+    },
+    updateTimeEndingAt(state) {
+      state.players.forEach(player => {
+        let date = new Date();
+        date.setSeconds(date.getSeconds() + player.timeRemaining);
+        player.timeEndingAt = date.toLocaleString("en-GB").split(" ")[1];
+      });
     },
     setTimeLength(
       state,
@@ -361,7 +373,7 @@ export const load = (
   console.log("loading");
 
   let waveform = document.getElementById("waveform-" + player.toString());
-  if (waveform != undefined) {
+  if (waveform !== null) {
     waveform.innerHTML = "";
   }
   const wavesurfer = WaveSurfer.create({
@@ -390,6 +402,7 @@ export const load = (
         time: 0
       })
     );
+    dispatch(updateTimeEnding());
     const state = getState().mixer.players[player];
     if (state.playOnLoad) {
       wavesurfer.play();
@@ -413,7 +426,7 @@ export const load = (
         time: wavesurfer.getCurrentTime()
       })
     );
-  })
+  });
   wavesurfer.on("finish", () => {
     dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
     const state = getState().mixer.players[player];
@@ -508,6 +521,20 @@ export const load = (
       console.error(e);
       dispatch(mixerState.actions.itemLoadError({ player }));
     }
+  }
+};
+
+export const updateTimeEnding = (): AppThunk => async dispatch => {
+  if (!timerInterval) {
+    timerInterval = later.setInterval(
+      () => {
+        dispatch(mixerState.actions.updateTimeEndingAt());
+      },
+      later.parse
+        .recur()
+        .every(1)
+        .second()
+    );
   }
 };
 
@@ -703,18 +730,25 @@ export const openMicrophone = (micID: string): AppThunk => async (
     return;
   }
   // Okay, we have a mic stream, time to do some audio nonsense
-  micSource = audioContext.createMediaStreamSource(micMedia);
-  micGain = audioContext.createGain();
   const state = getState().mixer.mic;
-  micGain.gain.value = state.gain * state.baseGain;
+  micSource = audioContext.createMediaStreamSource(micMedia);
+
+  micCalibrationGain = audioContext.createGain();
+  micCalibrationGain.gain.value = state.baseGain;
+
   micCompressor = audioContext.createDynamicsCompressor();
   micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
   micCompressor.threshold.value = -18;
   micCompressor.attack.value = 0.01;
   micCompressor.release.value = 0.1;
+
+  micMixGain = audioContext.createGain();
+  micMixGain.gain.value = state.volume;
+
   micSource
-    .connect(micGain)
+    .connect(micCalibrationGain)
     .connect(micCompressor)
+    .connect(micMixGain)
     .connect(finalCompressor);
   dispatch(mixerState.actions.micOpen(micID));
 
@@ -767,7 +801,7 @@ export const startMicCalibration = (): AppThunk => async (
     sauce.load();
     input = audioContext.createMediaElementSource(sauce);
   } else {
-    input = micCompressor!;
+    input = micCalibrationGain!;
   }
   analyser = audioContext.createAnalyser();
   analyser.fftSize = 8192;
@@ -784,11 +818,9 @@ export function getMicAnalysis() {
     float = new Float32Array(analyser.fftSize);
   }
   analyser.getFloatTimeDomainData(float);
-  let sumOfSquares = 0;
   let peak = 0;
   for (let i = 0; i < float.length; i++) {
     peak = Math.max(peak, float[i] ** 2);
-    sumOfSquares += float[i] ** 2;
   }
   return 10 * Math.log10(peak);
 }
@@ -816,11 +848,13 @@ export const mixerMiddleware: Middleware<
     }
   });
   if (
-    (newState.mic.gain !== oldState.mic.gain ||
-      newState.mic.baseGain !== oldState.mic.baseGain) &&
-    micGain !== null
+    newState.mic.baseGain !== oldState.mic.baseGain &&
+    micCalibrationGain !== null
   ) {
-    micGain.gain.value = newState.mic.gain * newState.mic.baseGain;
+    micCalibrationGain.gain.value = newState.mic.baseGain;
+  }
+  if (newState.mic.volume !== oldState.mic.volume && micMixGain !== null) {
+    micMixGain.gain.value = newState.mic.volume;
   }
   return result;
 };

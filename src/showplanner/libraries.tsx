@@ -44,7 +44,7 @@ export function CentralMusicLibrary() {
       });
       setItems(tracks);
     });
-  }, [debouncedTrack, debouncedArtist]);
+  }, [debouncedTrack, debouncedArtist, artist, track]);
   return (
     <div className="library library-central">
       <input
@@ -99,7 +99,6 @@ export const AUX_CACHE: { [auxid: string]: AuxItem } = {};
 
 export function AuxLibrary({ libraryId }: { libraryId: string }) {
   const [title, setTitle] = useState("");
-  const debouncedTitle = useDebounce(title, 1000);
   const [items, setItems] = useState<AuxItem[]>([]);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
-import React, { useReducer, useState, Suspense, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useReducer, useState } from "react";
+import { useSelector } from "react-redux";
 import qs from "qs";
 import "./App.css";
 import Showplanner from "./showplanner";
@@ -35,7 +35,7 @@ const App: React.FC = () => {
     currentUser,
     userLoading,
     currentTimeslot,
-    timeslotLoading,
+    timeslotLoading
   } = useSelector((state: RootState) => state.session);
 
   if (
@@ -62,8 +62,8 @@ const App: React.FC = () => {
             type="text"
             placeholder="enter a timeslot id"
             value={inputVal}
-            onChange={(e) => setInputVal(e.target.value)}
-            onKeyPress={(e) => enterKeyCont(e.key)}
+            onChange={e => setInputVal(e.target.value)}
+            onKeyPress={e => enterKeyCont(e.key)}
             autoFocus
           />
           <button onClick={cont}>Continue</button>

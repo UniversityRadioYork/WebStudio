@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 
@@ -14,7 +14,7 @@ type MicErrorEnum =
 function reduceToInputs(devices: MediaDeviceInfo[]) {
   var temp: MediaDeviceInfo[] = [];
   devices.forEach(device => {
-    if (device.kind == "audioinput") {
+    if (device.kind === "audioinput") {
       temp.push(device);
     }
   });
@@ -62,7 +62,7 @@ export function MicTab() {
   const rafRef = useRef<number | null>(null);
   const [peak, setPeak] = useState(-Infinity);
 
-  const animate = () => {
+  const animate = useCallback(() => {
     if (state.calibration) {
       const result = MixerState.getMicAnalysis();
       setPeak(result);
@@ -71,7 +71,7 @@ export function MicTab() {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
-  };
+  }, [state.calibration]);
 
   useEffect(() => {
     if (state.calibration) {
@@ -80,7 +80,7 @@ export function MicTab() {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
-  }, [state.calibration]);
+  }, [animate, state.calibration]);
 
   return (
     <>
@@ -94,7 +94,7 @@ export function MicTab() {
         onChange={e => setMicSource(e.target.value)}
         disabled={micList === null}
       >
-        <option value={"$NONE"} disabled label="Choose a microphone"></option>
+        <option value={"$NONE"} disabled label="Choose a microphone" />
         {(micList || []).map(function(e, i) {
           return (
             <option value={e.deviceId} key={i}>
@@ -137,7 +137,7 @@ export function MicTab() {
             min={1.0 / 10}
             max={3}
             step={0.05}
-            value={state.gain}
+            value={state.baseGain}
             onChange={e =>
               dispatch(MixerState.setMicBaseGain(parseFloat(e.target.value)))
             }

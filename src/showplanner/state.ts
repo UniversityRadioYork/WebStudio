@@ -97,7 +97,9 @@ const showplan = createSlice({
             // no-op
             break;
           case "RemoveItem":
-            const idx = state.plan!.findIndex(x => itemId(x) === op.timeslotitemid);
+            const idx = state.plan!.findIndex(
+              x => itemId(x) === op.timeslotitemid
+            );
             if (idx < 0) {
               throw new Error();
             }
@@ -131,7 +133,7 @@ const showplan = createSlice({
     },
     addAuxPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
       state.auxPlaylists = state.auxPlaylists.concat(action.payload);
-    },
+    }
   }
 });
 
@@ -256,7 +258,7 @@ export const moveItem = (
   // if (!result.every(x => x.status)) {
   //   dispatch(showplan.actions.planSaveError("Server says no!"));
   // } else {
-    dispatch(showplan.actions.setPlanSaving(false));
+  dispatch(showplan.actions.setPlanSaving(false));
   // }
 };
 
@@ -411,7 +413,7 @@ export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {
     }
 
     if (ops.length > 0) {
-      console.log("Is corrupt, repairing locally")
+      console.log("Is corrupt, repairing locally");
       dispatch(showplan.actions.applyOps(ops));
       /*
       console.log("Repairing showplan", ops);

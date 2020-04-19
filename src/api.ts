@@ -3,7 +3,6 @@ import qs from "qs";
 export const MYRADIO_NON_API_BASE = process.env.REACT_APP_MYRADIO_NONAPI_BASE!;
 export const MYRADIO_BASE_URL = process.env.REACT_APP_MYRADIO_BASE!;
 export const BROADCAST_API_BASE_URL = process.env.REACT_APP_BROADCAST_API_BASE!;
-const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
 export class ApiException extends Error {}
 
@@ -288,6 +287,8 @@ export interface NewsEntry {
   seen?: boolean;
 }
 
-export function getLatestNewsItem(newsFeedId: number): Promise<NewsEntry | null> {
+export function getLatestNewsItem(
+  newsFeedId: number
+): Promise<NewsEntry | null> {
   return myradioApiRequest(`/news/latestnewsitem/${newsFeedId}`, "GET", {});
 }

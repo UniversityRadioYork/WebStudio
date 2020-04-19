@@ -6,7 +6,6 @@ import { RootState } from "../rootReducer";
 
 import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
-import { FaCircle } from "react-icons/fa";
 import { ContextMenuTrigger } from "react-contextmenu";
 import './item.scss';
 

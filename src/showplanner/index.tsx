@@ -1,4 +1,4 @@
-import React, { useState, useReducer, useEffect, memo } from "react";
+import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
 import { FaCaretSquareDown, FaAlignJustify } from "react-icons/fa";
@@ -25,7 +25,6 @@ import {
 } from "./state";
 
 import * as MixerState from "../mixer/state";
-import * as BroadcastState from "../broadcast/state";
 import * as OptionsMenuState from "../optionsMenu/state";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
 import {
@@ -34,7 +33,7 @@ import {
   AuxLibrary,
   AUX_CACHE
 } from "./libraries";
-import { Player, USE_REAL_GAIN_VALUE } from "./Player";
+import { Player } from "./Player";
 
 import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
@@ -139,7 +138,7 @@ function MicControl() {
         <div
           className="mixer-buttons-backdrop"
           style={{
-            width: (USE_REAL_GAIN_VALUE ? state.gain : state.volume) * 100 + "%"
+            width: state.volume * 100 + "%"
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
