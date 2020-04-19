@@ -139,36 +139,6 @@ button {
   -webkit-animation: green-flash steps(1) 0.5s infinite;
   animation: green-flash steps(1) 0.5s infinite;
 }
-@-webkit-keyframes green-flash {
-  0% {
-  }
-  50% {
-    background-color: rgb(199, 255, 199);
-  }
-}
-@keyframes green-flash {
-  0% {
-  }
-  50% {
-    background-color: rgb(199, 255, 199);
-  }
-}
-
-/* Flash class and keyframe animation */
-@-webkit-keyframes red-flash {
-  0% {
-  }
-  50% {
-    background-color: rgb(255, 199, 199);
-  }
-}
-@keyframes red-flash {
-  0% {
-  }
-  50% {
-    background-color: rgb(255, 199, 199);
-  }
-}
 
 .ReactModal__Overlay {
   z-index: 10000;
