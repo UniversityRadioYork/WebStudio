@@ -137,7 +137,7 @@ export function MicTab() {
             min={1.0 / 10}
             max={3}
             step={0.05}
-            value={state.gain}
+            value={state.baseGain}
             onChange={e =>
               dispatch(MixerState.setMicBaseGain(parseFloat(e.target.value)))
             }
