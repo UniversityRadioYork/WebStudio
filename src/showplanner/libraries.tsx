@@ -68,7 +68,6 @@ export function CentralMusicLibrary() {
         {state === "not-searching" && <FaSearch />}
         {state === "searching" && <FaCog className="fa-spin" />}
         {state === "no-results" && <FaTimesCircle />}
-        <br />
         {state === "not-searching"
           ? "Enter a search term."
           : state === "searching"
