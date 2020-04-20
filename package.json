@@ -1,6 +1,6 @@
 {
   "name": "webstudio",
-  "version": "0.0.18",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@babel/core": "7.6.0",
@@ -36,6 +36,7 @@
     "camelcase": "^5.2.0",
     "case-sensitive-paths-webpack-plugin": "2.2.0",
     "css-loader": "2.1.1",
+    "date-fns": "^2.12.0",
     "dotenv": "6.2.0",
     "dotenv-expand": "5.1.0",
     "eslint": "^6.1.0",
@@ -78,6 +79,7 @@
     "react-dnd": "^9.4.0",
     "react-dnd-html5-backend": "^9.4.0",
     "react-dom": "^16.13.1",
+    "react-icons": "^3.9.0",
     "react-live-clock": "^4.0.5",
     "react-modal": "^3.11.2",
     "react-redux": "^7.1.3",
@@ -123,6 +125,7 @@
     ]
   },
   "devDependencies": {
+    "@ury1350/prettier-config": "^1.0.0",
     "node-sass": "^4.13.1",
     "prettier": "^1.19.1"
   },
@@ -178,5 +181,6 @@
     "presets": [
       "react-app"
     ]
-  }
+  },
+  "prettier": "@ury1350/prettier-config"
 }

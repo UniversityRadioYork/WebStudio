@@ -5,7 +5,7 @@ import os
 import re
 import sys
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from types import TracebackType
 from typing import Optional, Any, Type, Dict
 
@@ -121,6 +121,7 @@ class Session(object):
     connection_state: Optional[str]
     pc: Optional[Any]
     connection_id: str
+    connected_at: datetime
     lock: asyncio.Lock
     running: bool
     ended: bool
@@ -136,9 +137,13 @@ class Session(object):
         self.ended = False
         self.lock = asyncio.Lock()
         self.running = False
+        self.connected_at = datetime.now(timezone.utc)
 
     def to_dict(self) -> Dict[str, str]:
-        return {"connection_id": self.connection_id}
+        return {
+            "connection_id": self.connection_id,
+            "connected_at": self.connected_at.strftime("%Y-%m-%dT%H:%M:%S%z")
+        }
 
     async def activate(self) -> None:
         print(self.connection_id, "Activating")

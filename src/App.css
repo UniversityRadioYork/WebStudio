@@ -25,93 +25,17 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  margin-left: .5%;
-  margin-right: .5%;
-}
-
-.sp {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  height: calc(100% - 60px);
-  align-items: stretch;
-  overflow: hidden;
-}
-
-.sp-col {
-  display: flex;
-  overflow-y: scroll;
-  margin-left: .2vw;
-  margin-right: .2vw;
-  padding: .2vw;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  flex-grow: 1;
-
-}
-
-.sp-main-col{
-  display: flex;
-  flex: 1;
-  justify-content: flex-end;
-  flex-direction: column;
-}
-
-#sidebar {
-  min-width: 250px;
-  max-width: 250px;
-  transition: all 0.3s;
-}
-.sidebar-toggle {
-  flex-grow: 0;
-  width: auto;
-
-}
-.sidebar-toggle .btn {
-  writing-mode: vertical-rl;
-  flex: 1;
+  margin-left: 0.5%;
+  margin-right: 0.5%;
 }
 
 .sp-main-col.active {
   margin-right: -250px;
 }
 
-.sp-col-inner {
-  flex: 1;
-}
-
-.sp-track {
-  display: block;
-  /* overflow-x: hidden; */
-  /* height: 1.6em; */
-  margin: 0.2em 0;
-  /* overflow: hidden; */
-  /* height: 1.3em; */
-  cursor: pointer;
-}
-
-.sp-track:hover {
-  background-color: #78acf1;
-}
-
-.sp-track .central {
-  color: green;
-}
-
-.sp-track .aux {
-  color: #07F;
-}
-
-.sp-track .ghost {
-  color: gray;
-}
-
-.sp-track-active {
-  background-color: #10c998 !important;
-}
-
-html, body, #root {
+html,
+body,
+#root {
   padding: 0;
   margin: 0;
   width: 100%;
@@ -133,10 +57,10 @@ html, body, #root {
   cursor: not-allowed;
 }
 
-.mediaButtons button{
+.mediaButtons button {
   width: 32%;
   border-style: none;
-  margin: .5%;
+  margin: 0.5%;
   padding: 2%;
 }
 
@@ -152,49 +76,8 @@ html, body, #root {
   background-color: #db2c2c;
 }
 
-button{
+button {
   background-color: rgb(199, 199, 199);
-}
-
-
-/*.player div {
-  overflow-x: hidden;
-}*/
-.player {
-  opacity: 0.5;
-}
-.player.loaded {
-  opacity: 1;
-}
-
-.sp-player-button {
-  height: 2em;
-}
-
-.sp-mixer-buttons {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  position: relative;
-}
-
-.sp-mixer-buttons-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background-color: #78acf1;
-}
-
-.sp-mixer-buttons.disabled .sp-mixer-buttons-backdrop {
-  background-color: #999;
-}
-
-.sp-mixer-buttons button {
-  flex: 1;
-  background: transparent;
-  border: 1px solid black;
-  z-index: 100;
 }
 
 .sp-alert {
@@ -210,19 +93,20 @@ button{
   display: block;
   z-index: 5;
   /* padding: 1px; */
-
 }
-.waveform .current, .waveform .remaining, .waveform .length {
-
+.waveform .current,
+.waveform .remaining,
+.waveform .length {
   font-weight: 800;
-
 }
-.waveform .remaining, .waveform .outro {
+.waveform .remaining,
+.waveform .outro {
   right: 0;
   position: absolute;
-
 }
-.waveform .intro, .waveform .outro, .waveform .length  {
+.waveform .intro,
+.waveform .outro,
+.waveform .length {
   bottom: 0;
   position: absolute;
 }
@@ -243,7 +127,7 @@ button{
   height: 6vh !important;
 }
 .waveform .loading {
-  background: #CCCCFF;
+  background: #ccccff;
 }
 
 .bypass-click {
@@ -252,16 +136,8 @@ button{
 
 /* Flash class and keyframe animation */
 .sp-ending-soon {
-	-webkit-animation: flash steps(1) 0.5s infinite;
-	animation: flash steps(1) 0.5s infinite;
-}
-@-webkit-keyframes flash {
-	0% { }
-	50% { background-color: rgb(199, 255, 199); }
-}
-@keyframes flash {
-  0% { }
-  50% { background-color: rgb(199, 255, 199); }
+  -webkit-animation: green-flash steps(1) 0.5s infinite;
+  animation: green-flash steps(1) 0.5s infinite;
 }
 
 .ReactModal__Overlay {

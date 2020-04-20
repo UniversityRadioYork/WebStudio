@@ -53,7 +53,7 @@ const initialState: ShowplanState = {
   planSaving: false,
   planSaveError: null,
   auxPlaylists: [],
-  userPlaylists: []
+  userPlaylists: [],
 };
 
 const showplan = createSlice({
@@ -84,11 +84,11 @@ const showplan = createSlice({
         return;
       }
       console.log("Applying op sequence", action.payload);
-      action.payload.forEach(op => {
+      action.payload.forEach((op) => {
         switch (op.op) {
           case "MoveItem":
             const item = state.plan!.find(
-              x => itemId(x) === op.timeslotitemid
+              (x) => itemId(x) === op.timeslotitemid
             )!;
             item.channel = op.channel;
             item.weight = op.weight;
@@ -97,7 +97,9 @@ const showplan = createSlice({
             // no-op
             break;
           case "RemoveItem":
-            const idx = state.plan!.findIndex(x => itemId(x) === op.timeslotitemid);
+            const idx = state.plan!.findIndex(
+              (x) => itemId(x) === op.timeslotitemid
+            );
             if (idx < 0) {
               throw new Error();
             }
@@ -119,7 +121,7 @@ const showplan = createSlice({
       action: PayloadAction<{ ghostId: string; newItemData: TimeslotItem }>
     ) {
       const idx = state.plan!.findIndex(
-        x => itemId(x) === action.payload.ghostId
+        (x) => itemId(x) === action.payload.ghostId
       );
       if (idx < 0) {
         throw new Error();
@@ -132,7 +134,7 @@ const showplan = createSlice({
     addAuxPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
       state.auxPlaylists = state.auxPlaylists.concat(action.payload);
     },
-  }
+  },
 });
 
 export default showplan.reducer;
@@ -144,7 +146,7 @@ export const moveItem = (
 ): AppThunk => async (dispatch, getState) => {
   // Make a copy of the plan, because we are about to engage in FUCKERY.
   const plan = cloneDeep(getState().showplan.plan!);
-  const itemToMove = plan.find(x => itemId(x) === itemid)!;
+  const itemToMove = plan.find((x) => itemId(x) === itemid)!;
   if (itemToMove.channel === to[0] && itemToMove.weight === to[1]) {
     return;
   }
@@ -165,7 +167,7 @@ export const moveItem = (
   if (oldChannel === newChannel) {
     // Moving around in the same channel
     const itemChan = plan
-      .filter(x => x.channel === oldChannel)
+      .filter((x) => x.channel === oldChannel)
       .sort((a, b) => a.weight - b.weight);
     if (oldWeight < newWeight) {
       // moved the item down (incremented) - everything in between needs decrementing
@@ -194,7 +196,7 @@ export const moveItem = (
     // First, decrement everything between the old weight and the end of the old channel
     // (inclusive of old weight, because we've removed the item)
     const oldChannelData = plan
-      .filter(x => x.channel === oldChannel)
+      .filter((x) => x.channel === oldChannel)
       .sort((a, b) => a.weight - b.weight);
     for (let i = oldWeight; i < oldChannelData.length; i++) {
       const movingItem = oldChannelData[i];
@@ -205,7 +207,7 @@ export const moveItem = (
     // Then, increment everything between the new weight and the end of the new channel
     // (again, inclusive)
     const newChannelData = plan
-      .filter(x => x.channel === newChannel)
+      .filter((x) => x.channel === newChannel)
       .sort((a, b) => a.weight - b.weight);
     for (let i = newWeight; i < newChannelData.length; i++) {
       const movingItem = newChannelData[i];
@@ -217,27 +219,27 @@ export const moveItem = (
   const ops: api.UpdateOp[] = [];
   console.log("Inc, dec:", inc, dec);
 
-  inc.forEach(id => {
-    const item = plan.find(x => itemId(x) === id)!;
+  inc.forEach((id) => {
+    const item = plan.find((x) => itemId(x) === id)!;
     ops.push({
       op: "MoveItem",
       timeslotitemid: itemId(item),
       oldchannel: item.channel,
       oldweight: item.weight - 1,
       channel: item.channel,
-      weight: item.weight
+      weight: item.weight,
     });
   });
 
-  dec.forEach(id => {
-    const item = plan.find(x => itemId(x) === id)!;
+  dec.forEach((id) => {
+    const item = plan.find((x) => itemId(x) === id)!;
     ops.push({
       op: "MoveItem",
       timeslotitemid: itemId(item),
       oldchannel: item.channel,
       oldweight: item.weight + 1,
       channel: item.channel,
-      weight: item.weight
+      weight: item.weight,
     });
   });
 
@@ -248,7 +250,7 @@ export const moveItem = (
     oldchannel: oldChannel,
     oldweight: oldWeight,
     channel: newChannel,
-    weight: newWeight
+    weight: newWeight,
   });
 
   dispatch(showplan.actions.applyOps(ops));
@@ -256,7 +258,7 @@ export const moveItem = (
   // if (!result.every(x => x.status)) {
   //   dispatch(showplan.actions.planSaveError("Server says no!"));
   // } else {
-    dispatch(showplan.actions.setPlanSaving(false));
+  dispatch(showplan.actions.setPlanSaving(false));
   // }
 };
 
@@ -270,7 +272,7 @@ export const addItem = (
   // This is basically a simplified version of the second case above
   // Before we add the new item to the plan, we increment everything below it
   const planColumn = plan
-    .filter(x => x.channel === newItemData.channel)
+    .filter((x) => x.channel === newItemData.channel)
     .sort((a, b) => a.weight - b.weight);
   for (let i = newItemData.weight; i < planColumn.length; i++) {
     const item = planColumn[i];
@@ -280,7 +282,7 @@ export const addItem = (
       oldchannel: item.channel,
       oldweight: item.weight,
       channel: item.channel,
-      weight: item.weight + 1
+      weight: item.weight + 1,
     });
     item.weight += 1;
   }
@@ -341,9 +343,9 @@ export const removeItem = (
 ): AppThunk => async (dispatch, getState) => {
   // This is a simplified version of the second case of moveItem
   const plan = cloneDeep(getState().showplan.plan!);
-  const item = plan.find(x => itemId(x) === itemid)!;
+  const item = plan.find((x) => itemId(x) === itemid)!;
   const planColumn = plan
-    .filter(x => x.channel === item.channel)
+    .filter((x) => x.channel === item.channel)
     .sort((a, b) => a.weight - b.weight);
 
   const ops: api.UpdateOp[] = [];
@@ -351,7 +353,7 @@ export const removeItem = (
     op: "RemoveItem",
     timeslotitemid: itemid,
     channel: item.channel,
-    weight: item.weight
+    weight: item.weight,
   });
   planColumn.splice(planColumn.indexOf(item), 1);
   for (let i = item.weight; i < planColumn.length; i++) {
@@ -362,7 +364,7 @@ export const removeItem = (
       oldchannel: movingItem.channel,
       oldweight: movingItem.weight,
       channel: movingItem.channel,
-      weight: movingItem.weight - 1
+      weight: movingItem.weight - 1,
     });
     movingItem.weight -= 1;
   }
@@ -375,7 +377,9 @@ export const removeItem = (
   dispatch(showplan.actions.applyOps(ops));
 };
 
-export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {
+export const getShowplan = (timeslotId: number): AppThunk => async (
+  dispatch
+) => {
   dispatch(showplan.actions.getShowplanStarting());
   try {
     const plan = await api.getShowplan(timeslotId);
@@ -403,7 +407,7 @@ export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {
             oldchannel: colIndex,
             channel: colIndex,
             oldweight: item.weight,
-            weight: itemIndex
+            weight: itemIndex,
           });
           plan[colIndex][itemIndex].weight = itemIndex;
         }
@@ -411,7 +415,7 @@ export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {
     }
 
     if (ops.length > 0) {
-      console.log("Is corrupt, repairing locally")
+      console.log("Is corrupt, repairing locally");
       dispatch(showplan.actions.applyOps(ops));
       /*
       console.log("Repairing showplan", ops);
@@ -430,7 +434,7 @@ export const getShowplan = (timeslotId: number): AppThunk => async dispatch => {
   }
 };
 
-export const getPlaylists = (): AppThunk => async dispatch => {
+export const getPlaylists = (): AppThunk => async (dispatch) => {
   try {
     const userPlaylists = await api.getUserPlaylists();
 

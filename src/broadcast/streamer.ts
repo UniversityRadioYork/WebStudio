@@ -20,6 +20,6 @@ export abstract class Streamer {
   }
 
   protected onStateChange(state: ConnectionStateEnum) {
-    this.csListeners.forEach(l => l(state));
+    this.csListeners.forEach((l) => l(state));
   }
 }

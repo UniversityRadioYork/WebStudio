@@ -1,10 +1,12 @@
-import {
-  createSlice,
-  PayloadAction
-} from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
-import { User, getCurrentApiUser, Timeslot, getCurrentApiTimeslot, doesCurrentUserHavePermission } from "../api";
-import { timestampToDateTime } from "../lib/utils";
+import {
+  User,
+  getCurrentApiUser,
+  Timeslot,
+  getCurrentApiTimeslot,
+  doesCurrentUserHavePermission,
+} from "../api";
 
 import raygun from "raygun4js";
 
@@ -29,12 +31,12 @@ const sessionState = createSlice({
     userLoading: false,
     userLoadError: null,
     timeslotLoading: false,
-    timeslotLoadError: null
+    timeslotLoadError: null,
   } as sessionState,
   reducers: {
     setCurrentUser(
       state,
-      action: PayloadAction<{ user: User | null, canBroadcast: boolean }>
+      action: PayloadAction<{ user: User | null; canBroadcast: boolean }>
     ) {
       state.userLoading = false;
       state.userLoadError = null;
@@ -54,7 +56,7 @@ const sessionState = createSlice({
       state.timeslotLoading = true;
     },
     getTimeslotSuccess(state, action: PayloadAction<Timeslot>) {
-      console.log("Getting timeslot succeeded.")
+      console.log("Getting timeslot succeeded.");
       state.timeslotLoading = false;
       state.timeslotLoadError = null;
       state.currentTimeslot = action.payload;
@@ -65,40 +67,42 @@ const sessionState = createSlice({
     },
     getState(state) {
       return state;
-    }
-  }
+    },
+  },
 });
 
 export default sessionState.reducer;
 
-export const getCurrentUser = (
-): AppThunk => async (dispatch, getState) => {
+export const getCurrentUser = (): AppThunk => async (dispatch, getState) => {
   return getState().session.currentUser;
 };
 
-export const getUser = (): AppThunk => async dispatch => {
+export const getUser = (): AppThunk => async (dispatch) => {
   dispatch(sessionState.actions.getUserStarting());
   try {
-    const [user, canBroadcast] = await Promise.all([ getCurrentApiUser(), doesCurrentUserHavePermission(BROADCAST_PERMISSION_ID) ]);
+    const [user, canBroadcast] = await Promise.all([
+      getCurrentApiUser(),
+      doesCurrentUserHavePermission(BROADCAST_PERMISSION_ID),
+    ]);
     raygun("setUser", {
       identifier: user.memberid.toString(10),
       firstName: user.fname,
-      fullName: user.fname + " " + user.sname
+      fullName: user.fname + " " + user.sname,
     });
-    dispatch(sessionState.actions.setCurrentUser({user, canBroadcast}));
+    dispatch(sessionState.actions.setCurrentUser({ user, canBroadcast }));
   } catch (e) {
-    console.log("failed to get user. " + e.toString())
+    console.log("failed to get user. " + e.toString());
     dispatch(sessionState.actions.getUserError(e.toString()));
   }
-}
+};
 
-export const getTimeslot = (): AppThunk => async dispatch => {
+export const getTimeslot = (): AppThunk => async (dispatch) => {
   dispatch(sessionState.actions.getTimeslotStarting());
   try {
     const timeslot = await getCurrentApiTimeslot();
     dispatch(sessionState.actions.getTimeslotSuccess(timeslot));
   } catch (e) {
-    console.log("failed to get selected timeslot. " + e.toString())
+    console.log("failed to get selected timeslot. " + e.toString());
     dispatch(sessionState.actions.getTimeslotError(e.toString()));
   }
-}
+};

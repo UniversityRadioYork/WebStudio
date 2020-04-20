@@ -11,7 +11,7 @@ const settingsState = createSlice({
   initialState: {
     showDebugInfo: false,
     enableRecording: false,
-    tracklist: "while_live"
+    tracklist: "while_live",
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(
@@ -19,8 +19,8 @@ const settingsState = createSlice({
       action: PayloadAction<{ key: K; val: Settings[K] }>
     ) {
       state[action.payload.key] = action.payload.val;
-    }
-  }
+    },
+  },
 });
 
 export default settingsState.reducer;

@@ -22,7 +22,7 @@ export function AdvancedTab() {
           className="form-control"
           id="broadcastSourceSelect"
           value={broadcastState.sourceID}
-          onChange={e =>
+          onChange={(e) =>
             dispatch(
               changeBroadcastSetting("sourceID", parseInt(e.target.value))
             )
@@ -39,7 +39,7 @@ export function AdvancedTab() {
           className="form-check-input"
           type="checkbox"
           checked={broadcastState.autoNewsBeginning}
-          onChange={e =>
+          onChange={(e) =>
             dispatch(
               changeBroadcastSetting("autoNewsBeginning", e.target.checked)
             )
@@ -52,7 +52,7 @@ export function AdvancedTab() {
           className="form-check-input"
           type="checkbox"
           checked={broadcastState.autoNewsMiddle}
-          onChange={e =>
+          onChange={(e) =>
             dispatch(changeBroadcastSetting("autoNewsMiddle", e.target.checked))
           }
         />
@@ -65,7 +65,7 @@ export function AdvancedTab() {
           className="form-check-input"
           type="checkbox"
           checked={broadcastState.autoNewsEnd}
-          onChange={e =>
+          onChange={(e) =>
             dispatch(changeBroadcastSetting("autoNewsEnd", e.target.checked))
           }
         />
@@ -81,12 +81,12 @@ export function AdvancedTab() {
           className="form-control"
           id="broadcastSourceSelect"
           value={settings.tracklist}
-          onChange={e =>
+          onChange={(e) =>
             dispatch(
               changeSetting({
                 key: "tracklist",
                 // @ts-ignore
-                val: e.target.value
+                val: e.target.value,
               })
             )
           }
@@ -101,11 +101,11 @@ export function AdvancedTab() {
           className="form-check-input"
           type="checkbox"
           checked={settings.showDebugInfo}
-          onChange={e =>
+          onChange={(e) =>
             dispatch(
               changeSetting({
                 key: "showDebugInfo",
-                val: e.target.checked
+                val: e.target.checked,
               })
             )
           }
@@ -119,11 +119,11 @@ export function AdvancedTab() {
           className="form-check-input"
           type="checkbox"
           checked={settings.enableRecording}
-          onChange={e =>
+          onChange={(e) =>
             dispatch(
               changeSetting({
                 key: "enableRecording",
-                val: e.target.checked
+                val: e.target.checked,
               })
             )
           }

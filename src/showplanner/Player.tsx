@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import {
+  FaLevelDownAlt,
+  FaPlayCircle,
+  FaRedo,
+  FaPlay,
+  FaPause,
+  FaStop,
+} from "react-icons/fa";
+import { add, format } from "date-fns";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
-import { secToHHMM } from "../lib/utils";
+import { secToHHMM, timestampToHHMM } from "../lib/utils";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -11,6 +20,13 @@ export function Player({ id }: { id: number }) {
     (state: RootState) => state.mixer.players[id]
   );
   const dispatch = useDispatch();
+
+  const [now, setNow] = useState<Date>(new Date());
+  const tickerRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    tickerRef.current = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(tickerRef.current);
+  }, []);
 
   return (
     <div
@@ -28,9 +44,12 @@ export function Player({ id }: { id: number }) {
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
-            onClick={() => dispatch(MixerState.toggleAutoAdvance({player: id}))}
+            onClick={() =>
+              dispatch(MixerState.toggleAutoAdvance({ player: id }))
+            }
           >
-            <i className="fa fa-level-down-alt"></i>&nbsp; Auto Advance
+            <FaLevelDownAlt />
+            &nbsp; Auto Advance
           </button>
           <button
             className={
@@ -38,19 +57,23 @@ export function Player({ id }: { id: number }) {
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
-            onClick={() => dispatch(MixerState.togglePlayOnLoad({ player: id }))}
+            onClick={() =>
+              dispatch(MixerState.togglePlayOnLoad({ player: id }))
+            }
           >
-            <i className="far fa-play-circle"></i>&nbsp; Play on Load
+            <FaPlayCircle />
+            &nbsp; Play on Load
           </button>
           <button
             className={
-              (playerState.repeat != "none"
+              (playerState.repeat !== "none"
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
             onClick={() => dispatch(MixerState.toggleRepeat({ player: id }))}
           >
-            <i className="fa fa-redo"></i>&nbsp; Repeat {playerState.repeat}
+            <FaRedo />
+            &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
         <div className="card-body p-0">
@@ -97,7 +120,7 @@ export function Player({ id }: { id: number }) {
                   : ""
               }
             >
-              <i className="fas fa-play"></i>
+              <FaPlay />
             </button>
             <button
               onClick={() => dispatch(MixerState.pause(id))}
@@ -105,7 +128,7 @@ export function Player({ id }: { id: number }) {
                 playerState.state === "paused" ? "sp-state-paused" : ""
               }
             >
-              <i className="fas fa-pause"></i>
+              <FaPause />
             </button>
             <button
               onClick={() => dispatch(MixerState.stop(id))}
@@ -113,7 +136,7 @@ export function Player({ id }: { id: number }) {
                 playerState.state === "stopped" ? "sp-state-stopped" : ""
               }
             >
-              <i className="fas fa-stop"></i>
+              <FaStop />
             </button>
           </div>
         </div>
@@ -128,6 +151,10 @@ export function Player({ id }: { id: number }) {
           <span id={"remaining-" + id} className="m-0 remaining bypass-click">
             {secToHHMM(playerState.timeRemaining)}
           </span>
+          <span id={"ends-" + id} className="m-0 outro bypass-click">
+            End -{" "}
+            {timestampToHHMM(now.valueOf() / 1000 + playerState.timeRemaining)}
+          </span>
           {playerState.loadedItem !== null &&
             "intro" in playerState.loadedItem && (
               <span className="m-0 intro bypass-click">
@@ -138,25 +165,39 @@ export function Player({ id }: { id: number }) {
                         : 0
                     )
                   : "00:00:00"}{" "}
-                - in
+                - In
               </span>
             )}
-          <div className={"m-0 graph" + ((playerState.loading !== -1) ? " loading" : "")} id={"waveform-" + id}
-            style={(playerState.loading !== -1) ? {
-            width: (playerState.loading*100) + "%"} : {}}
-          >
-          </div>
+          <div
+            className={
+              "m-0 graph" + (playerState.loading !== -1 ? " loading" : "")
+            }
+            id={"waveform-" + id}
+            style={
+              playerState.loading !== -1
+                ? {
+                    width: playerState.loading * 100 + "%",
+                  }
+                : {}
+            }
+          ></div>
         </div>
       </div>
-
-      <div className="sp-mixer-buttons">
+      <div
+        className={
+          "mixer-buttons " +
+          (playerState.state === "playing" && playerState.volume === 0
+            ? "error-animation"
+            : "")
+        }
+      >
         <div
-          className="sp-mixer-buttons-backdrop"
+          className="mixer-buttons-backdrop"
           style={{
             width:
               (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
                 100 +
-              "%"
+              "%",
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>

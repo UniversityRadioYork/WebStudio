@@ -1,10 +1,12 @@
-import React, { useReducer, useState, Suspense, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useReducer, useState } from "react";
+import { useSelector } from "react-redux";
 import qs from "qs";
 import "./App.css";
 import Showplanner from "./showplanner";
 import SessionHandler from "./session";
 import { RootState } from "./rootReducer";
+import "./light-theme.scss";
+import "./App.scss";
 
 const forceReducer = (state: boolean) => !state;
 function useForceUpdate() {
@@ -44,7 +46,7 @@ const App: React.FC = () => {
   ) {
     return <SessionHandler />;
   } else {
-    var timeslotid = null;
+    var timeslotid: number | null = null;
     if ("timeslot_id" in q) {
       timeslotid = q.timeslot_id;
     } else if (currentTimeslot.timeslot_id != null) {

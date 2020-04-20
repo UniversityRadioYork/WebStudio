@@ -3,7 +3,6 @@ import qs from "qs";
 export const MYRADIO_NON_API_BASE = process.env.REACT_APP_MYRADIO_NONAPI_BASE!;
 export const MYRADIO_BASE_URL = process.env.REACT_APP_MYRADIO_BASE!;
 export const BROADCAST_API_BASE_URL = process.env.REACT_APP_BROADCAST_API_BASE!;
-const MYRADIO_API_KEY = process.env.REACT_APP_MYRADIO_KEY!;
 
 export class ApiException extends Error {}
 
@@ -13,10 +12,10 @@ export async function apiRequest(
   params: any,
   need_auth: boolean = true
 ): Promise<Response> {
-  let req = null;
+  var req: Promise<Response> | null = null;
   if (method === "GET") {
     req = fetch(url + qs.stringify(params, { addQueryPrefix: true }), {
-      credentials: need_auth ? "include" : "omit"
+      credentials: need_auth ? "include" : "omit",
     });
   } else {
     const body = JSON.stringify(params);
@@ -25,9 +24,9 @@ export async function apiRequest(
       method,
       body,
       headers: {
-        "Content-Type": "application/json; charset=UTF-8"
+        "Content-Type": "application/json; charset=UTF-8",
       },
-      credentials: need_auth ? "include" : "omit"
+      credentials: need_auth ? "include" : "omit",
     });
   }
   return await req;
@@ -124,8 +123,8 @@ export function getShowplan(showId: number): Promise<Showplan> {
     `/timeslot/${showId.toString(10)}/showplan`,
     "GET",
     {}
-  ).then(res => {
-    return Object.keys(res).map(x => res[x]);
+  ).then((res) => {
+    return Object.keys(res).map((x) => res[x]);
   });
 }
 
@@ -137,11 +136,11 @@ function wrapPromise<T, TArgs>(factory: (...args: TArgs[]) => Promise<T>) {
     read(...args: TArgs[]) {
       if (!(suspender instanceof Promise)) {
         suspender = factory(...args).then(
-          r => {
+          (r) => {
             status = "success";
             result = r;
           },
-          e => {
+          (e) => {
             status = "error";
             result = e;
           }
@@ -156,7 +155,7 @@ function wrapPromise<T, TArgs>(factory: (...args: TArgs[]) => Promise<T>) {
       } else {
         throw new Error("Can't happen.");
       }
-    }
+    },
   };
 }
 
@@ -182,7 +181,7 @@ export function searchForTracks(
     artist,
     title,
     limit: 100,
-    digitised: true
+    digitised: true,
   });
 }
 
@@ -207,8 +206,8 @@ export function getAuxPlaylists(): Promise<Array<ManagedPlaylist>> {
 
 export function loadAuxLibrary(libraryId: string): Promise<AuxItem[]> {
   return apiRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
-    libraryid: libraryId
-  }).then(res => res.json());
+    libraryid: libraryId,
+  }).then((res) => res.json());
 }
 
 export type UpdateOp =
@@ -243,7 +242,7 @@ export function updateShowplan(
   ops: UpdateOp[]
 ): Promise<OpResult[]> {
   return myradioApiRequest(`/timeslot/${timeslotid}/updateshowplan`, "PUT", {
-    set: ops
+    set: ops,
   });
 }
 
@@ -256,7 +255,7 @@ export interface Timeslot {
 
 export function getCurrentApiTimeslot(): Promise<Timeslot> {
   return myradioApiRequest(`/timeslot/userselectedtimeslot`, "GET", {}).then(
-    res => {
+    (res) => {
       return res;
     }
   );
@@ -271,7 +270,7 @@ export interface User {
 }
 
 export function getCurrentApiUser(): Promise<User> {
-  return myradioApiRequest(`/user/currentuser`, "GET", {}).then(res => {
+  return myradioApiRequest(`/user/currentuser`, "GET", {}).then((res) => {
     return res;
   });
 }
@@ -288,6 +287,8 @@ export interface NewsEntry {
   seen?: boolean;
 }
 
-export function getLatestNewsItem(newsFeedId: number): Promise<NewsEntry | null> {
+export function getLatestNewsItem(
+  newsFeedId: number
+): Promise<NewsEntry | null> {
   return myradioApiRequest(`/news/latestnewsitem/${newsFeedId}`, "GET", {});
 }

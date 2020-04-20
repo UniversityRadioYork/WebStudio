@@ -7,6 +7,7 @@ import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { ContextMenuTrigger } from "react-contextmenu";
+import "./item.scss";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
 
@@ -24,11 +25,14 @@ export const Item = memo(function Item({
   const isReal = "timeslotitemid" in x;
   const isGhost = "ghostid" in x;
 
-  const playerState = useSelector(
-    (state: RootState) => column > -1 ? state.mixer.players[column] : undefined
+  const playerState = useSelector((state: RootState) =>
+    column > -1 ? state.mixer.players[column] : undefined
   );
 
-  const isLoaded = playerState && playerState.loadedItem !== null && itemId(playerState.loadedItem) === id;
+  const isLoaded =
+    playerState &&
+    playerState.loadedItem !== null &&
+    itemId(playerState.loadedItem) === id;
 
   const showDebug = useSelector(
     (state: RootState) => state.settings.showDebugInfo
@@ -41,17 +45,21 @@ export const Item = memo(function Item({
   }
 
   return (
-    <Draggable draggableId={id} index={index} isDragDisabled={isGhost || isLoaded}>
+    <Draggable
+      draggableId={id}
+      index={index}
+      isDragDisabled={isGhost || isLoaded}
+    >
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           key={id}
-          className={`sp-track ${
+          className={`item ${
             column >= 0 &&
             playerState &&
             playerState.loadedItem !== null &&
             itemId(playerState.loadedItem) === id
-              ? "sp-track-active"
+              ? "active"
               : ""
           }`}
           onClick={triggerClick}
@@ -62,7 +70,8 @@ export const Item = memo(function Item({
             id={isReal ? TS_ITEM_MENU_ID : ""}
             collect={() => ({ id })}
           >
-            <i className={"fa fa-circle " + x.type}></i>&nbsp;
+            <span className={"icon " + x.type} />
+            &nbsp;
             {x.title.toString()}
             {"artist" in x && " - " + x.artist}
             <small

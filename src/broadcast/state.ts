@@ -4,7 +4,7 @@ import { myradioApiRequest, broadcastApiRequest, ApiException } from "../api";
 import { WebRTCStreamer } from "./rtc_streamer";
 import * as MixerState from "../mixer/state";
 import * as NavbarState from "../navbar/state";
-import { ConnectionStateEnum, Streamer } from "./streamer";
+import { ConnectionStateEnum } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 
 export let streamer: WebRTCStreamer | null = null;
@@ -45,7 +45,7 @@ const broadcastState = createSlice({
     autoNewsEnd: true,
     liveForThePurposesOfTracklisting: false,
     connectionState: "NOT_CONNECTED",
-    recordingState: "NOT_CONNECTED"
+    recordingState: "NOT_CONNECTED",
   } as BroadcastState,
   reducers: {
     changeSetting<K extends keyof BroadcastState>(
@@ -76,8 +76,8 @@ const broadcastState = createSlice({
     },
     setRecordingState(state, action: PayloadAction<ConnectionStateEnum>) {
       state.recordingState = action.payload;
-    }
-  }
+    },
+  },
 });
 
 export default broadcastState.reducer;
@@ -85,7 +85,7 @@ export default broadcastState.reducer;
 export const {
   toggleTracklisting,
   setTracklisting,
-  setWsID
+  setWsID,
 } = broadcastState.actions;
 
 export interface TrackListItem {
@@ -107,7 +107,7 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
       NavbarState.showAlert({
         color: "warning",
         content: "You are not WebStudio Trained and cannot go live.",
-        closure: 7000
+        closure: 7000,
       })
     );
     return;
@@ -139,7 +139,7 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
           NavbarState.showAlert({
             content: e.message,
             color: "danger",
-            closure: 10000
+            closure: 10000,
           })
         );
         if (streamer) {
@@ -168,7 +168,7 @@ export const cancelTimeslot = (): AppThunk => async (dispatch, getState) => {
           NavbarState.showAlert({
             content: e.message,
             color: "danger",
-            closure: 10000
+            closure: 10000,
           })
         );
       } else {
@@ -183,7 +183,7 @@ export const changeTimeslot = (): AppThunk => async (dispatch, getState) => {
   var state = getState().broadcast;
   if (state.stage === "REGISTERED") {
     console.log("Attempting to Change Broadcast Options.");
-    var response = await sendBroadcastChange(
+    await sendBroadcastChange(
       state.connID,
       state.sourceID,
       state.autoNewsBeginning,
@@ -203,7 +203,7 @@ export function sendBroadcastRegister(
     memberid: memberid,
     timeslotid: timeslotid,
     sourceid: sourceid,
-    wsid: wsID
+    wsid: wsID,
   } as any;
   return broadcastApiRequest("/registerTimeslot", "POST", payload);
 }
@@ -211,7 +211,7 @@ export function sendBroadcastCancel(
   connid: number | null
 ): Promise<string | null> {
   return broadcastApiRequest("/cancelTimeslot", "POST", {
-    connid: connid
+    connid: connid,
   });
 }
 
@@ -227,7 +227,7 @@ export function sendBroadcastChange(
     sourceid: sourceid,
     beginning: beginning,
     middle: middle,
-    end: end
+    end: end,
   });
 }
 
@@ -286,7 +286,7 @@ export function sendTracklistStart(trackid: number): Promise<TrackListItem> {
   return myradioApiRequest("/tracklistItem", "POST", {
     trackid: trackid,
     sourceid: "w",
-    state: "c"
+    state: "c",
   });
 }
 
@@ -296,14 +296,14 @@ export const goOnAir = (): AppThunk => async (dispatch, getState) => {
       NavbarState.showAlert({
         color: "warning",
         content: "You are not WebStudio Trained and cannot go live.",
-        closure: 7000
+        closure: 7000,
       })
     );
     return;
   }
   console.log("starting streamer.");
   streamer = new WebRTCStreamer(MixerState.destination.stream, dispatch);
-  streamer.addConnectionStateListener(state => {
+  streamer.addConnectionStateListener((state) => {
     dispatch(broadcastState.actions.setConnectionState(state));
     if (state === "CONNECTION_LOST") {
       // un-register if we drop, let the user manually reconnect
@@ -316,7 +316,7 @@ export const goOnAir = (): AppThunk => async (dispatch, getState) => {
   await streamer.start();
 };
 
-export const stopStreaming = (): AppThunk => async dispatch => {
+export const stopStreaming = (): AppThunk => async (dispatch) => {
   if (streamer) {
     await streamer.stop();
     streamer = null;
@@ -327,15 +327,15 @@ export const stopStreaming = (): AppThunk => async dispatch => {
 
 let recorder: RecordingStreamer;
 
-export const startRecording = (): AppThunk => async dispatch => {
+export const startRecording = (): AppThunk => async (dispatch) => {
   recorder = new RecordingStreamer(MixerState.destination.stream);
-  recorder.addConnectionStateListener(state => {
+  recorder.addConnectionStateListener((state) => {
     dispatch(broadcastState.actions.setRecordingState(state));
   });
   await recorder.start();
 };
 
-export const stopRecording = (): AppThunk => async dispatch => {
+export const stopRecording = (): AppThunk => async (dispatch) => {
   if (recorder) {
     await recorder.stop();
   } else {

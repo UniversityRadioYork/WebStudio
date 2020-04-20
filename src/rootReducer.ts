@@ -13,22 +13,22 @@ import OptionsMenuReducer from "./optionsMenu/state";
 import SettingsState from "./optionsMenu/settingsState";
 
 const rootReducer = combineReducers({
-    showplan: ShowplanReducer,
-    mixer: MixerReducer,
-    broadcast: BroadcastReducer,
-    session: sessionReducer,
-    navbar: NavbarReducer,
-    optionsMenu: OptionsMenuReducer,
-    settings: SettingsState,
+  showplan: ShowplanReducer,
+  mixer: MixerReducer,
+  broadcast: BroadcastReducer,
+  session: sessionReducer,
+  navbar: NavbarReducer,
+  optionsMenu: OptionsMenuReducer,
+  settings: SettingsState,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
 
 const persistenceConfig: PersistConfig<RootState> = {
-	key: "root",
-	storage: webStorage,
-	whitelist: ["settings"],
-	stateReconciler: autoMergeLevel2
+  key: "root",
+  storage: webStorage,
+  whitelist: ["settings"],
+  stateReconciler: autoMergeLevel2,
 };
 
 const persistedReducer = persistReducer(persistenceConfig, rootReducer);

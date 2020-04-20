@@ -1,20 +1,16 @@
-import React, { useState, useReducer, useEffect, memo } from "react";
+import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import {
-  MYRADIO_NON_API_BASE,
-  getUserPlaylists,
-  getAuxPlaylists,
-  ManagedPlaylist
-} from "../api";
+import { FaAlignJustify, FaBookOpen, FaMicrophone } from "react-icons/fa";
 
 import { TimeslotItem } from "../api";
+import appLogo from "../assets/images/webstudio.svg";
 
 import {
   Droppable,
   DragDropContext,
   DropResult,
-  ResponderProvided
+  ResponderProvided,
 } from "react-beautiful-dnd";
 
 import { useSelector, useDispatch } from "react-redux";
@@ -26,55 +22,48 @@ import {
   moveItem,
   addItem,
   removeItem,
-  getPlaylists
+  getPlaylists,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
-import * as BroadcastState from "../broadcast/state";
 import * as OptionsMenuState from "../optionsMenu/state";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
 import {
   CentralMusicLibrary,
   CML_CACHE,
   AuxLibrary,
-  AUX_CACHE
+  AUX_CACHE,
 } from "./libraries";
-import { Player, USE_REAL_GAIN_VALUE } from "./Player";
+import { Player } from "./Player";
 
 import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
-import {PisModal} from "./PISModal";
+import { PisModal } from "./PISModal";
+import "./channel.scss";
 
-function Column({ id, data }: { id: number; data: PlanItem[] }) {
+function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
-    <div className="sp-main-col">
-      <div className="sp-col shadow">
-        <Droppable droppableId={id.toString(10)}>
-          {(provided, snapshot) => (
-            <div
-              className="sp-col-inner"
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
-              {typeof data[id] === "undefined"
-                ? null
-                : data
-                    .filter(x => x.channel === id)
-                    .sort((a, b) => a.weight - b.weight)
-                    .map((x, index) => (
-                      <Item
-                        key={itemId(x)}
-                        item={x}
-                        index={index}
-                        column={id}
-                      />
-                    ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </div>
+    <div className="channel" id={"channel-" + id}>
+      <Droppable droppableId={id.toString(10)}>
+        {(provided, snapshot) => (
+          <div
+            className="channel-item-list"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {typeof data[id] === "undefined"
+              ? null
+              : data
+                  .filter((x) => x.channel === id)
+                  .sort((a, b) => a.weight - b.weight)
+                  .map((x, index) => (
+                    <Item key={itemId(x)} item={x} index={index} column={id} />
+                  ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
       <Player id={id} />
     </div>
   );
@@ -92,34 +81,40 @@ function LibraryColumn() {
   }, [dispatch]);
 
   return (
-    <div className="sp-col" style={{ height: "48%", marginBottom: "1%" }}>
-      <select
-        className="form-control"
-        style={{ width: "100%" }}
-        value={sauce}
-        onChange={e => setSauce(e.target.value)}
-      >
-        <option value={"None"} disabled>
-          Choose a library
-        </option>
-        <option value={"CentralMusicLibrary"}>Central Music Library</option>
-        <option disabled>Personal Resources</option>
-        {userPlaylists.map(playlist => (
-          <option key={playlist.managedid} value={playlist.managedid}>
-            {playlist.title}
+    <div className="library-column">
+      <h2>
+        <FaBookOpen className="mx-2" size={28} />
+        Libraries
+      </h2>
+      <div className="px-2">
+        <select
+          className="form-control"
+          style={{ flex: "none" }}
+          value={sauce}
+          onChange={(e) => setSauce(e.target.value)}
+        >
+          <option value={"None"} disabled>
+            Choose a library
           </option>
-        ))}
-        <option disabled>Shared Resources</option>
-        {auxPlaylists.map(playlist => (
-          <option
-            key={"aux-" + playlist.managedid}
-            value={"aux-" + playlist.managedid}
-          >
-            {playlist.title}
-          </option>
-        ))}
-      </select>
-      <div className="border-top my-3"></div>
+          <option value={"CentralMusicLibrary"}>Central Music Library</option>
+          <option disabled>Personal Resources</option>
+          {userPlaylists.map((playlist) => (
+            <option key={playlist.managedid} value={playlist.managedid}>
+              {playlist.title}
+            </option>
+          ))}
+          <option disabled>Shared Resources</option>
+          {auxPlaylists.map((playlist) => (
+            <option
+              key={"aux-" + playlist.managedid}
+              value={"aux-" + playlist.managedid}
+            >
+              {playlist.title}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="border-top my-2"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
       {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
         <AuxLibrary libraryId={sauce} />
@@ -127,7 +122,7 @@ function LibraryColumn() {
       <span
         className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
       >
-        <i className="far fa-2x fa-caret-square-down"></i>
+        <FaBookOpen size={56} />
         <br />
         Select a library to search.
       </span>
@@ -140,13 +135,21 @@ function MicControl() {
   const dispatch = useDispatch();
 
   return (
-    <div className="sp-col" style={{ height: "48%", overflowY: "visible" }}>
-      <h2>Microphone</h2>
-      <div className={`sp-mixer-buttons ${!state.open && "disabled"}`}>
+    <div className="mic-control">
+      <h2>
+        <FaMicrophone className="mx-1" size={28} />
+        Microphone
+      </h2>
+      {!state.open && (
+        <p className="alert-info p-2 mb-0">
+          The microphone has not been setup. Go to options.
+        </p>
+      )}
+      <div className={`mixer-buttons ${!state.open && "disabled"}`}>
         <div
-          className="sp-mixer-buttons-backdrop"
+          className="mixer-buttons-backdrop"
           style={{
-            width: (USE_REAL_GAIN_VALUE ? state.gain : state.volume) * 100 + "%"
+            width: state.volume * 100 + "%",
           }}
         ></div>
         <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
@@ -183,7 +186,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     planLoadError,
     planLoading,
     planSaveError,
-    planSaving
+    planSaving,
   } = useSelector((state: RootState) => state.showplan);
   const session = useSelector((state: RootState) => state.session);
 
@@ -195,7 +198,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   const dispatch = useDispatch();
 
-  useBeforeunload(event => event.preventDefault());
+  useBeforeunload((event) => event.preventDefault());
 
   useEffect(() => {
     dispatch(getShowplan(timeslotId));
@@ -204,7 +207,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   function toggleSidebar() {
     var element = document.getElementById("sidebar");
     if (element) {
-      element.classList.toggle("active");
+      element.classList.toggle("hidden");
     }
     setTimeout(function() {
       dispatch(MixerState.redrawWavesurfers());
@@ -230,7 +233,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
-        ...data
+        ...data,
       };
       dispatch(addItem(timeslotId, newItem));
       increment(null);
@@ -244,7 +247,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
-        ...data
+        ...data,
       } as any;
       dispatch(addItem(timeslotId, newItem));
       increment(null);
@@ -253,7 +256,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       dispatch(
         moveItem(timeslotId, result.draggableId, [
           parseInt(result.destination.droppableId, 10),
-          result.destination.index
+          result.destination.index,
         ])
       );
     }
@@ -265,20 +268,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   if (showplan === null) {
     return (
-      <div className="sp-container">
-        <h1>Getting show plan...</h1>
-        {planLoading && (
-          <b>Your plan is loading, please wait just a second...</b>
-        )}
-        {planLoadError !== null && (
-          <>
-            <b>Plan load failed!</b> Please tell Comp that something broke.
-            <p>
-              <code>{planLoadError}</code>
-            </p>
-          </>
-        )}
-      </div>
+      <LoadingDialogue
+        title="Getting Show Plan..."
+        subtitle={planLoading ? "Hang on a sec..." : ""}
+        error={planLoadError}
+        percent={100}
+      />
     );
   }
   return (
@@ -287,27 +282,29 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <div className="sp-status">
         {planSaving && <em>Plan saving...</em>}
         {planSaveError && (
-          <b>
+          <strong>
             Catastrophe! <code>{planSaveError}</code>
-          </b>
+          </strong>
         )}
       </div>
       <div className="sp">
         <DragDropContext onDragEnd={onDragEnd}>
-          <Column id={0} data={showplan} />
-          <Column id={1} data={showplan} />
-          <Column id={2} data={showplan} />
-          <div className="sp-main-col sidebar-toggle">
-            <span
-              id="sidebarCollapse"
-              className="btn btn-outline-dark btn-sm mb-0"
-              onClick={() => toggleSidebar()}
-            >
-              <i className="fas fa-align-justify mb-2"></i>Toggle Sidebar
-            </span>
+          <div className="channels">
+            <Channel id={0} data={showplan} />
+            <Channel id={1} data={showplan} />
+            <Channel id={2} data={showplan} />
           </div>
-          <div id="sidebar" className="sp-main-col">
+          <span
+            id="sidebar-toggle"
+            className="btn btn-outline-dark btn-sm mb-0"
+            onClick={() => toggleSidebar()}
+          >
+            <FaAlignJustify style={{ verticalAlign: "text-bottom" }} />
+            &nbsp; Toggle Sidebar
+          </span>
+          <div id="sidebar">
             <LibraryColumn />
+            <div className="border-top"></div>
             <MicControl />
           </div>
         </DragDropContext>
@@ -325,5 +322,52 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     </div>
   );
 };
+
+export function LoadingDialogue({
+  title,
+  subtitle,
+  error,
+  percent,
+}: {
+  title: string;
+  subtitle: string;
+  error: string | null;
+  percent: number;
+}) {
+  return (
+    <div className="loading-dialogue">
+      <div className="logo-container" style={{ width: percent + "%" }}>
+        <img
+          className="logo mb-5"
+          src={appLogo}
+          style={{
+            filter:
+              "brightness(0.5) sepia(0.5) hue-rotate(-180deg) saturate(5)",
+            maxHeight: 50,
+          }}
+          alt="Web Studio Logo"
+        />
+      </div>
+
+      <span className="inner">
+        <h1>{title}</h1>
+        <p>
+          <strong>{subtitle}</strong>
+        </p>
+        {error !== null && (
+          <>
+            <p>
+              <strong>Failed!</strong> Please tell Computing Team that something
+              broke.
+            </p>
+            <p>
+              <code>{error}</code>
+            </p>
+          </>
+        )}
+      </span>
+    </div>
+  );
+}
 
 export default Showplanner;

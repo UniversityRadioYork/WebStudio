@@ -1,0 +1,55 @@
+.channel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: --var(--channel-shadow);
+  background: var(--channel-background);
+  color: var(--channel-color);
+
+  .channel-item-list {
+    flex-grow: 1;
+    overflow-y: scroll;
+  }
+
+  .player {
+    height: auto;
+    background: var(--player-background);
+    color: var(--player-color);
+    opacity: 0.5;
+
+    &.loaded {
+      opacity: 1;
+    }
+  }
+}
+
+.mixer-buttons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  position: relative;
+
+  button {
+    flex: 1;
+    background: transparent;
+    border: 1px solid black;
+    z-index: 100;
+  }
+
+  &.error-animation {
+    -webkit-animation: red-flash steps(1) 0.5s infinite;
+    animation: red-flash steps(1) 0.5s infinite;
+  }
+
+  .mixer-buttons-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: var(--mixer-backdrop);
+  }
+
+  &.disabled .mixer-buttons-backdrop {
+    background-color: var(--mixer-backdrop-disabled);
+  }
+}
