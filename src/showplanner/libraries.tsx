@@ -10,10 +10,10 @@ import "./libraries.scss";
 export const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
 type searchingStateEnum =
-| "searching"
-| "not-searching"
-| "results"
-| "no-results";
+  | "searching"
+  | "not-searching"
+  | "results"
+  | "no-results";
 
 export function CentralMusicLibrary() {
   const [track, setTrack] = useState("");
@@ -157,16 +157,14 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
   );
 }
 
-export function ResultsPlaceholder({ state }: { state:string }) {
+export function ResultsPlaceholder({ state }: { state: string }) {
   return (
     <span
-      className={
-        state !== "results" ? "mt-5 text-center text-muted" : "d-none"
-      }
+      className={state !== "results" ? "mt-5 text-center text-muted" : "d-none"}
     >
-      {state === "not-searching" && <FaSearch size={56}/>}
+      {state === "not-searching" && <FaSearch size={56} />}
       {state === "searching" && <FaCog size={56} className="fa-spin" />}
-      {state === "no-results" && <FaTimesCircle size={56}/>}
+      {state === "no-results" && <FaTimesCircle size={56} />}
       <br />
       {state === "not-searching"
         ? "Enter a search term."
@@ -176,5 +174,5 @@ export function ResultsPlaceholder({ state }: { state:string }) {
         ? "No results."
         : ""}
     </span>
-  )
+  );
 }
