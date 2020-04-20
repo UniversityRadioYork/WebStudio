@@ -1,6 +1,6 @@
 {
   "name": "webstudio",
-  "version": "0.0.18",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@babel/core": "7.6.0",
