@@ -11,7 +11,7 @@ import {
 import { add, format } from "date-fns";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
-import { secToHHMM } from "../lib/utils";
+import { secToHHMM, timestampToHHMM } from "../lib/utils";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -152,7 +152,8 @@ export function Player({ id }: { id: number }) {
             {secToHHMM(playerState.timeRemaining)}
           </span>
           <span id={"ends-" + id} className="m-0 outro bypass-click">
-            End - {secToHHMM(now.valueOf() / 1000 + playerState.timeRemaining)}
+            End -{" "}
+            {timestampToHHMM(now.valueOf() / 1000 + playerState.timeRemaining)}
           </span>
           {playerState.loadedItem !== null &&
             "intro" in playerState.loadedItem && (

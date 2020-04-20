@@ -1,3 +1,5 @@
+import { format, fromUnixTime } from "date-fns";
+
 export function convertModelToFormData(
   model: any,
   form: FormData | null = null,
@@ -43,6 +45,10 @@ export function secToHHMM(sec: number = 0) {
   d.setSeconds(0);
   d = new Date(d.getTime() + Math.ceil(sec) * 1000);
   return d.toLocaleString("en-GB").split(" ")[1];
+}
+
+export function timestampToHHMM(sec: number = 0) {
+  return format(fromUnixTime(sec), "HH:mm:ss");
 }
 
 export function timestampToDateTime(timestamp: number) {
