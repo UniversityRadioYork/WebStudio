@@ -18,8 +18,8 @@ type searchingStateEnum =
 export function CentralMusicLibrary() {
   const [track, setTrack] = useState("");
   const [artist, setArtist] = useState("");
-  const debouncedTrack = useDebounce(track, 1000);
-  const debouncedArtist = useDebounce(artist, 1000);
+  const debouncedTrack = useDebounce(track, 600);
+  const debouncedArtist = useDebounce(artist, 600);
   const [items, setItems] = useState<Track[]>([]);
 
   const [state, setState] = useState<searchingStateEnum>("not-searching");
@@ -88,7 +88,8 @@ export function CentralMusicLibrary() {
 export const AUX_CACHE: { [auxid: string]: AuxItem } = {};
 
 export function AuxLibrary({ libraryId }: { libraryId: string }) {
-  const [title, setTitle] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 200);
   const [items, setItems] = useState<AuxItem[]>([]);
 
   const [state, setState] = useState<searchingStateEnum>("not-searching");
@@ -120,8 +121,8 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
           className="form-control"
           type="text"
           placeholder="Filter..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </span>
       <div className="border-top mt-2"></div>
@@ -139,7 +140,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
                   its.title
                     .toString()
                     .toLowerCase()
-                    .indexOf(its.title.toString().toLowerCase()) > -1
+                    .indexOf(debouncedQuery.toLowerCase()) > -1
               )
               .map((item, index) => (
                 <Item
