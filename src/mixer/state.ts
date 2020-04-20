@@ -6,7 +6,7 @@ import {
 } from "@reduxjs/toolkit";
 import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
-import { PlanItem } from "../showplanner/state";
+import { itemId, PlanItem } from "../showplanner/state";
 import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
@@ -326,6 +326,11 @@ export const load = (
       // already playing, don't kill playback
       return;
     }
+  }
+  // If this is already the currently loaded item, don't bother
+  const currentItem = getState().mixer.players[player].loadedItem;
+  if (currentItem !== null && itemId(currentItem) === itemId(item)) {
+    return;
   }
   // If we're already loading something, abort it
   if (typeof loadAbortControllers[player] !== "undefined") {
