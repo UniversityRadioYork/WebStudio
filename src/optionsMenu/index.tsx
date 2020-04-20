@@ -9,6 +9,7 @@ import { MicTab } from "./MicTab";
 import { AboutTab } from "./AboutTab";
 import { StatsTab } from "./StatsTab";
 import { AdvancedTab } from "./AdvancedTab";
+import { FaTimes } from "react-icons/fa";
 
 export function OptionsMenu() {
   const state = useSelector((state: RootState) => state.optionsMenu);
@@ -43,16 +44,16 @@ export function OptionsMenu() {
             Advanced Options
           </NavLink>
         </NavItem>
-        <NavItem>
+        <NavItem className="ml-auto">
           <NavLink
-            className={state.currentTab === "about" ? "active" : ""}
-            onClick={() => dispatch(OptionsState.changeTab("about"))}
+            className=" btn-primary active"
+            onClick={() => dispatch(OptionsState.close())}
           >
-            About
+            <FaTimes /> Close
           </NavLink>
         </NavItem>
       </Nav>
-      <TabContent activeTab={state.currentTab}>
+      <TabContent activeTab={state.currentTab} className="pt-2">
         <TabPane tabId="mic">
           <MicTab />
         </TabPane>
@@ -66,9 +67,6 @@ export function OptionsMenu() {
           <AboutTab />
         </TabPane>
       </TabContent>
-      <footer>
-        <button onClick={() => dispatch(OptionsState.close())}>Exit</button>
-      </footer>
     </Modal>
   );
 }
