@@ -4,6 +4,7 @@ import { useBeforeunload } from "react-beforeunload";
 import { FaAlignJustify, FaBookOpen, FaMicrophone } from "react-icons/fa";
 
 import { TimeslotItem } from "../api";
+import appLogo from "../assets/images/webstudio.svg";
 
 import {
   Droppable,
@@ -257,21 +258,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   if (showplan === null) {
     return (
-      <div className="sp-container">
-        <h1>Getting show plan...</h1>
-        {planLoading && (
-          <b>Your plan is loading, please wait just a second...</b>
-        )}
-        {planLoadError !== null && (
-          <>
-            <b>Plan load failed!</b> Please tell Comp that something broke.
-            <p>
-              <code>{planLoadError}</code>
-            </p>
-          </>
-        )}
-      </div>
-    );
+      <LoadingDialogue
+      title="Getting Show Plan..."
+        subtitle={planLoading ? "Hang on a sec..." : ""}
+      error={planLoadError}
+      percent={100}
+    />
+    )
   }
   return (
     <div className="sp-container m-0">
@@ -279,9 +272,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <div className="sp-status">
         {planSaving && <em>Plan saving...</em>}
         {planSaveError && (
-          <b>
+          <strong>
             Catastrophe! <code>{planSaveError}</code>
-          </b>
+          </strong>
         )}
       </div>
       <div className="sp">
@@ -320,5 +313,30 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     </div>
   );
 };
+
+export function LoadingDialogue ({title, subtitle, error, percent}: {title:string, subtitle:string, error:string|null, percent:number}) {
+  return (
+    <div className="loading">
+      <div className="logo-container" style={{"width": percent + "%"}}>
+        <img className="logo mb-5" src={appLogo} style={{ filter: "brightness(0.5) sepia(0.5) hue-rotate(-180deg) saturate(5)", maxHeight: 50 }} alt="Web Studio Logo" />
+      </div>
+
+      <span className="inner">
+        <h1>{title}</h1>
+        <p><strong>{subtitle}</strong></p>
+        {error !== null && (
+          <>
+          <p>
+            <strong>Failed!</strong> Please tell Computing Team that something broke.
+          </p>
+          <p>
+            <code>{error}</code>
+          </p>
+          </>
+        )}
+      </span>
+    </div>
+  );
+}
 
 export default Showplanner;

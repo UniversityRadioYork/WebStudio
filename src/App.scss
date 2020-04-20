@@ -3,6 +3,28 @@
 $sidebar-width: 250px;
 $number-of-channels: 3;
 
+.loading {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  /* bring your own prefixes */
+  transform: translate(-50%, -20%);
+  text-align: left;
+
+  .logo-container {
+    text-align: center;
+    overflow-x: hidden;
+    position: relative;
+
+    .logo {
+      height: 50px;
+    }
+  }
+  .inner {
+    text-align: center;
+  }
+}
+
 .sp {
   display: grid;
   grid-template-areas: "channels sb-tg sb";

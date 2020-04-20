@@ -4,6 +4,7 @@ import { MYRADIO_NON_API_BASE } from "../api";
 
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
+import { LoadingDialogue } from "../showplanner";
 
 const SessionHandler: React.FC = function() {
   const dispatch = useDispatch();
@@ -17,18 +18,21 @@ const SessionHandler: React.FC = function() {
   }, [dispatch]);
 
   function redirectToLogin() {
-    window.location.replace(
-      MYRADIO_NON_API_BASE +
-        "/MyRadio/login/?next=" +
-        encodeURIComponent(
-          MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
-        )
+    return (window.location.replace(
+        MYRADIO_NON_API_BASE +
+          "/MyRadio/login/?next=" +
+          encodeURIComponent(
+            MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
+          )
+      )
     );
   }
 
   function redirectToTimeslotSelect() {
-    window.location.replace(
-      MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
+    return (
+      window.location.replace(
+        MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
+      )
     );
   }
 
@@ -44,36 +48,46 @@ const SessionHandler: React.FC = function() {
   var redirect_url = encodeURIComponent(window.location.toString());
   if (currentUser === null) {
     return (
-      <div className="sp-container">
-        <h1>Getting user data...</h1>
-        {userLoading && (
-          <b>Your data is loading, please wait just a second...</b>
-        )}
-        {userLoadError !== null &&
+      <div>
+        <LoadingDialogue
+          title="Getting User..."
+          subtitle={userLoading ? "Hang on a sec..." : ""}
+          error={userLoadError}
+          percent={39}
+        />
+        {
+          userLoadError !== null &&
           userLoadError !== undefined &&
           !userLoading &&
-          redirectToLogin()}
+          redirectToLogin()
+        }
       </div>
     );
   }
 
   if (currentTimeslot === null) {
     return (
-      <div className="sp-container">
-        <h1>Getting User Data...</h1>
-        {timeslotLoading && (
-          <b>Your data is loading, please wait just a second...</b>
-        )}
-        {currentTimeslot === null &&
-          timeslotLoadError == null &&
-          timeslotLoadError !== undefined &&
-          !timeslotLoading &&
-          redirectToTimeslotSelect()}
+      <div>
+        <LoadingDialogue
+          title="Getting Timeslot..."
+          subtitle={timeslotLoading ? "Hang on a sec..." : ""}
+          error={userLoadError}
+          percent={71}
+        />
+        {
+
+            currentTimeslot === null &&
+            timeslotLoadError == null &&
+            timeslotLoadError !== undefined &&
+            !timeslotLoading &&
+            redirectToTimeslotSelect()
+
+        }
       </div>
-    );
+    )
   }
 
-  return null;
+  return (<p></p>);
 };
 
 export default SessionHandler;
