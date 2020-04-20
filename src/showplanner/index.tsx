@@ -335,7 +335,7 @@ export function LoadingDialogue({
   percent: number;
 }) {
   return (
-    <div className="loading">
+    <div className="loading-dialogue">
       <div className="logo-container" style={{ width: percent + "%" }}>
         <img
           className="logo mb-5"
