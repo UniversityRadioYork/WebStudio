@@ -88,7 +88,6 @@ interface PlayerState {
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
-  timeEndingAt: string | null;
   playOnLoad: Boolean;
   autoAdvance: Boolean;
   repeat: PlayerRepeatEnum;
@@ -122,7 +121,6 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
-        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -138,7 +136,6 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
-        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -154,7 +151,6 @@ const mixerState = createSlice({
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
-        timeEndingAt: null,
         playOnLoad: false,
         autoAdvance: true,
         repeat: "none",
@@ -184,7 +180,6 @@ const mixerState = createSlice({
       state.players[action.payload.player].loading = 0;
       state.players[action.payload.player].timeCurrent = 0;
       state.players[action.payload.player].timeRemaining = 0;
-      state.players[action.payload.player].timeEndingAt = null;
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
@@ -250,13 +245,6 @@ const mixerState = createSlice({
       let timeRemaining =
         state.players[action.payload.player].timeLength - action.payload.time;
       state.players[action.payload.player].timeRemaining = timeRemaining;
-    },
-    updateTimeEndingAt(state) {
-      state.players.forEach((player) => {
-        let date = new Date();
-        date.setSeconds(date.getSeconds() + player.timeRemaining);
-        player.timeEndingAt = date.toLocaleString("en-GB").split(" ")[1];
-      });
     },
     setTimeLength(
       state,
@@ -413,7 +401,6 @@ export const load = (
         time: 0,
       })
     );
-    dispatch(updateTimeEnding());
     const state = getState().mixer.players[player];
     if (state.playOnLoad) {
       wavesurfer.play();
@@ -541,20 +528,6 @@ export const load = (
       console.error(e);
       dispatch(mixerState.actions.itemLoadError({ player }));
     }
-  }
-};
-
-export const updateTimeEnding = (): AppThunk => async (dispatch) => {
-  if (!timerInterval) {
-    timerInterval = later.setInterval(
-      () => {
-        dispatch(mixerState.actions.updateTimeEndingAt());
-      },
-      later.parse
-        .recur()
-        .every(1)
-        .second()
-    );
   }
 };
 

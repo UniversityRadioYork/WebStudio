@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   FaLevelDownAlt,
@@ -8,6 +8,7 @@ import {
   FaPause,
   FaStop,
 } from "react-icons/fa";
+import { add, format } from "date-fns";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { secToHHMM } from "../lib/utils";
@@ -19,6 +20,13 @@ export function Player({ id }: { id: number }) {
     (state: RootState) => state.mixer.players[id]
   );
   const dispatch = useDispatch();
+
+  const [now, setNow] = useState<Date>(new Date());
+  const tickerRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    tickerRef.current = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(tickerRef.current);
+  }, []);
 
   return (
     <div
@@ -144,8 +152,7 @@ export function Player({ id }: { id: number }) {
             {secToHHMM(playerState.timeRemaining)}
           </span>
           <span id={"ends-" + id} className="m-0 outro bypass-click">
-            End -{" "}
-            {playerState.timeEndingAt ? playerState.timeEndingAt : "00:00:00"}
+            End - {secToHHMM(now.valueOf() / 1000 + playerState.timeRemaining)}
           </span>
           {playerState.loadedItem !== null &&
             "intro" in playerState.loadedItem && (
