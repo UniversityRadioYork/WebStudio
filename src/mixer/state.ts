@@ -13,8 +13,8 @@ import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
-import CursorPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js';
-import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
+import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
+import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
 import * as later from "later";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
@@ -385,20 +385,18 @@ export const load = (
       credentials: "include",
     } as any,
     plugins: [
-      CursorPlugin.create(
-        {
-          showTime: true,
-          opacity: 1,
-          customShowTimeStyle: {
-              'background-color': '#000',
-              color: '#fff',
-              padding: '2px',
-              'font-size': '10px'
-          }
-        }
-      ),
-      RegionsPlugin.create({})
-    ]
+      CursorPlugin.create({
+        showTime: true,
+        opacity: 1,
+        customShowTimeStyle: {
+          "background-color": "#000",
+          color: "#fff",
+          padding: "2px",
+          "font-size": "10px",
+        },
+      }),
+      RegionsPlugin.create({}),
+    ],
   });
 
   wavesurfer.on("ready", () => {
@@ -421,15 +419,13 @@ export const load = (
       wavesurfer.play();
     }
     if (state.loadedItem && "intro" in state.loadedItem) {
-      wavesurfer.addRegion(
-        {
-          id: "intro",
-          resize: false,
-          start: 0,
-          end: state.loadedItem.intro,
-          color: 'rgba(125,0,255, 0.12)'
-        }
-      )
+      wavesurfer.addRegion({
+        id: "intro",
+        resize: false,
+        start: 0,
+        end: state.loadedItem.intro,
+        color: "rgba(125,0,255, 0.12)",
+      });
     }
   });
   wavesurfer.on("play", () => {
