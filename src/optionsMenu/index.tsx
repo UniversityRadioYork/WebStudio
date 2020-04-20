@@ -44,6 +44,14 @@ export function OptionsMenu() {
             Advanced Options
           </NavLink>
         </NavItem>
+        <NavItem>
+          <NavLink
+            className={state.currentTab === "about" ? "active" : ""}
+            onClick={() => dispatch(OptionsState.changeTab("about"))}
+          >
+            About
+          </NavLink>
+        </NavItem>
         <NavItem className="ml-auto">
           <NavLink
             className=" btn-primary active"
