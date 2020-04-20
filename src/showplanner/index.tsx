@@ -1,7 +1,7 @@
 import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { FaCaretSquareDown, FaAlignJustify, FaSwatchbook, FaBookOpen } from "react-icons/fa";
+import { FaAlignJustify, FaBookOpen, FaMicrophone } from "react-icons/fa";
 
 import { TimeslotItem } from "../api";
 
@@ -81,32 +81,34 @@ function LibraryColumn() {
 
   return (
     <div className="library-column">
-      <select
-        className="form-control"
-        style={{ width: "100%" }}
-        value={sauce}
-        onChange={(e) => setSauce(e.target.value)}
-      >
-        <option value={"None"} disabled>
-          Choose a library
-        </option>
-        <option value={"CentralMusicLibrary"}>Central Music Library</option>
-        <option disabled>Personal Resources</option>
-        {userPlaylists.map((playlist) => (
-          <option key={playlist.managedid} value={playlist.managedid}>
-            {playlist.title}
+      <h2><FaBookOpen className="mx-2" size={28} />Libraries</h2>
+      <div className="px-2">
+        <select
+          className="form-control"
+          value={sauce}
+          onChange={(e) => setSauce(e.target.value)}
+        >
+          <option value={"None"} disabled>
+            Choose a library
           </option>
-        ))}
-        <option disabled>Shared Resources</option>
-        {auxPlaylists.map((playlist) => (
-          <option
-            key={"aux-" + playlist.managedid}
-            value={"aux-" + playlist.managedid}
-          >
-            {playlist.title}
-          </option>
-        ))}
-      </select>
+          <option value={"CentralMusicLibrary"}>Central Music Library</option>
+          <option disabled>Personal Resources</option>
+          {userPlaylists.map((playlist) => (
+            <option key={playlist.managedid} value={playlist.managedid}>
+              {playlist.title}
+            </option>
+          ))}
+          <option disabled>Shared Resources</option>
+          {auxPlaylists.map((playlist) => (
+            <option
+              key={"aux-" + playlist.managedid}
+              value={"aux-" + playlist.managedid}
+            >
+              {playlist.title}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="border-top my-3"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
       {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
@@ -129,7 +131,8 @@ function MicControl() {
 
   return (
     <div className="mic-control">
-      <h2>Microphone</h2>
+      <h2><FaMicrophone className="mx-1" size={28} />Microphone</h2>
+      {!state.open && (<p className="alert-info p-2 mb-0">The microphone has not been setup. Go to options.</p>)}
       <div className={`mixer-buttons ${!state.open && "disabled"}`}>
         <div
           className="mixer-buttons-backdrop"
@@ -298,6 +301,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           </span>
           <div id="sidebar">
             <LibraryColumn />
+            <div className="border-top"></div>
             <MicControl />
           </div>
         </DragDropContext>
