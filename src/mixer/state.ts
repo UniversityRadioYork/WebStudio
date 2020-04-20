@@ -13,6 +13,8 @@ import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import WaveSurfer from "wavesurfer.js";
+import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
+import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
 import * as later from "later";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
@@ -83,7 +85,6 @@ interface PlayerState {
   state: PlayerStateEnum;
   volume: number;
   gain: number;
-  wavesurfer: WaveSurfer | null;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -118,7 +119,6 @@ const mixerState = createSlice({
         state: "stopped",
         volume: 1,
         gain: 1,
-        wavesurfer: null,
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
@@ -135,7 +135,6 @@ const mixerState = createSlice({
         state: "stopped",
         volume: 1,
         gain: 1,
-        wavesurfer: null,
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
@@ -152,7 +151,6 @@ const mixerState = createSlice({
         state: "stopped",
         volume: 1,
         gain: 1,
-        wavesurfer: null,
         timeCurrent: 0,
         timeRemaining: 0,
         timeLength: 0,
@@ -386,6 +384,19 @@ export const load = (
     xhr: {
       credentials: "include",
     } as any,
+    plugins: [
+      CursorPlugin.create({
+        showTime: true,
+        opacity: 1,
+        customShowTimeStyle: {
+          "background-color": "#000",
+          color: "#fff",
+          padding: "2px",
+          "font-size": "10px",
+        },
+      }),
+      RegionsPlugin.create({}),
+    ],
   });
 
   wavesurfer.on("ready", () => {
@@ -406,6 +417,15 @@ export const load = (
     const state = getState().mixer.players[player];
     if (state.playOnLoad) {
       wavesurfer.play();
+    }
+    if (state.loadedItem && "intro" in state.loadedItem) {
+      wavesurfer.addRegion({
+        id: "intro",
+        resize: false,
+        start: 0,
+        end: state.loadedItem.intro,
+        color: "rgba(125,0,255, 0.12)",
+      });
     }
   });
   wavesurfer.on("play", () => {

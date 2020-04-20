@@ -12,7 +12,7 @@ export async function apiRequest(
   params: any,
   need_auth: boolean = true
 ): Promise<Response> {
-  let req = null;
+  var req: Promise<Response> | null = null;
   if (method === "GET") {
     req = fetch(url + qs.stringify(params, { addQueryPrefix: true }), {
       credentials: need_auth ? "include" : "omit",
