@@ -2,12 +2,13 @@ import React, { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
 
-import { FaClock, FaUser } from "react-icons/fa";
+import { FaRegClock, FaRegUser } from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
 
 import * as BroadcastState from "../broadcast/state";
 import appLogo from "../assets/images/webstudio.svg";
+import myradioLogo from "../assets/images/myradio.svg";
 import { MYRADIO_NON_API_BASE } from "../api";
 import "./navbar.scss";
 import { closeAlert } from "./state";
@@ -50,8 +51,9 @@ export function NavBar() {
           />
         </a>
         <span className="navbar-brand divider"></span>
-        <a className="navbar-brand" href="/">
-          <img src={appLogo} height="28" alt="Web Studio Logo" />
+        <a className="navbar-brand logo-hover" href={MYRADIO_NON_API_BASE} title="Back to MyRadio">
+          <img className="logo-webstudio" src={appLogo} alt="Web Studio Logo" />
+          <img className="logo-myradio" src={myradioLogo} alt="MyRadio Logo" />
         </a>
         <div className="nav-item nav-link" id="timelord">
           <div className="time">
@@ -70,8 +72,8 @@ export function NavBar() {
             <b>{nicifyConnectionState(broadcastState.connectionState)}</b>
           </div>
         </li>
-        <li className="nav-item nav-link">
-          <button
+        <li className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link"
+
             onClick={() => {
               switch (broadcastState.stage) {
                 case "NOT_REGISTERED":
@@ -85,7 +87,6 @@ export function NavBar() {
           >
             {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
             {broadcastState.stage === "REGISTERED" && "Cancel registration"}
-          </button>
         </li>
         {settings.enableRecording && (
           <li className="nav-item nav-link">
@@ -103,6 +104,7 @@ export function NavBar() {
             </button>
           </li>
         )}
+        <span className="navbar-brand divider ml-3 mr-2 mt-2 mb-0"></span>
         <li className="nav-item dropdown">
           <a
             className="nav-link dropdown-toggle"
@@ -114,7 +116,7 @@ export function NavBar() {
             aria-haspopup="true"
             aria-expanded="false"
           >
-            <FaClock />
+            <FaRegClock />
             &nbsp;
             {sessionState.currentTimeslot &&
               sessionState.currentTimeslot.start_time}
@@ -145,7 +147,7 @@ export function NavBar() {
             aria-haspopup="true"
             aria-expanded="false"
           >
-            <FaUser />
+            <FaRegUser />
             &nbsp;
             {sessionState.currentUser?.fname} {sessionState.currentUser?.sname}
           </a>
