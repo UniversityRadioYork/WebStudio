@@ -85,6 +85,7 @@ function LibraryColumn() {
       <div className="px-2">
         <select
           className="form-control"
+          style={{"flex": "none"}}
           value={sauce}
           onChange={(e) => setSauce(e.target.value)}
         >
@@ -109,7 +110,7 @@ function LibraryColumn() {
           ))}
         </select>
       </div>
-      <div className="border-top my-3"></div>
+      <div className="border-top my-2"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
       {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
         <AuxLibrary libraryId={sauce} />

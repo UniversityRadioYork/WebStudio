@@ -49,20 +49,23 @@ export function CentralMusicLibrary() {
   }, [debouncedTrack, debouncedArtist, artist, track]);
   return (
     <div className="library library-central">
-      <input
-        className="form-control"
-        type="text"
-        placeholder="Filter by track..."
-        value={track}
-        onChange={(e) => setTrack(e.target.value)}
-      />
-      <input
-        className="form-control"
-        type="text"
-        placeholder="Filter by artist..."
-        value={artist}
-        onChange={(e) => setArtist(e.target.value)}
-      />
+      <span className="px-2">
+        <input
+          className="form-control"
+          type="text"
+          placeholder="Filter by track..."
+          value={track}
+          onChange={(e) => setTrack(e.target.value)}
+        />
+        <input
+          className="form-control mt-2"
+          type="text"
+          placeholder="Filter by artist..."
+          value={artist}
+          onChange={(e) => setArtist(e.target.value)}
+        />
+      </span>
+      <div className="border-top mt-2"></div>
       <ResultsPlaceholder state={state} />
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
@@ -112,13 +115,16 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
   }, [libraryId]);
   return (
     <div className="library library-aux">
-      <input
-        className="form-control"
-        type="text"
-        placeholder="Filter..."
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+      <span className="px-2">
+        <input
+          className="form-control"
+          type="text"
+          placeholder="Filter..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </span>
+      <div className="border-top mt-2"></div>
       <ResultsPlaceholder state={state} />
       <Droppable droppableId="$AUX">
         {(provided, snapshot) => (
