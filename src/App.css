@@ -122,6 +122,10 @@ button {
   height: 6vh;
   width: 100%;
   overflow: hidden;
+  background: white;
+}
+.waveform .graph canvas {
+  background: transparent;
 }
 .waveform .graph wave {
   height: 6vh !important;
