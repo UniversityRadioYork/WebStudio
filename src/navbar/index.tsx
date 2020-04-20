@@ -2,7 +2,12 @@ import React, { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
 
-import { FaCircle, FaRegClock, FaRegUser, FaBroadcastTower } from "react-icons/fa";
+import {
+  FaCircle,
+  FaRegClock,
+  FaRegUser,
+  FaBroadcastTower,
+} from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
 
@@ -77,7 +82,12 @@ export function NavBar() {
           </div>
         </li>
         <li
-          className={"btn rounded-0 pt-2 pb-1 nav-item nav-link " + (broadcastState.stage !== "NOT_REGISTERED" ? "btn-danger active" : "btn-outline-light")}
+          className={
+            "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
+            (broadcastState.stage !== "NOT_REGISTERED"
+              ? "btn-danger active"
+              : "btn-outline-light")
+          }
           onClick={() => {
             switch (broadcastState.stage) {
               case "NOT_REGISTERED":
@@ -89,24 +99,32 @@ export function NavBar() {
             }
           }}
         >
-          <FaBroadcastTower size={17}/>
+          <FaBroadcastTower size={17} />
           &nbsp;
           {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
           {broadcastState.stage === "REGISTERED" && "Cancel registration"}
         </li>
         {settings.enableRecording && (
-          <li className={"btn rounded-0 pt-2 pb-1 nav-item nav-link " + (broadcastState.recordingState === "CONNECTED" ? "btn-outline-danger active" : "btn-outline-warning") }
-              onClick={() =>
-                dispatch(
-                  broadcastState.recordingState === "NOT_CONNECTED"
-                    ? BroadcastState.startRecording()
-                    : BroadcastState.stopRecording()
-                )
-              }
-            >
-              <FaCircle size={17} />
-              &nbsp;
-              Rec: {broadcastState.recordingState === "CONNECTED" ? "Recording" : "Not Recording"}
+          <li
+            className={
+              "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
+              (broadcastState.recordingState === "CONNECTED"
+                ? "btn-outline-danger active"
+                : "btn-outline-warning")
+            }
+            onClick={() =>
+              dispatch(
+                broadcastState.recordingState === "NOT_CONNECTED"
+                  ? BroadcastState.startRecording()
+                  : BroadcastState.stopRecording()
+              )
+            }
+          >
+            <FaCircle size={17} />
+            &nbsp; Rec:{" "}
+            {broadcastState.recordingState === "CONNECTED"
+              ? "Recording"
+              : "Not Recording"}
           </li>
         )}
         <span className="navbar-brand divider ml-3 mr-2 mt-2 mb-0"></span>
