@@ -16,6 +16,8 @@ $number-of-channels: 3;
     overflow-x: hidden;
     position: relative;
 
+    transition: 600ms ease-in-out width;
+
     .logo {
       height: 50px;
     }
