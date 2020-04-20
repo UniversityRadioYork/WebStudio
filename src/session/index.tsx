@@ -18,21 +18,18 @@ const SessionHandler: React.FC = function() {
   }, [dispatch]);
 
   function redirectToLogin() {
-    return (window.location.replace(
-        MYRADIO_NON_API_BASE +
-          "/MyRadio/login/?next=" +
-          encodeURIComponent(
-            MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
-          )
-      )
+    return window.location.replace(
+      MYRADIO_NON_API_BASE +
+        "/MyRadio/login/?next=" +
+        encodeURIComponent(
+          MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
+        )
     );
   }
 
   function redirectToTimeslotSelect() {
-    return (
-      window.location.replace(
-        MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
-      )
+    return window.location.replace(
+      MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
     );
   }
 
@@ -55,12 +52,10 @@ const SessionHandler: React.FC = function() {
           error={userLoadError}
           percent={39}
         />
-        {
-          userLoadError !== null &&
+        {userLoadError !== null &&
           userLoadError !== undefined &&
           !userLoading &&
-          redirectToLogin()
-        }
+          redirectToLogin()}
       </div>
     );
   }
@@ -74,20 +69,16 @@ const SessionHandler: React.FC = function() {
           error={userLoadError}
           percent={71}
         />
-        {
-
-            currentTimeslot === null &&
-            timeslotLoadError == null &&
-            timeslotLoadError !== undefined &&
-            !timeslotLoading &&
-            redirectToTimeslotSelect()
-
-        }
+        {currentTimeslot === null &&
+          timeslotLoadError == null &&
+          timeslotLoadError !== undefined &&
+          !timeslotLoading &&
+          redirectToTimeslotSelect()}
       </div>
-    )
+    );
   }
 
-  return (<p></p>);
+  return <p></p>;
 };
 
 export default SessionHandler;

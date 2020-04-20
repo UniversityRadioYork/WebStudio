@@ -82,11 +82,14 @@ function LibraryColumn() {
 
   return (
     <div className="library-column">
-      <h2><FaBookOpen className="mx-2" size={28} />Libraries</h2>
+      <h2>
+        <FaBookOpen className="mx-2" size={28} />
+        Libraries
+      </h2>
       <div className="px-2">
         <select
           className="form-control"
-          style={{"flex": "none"}}
+          style={{ flex: "none" }}
           value={sauce}
           onChange={(e) => setSauce(e.target.value)}
         >
@@ -133,8 +136,15 @@ function MicControl() {
 
   return (
     <div className="mic-control">
-      <h2><FaMicrophone className="mx-1" size={28} />Microphone</h2>
-      {!state.open && (<p className="alert-info p-2 mb-0">The microphone has not been setup. Go to options.</p>)}
+      <h2>
+        <FaMicrophone className="mx-1" size={28} />
+        Microphone
+      </h2>
+      {!state.open && (
+        <p className="alert-info p-2 mb-0">
+          The microphone has not been setup. Go to options.
+        </p>
+      )}
       <div className={`mixer-buttons ${!state.open && "disabled"}`}>
         <div
           className="mixer-buttons-backdrop"
@@ -259,12 +269,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   if (showplan === null) {
     return (
       <LoadingDialogue
-      title="Getting Show Plan..."
+        title="Getting Show Plan..."
         subtitle={planLoading ? "Hang on a sec..." : ""}
-      error={planLoadError}
-      percent={100}
-    />
-    )
+        error={planLoadError}
+        percent={100}
+      />
+    );
   }
   return (
     <div className="sp-container m-0">
@@ -289,9 +299,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
             className="btn btn-outline-dark btn-sm mb-0"
             onClick={() => toggleSidebar()}
           >
-            <FaAlignJustify style={{verticalAlign: "text-bottom"}}/>
-            &nbsp;
-            Toggle Sidebar
+            <FaAlignJustify style={{ verticalAlign: "text-bottom" }} />
+            &nbsp; Toggle Sidebar
           </span>
           <div id="sidebar">
             <LibraryColumn />
@@ -314,24 +323,46 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   );
 };
 
-export function LoadingDialogue ({title, subtitle, error, percent}: {title:string, subtitle:string, error:string|null, percent:number}) {
+export function LoadingDialogue({
+  title,
+  subtitle,
+  error,
+  percent,
+}: {
+  title: string;
+  subtitle: string;
+  error: string | null;
+  percent: number;
+}) {
   return (
     <div className="loading">
-      <div className="logo-container" style={{"width": percent + "%"}}>
-        <img className="logo mb-5" src={appLogo} style={{ filter: "brightness(0.5) sepia(0.5) hue-rotate(-180deg) saturate(5)", maxHeight: 50 }} alt="Web Studio Logo" />
+      <div className="logo-container" style={{ width: percent + "%" }}>
+        <img
+          className="logo mb-5"
+          src={appLogo}
+          style={{
+            filter:
+              "brightness(0.5) sepia(0.5) hue-rotate(-180deg) saturate(5)",
+            maxHeight: 50,
+          }}
+          alt="Web Studio Logo"
+        />
       </div>
 
       <span className="inner">
         <h1>{title}</h1>
-        <p><strong>{subtitle}</strong></p>
+        <p>
+          <strong>{subtitle}</strong>
+        </p>
         {error !== null && (
           <>
-          <p>
-            <strong>Failed!</strong> Please tell Computing Team that something broke.
-          </p>
-          <p>
-            <code>{error}</code>
-          </p>
+            <p>
+              <strong>Failed!</strong> Please tell Computing Team that something
+              broke.
+            </p>
+            <p>
+              <code>{error}</code>
+            </p>
           </>
         )}
       </span>

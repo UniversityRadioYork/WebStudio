@@ -51,7 +51,11 @@ export function NavBar() {
           />
         </a>
         <span className="navbar-brand divider"></span>
-        <a className="navbar-brand logo-hover" href={MYRADIO_NON_API_BASE} title="Back to MyRadio">
+        <a
+          className="navbar-brand logo-hover"
+          href={MYRADIO_NON_API_BASE}
+          title="Back to MyRadio"
+        >
           <img className="logo-webstudio" src={appLogo} alt="Web Studio Logo" />
           <img className="logo-myradio" src={myradioLogo} alt="MyRadio Logo" />
         </a>
@@ -72,21 +76,21 @@ export function NavBar() {
             <b>{nicifyConnectionState(broadcastState.connectionState)}</b>
           </div>
         </li>
-        <li className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link"
-
-            onClick={() => {
-              switch (broadcastState.stage) {
-                case "NOT_REGISTERED":
-                  dispatch(BroadcastState.goOnAir());
-                  break;
-                case "REGISTERED":
-                  dispatch(BroadcastState.cancelTimeslot());
-                  break;
-              }
-            }}
-          >
-            {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
-            {broadcastState.stage === "REGISTERED" && "Cancel registration"}
+        <li
+          className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link"
+          onClick={() => {
+            switch (broadcastState.stage) {
+              case "NOT_REGISTERED":
+                dispatch(BroadcastState.goOnAir());
+                break;
+              case "REGISTERED":
+                dispatch(BroadcastState.cancelTimeslot());
+                break;
+            }
+          }}
+        >
+          {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
+          {broadcastState.stage === "REGISTERED" && "Cancel registration"}
         </li>
         {settings.enableRecording && (
           <li className="nav-item nav-link">
