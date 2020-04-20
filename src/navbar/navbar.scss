@@ -42,8 +42,8 @@
   background-color: #2d333c;
   border-color: #2d425f;
   border: none;
-  height: 60px;
   max-height: 7vh;
+  flex-shrink: 0;
 }
 .navbar-ury .navbar-brand {
   color: #ffffff;
