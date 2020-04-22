@@ -1,7 +1,16 @@
-import React, { useRef, useLayoutEffect, useEffect, HTMLProps } from "react";
+import React, {
+  useRef,
+  useLayoutEffect,
+  useEffect,
+  useCallback,
+  useState,
+  HTMLProps,
+} from "react";
+import { useSelector } from "react-redux";
+import * as MixerState from "../../mixer/state";
+import { RootState } from "../../rootReducer";
 
 interface VUMeterProps extends HTMLProps<HTMLCanvasElement> {
-  value: number;
   range: [number, number];
   greenRange: [number, number];
 }
@@ -9,6 +18,29 @@ interface VUMeterProps extends HTMLProps<HTMLCanvasElement> {
 export function VUMeter(props: VUMeterProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+
+  const state = useSelector((state: RootState) => state.mixer.mic);
+  const rafRef = useRef<number | null>(null);
+  const [peak, setPeak] = useState(-Infinity);
+  const animate = useCallback(() => {
+    if (state.calibration) {
+      const result = MixerState.getMicAnalysis();
+      setPeak(result);
+      rafRef.current = requestAnimationFrame(animate);
+    } else if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, [state.calibration]);
+
+  useEffect(() => {
+    if (state.calibration) {
+      rafRef.current = requestAnimationFrame(animate);
+    } else if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, [animate, state.calibration]);
 
   useLayoutEffect(() => {
     if (canvasRef.current) {
@@ -40,18 +72,15 @@ export function VUMeter(props: VUMeterProps) {
       height
     );
 
-    if (
-      props.value >= props.greenRange[0] &&
-      props.value <= props.greenRange[1]
-    ) {
+    if (peak >= props.greenRange[0] && peak <= props.greenRange[1]) {
       ctx.fillStyle = "#00ff00";
-    } else if (props.value < props.greenRange[0]) {
+    } else if (peak < props.greenRange[0]) {
       ctx.fillStyle = "#e8d120";
     } else {
       ctx.fillStyle = "#ff0000";
     }
 
-    const valueOffset = Math.abs(props.value - props.range[0]) / valueRange;
+    const valueOffset = Math.abs(peak - props.range[0]) / valueRange;
 
     ctx.fillRect(0, 0, valueOffset * width, height - 10);
 
@@ -60,7 +89,7 @@ export function VUMeter(props: VUMeterProps) {
       const value = (props.range[0] + valueRange * (i / 10)).toFixed(0);
       ctx.fillText(value, width * (i / 10), height - 7);
     }
-  }, [props.value, props.range, props.greenRange]);
+  }, [peak, props.range, props.greenRange]);
 
   const { value, range, greenRange, ...rest } = props;
 

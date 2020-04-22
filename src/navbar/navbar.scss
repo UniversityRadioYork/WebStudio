@@ -1,5 +1,6 @@
 /* Stuff to get the nav to collapse at 991px (when the menu collapses)
  * Taken from http://stackoverflow.com/a/36289507/995325 */
+
 @media (max-width: 991px) {
   .navbar-header {
     float: none;
@@ -37,7 +38,9 @@
     display: block !important;
   }
 }
+
 /** MyRadio bootstrap navbar overides taken from http://work.smarchal.com/twbscolor/css/2D425F2D425Fffffffe1e1e11 **/
+
 .navbar-ury {
   background-color: #2d333c;
   border-color: #2d425f;
@@ -45,44 +48,57 @@
   max-height: 7vh;
   flex-shrink: 0;
 }
+
 .navbar-ury .navbar-brand {
   color: #ffffff;
-  padding: 10px 15px; /** added to center the logo **/
-  line-height: 30px; /** added to center the logo **/
+  padding: 10px 15px;
+  /** added to center the logo **/
+  line-height: 30px;
+  /** added to center the logo **/
   margin-right: 0;
 }
+
 .navbar-ury .navbar-brand img {
   max-height: 100%;
 }
+
 .navbar-ury .navbar-brand:hover,
 .navbar-ury .navbar-brand:focus {
   color: #e1e1e1;
 }
+
 .navbar-ury .navbar-brand.divider {
   border-right: 1px white solid;
   margin: 14px 0;
   height: 22px;
   padding: 0;
 }
+
 .navbar-ury .navbar-text {
   color: #ffffff;
 }
+
 .navbar-ury .navbar-nav > li > a {
   color: #ffffff;
 }
+
 .navbar-ury .navbar-nav > li.nav-img {
   height: 50px;
 }
+
 .navbar-ury .navbar-nav > li.nav-img > a {
   height: 100%;
   padding: 10px 10px;
 }
+
 .navbar-ury .navbar-nav > li.nav-img > a > img {
   height: 100%;
 }
+
 .navbar-ury .navbar-nav .caret {
   margin-left: 5px;
 }
+
 .navbar-ury .navbar-nav .glyphicon {
   margin-right: 5px;
 }
@@ -92,59 +108,73 @@
   color: #e1e1e1;
   background-color: #2d425f;
 }
+
 .navbar-ury .navbar-nav > li > .dropdown-menu {
   background-color: #2d333c;
   border-top: none;
 }
+
 .navbar-ury .navbar-nav > li > .dropdown-menu > a {
   color: #ffffff;
 }
+
 .navbar-ury .navbar-nav > li > .dropdown-menu > a:hover,
 .navbar-ury .navbar-nav > li > .dropdown-menu > a:focus {
   color: #e1e1e1;
   background-color: #2d425f;
 }
+
 .navbar-ury .navbar-nav > li > .dropdown-menu > .divider {
   background-color: #2d425f;
 }
+
 .navbar-ury .navbar-nav .open .dropdown-menu > .active > a,
 .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:hover,
 .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:focus {
   color: #e1e1e1;
   background-color: #2d333c;
 }
+
 .navbar-ury .navbar-nav > .active > a,
 .navbar-ury .navbar-nav > .active > a:hover,
 .navbar-ury .navbar-nav > .active > a:focus {
   color: #e1e1e1;
   background-color: #2d333c;
 }
+
 .navbar-ury .navbar-nav > .open > a,
 .navbar-ury .navbar-nav > .open > a:hover,
 .navbar-ury .navbar-nav > .open > a:focus {
   color: #e1e1e1;
   background-color: #2d425f !important;
 }
+
 .navbar-ury .navbar-toggle {
   border-color: #2d425f;
 }
+
 .navbar-ury .navbar-toggle:hover,
 .navbar-ury .navbar-toggle:focus {
   background-color: #2d425f;
 }
+
 .navbar-ury .navbar-toggle .icon-bar {
   background-color: #ffffff;
 }
+
 .navbar-ury .navbar-collapse,
 .navbar-ury .navbar-form {
   border-color: #ffffff;
 }
+
 .navbar-ury .navbar-link {
   color: #ffffff;
 }
+
 .navbar-ury .navbar-link:hover {
   color: #e1e1e1;
 }
+
 .navbar-ury .navbar-brand:hover {
   color: #e1e1e1;
   background-color: #2d425f !important;
@@ -216,7 +246,12 @@
   height: 100%;
   max-height: 36.5px;
 }
+
 #timelord .time {
   font-weight: bold;
   font-size: 1.1em;
+}
+
+#navMeter {
+  margin: 0.4rem 0 0 1rem;
 }
