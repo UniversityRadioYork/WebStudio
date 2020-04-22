@@ -132,7 +132,16 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 }
 
-export class AudioEngine {
+interface EngineEvents {
+  micOpen: () => void;
+}
+
+const EngineEmitter: StrictEmitter<
+  EventEmitter,
+  EngineEvents
+> = EventEmitter as any;
+
+export class AudioEngine extends ((EngineEmitter as unknown) as { new (): EventEmitter }) {
   public audioContext: AudioContext;
   public players: (Player | undefined)[] = [];
 
@@ -155,6 +164,7 @@ export class AudioEngine {
   analysisBuffer: Float32Array;
 
   constructor() {
+    super();
     this.audioContext = new AudioContext({
       sampleRate: 44100,
       latencyHint: "interactive",
@@ -186,8 +196,7 @@ export class AudioEngine {
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
 
-    this.micCalibrationGain.connect(this.micAnalyser);
-    this.micCalibrationGain
+    this.micCalibrationGain.connect(this.micAnalyser)
       .connect(this.micCompressor)
       .connect(this.micMixGain)
       .connect(this.streamingDestination);
@@ -216,6 +225,7 @@ export class AudioEngine {
   }
 
   async openMic(deviceId: string) {
+    console.log("opening mic", deviceId);
     this.micMedia = await navigator.mediaDevices.getUserMedia({
       audio: {
         deviceId: { exact: deviceId },
@@ -228,7 +238,9 @@ export class AudioEngine {
 
     this.micSource = this.audioContext.createMediaStreamSource(this.micMedia);
 
-    this.micSource.connect(this.micMixGain);
+    this.micSource.connect(this.micCalibrationGain);
+
+    this.emit("micOpen");
   }
 
   setMicCalibrationGain(value: number) {

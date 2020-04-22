@@ -36,12 +36,3 @@ const optionsMenuState = createSlice({
 export default optionsMenuState.reducer;
 
 export const { open, openToTab, close, changeTab } = optionsMenuState.actions;
-
-export const tabSyncMiddleware: Middleware<{}, RootState, Dispatch> = (
-  store
-) => (next) => (action) => {
-  const oldState = store.getState();
-  const result = next(action);
-  const newState = store.getState();
-  return result;
-};

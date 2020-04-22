@@ -30,10 +30,16 @@ export function MicTab() {
   const [openError, setOpenError] = useState<null | MicErrorEnum>(null);
 
   async function fetchMicNames() {
+    console.log("start fetchNames");
+    if(!("getUserMedia" in navigator.mediaDevices)) {
+      setOpenError("NOT_SECURE_CONTEXT");
+      return;
+    }
     // Because Chrome, we have to call getUserMedia() before enumerateDevices()
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
+      console.warn(e);
       if (e instanceof DOMException) {
         switch (e.message) {
           case "Permission denied":
@@ -47,8 +53,11 @@ export function MicTab() {
       }
       return;
     }
+    console.log("done")
     try {
+      console.log("gUM");
       const devices = await navigator.mediaDevices.enumerateDevices();
+      console.log(devices);
       setMicList(reduceToInputs(devices));
     } catch (e) {
       setOpenError("UNKNOWN_ENUM");
@@ -70,18 +79,20 @@ export function MicTab() {
   }, []);
 
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(animate);
+    if (state.open) {
+      rafRef.current = requestAnimationFrame(animate);
+    }
     return () => {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
       rafRef.current = null;
     };
-  }, [animate]);
+  }, [animate, state.open]);
 
   return (
     <>
-      <button onClick={fetchMicNames} disabled={micList !== null}>
+      <button onClick={fetchMicNames} disabled={micList !== null} className="btn btn-outline-dark">
         Open
       </button>
       <select

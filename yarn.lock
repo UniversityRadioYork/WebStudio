@@ -1643,9 +1643,9 @@
     tsutils "^3.17.1"
 
 "@ury1350/prettier-config@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@ury1350/prettier-config/-/prettier-config-1.0.0.tgz#c5c81d187c016a9692edbd25b3964b23132c9b06"
-  integrity sha512-U36sZLI1vf9BiVB9P1CRYgBCoS0lYqzpUb37Cy8sgjjQvg8XwfjA75fMjgIBS99uYRN/VtnRrNIm93OsvetVJw==
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@ury1350/prettier-config/-/prettier-config-1.0.1.tgz#024c80d050f16149bd3928a139fec86d26e10b3d"
+  integrity sha512-G6zwRgCZ5jkjn180AovRQN6TGqVhkdNoShpxOFF7QjHYkVrPLb4ig26yMpS94EqeyzL/KDYIwrS/n7Tkgqw07A==
 
 "@webassemblyjs/ast@1.8.5":
   version "1.8.5"
