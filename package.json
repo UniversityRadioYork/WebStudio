@@ -5,7 +5,6 @@
   "dependencies": {
     "@babel/core": "7.6.0",
     "@reduxjs/toolkit": "^1.0.4",
-    "@servie/events": "^1.0.0",
     "@svgr/webpack": "4.3.2",
     "@types/dom-mediacapture-record": "^1.0.4",
     "@types/jest": "24.0.22",
@@ -110,7 +109,8 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "test": "node scripts/test.js"
+    "test": "node scripts/test.js",
+    "prettier": "yarn prettier --write \"src/**/*.{js,ts,tsx,css,scss}\""
   },
   "eslintConfig": {
     "extends": "react-app"
