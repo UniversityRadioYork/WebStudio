@@ -43,18 +43,5 @@ export const tabSyncMiddleware: Middleware<{}, RootState, Dispatch> = (
   const oldState = store.getState();
   const result = next(action);
   const newState = store.getState();
-  if (newState.optionsMenu.currentTab === "mic") {
-    if (
-      oldState.optionsMenu.currentTab !== "mic" &&
-      newState.optionsMenu.open
-    ) {
-      store.dispatch(MixerState.startMicCalibration() as any);
-    }
-  } else if (
-    oldState.optionsMenu.currentTab === "mic" ||
-    oldState.optionsMenu.open !== newState.optionsMenu.open
-  ) {
-    store.dispatch(MixerState.stopMicCalibration() as any);
-  }
   return result;
 };

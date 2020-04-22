@@ -4,6 +4,7 @@ import { RootState } from "../rootReducer";
 
 import * as MixerState from "../mixer/state";
 import { VUMeter } from "./helpers/VUMeter";
+import { engine } from "../mixer/audio";
 
 type MicErrorEnum =
   | "NO_PERMISSION"
@@ -63,24 +64,20 @@ export function MicTab() {
   const [peak, setPeak] = useState(-Infinity);
 
   const animate = useCallback(() => {
-    if (state.calibration) {
-      const result = MixerState.getMicAnalysis();
-      setPeak(result);
-      rafRef.current = requestAnimationFrame(animate);
-    } else if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, [state.calibration]);
+    const result = engine.getMicLevel();
+    setPeak(result);
+    rafRef.current = requestAnimationFrame(animate);
+  }, []);
 
   useEffect(() => {
-    if (state.calibration) {
-      rafRef.current = requestAnimationFrame(animate);
-    } else if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
       rafRef.current = null;
-    }
-  }, [animate, state.calibration]);
+    };
+  }, [animate]);
 
   return (
     <>
