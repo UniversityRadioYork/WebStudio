@@ -69,7 +69,7 @@ export function NavBar() {
             />
           </div>
         </div>
-        
+
         <div className="nav-item" id="navMeter">
           <VUMeter
             width={400}
@@ -78,7 +78,6 @@ export function NavBar() {
             greenRange={[-14, -3]}
           />
         </div>
-
       </div>
 
       <ul className="nav navbar-nav navbar-right">
@@ -206,7 +205,7 @@ function AlertBar() {
     <div
       className={`alertbar alert alert-${state?.color} ${
         state !== null ? "visible" : ""
-        }`}
+      }`}
     >
       {state?.content}
       {state?.closure !== null && (
