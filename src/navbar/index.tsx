@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
+import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 
 import { FaRegClock, FaRegUser } from "react-icons/fa";
 
@@ -68,6 +69,16 @@ export function NavBar() {
             />
           </div>
         </div>
+        
+        <div className="nav-item" id="navMeter">
+          <VUMeter
+            width={400}
+            height={40}
+            range={[-70, 0]}
+            greenRange={[-14, -3]}
+          />
+        </div>
+
       </div>
 
       <ul className="nav navbar-nav navbar-right">
@@ -195,7 +206,7 @@ function AlertBar() {
     <div
       className={`alertbar alert alert-${state?.color} ${
         state !== null ? "visible" : ""
-      }`}
+        }`}
     >
       {state?.content}
       {state?.closure !== null && (

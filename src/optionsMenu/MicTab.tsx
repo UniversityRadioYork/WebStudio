@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 
@@ -59,29 +59,6 @@ export function MicTab() {
     dispatch(MixerState.openMicrophone(sourceId));
   }
 
-  const rafRef = useRef<number | null>(null);
-  const [peak, setPeak] = useState(-Infinity);
-
-  const animate = useCallback(() => {
-    if (state.calibration) {
-      const result = MixerState.getMicAnalysis();
-      setPeak(result);
-      rafRef.current = requestAnimationFrame(animate);
-    } else if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, [state.calibration]);
-
-  useEffect(() => {
-    if (state.calibration) {
-      rafRef.current = requestAnimationFrame(animate);
-    } else if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, [animate, state.calibration]);
-
   return (
     <>
       <button onClick={fetchMicNames} disabled={micList !== null}>
@@ -126,7 +103,6 @@ export function MicTab() {
           <VUMeter
             width={400}
             height={40}
-            value={peak}
             range={[-70, 0]}
             greenRange={[-14, -3]}
           />
