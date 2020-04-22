@@ -1,4 +1,11 @@
-import React, { useRef, useLayoutEffect, useEffect, useCallback, useState, HTMLProps } from "react";
+import React, {
+  useRef,
+  useLayoutEffect,
+  useEffect,
+  useCallback,
+  useState,
+  HTMLProps,
+} from "react";
 import { useSelector } from "react-redux";
 import * as MixerState from "../../mixer/state";
 import { RootState } from "../../rootReducer";
@@ -65,10 +72,7 @@ export function VUMeter(props: VUMeterProps) {
       height
     );
 
-    if (
-      peak >= props.greenRange[0] &&
-      peak <= props.greenRange[1]
-    ) {
+    if (peak >= props.greenRange[0] && peak <= props.greenRange[1]) {
       ctx.fillStyle = "#00ff00";
     } else if (peak < props.greenRange[0]) {
       ctx.fillStyle = "#e8d120";

@@ -3,79 +3,79 @@ $sidebar-width-min: 250px;
 $sidebar-width: 22vw;
 $number-of-channels: 3;
 .loading-dialogue {
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    /* bring your own prefixes */
-    transform: translate(-50%, -20%);
-    text-align: left;
-    .logo-container {
-        text-align: center;
-        overflow-x: hidden;
-        position: relative;
-        transition: 600ms ease-in-out width;
-        .logo {
-            height: 50px;
-        }
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  /* bring your own prefixes */
+  transform: translate(-50%, -20%);
+  text-align: left;
+  .logo-container {
+    text-align: center;
+    overflow-x: hidden;
+    position: relative;
+    transition: 600ms ease-in-out width;
+    .logo {
+      height: 50px;
     }
-    .inner {
-        text-align: center;
-    }
+  }
+  .inner {
+    text-align: center;
+  }
 }
 
 .sp {
+  display: grid;
+  grid-template-areas: "channels sb-tg sb";
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: 100%;
+  overflow: hidden;
+  background: var(--background);
+  flex-grow: 1;
+  .channels {
     display: grid;
-    grid-template-areas: "channels sb-tg sb";
-    grid-template-columns: 1fr auto auto;
+    grid-area: channels;
+    grid-template-columns: repeat($number-of-channels, 1fr);
     grid-template-rows: 100%;
-    overflow: hidden;
-    background: var(--background);
-    flex-grow: 1;
-    .channels {
-        display: grid;
-        grid-area: channels;
-        grid-template-columns: repeat($number-of-channels, 1fr);
-        grid-template-rows: 100%;
-        grid-gap: 10px;
-        padding: 10px;
+    grid-gap: 10px;
+    padding: 10px;
+  }
+  #sidebar {
+    grid-area: sb;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: $sidebar-width-min;
+    width: $sidebar-width;
+    transition: all 0.3s;
+    &.hidden {
+      margin-right: -$sidebar-width * 2; // couldn't do a calc of the min and max.
     }
-    #sidebar {
-        grid-area: sb;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        min-width: $sidebar-width-min;
-        width: $sidebar-width;
-        transition: all 0.3s;
-        &.hidden {
-            margin-right: -$sidebar-width * 2; // couldn't do a calc of the min and max.
-        }
-        .library-column {
-            flex-grow: 1;
-            min-height: 0;
-            background: var(--sidebar-background);
-            display: flex;
-            flex-direction: column;
-        }
-        .mic-control {
-            background: var(--sidebar-background);
-            padding: 0 0 0.4rem 0;
-        }
+    .library-column {
+      flex-grow: 1;
+      min-height: 0;
+      background: var(--sidebar-background);
+      display: flex;
+      flex-direction: column;
     }
-    #sidebar-toggle {
-        grid-area: sb-tg;
-        writing-mode: vertical-rl;
-        height: 100%;
+    .mic-control {
+      background: var(--sidebar-background);
+      padding: 0 0 0.4rem 0;
     }
-    .fa-spin {
-        animation: fa-spin 2s infinite linear;
+  }
+  #sidebar-toggle {
+    grid-area: sb-tg;
+    writing-mode: vertical-rl;
+    height: 100%;
+  }
+  .fa-spin {
+    animation: fa-spin 2s infinite linear;
+  }
+  @keyframes fa-spin {
+    0% {
+      transform: rotate(0deg);
     }
-    @keyframes fa-spin {
-        0% {
-            transform: rotate(0deg);
-        }
-        100% {
-            transform: rotate(359deg);
-        }
+    100% {
+      transform: rotate(359deg);
     }
+  }
 }
