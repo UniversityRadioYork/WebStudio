@@ -303,10 +303,11 @@ def post_registerCheck() -> Any:
         }
 
     if start_time + datetime.timedelta(minutes=2) < now_time:
-        # they're late, bring them live now
-        print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
-        do_ws_srv_telnet(connection["wsid"])
-        subprocess.Popen(['sel', '5'])
+        if connection["wsid"] is not None:
+            # they're late, bring them live now
+            print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
+            do_ws_srv_telnet(connection["wsid"])
+            subprocess.Popen(['sel', '5'])
 
     assert connection is not None
     if new_connection:
