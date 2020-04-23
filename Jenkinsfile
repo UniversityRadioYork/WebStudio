@@ -51,7 +51,7 @@ pipeline {
    }
    steps {
     sh 'sed -i -e \'s/ury.org.uk\\/webstudio/ury.org.uk\\/webstudio-dev/\' package.json'
-    sh 'yarn build'
+    sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
     sshagent(credentials: ['ury']) {
      sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio-dev'
     }
@@ -71,7 +71,7 @@ pipeline {
         }
         steps {
           sh 'sed -i -e \'s/ury.org.uk\\/webstudio-dev/ury.org.uk\\/webstudio/\' package.json'
-          sh 'yarn build'
+          sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
           sshagent(credentials: ['ury']) {
            sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio'
           }
