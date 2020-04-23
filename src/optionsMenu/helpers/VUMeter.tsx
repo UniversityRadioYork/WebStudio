@@ -7,8 +7,8 @@ import React, {
   HTMLProps,
 } from "react";
 import { useSelector } from "react-redux";
-import * as MixerState from "../../mixer/state";
 import { RootState } from "../../rootReducer";
+import { audioEngine } from "../../mixer/audio";
 
 interface VUMeterProps extends HTMLProps<HTMLCanvasElement> {
   range: [number, number];
@@ -23,24 +23,24 @@ export function VUMeter(props: VUMeterProps) {
   const rafRef = useRef<number | null>(null);
   const [peak, setPeak] = useState(-Infinity);
   const animate = useCallback(() => {
-    if (state.calibration) {
-      const result = MixerState.getMicAnalysis();
+    if (state.open) {
+      const result = audioEngine.getMicLevel();
       setPeak(result);
       rafRef.current = requestAnimationFrame(animate);
-    } else if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
     }
-  }, [state.calibration]);
+  }, [state.open]);
 
   useEffect(() => {
-    if (state.calibration) {
+    if (state.open) {
       rafRef.current = requestAnimationFrame(animate);
-    } else if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
     }
-  }, [animate, state.calibration]);
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [animate, state.open]);
 
   useLayoutEffect(() => {
     if (canvasRef.current) {
