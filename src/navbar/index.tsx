@@ -13,6 +13,7 @@ import { MYRADIO_NON_API_BASE } from "../api";
 import "./navbar.scss";
 import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
+import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -71,6 +72,10 @@ export function NavBar() {
       </div>
 
       <ul className="nav navbar-nav navbar-right">
+        {/*<li className="nav-item">*/}
+        {/*  <VUMeter width={400} height={40} source="master" range={[-70, 0]} />*/}
+        {/*</li>*/}
+
         <li className="nav-item" style={{ color: "white" }}>
           <div className="nav-link">
             <b>{nicifyConnectionState(broadcastState.connectionState)}</b>

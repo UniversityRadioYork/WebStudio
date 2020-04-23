@@ -116,6 +116,7 @@ export function MicTab() {
           <VUMeter
             width={400}
             height={40}
+            source="mic-precomp"
             range={[-70, 0]}
             greenRange={[-14, -3]}
           />
