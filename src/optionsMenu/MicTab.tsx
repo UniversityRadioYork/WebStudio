@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 
@@ -138,7 +138,6 @@ export function MicTab() {
           <VUMeter
             width={400}
             height={40}
-            value={peak}
             range={[-70, 0]}
             greenRange={[-14, -3]}
           />

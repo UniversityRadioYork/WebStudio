@@ -1,9 +1,7 @@
 @import "./scss/base";
-
 $sidebar-width-min: 250px;
 $sidebar-width: 22vw;
 $number-of-channels: 3;
-
 .loading-dialogue {
   position: fixed;
   top: 20%;
@@ -11,14 +9,11 @@ $number-of-channels: 3;
   /* bring your own prefixes */
   transform: translate(-50%, -20%);
   text-align: left;
-
   .logo-container {
     text-align: center;
     overflow-x: hidden;
     position: relative;
-
     transition: 600ms ease-in-out width;
-
     .logo {
       height: 50px;
     }
@@ -36,7 +31,6 @@ $number-of-channels: 3;
   overflow: hidden;
   background: var(--background);
   flex-grow: 1;
-
   .channels {
     display: grid;
     grid-area: channels;
@@ -45,7 +39,6 @@ $number-of-channels: 3;
     grid-gap: 10px;
     padding: 10px;
   }
-
   #sidebar {
     grid-area: sb;
     display: flex;
@@ -54,11 +47,9 @@ $number-of-channels: 3;
     min-width: $sidebar-width-min;
     width: $sidebar-width;
     transition: all 0.3s;
-
     &.hidden {
       margin-right: -$sidebar-width * 2; // couldn't do a calc of the min and max.
     }
-
     .library-column {
       flex-grow: 1;
       min-height: 0;
@@ -66,18 +57,16 @@ $number-of-channels: 3;
       display: flex;
       flex-direction: column;
     }
-
     .mic-control {
       background: var(--sidebar-background);
+      padding: 0 0 0.4rem 0;
     }
   }
-
   #sidebar-toggle {
     grid-area: sb-tg;
     writing-mode: vertical-rl;
     height: 100%;
   }
-
   .fa-spin {
     animation: fa-spin 2s infinite linear;
   }
