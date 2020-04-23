@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 
@@ -68,27 +68,6 @@ export function MicTab() {
     setNextMicSource(sourceId);
     dispatch(MixerState.openMicrophone(sourceId));
   }
-
-  const rafRef = useRef<number | null>(null);
-  const [peak, setPeak] = useState(-Infinity);
-
-  const animate = useCallback(() => {
-    const result = audioEngine.getMicLevel();
-    setPeak(result);
-    rafRef.current = requestAnimationFrame(animate);
-  }, []);
-
-  useEffect(() => {
-    if (state.open) {
-      rafRef.current = requestAnimationFrame(animate);
-    }
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-      rafRef.current = null;
-    };
-  }, [animate, state.open]);
 
   return (
     <>
