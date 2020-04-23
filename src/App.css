@@ -165,5 +165,9 @@ button {
 }
 
 #micMeter {
-  margin: 0.4rem 0 0 0.6rem;
+  margin: 0.4rem 0.6rem;
+}
+
+#micMeter canvas {
+  width: 100%;
 }

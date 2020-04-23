@@ -122,15 +122,16 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
     (wavesurfer as any).backend.gainNode.disconnect();
     (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
-    (wavesurfer as any).backend.gainNode.connect(
-      engine.audioContext.destination
-    );
 
     wavesurfer.load(url);
 
     return instance;
   }
 }
+
+export type LevelsSource = "mic-precomp" | "mic-final" | "master";
+
+const ANALYSIS_FFT_SIZE = 8192;
 
 interface EngineEvents {
   micOpen: () => void;
@@ -150,12 +151,15 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   micMedia: MediaStream | null = null;
   micSource: MediaStreamAudioSourceNode | null = null;
   micCalibrationGain: GainNode;
-  micAnalyser: AnalyserNode;
+  micPrecompAnalyser: AnalyserNode;
   micCompressor: DynamicsCompressorNode;
   micMixGain: GainNode;
+  micFinalAnalyser: AnalyserNode;
 
   finalCompressor: DynamicsCompressorNode;
   streamingDestination: MediaStreamAudioDestinationNode;
+
+  streamingAnalyser: AnalyserNode;
 
   newsStartCountdownEl: HTMLAudioElement;
   newsStartCountdownNode: MediaElementAudioSourceNode;
@@ -177,17 +181,30 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.finalCompressor.threshold.value = -0.5;
     this.finalCompressor.attack.value = 0;
     this.finalCompressor.release.value = 0.2;
-    this.finalCompressor.connect(this.audioContext.destination);
+
+    this.streamingAnalyser = this.audioContext.createAnalyser();
+    this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+    // this.streamingAnalyser.maxDecibels = 0;
 
     this.streamingDestination = this.audioContext.createMediaStreamDestination();
-    this.finalCompressor.connect(this.streamingDestination);
+
+    this.finalCompressor.connect(this.audioContext.destination);
+
+    this.finalCompressor
+      .connect(this.streamingAnalyser)
+      .connect(this.streamingDestination);
 
     this.micCalibrationGain = this.audioContext.createGain();
 
-    this.micAnalyser = this.audioContext.createAnalyser();
-    this.micAnalyser.fftSize = 8192;
+    this.micPrecompAnalyser = this.audioContext.createAnalyser();
+    this.micPrecompAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+    this.micPrecompAnalyser.maxDecibels = 0;
 
-    this.analysisBuffer = new Float32Array(this.micAnalyser.fftSize);
+    this.micFinalAnalyser = this.audioContext.createAnalyser();
+    this.micFinalAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+    this.micFinalAnalyser.maxDecibels = 0;
+
+    this.analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
 
     this.micCompressor = this.audioContext.createDynamicsCompressor();
     this.micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
@@ -199,10 +216,12 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain.gain.value = 1;
 
     this.micCalibrationGain
-      .connect(this.micAnalyser)
+      .connect(this.micPrecompAnalyser)
       .connect(this.micCompressor)
       .connect(this.micMixGain)
-      .connect(this.streamingDestination);
+      .connect(this.micFinalAnalyser)
+      // we don't run the mic into masterAnalyser to ensure it doesn't go to audioContext.destination
+      .connect(this.streamingAnalyser);
 
     this.newsEndCountdownEl = new Audio(NewsEndCountdown);
     this.newsEndCountdownEl.preload = "auto";
@@ -254,11 +273,23 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain.gain.value = value;
   }
 
-  getMicLevel() {
-    this.micAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+  getLevel(source: LevelsSource) {
+    switch (source) {
+      case "mic-precomp":
+        this.micPrecompAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        break;
+      case "mic-final":
+        this.micFinalAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        break;
+      case "master":
+        this.streamingAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        break;
+      default:
+        throw new Error("can't getLevel " + source);
+    }
     let peak = 0;
     for (let i = 0; i < this.analysisBuffer.length; i++) {
-      peak = Math.max(peak, this.analysisBuffer[i] ** 2);
+      peak = Math.max(peak, Math.abs(this.analysisBuffer[i]));
     }
     return 10 * Math.log10(peak);
   }
