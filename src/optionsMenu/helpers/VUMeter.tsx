@@ -7,7 +7,6 @@ import React, {
   HTMLProps,
 } from "react";
 import { useSelector } from "react-redux";
-import * as MixerState from "../../mixer/state";
 import { RootState } from "../../rootReducer";
 import { audioEngine } from "../../mixer/audio";
 

@@ -2,7 +2,6 @@ import SdpTransform from "sdp-transform";
 import * as later from "later";
 
 import * as BroadcastState from "./state";
-import * as MixerState from "../mixer/state";
 
 import { Streamer, ConnectionStateEnum } from "./streamer";
 import { Dispatch } from "redux";

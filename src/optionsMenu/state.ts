@@ -1,12 +1,4 @@
-import {
-  createSlice,
-  PayloadAction,
-  Middleware,
-  Dispatch,
-} from "@reduxjs/toolkit";
-import { RootState } from "../rootReducer";
-
-import * as MixerState from "../mixer/state";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type OptionsTabIDsEnum = "mic" | "about" | "advanced" | "stats";
 

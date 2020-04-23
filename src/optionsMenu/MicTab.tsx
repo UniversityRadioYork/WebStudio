@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 
 import * as MixerState from "../mixer/state";
 import { VUMeter } from "./helpers/VUMeter";
-import { audioEngine } from "../mixer/audio";
 
 type MicErrorEnum =
   | "NO_PERMISSION"

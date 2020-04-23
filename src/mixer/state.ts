@@ -12,13 +12,7 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import WaveSurfer from "wavesurfer.js";
-import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
-import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
-import * as later from "later";
-import NewsIntro from "../assets/audio/NewsIntro.wav";
-import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
-import { AudioEngine, audioEngine } from "./audio";
+import { audioEngine } from "./audio";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
