@@ -19,6 +19,9 @@ export function AboutTab() {
         <b>WebStudio v{process.env.REACT_APP_VERSION}</b>
       </div>
       <div>
+        <b>Git hash:</b> <code>{process.env.REACT_APP_GIT_SHA}</code>
+      </div>
+      <div>
         MyRadio endpoint: <code>{MYRADIO_BASE_URL}</code>/
         <code>{MYRADIO_NON_API_BASE}</code>
       </div>
