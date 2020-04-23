@@ -4,7 +4,7 @@ import { RootState } from "../rootReducer";
 
 import * as MixerState from "../mixer/state";
 import { VUMeter } from "./helpers/VUMeter";
-import { engine } from "../mixer/audio";
+import { audioEngine } from "../mixer/audio";
 
 type MicErrorEnum =
   | "NO_PERMISSION"
@@ -31,7 +31,7 @@ export function MicTab() {
 
   async function fetchMicNames() {
     console.log("start fetchNames");
-    if(!("getUserMedia" in navigator.mediaDevices)) {
+    if (!("getUserMedia" in navigator.mediaDevices)) {
       setOpenError("NOT_SECURE_CONTEXT");
       return;
     }
@@ -53,7 +53,7 @@ export function MicTab() {
       }
       return;
     }
-    console.log("done")
+    console.log("done");
     try {
       console.log("gUM");
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -73,7 +73,7 @@ export function MicTab() {
   const [peak, setPeak] = useState(-Infinity);
 
   const animate = useCallback(() => {
-    const result = engine.getMicLevel();
+    const result = audioEngine.getMicLevel();
     setPeak(result);
     rafRef.current = requestAnimationFrame(animate);
   }, []);
@@ -92,7 +92,11 @@ export function MicTab() {
 
   return (
     <>
-      <button onClick={fetchMicNames} disabled={micList !== null} className="btn btn-outline-dark">
+      <button
+        onClick={fetchMicNames}
+        disabled={micList !== null}
+        className="btn btn-outline-dark"
+      >
         Open
       </button>
       <select

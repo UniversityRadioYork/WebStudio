@@ -6,7 +6,7 @@ import * as MixerState from "../mixer/state";
 import * as NavbarState from "../navbar/state";
 import { ConnectionStateEnum } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
-import { engine } from "../mixer/audio";
+import { audioEngine } from "../mixer/audio";
 
 export let streamer: WebRTCStreamer | null = null;
 
@@ -303,7 +303,10 @@ export const goOnAir = (): AppThunk => async (dispatch, getState) => {
     return;
   }
   console.log("starting streamer.");
-  streamer = new WebRTCStreamer(engine.streamingDestination.stream, dispatch);
+  streamer = new WebRTCStreamer(
+    audioEngine.streamingDestination.stream,
+    dispatch
+  );
   streamer.addConnectionStateListener((state) => {
     dispatch(broadcastState.actions.setConnectionState(state));
     if (state === "CONNECTION_LOST") {
@@ -329,7 +332,7 @@ export const stopStreaming = (): AppThunk => async (dispatch) => {
 let recorder: RecordingStreamer;
 
 export const startRecording = (): AppThunk => async (dispatch) => {
-  recorder = new RecordingStreamer(engine.streamingDestination.stream);
+  recorder = new RecordingStreamer(audioEngine.streamingDestination.stream);
   recorder.addConnectionStateListener((state) => {
     dispatch(broadcastState.actions.setRecordingState(state));
   });

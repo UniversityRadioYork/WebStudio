@@ -7,7 +7,7 @@ import * as MixerState from "../mixer/state";
 import { Streamer, ConnectionStateEnum } from "./streamer";
 import { Dispatch } from "redux";
 import { broadcastApiRequest } from "../api";
-import { engine } from "../mixer/audio";
+import { audioEngine } from "../mixer/audio";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
@@ -113,7 +113,7 @@ export class WebRTCStreamer extends Streamer {
       if (now.getSeconds() < 45) {
         later.setTimeout(
           async () => {
-            await engine.playNewsIntro();
+            await audioEngine.playNewsIntro();
           },
           later.parse
             .recur()
@@ -126,7 +126,7 @@ export class WebRTCStreamer extends Streamer {
       if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
         later.setTimeout(
           async () => {
-            await engine.playNewsEnd();
+            await audioEngine.playNewsEnd();
           },
           later.parse
             .recur()

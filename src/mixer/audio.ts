@@ -141,7 +141,9 @@ const EngineEmitter: StrictEmitter<
   EngineEvents
 > = EventEmitter as any;
 
-export class AudioEngine extends ((EngineEmitter as unknown) as { new (): EventEmitter }) {
+export class AudioEngine extends ((EngineEmitter as unknown) as {
+  new (): EventEmitter;
+}) {
   public audioContext: AudioContext;
   public players: (Player | undefined)[] = [];
 
@@ -196,7 +198,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as { new (): EventE
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
 
-    this.micCalibrationGain.connect(this.micAnalyser)
+    this.micCalibrationGain
+      .connect(this.micAnalyser)
       .connect(this.micCompressor)
       .connect(this.micMixGain)
       .connect(this.streamingDestination);
@@ -271,4 +274,4 @@ export class AudioEngine extends ((EngineEmitter as unknown) as { new (): EventE
   }
 }
 
-export const engine = new AudioEngine();
+export const audioEngine = new AudioEngine();

@@ -18,7 +18,7 @@ import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
 import * as later from "later";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
-import { AudioEngine, engine } from "./audio";
+import { AudioEngine, audioEngine } from "./audio";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -237,8 +237,8 @@ export const load = (
   player: number,
   item: PlanItem | Track | AuxItem
 ): AppThunk => async (dispatch, getState) => {
-  if (typeof engine.players[player] !== "undefined") {
-    if (engine.players[player]?.isPlaying) {
+  if (typeof audioEngine.players[player] !== "undefined") {
+    if (audioEngine.players[player]?.isPlaying) {
       // already playing, don't kill playback
       return;
     }
@@ -301,7 +301,7 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const playerInstance = await engine.createPlayer(player, objectUrl);
+    const playerInstance = await audioEngine.createPlayer(player, objectUrl);
 
     playerInstance.on("loadComplete", (duration) => {
       console.log("loadComplete");
@@ -403,20 +403,20 @@ export const play = (player: number): AppThunk => async (
   dispatch,
   getState
 ) => {
-  if (typeof engine.players[player] === "undefined") {
+  if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
   }
-  if (engine.audioContext.state !== "running") {
+  if (audioEngine.audioContext.state !== "running") {
     console.log("Resuming AudioContext because Chrome bad");
-    await engine.audioContext.resume();
+    await audioEngine.audioContext.resume();
   }
   const state = getState().mixer.players[player];
   if (state.loading !== -1) {
     console.log("not ready");
     return;
   }
-  engine.players[player]?.play();
+  audioEngine.players[player]?.play();
 
   if (state.loadedItem && "album" in state.loadedItem) {
     //track
@@ -430,7 +430,7 @@ export const play = (player: number): AppThunk => async (
 };
 
 export const pause = (player: number): AppThunk => (dispatch, getState) => {
-  if (typeof engine.players[player] === "undefined") {
+  if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
   }
@@ -438,15 +438,15 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
     console.log("not ready");
     return;
   }
-  if (engine.players[player]?.isPlaying) {
-    engine.players[player]?.pause();
+  if (audioEngine.players[player]?.isPlaying) {
+    audioEngine.players[player]?.pause();
   } else {
-    engine.players[player]?.play();
+    audioEngine.players[player]?.play();
   }
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
-  if (typeof engine.players[player] === "undefined") {
+  if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
   }
@@ -455,7 +455,7 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
     console.log("not ready");
     return;
   }
-  engine.players[player]?.stop();
+  audioEngine.players[player]?.stop();
   // Incase wavesurver wasn't playing, it won't 'finish', so just make sure the UI is stopped.
   dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
 
@@ -471,7 +471,7 @@ export const {
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
-  engine.players.forEach(function(item) {
+  audioEngine.players.forEach(function(item) {
     item?.redraw();
   });
 };
@@ -531,8 +531,8 @@ export const setVolume = (
     .time(FADE_TIME_SECONDS * 1000)
     .easing((Between as any).Easing.Exponential.InOut)
     .on("update", (val: number) => {
-      if (typeof engine.players[player] !== "undefined") {
-        engine.players[player]?.setVolume(val);
+      if (typeof audioEngine.players[player] !== "undefined") {
+        audioEngine.players[player]?.setVolume(val);
       }
     })
     .on("complete", () => {
@@ -556,9 +556,9 @@ export const openMicrophone = (micID: string): AppThunk => async (
   // if (getState().mixer.mic.open) {
   // 	micSource?.disconnect();
   // }
-  if (engine.audioContext.state !== "running") {
+  if (audioEngine.audioContext.state !== "running") {
     console.log("Resuming AudioContext because Chrome bad");
-    await engine.audioContext.resume();
+    await audioEngine.audioContext.resume();
   }
   dispatch(mixerState.actions.setMicError(null));
   if (!("mediaDevices" in navigator)) {
@@ -567,7 +567,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
     return;
   }
   try {
-    await engine.openMic(micID);
+    await audioEngine.openMic(micID);
   } catch (e) {
     if (e instanceof DOMException) {
       switch (e.message) {
@@ -584,8 +584,8 @@ export const openMicrophone = (micID: string): AppThunk => async (
   }
 
   const state = getState().mixer.mic;
-  engine.setMicCalibrationGain(state.baseGain);
-  engine.setMicVolume(state.volume);
+  audioEngine.setMicCalibrationGain(state.baseGain);
+  audioEngine.setMicVolume(state.volume);
 
   dispatch(mixerState.actions.micOpen(micID));
 };
@@ -607,7 +607,7 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
         mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
       );
       // latency, plus a little buffer
-    }, engine.audioContext.baseLatency * 1000 + 150);
+    }, audioEngine.audioContext.baseLatency * 1000 + 150);
   }
 };
 
@@ -620,15 +620,15 @@ export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
 
   newState.players.forEach((state, index) => {
     if (oldState.players[index].gain !== newState.players[index].gain) {
-      engine.players[index]?.setVolume(state.gain);
+      audioEngine.players[index]?.setVolume(state.gain);
     }
   });
 
   if (newState.mic.baseGain !== oldState.mic.baseGain) {
-    engine.setMicCalibrationGain(newState.mic.baseGain);
+    audioEngine.setMicCalibrationGain(newState.mic.baseGain);
   }
   if (newState.mic.volume !== oldState.mic.volume) {
-    engine.setMicVolume(newState.mic.volume);
+    audioEngine.setMicVolume(newState.mic.volume);
   }
   return result;
 };
