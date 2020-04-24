@@ -1,6 +1,9 @@
 /* Stuff to get the nav to collapse at 991px (when the menu collapses)
  * Taken from http://stackoverflow.com/a/36289507/995325 */
 
+$dot-color: #fff;
+@import "~three-dots/sass/three-dots";
+
 @media (max-width: 991px) {
   .navbar-header {
     float: none;
@@ -250,4 +253,8 @@
 #timelord .time {
   font-weight: bold;
   font-size: 1.1em;
+}
+
+.nav-link.connect {
+  min-width: 80px;
 }

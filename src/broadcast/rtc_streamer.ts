@@ -110,6 +110,7 @@ export class WebRTCStreamer extends Streamer {
     const data = JSON.parse(evt.data);
     switch (data.kind) {
       case "HELLO":
+        this.onStateChange("CONNECTING");
         console.log("WS HELLO, our client ID is " + data.connectionId);
         this.dispatch(BroadcastState.setWsID(data.connectionId));
         if (this.state !== "HELLO") {
@@ -258,6 +259,11 @@ export class WebRTCStreamer extends Streamer {
         return "NOT_CONNECTED";
       }
     }
+    console.log(
+      "Relevant values: ",
+      this.pc?.iceConnectionState,
+      this.ws?.readyState
+    );
     switch (this.pc.iceConnectionState) {
       case "connected":
       case "completed":
