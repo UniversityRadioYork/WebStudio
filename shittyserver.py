@@ -13,7 +13,7 @@ import aiohttp
 import av  # type: ignore
 import jack as Jack  # type: ignore
 import websockets
-from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
+from aiortc import MediaStreamTrack, RTCPeerConnection, RTCConfiguration, RTCSessionDescription  # type: ignore
 from aiortc.mediastreams import MediaStreamError  # type: ignore
 from raygun4py import raygunprovider  # type: ignore
 
@@ -161,6 +161,7 @@ class Session(object):
     running: bool
     ended: bool
     resampler: Optional[Any]
+    ice_servers: Optional[TurnCredentials]
 
     def __init__(self) -> None:
         self.websocket = None
@@ -173,6 +174,7 @@ class Session(object):
         self.lock = asyncio.Lock()
         self.running = False
         self.connected_at = datetime.now(timezone.utc)
+        self.ice_servers = None
 
     def to_dict(self) -> Dict[str, str]:
         return {
@@ -239,7 +241,10 @@ class Session(object):
                 self.ended = True
 
     def create_peerconnection(self) -> None:
-        self.pc = RTCPeerConnection()
+        assert self.ice_servers is not None
+        rtc_config = RTCConfiguration()
+        rtc_config.iceServers = self.ice_servers
+        self.pc = RTCPeerConnection(rtc_config)
         assert self.pc is not None
 
         @self.pc.on("signalingstatechange")  # type: ignore
@@ -346,11 +351,11 @@ class Session(object):
         self.websocket = websocket
         self.connection_state = "HELLO"
         print(self.connection_id, "Connected")
-        ice_config = get_turn_credentials()
+        self.ice_servers = get_turn_credentials()
         print(self.connection_id, "Obtained ICE")
         # TODO Raygun user ID
         await websocket.send(
-            json.dumps({"kind": "HELLO", "connectionId": self.connection_id, "iceServers": ice_config})
+            json.dumps({"kind": "HELLO", "connectionId": self.connection_id, "iceServers": self.ice_servers})
         )
 
         try:
