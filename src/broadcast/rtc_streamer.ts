@@ -29,46 +29,6 @@ export class WebRTCStreamer extends Streamer {
 
   async start(): Promise<void> {
     console.log("RTCStreamer start");
-    this.pc = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: [
-            "stun:stun.l.google.com:19302",
-            "stun:stun1.l.google.com:19302",
-            "stun:stun2.l.google.com:19302",
-            "stun:stun3.l.google.com:19302",
-            "stun:stun4.l.google.com:19302",
-          ],
-        },
-        {
-          urls: ["stun:eu-turn4.xirsys.com"],
-        },
-        {
-          username:
-            "h42bRBHL2GtRTiQRoXN8GCG-PFYMl4Acel6EQ9xINBWdTpoZyBEGyCcJBCtT3iINAAAAAF5_NJptYXJrc3BvbGFrb3Zz",
-          credential: "17e834fa-70e7-11ea-a66c-faa4ea02ad5c",
-          urls: [
-            "turn:eu-turn4.xirsys.com:80?transport=udp",
-            "turn:eu-turn4.xirsys.com:3478?transport=udp",
-            "turn:eu-turn4.xirsys.com:80?transport=tcp",
-            "turn:eu-turn4.xirsys.com:3478?transport=tcp",
-            "turns:eu-turn4.xirsys.com:443?transport=tcp",
-            "turns:eu-turn4.xirsys.com:5349?transport=tcp",
-          ],
-        },
-      ],
-    });
-    this.pc.oniceconnectionstatechange = (e) => {
-      if (!this.pc) {
-        throw new Error(
-          "Received ICEConnectionStateChange but PC was null?????"
-        );
-      }
-      console.log("ICE Connection state change: " + this.pc.iceConnectionState);
-      this.onStateChange(this.mapStateToConnectionState());
-    };
-    this.stream.getAudioTracks().forEach((track) => this.pc!.addTrack(track));
-
     this.addConnectionStateListener((state) => {
       if (state === "CONNECTED") {
         this.newsInterval = later.setInterval(
@@ -83,7 +43,6 @@ export class WebRTCStreamer extends Streamer {
       }
     });
 
-    console.log("PC created");
     this.ws = new WebSocket(process.env.REACT_APP_WS_URL!);
     this.ws.onopen = (e) => {
       console.log("WS open");
@@ -156,6 +115,9 @@ export class WebRTCStreamer extends Streamer {
         if (this.state !== "HELLO") {
           this.ws!.close();
         }
+
+        this.createPeerConnection(data.iceServers);
+
         if (!this.pc) {
           throw new Error(
             "Tried to do websocket fuckery with a null PeerConnection!"
@@ -223,6 +185,34 @@ export class WebRTCStreamer extends Streamer {
         this.unexpectedDeath = true;
         break;
     }
+  }
+
+  createPeerConnection(iceServers: RTCIceServer[]) {
+    this.pc = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: [
+            "stun:stun.l.google.com:19302",
+            "stun:stun1.l.google.com:19302",
+            "stun:stun2.l.google.com:19302",
+            "stun:stun3.l.google.com:19302",
+            "stun:stun4.l.google.com:19302",
+          ],
+        },
+        ...iceServers,
+      ],
+    });
+    this.pc.oniceconnectionstatechange = (e) => {
+      if (!this.pc) {
+        throw new Error(
+          "Received ICEConnectionStateChange but PC was null?????"
+        );
+      }
+      console.log("ICE Connection state change: " + this.pc.iceConnectionState);
+      this.onStateChange(this.mapStateToConnectionState());
+    };
+    this.stream.getAudioTracks().forEach((track) => this.pc!.addTrack(track));
+    console.log("PC created");
   }
 
   async getStatistics() {
