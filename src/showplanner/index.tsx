@@ -147,12 +147,7 @@ function MicControl() {
         </p>
       )}
       <div id="micMeter">
-        <VUMeter
-          width={400}
-          height={40}
-          range={[-70, 0]}
-          greenRange={[-14, -3]}
-        />
+        <VUMeter width={250} height={40} source="mic-final" range={[-70, 0]} />
       </div>
       <div className={`mixer-buttons ${!state.open && "disabled"}`}>
         <div
