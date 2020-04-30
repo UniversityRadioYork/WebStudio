@@ -6,71 +6,19 @@ import {
 } from "@reduxjs/toolkit";
 import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
-import { PlanItem } from "../showplanner/state";
+import { itemId, PlanItem } from "../showplanner/state";
 import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import WaveSurfer from "wavesurfer.js";
-import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
-import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
-import * as later from "later";
-import NewsIntro from "../assets/audio/NewsIntro.wav";
-import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
+import { audioEngine } from "./audio";
 
-const audioContext = new (window.AudioContext ||
-  (window as any).webkitAudioContext)();
-const wavesurfers: WaveSurfer[] = [];
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
   tweens: Between[];
 }> = [];
 const loadAbortControllers: AbortController[] = [];
-
-let micMedia: MediaStream | null = null;
-let micSource: MediaStreamAudioSourceNode | null = null;
-let micCalibrationGain: GainNode | null = null;
-let micCompressor: DynamicsCompressorNode | null = null;
-let micMixGain: GainNode | null = null;
-
-const finalCompressor = audioContext.createDynamicsCompressor();
-finalCompressor.ratio.value = 20; //brickwall destination comressor
-finalCompressor.threshold.value = -0.5;
-finalCompressor.attack.value = 0;
-finalCompressor.release.value = 0.2;
-
-export const destination = audioContext.createMediaStreamDestination();
-console.log("final destination", destination);
-finalCompressor.connect(destination);
-
-const newsEndCountdownEl = new Audio(NewsEndCountdown);
-newsEndCountdownEl.preload = "auto";
-newsEndCountdownEl.volume = 0.5;
-const newsEndCountdownNode = audioContext.createMediaElementSource(
-  newsEndCountdownEl
-);
-newsEndCountdownNode.connect(audioContext.destination);
-
-const newsStartCountdownEl = new Audio(NewsIntro);
-newsStartCountdownEl.preload = "auto";
-newsStartCountdownEl.volume = 0.5;
-const newsStartCountdownNode = audioContext.createMediaElementSource(
-  newsStartCountdownEl
-);
-newsStartCountdownNode.connect(audioContext.destination);
-
-export async function playNewsEnd() {
-  newsEndCountdownEl.currentTime = 0;
-  await newsEndCountdownEl.play();
-}
-
-export async function playNewsIntro() {
-  newsStartCountdownEl.currentTime = 0;
-  await newsStartCountdownEl.play();
-}
-
-let timerInterval: later.Timer;
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
@@ -100,7 +48,6 @@ interface MicState {
   volume: 1 | 0;
   baseGain: number;
   id: string | null;
-  calibration: boolean;
 }
 
 interface MixerState {
@@ -108,56 +55,26 @@ interface MixerState {
   mic: MicState;
 }
 
+const BasePlayerState: PlayerState = {
+  loadedItem: null,
+  loading: -1,
+  state: "stopped",
+  volume: 1,
+  gain: 1,
+  timeCurrent: 0,
+  timeRemaining: 0,
+  timeLength: 0,
+  playOnLoad: false,
+  autoAdvance: true,
+  repeat: "none",
+  tracklistItemID: -1,
+  loadError: false,
+};
+
 const mixerState = createSlice({
   name: "Player",
   initialState: {
-    players: [
-      {
-        loadedItem: null,
-        loading: -1,
-        state: "stopped",
-        volume: 1,
-        gain: 1,
-        timeCurrent: 0,
-        timeRemaining: 0,
-        timeLength: 0,
-        playOnLoad: false,
-        autoAdvance: true,
-        repeat: "none",
-        tracklistItemID: -1,
-        loadError: false,
-      },
-      {
-        loadedItem: null,
-        loading: -1,
-        state: "stopped",
-        volume: 1,
-        gain: 1,
-        timeCurrent: 0,
-        timeRemaining: 0,
-        timeLength: 0,
-        playOnLoad: false,
-        autoAdvance: true,
-        repeat: "none",
-        tracklistItemID: -1,
-        loadError: false,
-      },
-      {
-        loadedItem: null,
-        loading: -1,
-        state: "stopped",
-        volume: 1,
-        gain: 1,
-        timeCurrent: 0,
-        timeRemaining: 0,
-        timeLength: 0,
-        playOnLoad: false,
-        autoAdvance: true,
-        repeat: "none",
-        tracklistItemID: -1,
-        loadError: false,
-      },
-    ],
+    players: [BasePlayerState, BasePlayerState, BasePlayerState],
     mic: {
       open: false,
       volume: 1,
@@ -165,7 +82,6 @@ const mixerState = createSlice({
       baseGain: 1,
       openError: null,
       id: "None",
-      calibration: false,
     },
   } as MixerState,
   reducers: {
@@ -304,12 +220,6 @@ const mixerState = createSlice({
     ) {
       state.players[action.payload.player].tracklistItemID = action.payload.id;
     },
-    startMicCalibration(state) {
-      state.mic.calibration = true;
-    },
-    stopMicCalibration(state) {
-      state.mic.calibration = false;
-    },
   },
 });
 
@@ -321,11 +231,16 @@ export const load = (
   player: number,
   item: PlanItem | Track | AuxItem
 ): AppThunk => async (dispatch, getState) => {
-  if (typeof wavesurfers[player] !== "undefined") {
-    if (wavesurfers[player].isPlaying()) {
+  if (typeof audioEngine.players[player] !== "undefined") {
+    if (audioEngine.players[player]?.isPlaying) {
       // already playing, don't kill playback
       return;
     }
+  }
+  // If this is already the currently loaded item, don't bother
+  const currentItem = getState().mixer.players[player].loadedItem;
+  if (currentItem !== null && itemId(currentItem) === itemId(item)) {
+    return;
   }
   // If we're already loading something, abort it
   if (typeof loadAbortControllers[player] !== "undefined") {
@@ -358,130 +273,6 @@ export const load = (
 
   console.log("loading");
 
-  let waveform = document.getElementById("waveform-" + player.toString());
-  if (waveform !== null) {
-    waveform.innerHTML = "";
-  }
-  const wavesurfer = WaveSurfer.create({
-    audioContext,
-    container: "#waveform-" + player.toString(),
-    waveColor: "#CCCCFF",
-    progressColor: "#9999FF",
-    backend: "MediaElementWebAudio",
-    responsive: true,
-    xhr: {
-      credentials: "include",
-    } as any,
-    plugins: [
-      CursorPlugin.create({
-        showTime: true,
-        opacity: 1,
-        customShowTimeStyle: {
-          "background-color": "#000",
-          color: "#fff",
-          padding: "2px",
-          "font-size": "10px",
-        },
-      }),
-      RegionsPlugin.create({}),
-    ],
-  });
-
-  wavesurfer.on("ready", () => {
-    dispatch(mixerState.actions.itemLoadComplete({ player }));
-    dispatch(
-      mixerState.actions.setTimeLength({
-        player,
-        time: wavesurfer.getDuration(),
-      })
-    );
-    dispatch(
-      mixerState.actions.setTimeCurrent({
-        player,
-        time: 0,
-      })
-    );
-    const state = getState().mixer.players[player];
-    if (state.playOnLoad) {
-      wavesurfer.play();
-    }
-    if (state.loadedItem && "intro" in state.loadedItem) {
-      wavesurfer.addRegion({
-        id: "intro",
-        resize: false,
-        start: 0,
-        end: state.loadedItem.intro,
-        color: "rgba(125,0,255, 0.12)",
-      });
-    }
-  });
-  wavesurfer.on("play", () => {
-    dispatch(mixerState.actions.setPlayerState({ player, state: "playing" }));
-  });
-  wavesurfer.on("pause", () => {
-    dispatch(
-      mixerState.actions.setPlayerState({
-        player,
-        state: wavesurfer.getCurrentTime() === 0 ? "stopped" : "paused",
-      })
-    );
-  });
-  wavesurfer.on("seek", () => {
-    dispatch(
-      mixerState.actions.setTimeCurrent({
-        player,
-        time: wavesurfer.getCurrentTime(),
-      })
-    );
-  });
-  wavesurfer.on("finish", () => {
-    dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
-    const state = getState().mixer.players[player];
-    if (state.tracklistItemID !== -1) {
-      dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
-    }
-    if (state.repeat === "one") {
-      wavesurfer.play();
-    } else if (state.repeat === "all") {
-      if ("channel" in item) {
-        // it's not in the CML/libraries "column"
-        const itsChannel = getState()
-          .showplan.plan!.filter((x) => x.channel === item.channel)
-          .sort((x, y) => x.weight - y.weight);
-        const itsIndex = itsChannel.indexOf(item);
-        if (itsIndex === itsChannel.length - 1) {
-          dispatch(load(player, itsChannel[0]));
-        }
-      }
-    } else if (state.autoAdvance) {
-      if ("channel" in item) {
-        // it's not in the CML/libraries "column"
-        const itsChannel = getState()
-          .showplan.plan!.filter((x) => x.channel === item.channel)
-          .sort((x, y) => x.weight - y.weight);
-        const itsIndex = itsChannel.indexOf(item);
-        if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
-          dispatch(load(player, itsChannel[itsIndex + 1]));
-        }
-      }
-    }
-  });
-  wavesurfer.on("audioprocess", () => {
-    if (
-      Math.abs(
-        wavesurfer.getCurrentTime() -
-          getState().mixer.players[player].timeCurrent
-      ) > 0.5
-    ) {
-      dispatch(
-        mixerState.actions.setTimeCurrent({
-          player,
-          time: wavesurfer.getCurrentTime(),
-        })
-      );
-    }
-  });
-
   try {
     const signal = loadAbortControllers[player].signal; // hang on to the signal, even if its controller gets replaced
     const result = await fetch(url, {
@@ -504,22 +295,93 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const audio = new Audio(objectUrl);
+    const playerInstance = await audioEngine.createPlayer(player, objectUrl);
 
-    wavesurfer.load(audio);
+    playerInstance.on("loadComplete", (duration) => {
+      console.log("loadComplete");
+      dispatch(mixerState.actions.itemLoadComplete({ player }));
+      dispatch(
+        mixerState.actions.setTimeLength({
+          player,
+          time: duration,
+        })
+      );
+      dispatch(
+        mixerState.actions.setTimeCurrent({
+          player,
+          time: 0,
+        })
+      );
+      const state = getState().mixer.players[player];
+      if (state.playOnLoad) {
+        playerInstance.play();
+      }
+      if (state.loadedItem && "intro" in state.loadedItem) {
+        playerInstance.setIntro(state.loadedItem.intro);
+      }
+    });
 
-    // THIS IS BAD
-    (wavesurfer as any).backend.gainNode.disconnect();
-    (wavesurfer as any).backend.gainNode.connect(finalCompressor);
-    (wavesurfer as any).backend.gainNode.connect(audioContext.destination);
+    playerInstance.on("play", () => {
+      dispatch(mixerState.actions.setPlayerState({ player, state: "playing" }));
+    });
+    playerInstance.on("pause", () => {
+      dispatch(
+        mixerState.actions.setPlayerState({
+          player,
+          state: playerInstance.currentTime === 0 ? "stopped" : "paused",
+        })
+      );
+    });
+    playerInstance.on("timeChange", (time) => {
+      if (Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5) {
+        dispatch(
+          mixerState.actions.setTimeCurrent({
+            player,
+            time,
+          })
+        );
+      }
+    });
+    playerInstance.on("finish", () => {
+      dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
+      const state = getState().mixer.players[player];
+      if (state.tracklistItemID !== -1) {
+        dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
+      }
+      if (state.repeat === "one") {
+        playerInstance.play();
+      } else if (state.repeat === "all") {
+        if ("channel" in item) {
+          // it's not in the CML/libraries "column"
+          const itsChannel = getState()
+            .showplan.plan!.filter((x) => x.channel === item.channel)
+            .sort((x, y) => x.weight - y.weight);
+          const itsIndex = itsChannel.indexOf(item);
+          if (itsIndex === itsChannel.length - 1) {
+            dispatch(load(player, itsChannel[0]));
+          }
+        }
+      } else if (state.autoAdvance) {
+        if ("channel" in item) {
+          // it's not in the CML/libraries "column"
+          const itsChannel = getState()
+            .showplan.plan!.filter((x) => x.channel === item.channel)
+            .sort((x, y) => x.weight - y.weight);
+          const itsIndex = itsChannel.indexOf(item);
+          if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
+            dispatch(load(player, itsChannel[itsIndex + 1]));
+          }
+        }
+      }
+    });
 
     // Double-check we haven't been aborted since
     if (signal.aborted) {
+      // noinspection ExceptionCaughtLocallyJS
       throw new DOMException("abort load", "AbortError");
     }
 
-    wavesurfer.setVolume(getState().mixer.players[player].gain);
-    wavesurfers[player] = wavesurfer;
+    playerInstance.setVolume(getState().mixer.players[player].gain);
     delete loadAbortControllers[player];
   } catch (e) {
     if ("name" in e && e.name === "AbortError") {
@@ -535,20 +397,20 @@ export const play = (player: number): AppThunk => async (
   dispatch,
   getState
 ) => {
-  if (typeof wavesurfers[player] === "undefined") {
+  if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
   }
-  if (audioContext.state !== "running") {
+  if (audioEngine.audioContext.state !== "running") {
     console.log("Resuming AudioContext because Chrome bad");
-    await audioContext.resume();
+    await audioEngine.audioContext.resume();
   }
-  var state = getState().mixer.players[player];
+  const state = getState().mixer.players[player];
   if (state.loading !== -1) {
     console.log("not ready");
     return;
   }
-  wavesurfers[player].play();
+  audioEngine.players[player]?.play();
 
   if (state.loadedItem && "album" in state.loadedItem) {
     //track
@@ -562,7 +424,7 @@ export const play = (player: number): AppThunk => async (
 };
 
 export const pause = (player: number): AppThunk => (dispatch, getState) => {
-  if (typeof wavesurfers[player] === "undefined") {
+  if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
   }
@@ -570,15 +432,15 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
     console.log("not ready");
     return;
   }
-  if (wavesurfers[player].isPlaying()) {
-    wavesurfers[player].pause();
+  if (audioEngine.players[player]?.isPlaying) {
+    audioEngine.players[player]?.pause();
   } else {
-    wavesurfers[player].play();
+    audioEngine.players[player]?.play();
   }
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
-  if (typeof wavesurfers[player] === "undefined") {
+  if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
   }
@@ -587,7 +449,7 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
     console.log("not ready");
     return;
   }
-  wavesurfers[player].stop();
+  audioEngine.players[player]?.stop();
   // Incase wavesurver wasn't playing, it won't 'finish', so just make sure the UI is stopped.
   dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
 
@@ -603,8 +465,8 @@ export const {
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
-  wavesurfers.forEach(function(item) {
-    item.drawBuffer();
+  audioEngine.players.forEach(function(item) {
+    item?.redraw();
   });
 };
 
@@ -663,8 +525,8 @@ export const setVolume = (
     .time(FADE_TIME_SECONDS * 1000)
     .easing((Between as any).Easing.Exponential.InOut)
     .on("update", (val: number) => {
-      if (typeof wavesurfers[player] !== "undefined") {
-        wavesurfers[player].setVolume(val);
+      if (typeof audioEngine.players[player] !== "undefined") {
+        audioEngine.players[player]?.setVolume(val);
       }
     })
     .on("complete", () => {
@@ -688,9 +550,9 @@ export const openMicrophone = (micID: string): AppThunk => async (
   // if (getState().mixer.mic.open) {
   // 	micSource?.disconnect();
   // }
-  if (audioContext.state !== "running") {
+  if (audioEngine.audioContext.state !== "running") {
     console.log("Resuming AudioContext because Chrome bad");
-    await audioContext.resume();
+    await audioEngine.audioContext.resume();
   }
   dispatch(mixerState.actions.setMicError(null));
   if (!("mediaDevices" in navigator)) {
@@ -699,15 +561,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
     return;
   }
   try {
-    micMedia = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        deviceId: { exact: micID },
-        echoCancellation: false,
-        autoGainControl: false,
-        noiseSuppression: false,
-        latency: 0.01,
-      },
-    });
+    await audioEngine.openMic(micID);
   } catch (e) {
     if (e instanceof DOMException) {
       switch (e.message) {
@@ -722,33 +576,12 @@ export const openMicrophone = (micID: string): AppThunk => async (
     }
     return;
   }
-  // Okay, we have a mic stream, time to do some audio nonsense
+
   const state = getState().mixer.mic;
-  micSource = audioContext.createMediaStreamSource(micMedia);
+  audioEngine.setMicCalibrationGain(state.baseGain);
+  audioEngine.setMicVolume(state.volume);
 
-  micCalibrationGain = audioContext.createGain();
-  micCalibrationGain.gain.value = state.baseGain;
-
-  micCompressor = audioContext.createDynamicsCompressor();
-  micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
-  micCompressor.threshold.value = -18;
-  micCompressor.attack.value = 0.01;
-  micCompressor.release.value = 0.1;
-
-  micMixGain = audioContext.createGain();
-  micMixGain.gain.value = state.volume;
-
-  micSource
-    .connect(micCalibrationGain)
-    .connect(micCompressor)
-    .connect(micMixGain)
-    .connect(finalCompressor);
   dispatch(mixerState.actions.micOpen(micID));
-
-  const state2 = getState();
-  if (state2.optionsMenu.open && state2.optionsMenu.currentTab === "mic") {
-    dispatch(startMicCalibration());
-  }
 };
 
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
@@ -768,61 +601,8 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
         mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
       );
       // latency, plus a little buffer
-    }, audioContext.baseLatency * 1000 + 150);
+    }, audioEngine.audioContext.baseLatency * 1000 + 150);
   }
-};
-
-let analyser: AnalyserNode | null = null;
-
-const CALIBRATE_THE_CALIBRATOR = false;
-
-export const startMicCalibration = (): AppThunk => async (
-  dispatch,
-  getState
-) => {
-  if (!getState().mixer.mic.open) {
-    return;
-  }
-  dispatch(mixerState.actions.startMicCalibration());
-  let input: AudioNode;
-  if (CALIBRATE_THE_CALIBRATOR) {
-    const sauce = new Audio(
-      "https://ury.org.uk/myradio/NIPSWeb/managed_play/?managedid=6489"
-    ); // URY 1K Sine -2.5dbFS PPM5
-    sauce.crossOrigin = "use-credentials";
-    sauce.autoplay = true;
-    sauce.load();
-    input = audioContext.createMediaElementSource(sauce);
-  } else {
-    input = micCalibrationGain!;
-  }
-  analyser = audioContext.createAnalyser();
-  analyser.fftSize = 8192;
-  input.connect(analyser);
-};
-
-let float: Float32Array | null = null;
-
-export function getMicAnalysis() {
-  if (!analyser) {
-    throw new Error();
-  }
-  if (!float) {
-    float = new Float32Array(analyser.fftSize);
-  }
-  analyser.getFloatTimeDomainData(float);
-  let peak = 0;
-  for (let i = 0; i < float.length; i++) {
-    peak = Math.max(peak, float[i] ** 2);
-  }
-  return 10 * Math.log10(peak);
-}
-
-export const stopMicCalibration = (): AppThunk => (dispatch, getState) => {
-  if (getState().mixer.mic.calibration === null) {
-    return;
-  }
-  dispatch(mixerState.actions.stopMicCalibration());
 };
 
 export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
@@ -831,21 +611,18 @@ export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   const oldState = store.getState().mixer;
   const result = next(action);
   const newState = store.getState().mixer;
+
   newState.players.forEach((state, index) => {
-    if (typeof wavesurfers[index] !== "undefined") {
-      if (oldState.players[index].gain !== newState.players[index].gain) {
-        wavesurfers[index].setVolume(state.gain);
-      }
+    if (oldState.players[index].gain !== newState.players[index].gain) {
+      audioEngine.players[index]?.setVolume(state.gain);
     }
   });
-  if (
-    newState.mic.baseGain !== oldState.mic.baseGain &&
-    micCalibrationGain !== null
-  ) {
-    micCalibrationGain.gain.value = newState.mic.baseGain;
+
+  if (newState.mic.baseGain !== oldState.mic.baseGain) {
+    audioEngine.setMicCalibrationGain(newState.mic.baseGain);
   }
-  if (newState.mic.volume !== oldState.mic.volume && micMixGain !== null) {
-    micMixGain.gain.value = newState.mic.volume;
+  if (newState.mic.volume !== oldState.mic.volume) {
+    audioEngine.setMicVolume(newState.mic.volume);
   }
   return result;
 };

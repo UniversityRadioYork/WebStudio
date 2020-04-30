@@ -2,6 +2,7 @@ import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
 import { FaAlignJustify, FaBookOpen, FaMicrophone } from "react-icons/fa";
+import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 
 import { TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
@@ -145,6 +146,9 @@ function MicControl() {
           The microphone has not been setup. Go to options.
         </p>
       )}
+      <div id="micMeter">
+        <VUMeter width={250} height={40} source="mic-final" range={[-70, 0]} />
+      </div>
       <div className={`mixer-buttons ${!state.open && "disabled"}`}>
         <div
           className="mixer-buttons-backdrop"

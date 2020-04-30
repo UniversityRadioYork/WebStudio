@@ -2,11 +2,11 @@ import SdpTransform from "sdp-transform";
 import * as later from "later";
 
 import * as BroadcastState from "./state";
-import * as MixerState from "../mixer/state";
 
 import { Streamer, ConnectionStateEnum } from "./streamer";
 import { Dispatch } from "redux";
 import { broadcastApiRequest } from "../api";
+import { audioEngine } from "../mixer/audio";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
@@ -80,7 +80,7 @@ export class WebRTCStreamer extends Streamer {
       if (now.getSeconds() < 45) {
         later.setTimeout(
           async () => {
-            await MixerState.playNewsIntro();
+            await audioEngine.playNewsIntro();
           },
           later.parse
             .recur()
@@ -93,7 +93,7 @@ export class WebRTCStreamer extends Streamer {
       if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
         later.setTimeout(
           async () => {
-            await MixerState.playNewsEnd();
+            await audioEngine.playNewsEnd();
           },
           later.parse
             .recur()
@@ -110,6 +110,7 @@ export class WebRTCStreamer extends Streamer {
     const data = JSON.parse(evt.data);
     switch (data.kind) {
       case "HELLO":
+        this.onStateChange("CONNECTING");
         console.log("WS HELLO, our client ID is " + data.connectionId);
         this.dispatch(BroadcastState.setWsID(data.connectionId));
         if (this.state !== "HELLO") {
@@ -258,6 +259,11 @@ export class WebRTCStreamer extends Streamer {
         return "NOT_CONNECTED";
       }
     }
+    console.log(
+      "Relevant values: ",
+      this.pc?.iceConnectionState,
+      this.ws?.readyState
+    );
     switch (this.pc.iceConnectionState) {
       case "connected":
       case "completed":

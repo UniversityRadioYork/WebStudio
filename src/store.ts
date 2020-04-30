@@ -5,7 +5,6 @@ import {
   mixerMiddleware,
   mixerKeyboardShortcutsMiddleware,
 } from "./mixer/state";
-import { tabSyncMiddleware } from "./optionsMenu/state";
 import { persistStore } from "redux-persist";
 
 const store = configureStore({
@@ -13,7 +12,6 @@ const store = configureStore({
   middleware: [
     mixerMiddleware,
     mixerKeyboardShortcutsMiddleware,
-    tabSyncMiddleware,
     ...getDefaultMiddleware(),
   ],
 });
