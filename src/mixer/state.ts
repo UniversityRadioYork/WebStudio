@@ -297,6 +297,8 @@ export const load = (
 
     const playerInstance = await audioEngine.createPlayer(player, objectUrl);
 
+    URL.revokeObjectURL(objectUrl);
+
     playerInstance.on("loadComplete", (duration) => {
       console.log("loadComplete");
       dispatch(mixerState.actions.itemLoadComplete({ player }));
