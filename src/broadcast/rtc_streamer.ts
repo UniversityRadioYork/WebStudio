@@ -5,8 +5,6 @@ import * as BroadcastState from "./state";
 
 import { Streamer, ConnectionStateEnum } from "./streamer";
 import { Dispatch } from "redux";
-import { broadcastApiRequest } from "../api";
-import { audioEngine } from "../mixer/audio";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
@@ -29,20 +27,6 @@ export class WebRTCStreamer extends Streamer {
 
   async start(): Promise<void> {
     console.log("RTCStreamer start");
-    this.addConnectionStateListener((state) => {
-      if (state === "CONNECTED") {
-        this.newsInterval = later.setInterval(
-          this.doTheNews,
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
-        );
-      } else if (state === "CONNECTION_LOST" || state === "NOT_CONNECTED") {
-        this.newsInterval?.clear();
-      }
-    });
-
     this.ws = new WebSocket(process.env.REACT_APP_WS_URL!);
     this.ws.onopen = (e) => {
       console.log("WS open");
@@ -66,44 +50,6 @@ export class WebRTCStreamer extends Streamer {
       this.pc = null;
     }
     this.unexpectedDeath = false;
-  }
-
-  async doTheNews() {
-    const transition = await broadcastApiRequest<{
-      autoNews: boolean;
-      selSource: number;
-      switchAudioAtMin: number;
-    }>("/nextTransition", "GET", {});
-    if (transition.autoNews) {
-      // Sanity check
-      const now = new Date();
-      if (now.getSeconds() < 45) {
-        later.setTimeout(
-          async () => {
-            await audioEngine.playNewsIntro();
-          },
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
-            .on(45)
-            .second()
-        );
-      }
-      if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
-        later.setTimeout(
-          async () => {
-            await audioEngine.playNewsEnd();
-          },
-          later.parse
-            .recur()
-            .on(1)
-            .minute()
-            .on(55)
-            .second()
-        );
-      }
-    }
   }
 
   async onMessage(evt: MessageEvent) {

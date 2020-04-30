@@ -96,6 +96,29 @@ export function AdvancedTab() {
           <option value="never">Never</option>
         </select>
       </div>
+        <div className="form-group">
+            <label>
+                Play news countdown
+            </label>
+            <select
+                className="form-control"
+                id="broadcastSourceSelect"
+                value={settings.doTheNews}
+                onChange={(e) =>
+                    dispatch(
+                        changeSetting({
+                            key: "doTheNews",
+                            // @ts-ignore
+                            val: e.target.value,
+                        })
+                    )
+                }
+            >
+                <option value="always">Always</option>
+                <option value="while_live">While Live</option>
+                <option value="never">Never</option>
+            </select>
+        </div>
       <div className="form-check">
         <input
           className="form-check-input"

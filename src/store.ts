@@ -3,7 +3,7 @@ import { configureStore, Action, getDefaultMiddleware } from "@reduxjs/toolkit";
 import { ThunkAction } from "redux-thunk";
 import {
   mixerMiddleware,
-  mixerKeyboardShortcutsMiddleware,
+  mixerKeyboardShortcutsMiddleware, startNewsTimer,
 } from "./mixer/state";
 import { persistStore } from "redux-persist";
 
@@ -27,4 +27,7 @@ export const persistor = persistStore(store);
 
 export type AppDispatch = typeof store.dispatch;
 export type AppThunk = ThunkAction<void, RootState, null, Action<string>>;
+
+store.dispatch(startNewsTimer() as any);
+
 export default store;
