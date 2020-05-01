@@ -19,6 +19,7 @@ const playerGainTweens: Array<{
   tweens: Between[];
 }> = [];
 const loadAbortControllers: AbortController[] = [];
+const lastObjectURLs: string[] = [];
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
@@ -296,6 +297,12 @@ export const load = (
     const objectUrl = URL.createObjectURL(blob);
 
     const playerInstance = await audioEngine.createPlayer(player, objectUrl);
+
+    // Clear the last one out from memory
+    if (typeof lastObjectURLs[player] === "string") {
+      URL.revokeObjectURL(lastObjectURLs[player]);
+    }
+    lastObjectURLs[player] = objectUrl;
 
     playerInstance.on("loadComplete", (duration) => {
       console.log("loadComplete");
