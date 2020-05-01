@@ -19,6 +19,7 @@ const playerGainTweens: Array<{
   tweens: Between[];
 }> = [];
 const loadAbortControllers: AbortController[] = [];
+const lastObjectURLs: string[] = [];
 
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
@@ -297,6 +298,12 @@ export const load = (
 
     const playerInstance = await audioEngine.createPlayer(player, objectUrl);
 
+    // Clear the last one out from memory
+    if (typeof lastObjectURLs[player] === "string") {
+      URL.revokeObjectURL(lastObjectURLs[player]);
+    }
+    lastObjectURLs[player] = objectUrl;
+
     playerInstance.on("loadComplete", (duration) => {
       console.log("loadComplete");
       dispatch(mixerState.actions.itemLoadComplete({ player }));
@@ -485,7 +492,7 @@ export const setVolume = (
       uiLevel = 0;
       break;
     case "bed":
-      volume = 0.125;
+      volume = 0.1;
       uiLevel = 0.5;
       break;
     case "full":
