@@ -53,9 +53,7 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
-            {typeof data[id] === "undefined"
-              ? null
-              : data
+            {data
                   .filter((x) => x.channel === id)
                   .sort((a, b) => a.weight - b.weight)
                   .map((x, index) => (
