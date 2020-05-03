@@ -14,7 +14,8 @@ async function actuallyDoTheNews() {
   const now = new Date();
   const newsInTime = set(now, { minutes: 59, seconds: 45 });
   const newsOutTime = set(add(now, {hours: 1}), { minutes: 1, seconds: 55 });
-  console.log("now is", now, "news in is at", newsInTime, "and out is at", newsOutTime)
+  console.log("now is", now, "news in is at", newsInTime, "and out is at", newsOutTime);
+  console.log("so deltas are", newsInTime.valueOf() - now.valueOf(), "and", newsOutTime.valueOf() - now.valueOf(), "respectively");
   if (now.getSeconds() < 45) {
     window.setTimeout(
       async () => {
