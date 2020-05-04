@@ -14,19 +14,23 @@ async function actuallyDoTheNews() {
   const now = new Date();
   const newsInTime = set(now, { minutes: 59, seconds: 45 });
   const newsOutTime = set(add(now, {hours: 1}), { minutes: 1, seconds: 55 });
+  const newsInDelta = newsInTime.valueOf() - now.valueOf();
+  const newsOutDelta = newsOutTime.valueOf() - now.valueOf();
   console.log("now is", now, "news in is at", newsInTime, "and out is at", newsOutTime);
-  console.log("so deltas are", newsInTime.valueOf() - now.valueOf(), "and", newsOutTime.valueOf() - now.valueOf(), "respectively");
-  if (now.getSeconds() < 45) {
+  console.log("so deltas are", newsInDelta, "and", newsOutDelta, "respectively");
+  if (newsInDelta > 0) {
     window.setTimeout(
       async () => {
+        console.log("Playing News In")
         await audioEngine.playNewsIntro();
       },
       newsInTime.valueOf() - now.valueOf()
     );
   }
-  if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
+  if (newsOutDelta > 0) {
     window.setTimeout(
       async () => {
+        console.log("Playing News Out")
         await audioEngine.playNewsEnd();
       },
       newsOutTime.valueOf() - now.valueOf()
