@@ -50,8 +50,9 @@ export class WebRTCStreamer extends Streamer {
       console.log("WS open");
       this.onStateChange(this.mapStateToConnectionState());
     };
-    this.ws.onclose = (e) => {
+    this.ws.onclose = async (e) => {
       console.log("WS close");
+      await this.stop("WS close");
       this.onStateChange(this.mapStateToConnectionState());
     };
     this.ws.addEventListener("message", this.onMessage.bind(this));
