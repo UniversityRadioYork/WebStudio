@@ -306,3 +306,4 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 }
 
 export const audioEngine = new AudioEngine();
+(window as any).AE = audioEngine;

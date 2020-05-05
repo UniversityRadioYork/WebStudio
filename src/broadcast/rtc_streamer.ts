@@ -1,6 +1,8 @@
 import SdpTransform from "sdp-transform";
 import * as later from "later";
 
+import raygun from "raygun4js";
+
 import * as BroadcastState from "./state";
 
 import { Streamer, ConnectionStateEnum } from "./streamer";
@@ -56,7 +58,10 @@ export class WebRTCStreamer extends Streamer {
     console.log("WS created");
   }
 
-  async stop(): Promise<void> {
+  async stop(reason?: string): Promise<void> {
+    raygun("send", {
+      error: new Error("Connection stop due to " + reason)
+    });
     if (this.ws) {
       this.ws.close();
       this.ws = null as any;
@@ -181,7 +186,7 @@ export class WebRTCStreamer extends Streamer {
         // oo-er
         // server thinks we've lost connection
         // kill it on our end and trigger a reconnect
-        await this.stop();
+        await this.stop("server DIED");
         await this.start();
         this.unexpectedDeath = true;
         break;
@@ -203,13 +208,16 @@ export class WebRTCStreamer extends Streamer {
         ...iceServers,
       ],
     });
-    this.pc.oniceconnectionstatechange = (e) => {
+    this.pc.oniceconnectionstatechange = async (e) => {
       if (!this.pc) {
         throw new Error(
           "Received ICEConnectionStateChange but PC was null?????"
         );
       }
       console.log("ICE Connection state change: " + this.pc.iceConnectionState);
+      if (this.pc.iceConnectionState === "failed") {
+        await this.stop("ICE failure");
+      }
       this.onStateChange(this.mapStateToConnectionState());
     };
     this.stream.getAudioTracks().forEach((track) => this.pc!.addTrack(track));
