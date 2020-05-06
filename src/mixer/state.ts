@@ -608,7 +608,7 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
 
 export const startNewsTimer = (): AppThunk => (_, getState) => {
   TheNews.butNowItsTimeFor(getState);
-}
+};
 
 export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   store

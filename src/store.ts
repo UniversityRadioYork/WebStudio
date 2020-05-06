@@ -3,7 +3,8 @@ import { configureStore, Action, getDefaultMiddleware } from "@reduxjs/toolkit";
 import { ThunkAction } from "redux-thunk";
 import {
   mixerMiddleware,
-  mixerKeyboardShortcutsMiddleware, startNewsTimer,
+  mixerKeyboardShortcutsMiddleware,
+  startNewsTimer,
 } from "./mixer/state";
 import { persistStore } from "redux-persist";
 

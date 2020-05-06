@@ -13,7 +13,7 @@ const settingsState = createSlice({
     showDebugInfo: false,
     enableRecording: false,
     tracklist: "while_live",
-    doTheNews: "while_live"
+    doTheNews: "while_live",
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(
