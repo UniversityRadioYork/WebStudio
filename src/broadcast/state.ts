@@ -144,7 +144,7 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
           })
         );
         if (streamer) {
-          await streamer.stop();
+          await streamer.stop("ApiException " + e.message);
         }
       } else {
         // let raygun handle it
@@ -322,7 +322,7 @@ export const goOnAir = (): AppThunk => async (dispatch, getState) => {
 
 export const stopStreaming = (): AppThunk => async (dispatch) => {
   if (streamer) {
-    await streamer.stop();
+    await streamer.stop("stopStreaming call");
     streamer = null;
   } else {
     console.warn("disconnect called with no streamer!");

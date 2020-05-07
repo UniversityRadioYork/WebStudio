@@ -13,7 +13,6 @@ import { MYRADIO_NON_API_BASE } from "../api";
 import "./navbar.scss";
 import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
-import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {

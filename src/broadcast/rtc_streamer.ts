@@ -1,12 +1,12 @@
 import SdpTransform from "sdp-transform";
 import * as later from "later";
 
+import raygun from "raygun4js";
+
 import * as BroadcastState from "./state";
 
 import { Streamer, ConnectionStateEnum } from "./streamer";
 import { Dispatch } from "redux";
-import { broadcastApiRequest } from "../api";
-import { audioEngine } from "../mixer/audio";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
@@ -29,34 +29,24 @@ export class WebRTCStreamer extends Streamer {
 
   async start(): Promise<void> {
     console.log("RTCStreamer start");
-    this.addConnectionStateListener((state) => {
-      if (state === "CONNECTED") {
-        this.newsInterval = later.setInterval(
-          this.doTheNews,
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
-        );
-      } else if (state === "CONNECTION_LOST" || state === "NOT_CONNECTED") {
-        this.newsInterval?.clear();
-      }
-    });
-
     this.ws = new WebSocket(process.env.REACT_APP_WS_URL!);
     this.ws.onopen = (e) => {
       console.log("WS open");
       this.onStateChange(this.mapStateToConnectionState());
     };
-    this.ws.onclose = (e) => {
+    this.ws.onclose = async (e) => {
       console.log("WS close");
+      await this.stop("WS close");
       this.onStateChange(this.mapStateToConnectionState());
     };
     this.ws.addEventListener("message", this.onMessage.bind(this));
     console.log("WS created");
   }
 
-  async stop(): Promise<void> {
+  async stop(reason?: string): Promise<void> {
+    raygun("send", {
+      error: new Error("Connection stop due to " + reason)
+    });
     if (this.ws) {
       this.ws.close();
       this.ws = null as any;
@@ -66,44 +56,6 @@ export class WebRTCStreamer extends Streamer {
       this.pc = null;
     }
     this.unexpectedDeath = false;
-  }
-
-  async doTheNews() {
-    const transition = await broadcastApiRequest<{
-      autoNews: boolean;
-      selSource: number;
-      switchAudioAtMin: number;
-    }>("/nextTransition", "GET", {});
-    if (transition.autoNews) {
-      // Sanity check
-      const now = new Date();
-      if (now.getSeconds() < 45) {
-        later.setTimeout(
-          async () => {
-            await audioEngine.playNewsIntro();
-          },
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
-            .on(45)
-            .second()
-        );
-      }
-      if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
-        later.setTimeout(
-          async () => {
-            await audioEngine.playNewsEnd();
-          },
-          later.parse
-            .recur()
-            .on(1)
-            .minute()
-            .on(55)
-            .second()
-        );
-      }
-    }
   }
 
   async onMessage(evt: MessageEvent) {
@@ -181,7 +133,7 @@ export class WebRTCStreamer extends Streamer {
         // oo-er
         // server thinks we've lost connection
         // kill it on our end and trigger a reconnect
-        await this.stop();
+        await this.stop("server DIED");
         await this.start();
         this.unexpectedDeath = true;
         break;
@@ -203,13 +155,16 @@ export class WebRTCStreamer extends Streamer {
         ...iceServers,
       ],
     });
-    this.pc.oniceconnectionstatechange = (e) => {
+    this.pc.oniceconnectionstatechange = async (e) => {
       if (!this.pc) {
         throw new Error(
           "Received ICEConnectionStateChange but PC was null?????"
         );
       }
       console.log("ICE Connection state change: " + this.pc.iceConnectionState);
+      if (this.pc.iceConnectionState === "failed") {
+        await this.stop("ICE failure");
+      }
       this.onStateChange(this.mapStateToConnectionState());
     };
     this.stream.getAudioTracks().forEach((track) => this.pc!.addTrack(track));
