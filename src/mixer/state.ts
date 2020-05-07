@@ -13,6 +13,7 @@ import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import { audioEngine } from "./audio";
+import * as TheNews from "./the_news";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -610,6 +611,10 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
       // latency, plus a little buffer
     }, audioEngine.audioContext.baseLatency * 1000 + 150);
   }
+};
+
+export const startNewsTimer = (): AppThunk => (_, getState) => {
+  TheNews.butNowItsTimeFor(getState);
 };
 
 export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
