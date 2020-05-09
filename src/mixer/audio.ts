@@ -311,7 +311,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     for (let i = 0; i < this.analysisBuffer.length; i++) {
       peak = Math.max(peak, Math.abs(this.analysisBuffer[i]));
     }
-    return 10 * Math.log10(peak);
+    return 20 * Math.log10(peak);
   }
 
   async playNewsEnd() {
