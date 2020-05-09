@@ -21,7 +21,7 @@ export default function ProModeButtons({channel}: { channel: number }) {
                 )}
                 {activeButton === "trim" && (
                     <>
-                    <input type="range" min={0.01} max={5} step={0.2} value={trimVal.toFixed(1)}
+                    <input type="range" min={-12} max={12} step={0.2} value={trimVal.toFixed(1)}
                            onChange={e => dispatch(setChannelTrim(channel, parseFloat(e.target.value)))}/>
                    <b>{trimVal}</b>
                    </>

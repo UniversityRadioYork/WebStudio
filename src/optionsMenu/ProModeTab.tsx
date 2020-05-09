@@ -1,6 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { streamer } from "../broadcast/state";
-import { WebRTCStreamer } from "../broadcast/rtc_streamer";
+import React from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "../rootReducer";
 import {changeSetting} from "./settingsState";

@@ -7,7 +7,6 @@ import {
   FaPlay,
   FaPause,
   FaStop,
-  FaTachometerAlt
 } from "react-icons/fa";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";

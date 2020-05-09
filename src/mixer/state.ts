@@ -64,7 +64,7 @@ const BasePlayerState: PlayerState = {
   state: "stopped",
   volume: 1,
   gain: 1,
-  trim: 1,
+  trim: 0,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
