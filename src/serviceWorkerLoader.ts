@@ -68,7 +68,7 @@ export function register(config?: Config) {
 function registerValidSW(swUrl: string, config?: Config) {
   navigator.serviceWorker
     .register(swUrl, {
-      scope: window.location.pathname.endsWith("/") ? window.location.pathname : window.location.pathname + "/"
+      scope: "/"
     })
     .then((registration) => {
       registration.onupdatefound = () => {
