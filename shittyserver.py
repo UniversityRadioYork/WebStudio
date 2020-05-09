@@ -67,24 +67,7 @@ def get_turn_credentials() -> TurnCredentials:
         # noinspection PyTypeChecker
         return token.ice_servers  # type: ignore
     elif provider == "hardcoded":
-        return [
-            {
-                "urls": ["stun:eu-turn4.xirsys.com"],
-            },
-            {
-                "username":
-                    "h42bRBHL2GtRTiQRoXN8GCG-PFYMl4Acel6EQ9xINBWdTpoZyBEGyCcJBCtT3iINAAAAAF5_NJptYXJrc3BvbGFrb3Zz",
-                "credential": "17e834fa-70e7-11ea-a66c-faa4ea02ad5c",
-                "urls": [
-                    "turn:eu-turn4.xirsys.com:80?transport=udp",
-                    "turn:eu-turn4.xirsys.com:3478?transport=udp",
-                    "turn:eu-turn4.xirsys.com:80?transport=tcp",
-                    "turn:eu-turn4.xirsys.com:3478?transport=tcp",
-                    "turns:eu-turn4.xirsys.com:443?transport=tcp",
-                    "turns:eu-turn4.xirsys.com:5349?transport=tcp",
-                ],
-            },
-        ]
+        raise Exception("Don't use hardcoded anymore!")
     else:
         raise Exception("unknown provider " + provider)
 
