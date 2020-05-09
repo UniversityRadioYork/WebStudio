@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export type OptionsTabIDsEnum = "mic" | "about" | "advanced" | "stats";
+export type OptionsTabIDsEnum = "mic" | "about" | "pro" | "advanced" | "stats";
 
 const optionsMenuState = createSlice({
   name: "optionsMenu",

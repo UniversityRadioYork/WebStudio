@@ -21,6 +21,8 @@ const PlayerEmitter: StrictEmitter<
 > = EventEmitter as any;
 
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
+  private volume = 1;
+  private trim = 1;
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
@@ -64,7 +66,13 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   setVolume(val: number) {
-    this.wavesurfer.setVolume(val);
+    this.volume = val;
+    this.wavesurfer.setVolume(this.volume * this.trim);
+  }
+
+  setTrim(val: number) {
+    this.trim = val;
+    this.wavesurfer.setVolume(this.volume * this.trim);
   }
 
   public static create(engine: AudioEngine, player: number, url: string) {

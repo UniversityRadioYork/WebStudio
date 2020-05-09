@@ -35,6 +35,7 @@ interface PlayerState {
   state: PlayerStateEnum;
   volume: number;
   gain: number;
+  trim: number;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -63,6 +64,7 @@ const BasePlayerState: PlayerState = {
   state: "stopped",
   volume: 1,
   gain: 1,
+  trim: 1,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -138,6 +140,15 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].gain = action.payload.gain;
+    },
+    setPlayerTrim(
+      state,
+      action: PayloadAction<{
+        player: number;
+        trim: number;
+      }>
+    ) {
+      state.players[action.payload.player].trim = action.payload.trim;
     },
     setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
       state.mic.openError = action.payload;
@@ -547,6 +558,11 @@ export const setVolume = (
     target: level,
     tweens: [volumeTween, gainTween],
   };
+};
+
+export const setChannelTrim = (player: number, val: number): AppThunk => async dispatch => {
+  dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
+  audioEngine.players[player]?.setTrim(val);
 };
 
 export const openMicrophone = (micID: string): AppThunk => async (

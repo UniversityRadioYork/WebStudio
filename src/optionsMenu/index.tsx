@@ -10,6 +10,7 @@ import { AboutTab } from "./AboutTab";
 import { StatsTab } from "./StatsTab";
 import { AdvancedTab } from "./AdvancedTab";
 import { FaTimes } from "react-icons/fa";
+import {ProModeTab} from "./ProModeTab";
 
 export function OptionsMenu() {
   const state = useSelector((state: RootState) => state.optionsMenu);
@@ -34,6 +35,14 @@ export function OptionsMenu() {
             onClick={() => dispatch(OptionsState.changeTab("stats"))}
           >
             Stream Statistics
+          </NavLink>
+        </NavItem>
+        <NavItem>
+          <NavLink
+              className={state.currentTab === "pro" ? "active" : ""}
+              onClick={() => dispatch(OptionsState.changeTab("pro"))}
+          >
+            Pro Mode&trade;
           </NavLink>
         </NavItem>
         <NavItem>
@@ -67,6 +76,9 @@ export function OptionsMenu() {
         </TabPane>
         <TabPane tabId="stats">
           <StatsTab />
+        </TabPane>
+        <TabPane tabId="pro">
+          <ProModeTab />
         </TabPane>
         <TabPane tabId="advanced">
           <AdvancedTab />
