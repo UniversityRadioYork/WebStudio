@@ -30,7 +30,7 @@ export function MicTab() {
 
   async function fetchMicNames() {
     console.log("start fetchNames");
-    if (!("getUserMedia" in navigator.mediaDevices)) {
+    if (!("mediaDevices" in navigator)) {
       setOpenError("NOT_SECURE_CONTEXT");
       return;
     }
