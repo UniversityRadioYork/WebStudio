@@ -28,6 +28,7 @@ export default function ProModeButtons({ channel }: { channel: number }) {
         {activeButton === "trim" && (
           <>
             <input
+              className="mx-2"
               type="range"
               min={-12}
               max={12}
@@ -37,7 +38,7 @@ export default function ProModeButtons({ channel }: { channel: number }) {
                 dispatch(setChannelTrim(channel, parseFloat(e.target.value)))
               }
             />
-            <b>{trimVal}</b>
+            <b>{trimVal} dB</b>
           </>
         )}
       </div>
