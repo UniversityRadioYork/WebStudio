@@ -517,7 +517,8 @@ export const setVolume = (
       uiLevel = 0.5;
       break;
     case "full":
-      volume = uiLevel = 1;
+      volume = 0;
+      uiLevel = 1;
       break;
   }
 
