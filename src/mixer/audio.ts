@@ -286,7 +286,10 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   setMicCalibrationGain(value: number) {
-    this.micCalibrationGain.gain.value = value;
+    this.micCalibrationGain.gain.value =
+      value === 0
+        ? 1 :
+        Math.pow(10, (value / 10));
   }
 
   setMicVolume(value: number) {
