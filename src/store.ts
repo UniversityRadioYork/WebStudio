@@ -8,6 +8,7 @@ import {
   startNewsTimer,
 } from "./mixer/state";
 import { persistStore } from "redux-persist";
+import {periodicallySynchroniseClock} from "./clock/state";
 
 const store = configureStore({
   reducer: rootReducer,
@@ -35,5 +36,6 @@ export type AppDispatch = typeof store.dispatch;
 export type AppThunk = ThunkAction<void, RootState, null, Action<string>>;
 
 store.dispatch(startNewsTimer() as any);
+store.dispatch(periodicallySynchroniseClock() as any);
 
 export default store;

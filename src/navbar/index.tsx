@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Clock from "react-live-clock";
 
 import { FaRegClock, FaRegUser } from "react-icons/fa";
 
@@ -13,6 +12,7 @@ import { MYRADIO_NON_API_BASE } from "../api";
 import "./navbar.scss";
 import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
+import {Clock} from "../clock/Clock";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -72,11 +72,7 @@ export function NavBar() {
         </a>
         <div className="nav-item nav-link" id="timelord">
           <div className="time">
-            <Clock
-              format={"HH:mm:ss"}
-              ticking={true}
-              timezone={"europe/london"}
-            />
+            <Clock />
           </div>
         </div>
       </div>
