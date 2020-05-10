@@ -93,7 +93,7 @@ export function MicTab() {
           );
         })}
       </select>
-      {state.openError !== null && (
+      {(state.openError !== null || openError !== null) && (
         <div className="sp-alert">
           {state.openError === "NO_PERMISSION" || openError === "NO_PERMISSION"
             ? "Please grant this page permission to use your microphone and try again."
