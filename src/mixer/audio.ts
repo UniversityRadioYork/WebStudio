@@ -267,6 +267,10 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   async openMic(deviceId: string) {
+    if (this.micSource !== null && this.micMedia !== null) {
+      this.micMedia.getAudioTracks()[0].stop();
+      this.micSource.disconnect();
+    }
     console.log("opening mic", deviceId);
     this.micMedia = await navigator.mediaDevices.getUserMedia({
       audio: {
