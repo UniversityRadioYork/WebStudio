@@ -155,6 +155,7 @@ def stateDecider() -> Dict[str, Any]:
         if currentConnection:
             print("We're currently doing a show, so check if they want middle news.")
             willRunAutoNews = currentConnection["autoNewsMiddle"]
+            print("(conclusion: {})".format("yes" if willRunAutoNews else "no"))
             newSelSource = currentConnection["sourceid"]
             newWSSource = currentConnection["wsid"]
         elif SUSTAINER_AUTONEWS:
@@ -211,9 +212,10 @@ def post_cancelCheck() -> Any:
     if currentShow and currentShow["connid"] == content["connid"]:
         # this show is (at least supposed to be) live now.
         # kill their show
-        # but don't kill it during the news, to avoid unexpected jukeboxing
+        # but don't kill it during the news, or after the end time, to avoid unexpected jukeboxing
         now = datetime.datetime.now().timestamp()
         if now < (currentShow["endTimestamp"] - 15):
+            print("Jukeboxing due to {}'s ({}, {}) cancellation".format(currentShow["connid"], currentShow["timeslotid"], currentShow["wsid"]))
             do_ws_srv_telnet("NUL")
             subprocess.Popen(["sel", str(SOURCE_JUKEBOX)])
 
@@ -303,10 +305,11 @@ def post_registerCheck() -> Any:
         }
 
     if start_time + datetime.timedelta(minutes=2) < now_time:
-        # they're late, bring them live now
-        print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
-        do_ws_srv_telnet(connection["wsid"])
-        subprocess.Popen(['sel', '5'])
+        if connection["wsid"] is not None:
+            # they're late, bring them live now
+            print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
+            do_ws_srv_telnet(connection["wsid"])
+            subprocess.Popen(['sel', '5'])
 
     assert connection is not None
     if new_connection:
@@ -379,10 +382,15 @@ def post_wsSessions() -> Any:
         if conn["wsid"] in wsids_to_remove:
             print("({}, {}) gone".format(conn["connid"], conn["wsid"]))
             conn["wsid"] = None
-            # TODO Make this actually do a disconnect sequence if this is the current show.
-            # time.sleep(5)
-            subprocess.Popen(['sel', str(SOURCE_JUKEBOX)])
-            do_ws_srv_telnet("NUL")
+            currentShow = getCurrentShowConnection()
+            if currentShow and currentShow["connid"] == conn["connid"]:
+                # they should be on air now, but they've just died. go to jukebox.
+                # but don't kill it during the news, or after the end time, to avoid unexpected jukeboxing
+                now = datetime.datetime.now().timestamp()
+                if now < (currentShow["endTimestamp"] - 15):
+                    print("jukeboxing due to their disappearance...")
+                    subprocess.Popen(['sel', str(SOURCE_JUKEBOX)])
+                    do_ws_srv_telnet("NUL")
     return genPayload("Thx, K, bye.")
 
 

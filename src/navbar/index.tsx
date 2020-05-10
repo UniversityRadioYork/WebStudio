@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
 
@@ -45,6 +45,17 @@ export function NavBar() {
   const broadcastState = useSelector((state: RootState) => state.broadcast);
   const settings = useSelector((state: RootState) => state.settings);
   const redirect_url = encodeURIComponent(window.location.toString());
+
+  const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
+
+  const prevRegistrationStage = useRef(broadcastState.stage);
+  useEffect(() => {
+    if (broadcastState.stage !== prevRegistrationStage.current) {
+      setConnectButtonAnimating(false);
+    }
+    prevRegistrationStage.current = broadcastState.stage;
+  }, [broadcastState.stage]);
+
   return (
     <>
       <div className="navbar-nav navbar-left">
@@ -76,19 +87,19 @@ export function NavBar() {
       </div>
 
       <ul className="nav navbar-nav navbar-right">
+        {/*<li className="nav-item">*/}
+        {/*  <VUMeter width={400} height={40} source="master" range={[-70, 0]} />*/}
+        {/*</li>*/}
+
         <li className="nav-item" style={{ color: "white" }}>
           <div className="nav-link">
             <b>{nicifyConnectionState(broadcastState.connectionState)}</b>
           </div>
         </li>
         <li
-          className={
-            "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
-            (broadcastState.stage !== "NOT_REGISTERED"
-              ? "btn-danger active"
-              : "btn-outline-light")
-          }
+          className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link connect"
           onClick={() => {
+            setConnectButtonAnimating(true);
             switch (broadcastState.stage) {
               case "NOT_REGISTERED":
                 dispatch(BroadcastState.goOnAir());
@@ -99,10 +110,14 @@ export function NavBar() {
             }
           }}
         >
-          <FaBroadcastTower size={17} />
-          &nbsp;
-          {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
-          {broadcastState.stage === "REGISTERED" && "Cancel registration"}
+          {connectButtonAnimating ? (
+            <span className="dot-pulse" />
+          ) : (
+            <>
+              {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
+              {broadcastState.stage === "REGISTERED" && "Cancel registration"}
+            </>
+          )}
         </li>
         {settings.enableRecording && (
           <li

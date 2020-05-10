@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   FaLevelDownAlt,
@@ -8,10 +8,10 @@ import {
   FaPause,
   FaStop,
 } from "react-icons/fa";
-import { add, format } from "date-fns";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { secToHHMM, timestampToHHMM } from "../lib/utils";
+import ProModeButtons from "./ProModeButtons";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -19,6 +19,7 @@ export function Player({ id }: { id: number }) {
   const playerState = useSelector(
     (state: RootState) => state.mixer.players[id]
   );
+  const proMode = useSelector((state: RootState) => state.settings.proMode);
   const dispatch = useDispatch();
 
   const [now, setNow] = useState<Date>(new Date());
@@ -76,6 +77,7 @@ export function Player({ id }: { id: number }) {
             &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
+        {proMode && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
           <span className="card-title">
             <strong>

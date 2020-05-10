@@ -1,14 +1,50 @@
-import React, { useRef, useLayoutEffect, useEffect, HTMLProps } from "react";
+import React, {
+  useRef,
+  useLayoutEffect,
+  useEffect,
+  useCallback,
+  useState,
+  HTMLProps,
+} from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../rootReducer";
+import { audioEngine, LevelsSource } from "../../mixer/audio";
 
 interface VUMeterProps extends HTMLProps<HTMLCanvasElement> {
-  value: number;
   range: [number, number];
-  greenRange: [number, number];
+  greenRange?: [number, number];
+  source: LevelsSource;
 }
 
 export function VUMeter(props: VUMeterProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+
+  const isMicOpen = useSelector((state: RootState) => state.mixer.mic.open);
+  const rafRef = useRef<number | null>(null);
+  const [peak, setPeak] = useState(-Infinity);
+
+  const isMic = props.source.substr(0, 3) === "mic";
+
+  const animate = useCallback(() => {
+    if (!isMic || isMicOpen) {
+      const result = audioEngine.getLevel(props.source);
+      setPeak(result);
+      rafRef.current = requestAnimationFrame(animate);
+    }
+  }, [isMicOpen, props.source, isMic]);
+
+  useEffect(() => {
+    if (!isMic || isMicOpen) {
+      rafRef.current = requestAnimationFrame(animate);
+    }
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [animate, isMicOpen, isMic]);
 
   useLayoutEffect(() => {
     if (canvasRef.current) {
@@ -28,30 +64,31 @@ export function VUMeter(props: VUMeterProps) {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = "#4ab81c";
-    const leftGreen =
-      Math.abs(props.greenRange[0] - props.range[0]) / valueRange;
-    const rightGreen =
-      Math.abs(props.greenRange[1] - props.range[0]) / valueRange;
-    ctx.fillRect(
-      leftGreen * width,
-      0,
-      rightGreen * width - leftGreen * width,
-      height
-    );
+    if (props.greenRange) {
+      ctx.fillStyle = "#4ab81c";
+      const leftGreen =
+        Math.abs(props.greenRange[0] - props.range[0]) / valueRange;
+      const rightGreen =
+        Math.abs(props.greenRange[1] - props.range[0]) / valueRange;
+      ctx.fillRect(
+        leftGreen * width,
+        0,
+        rightGreen * width - leftGreen * width,
+        height
+      );
 
-    if (
-      props.value >= props.greenRange[0] &&
-      props.value <= props.greenRange[1]
-    ) {
-      ctx.fillStyle = "#00ff00";
-    } else if (props.value < props.greenRange[0]) {
-      ctx.fillStyle = "#e8d120";
+      if (peak >= props.greenRange[0] && peak <= props.greenRange[1]) {
+        ctx.fillStyle = "#00ff00";
+      } else if (peak < props.greenRange[0]) {
+        ctx.fillStyle = "#e8d120";
+      } else {
+        ctx.fillStyle = "#ff0000";
+      }
     } else {
-      ctx.fillStyle = "#ff0000";
+      ctx.fillStyle = "#e8d120";
     }
 
-    const valueOffset = Math.abs(props.value - props.range[0]) / valueRange;
+    const valueOffset = Math.abs(peak - props.range[0]) / valueRange;
 
     ctx.fillRect(0, 0, valueOffset * width, height - 10);
 
@@ -60,9 +97,9 @@ export function VUMeter(props: VUMeterProps) {
       const value = (props.range[0] + valueRange * (i / 10)).toFixed(0);
       ctx.fillText(value, width * (i / 10), height - 7);
     }
-  }, [props.value, props.range, props.greenRange]);
+  }, [peak, props.range, props.greenRange]);
 
-  const { value, range, greenRange, ...rest } = props;
+  const { value, range, greenRange, source, ...rest } = props;
 
   return <canvas ref={canvasRef} {...rest} />;
 }

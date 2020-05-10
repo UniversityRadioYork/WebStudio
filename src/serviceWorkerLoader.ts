@@ -67,7 +67,10 @@ export function register(config?: Config) {
 
 function registerValidSW(swUrl: string, config?: Config) {
   navigator.serviceWorker
-    .register(swUrl)
+    .register(swUrl, {
+      // TODO: disabled until #107 is resolved
+      // scope: "/"
+    })
     .then((registration) => {
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;

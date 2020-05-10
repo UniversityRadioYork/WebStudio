@@ -7,7 +7,7 @@ import sys
 import uuid
 from datetime import datetime, timezone
 from types import TracebackType
-from typing import Optional, Any, Type, Dict
+from typing import Optional, Any, Type, Dict, List
 
 import aiohttp
 import av  # type: ignore
@@ -21,18 +21,17 @@ config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
 
 if config.get("raygun", "enable") == "True":
-
     def handle_exception(
-        exc_type: Type[BaseException],
-        exc_value: BaseException,
-        exc_traceback: TracebackType,
+            exc_type: Type[BaseException],
+            exc_value: BaseException,
+            exc_traceback: TracebackType,
     ) -> None:
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         cl = raygunprovider.RaygunSender(config.get("raygun", "key"))
         cl.send_exception(exc_info=(exc_type, exc_value, exc_traceback))
 
-    sys.excepthook = handle_exception
 
+    sys.excepthook = handle_exception
 
 file_contents_ex = re.compile(r"^ws=\d$")
 
@@ -52,6 +51,25 @@ def write_ob_status(status: bool) -> None:
         fd.seek(0)
         fd.write(content)
         fd.truncate()
+
+
+TurnCredentials = List[Dict[str, Any]]
+
+
+def get_turn_credentials() -> TurnCredentials:
+    provider = config.get("shittyserver", "turn_provider")
+    if provider == "twilio":
+        from twilio.rest import Client  # type: ignore
+        client = Client(config.get("twilio", "account_sid"), config.get("twilio", "auth_token"))
+
+        token = client.tokens.create()
+        # Twilio's typedef is wrong, reee
+        # noinspection PyTypeChecker
+        return token.ice_servers  # type: ignore
+    elif provider == "hardcoded":
+        raise Exception("Don't use hardcoded anymore!")
+    else:
+        raise Exception("unknown provider " + provider)
 
 
 @Jack.set_error_function  # type: ignore
@@ -177,8 +195,8 @@ class Session(object):
                     await self.pc.close()
 
                 if (
-                    self.websocket is not None
-                    and self.websocket.state == websockets.protocol.State.OPEN
+                        self.websocket is not None
+                        and self.websocket.state == websockets.protocol.State.OPEN
                 ):
                     try:
                         await self.websocket.send(json.dumps({"kind": "DIED"}))
@@ -311,9 +329,11 @@ class Session(object):
         self.websocket = websocket
         self.connection_state = "HELLO"
         print(self.connection_id, "Connected")
+        ice_config = get_turn_credentials()
+        print(self.connection_id, "Obtained ICE")
         # TODO Raygun user ID
         await websocket.send(
-            json.dumps({"kind": "HELLO", "connectionId": self.connection_id})
+            json.dumps({"kind": "HELLO", "connectionId": self.connection_id, "iceServers": ice_config})
         )
 
         try:
@@ -353,7 +373,7 @@ print("Shittyserver WS starting on port {}.".format(config.get("shittyserver", "
 
 
 async def telnet_server(
-    reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
 ) -> None:
     global active_sessions, live_session
     while True:
@@ -374,15 +394,15 @@ async def telnet_server(
                 result[sid] = sess.to_dict()
             writer.write(
                 (
-                    json.dumps(
-                        {
-                            "live": live_session.to_dict()
-                            if live_session is not None
-                            else None,
-                            "active": result,
-                        }
-                    )
-                    + "\r\n"
+                        json.dumps(
+                            {
+                                "live": live_session.to_dict()
+                                if live_session is not None
+                                else None,
+                                "active": result,
+                            }
+                        )
+                        + "\r\n"
                 ).encode("utf-8")
             )
 

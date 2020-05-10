@@ -1,12 +1,12 @@
 import SdpTransform from "sdp-transform";
 import * as later from "later";
 
+import raygun from "raygun4js";
+
 import * as BroadcastState from "./state";
-import * as MixerState from "../mixer/state";
 
 import { Streamer, ConnectionStateEnum } from "./streamer";
 import { Dispatch } from "redux";
-import { broadcastApiRequest } from "../api";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
@@ -29,66 +29,24 @@ export class WebRTCStreamer extends Streamer {
 
   async start(): Promise<void> {
     console.log("RTCStreamer start");
-    this.pc = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: ["stun:eu-turn4.xirsys.com"],
-        },
-        {
-          username:
-            "h42bRBHL2GtRTiQRoXN8GCG-PFYMl4Acel6EQ9xINBWdTpoZyBEGyCcJBCtT3iINAAAAAF5_NJptYXJrc3BvbGFrb3Zz",
-          credential: "17e834fa-70e7-11ea-a66c-faa4ea02ad5c",
-          urls: [
-            "turn:eu-turn4.xirsys.com:80?transport=udp",
-            "turn:eu-turn4.xirsys.com:3478?transport=udp",
-            "turn:eu-turn4.xirsys.com:80?transport=tcp",
-            "turn:eu-turn4.xirsys.com:3478?transport=tcp",
-            "turns:eu-turn4.xirsys.com:443?transport=tcp",
-            "turns:eu-turn4.xirsys.com:5349?transport=tcp",
-          ],
-        },
-      ],
-    });
-    this.pc.oniceconnectionstatechange = (e) => {
-      if (!this.pc) {
-        throw new Error(
-          "Received ICEConnectionStateChange but PC was null?????"
-        );
-      }
-      console.log("ICE Connection state change: " + this.pc.iceConnectionState);
-      this.onStateChange(this.mapStateToConnectionState());
-    };
-    this.stream.getAudioTracks().forEach((track) => this.pc!.addTrack(track));
-
-    this.addConnectionStateListener((state) => {
-      if (state === "CONNECTED") {
-        this.newsInterval = later.setInterval(
-          this.doTheNews,
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
-        );
-      } else if (state === "CONNECTION_LOST" || state === "NOT_CONNECTED") {
-        this.newsInterval?.clear();
-      }
-    });
-
-    console.log("PC created");
     this.ws = new WebSocket(process.env.REACT_APP_WS_URL!);
     this.ws.onopen = (e) => {
       console.log("WS open");
       this.onStateChange(this.mapStateToConnectionState());
     };
-    this.ws.onclose = (e) => {
+    this.ws.onclose = async (e) => {
       console.log("WS close");
+      await this.stop("WS close");
       this.onStateChange(this.mapStateToConnectionState());
     };
     this.ws.addEventListener("message", this.onMessage.bind(this));
     console.log("WS created");
   }
 
-  async stop(): Promise<void> {
+  async stop(reason?: string): Promise<void> {
+    raygun("send", {
+      error: new Error("Connection stop due to " + reason),
+    });
     if (this.ws) {
       this.ws.close();
       this.ws = null as any;
@@ -100,53 +58,19 @@ export class WebRTCStreamer extends Streamer {
     this.unexpectedDeath = false;
   }
 
-  async doTheNews() {
-    const transition = await broadcastApiRequest<{
-      autoNews: boolean;
-      selSource: number;
-      switchAudioAtMin: number;
-    }>("/nextTransition", "GET", {});
-    if (transition.autoNews) {
-      // Sanity check
-      const now = new Date();
-      if (now.getSeconds() < 45) {
-        later.setTimeout(
-          async () => {
-            await MixerState.playNewsIntro();
-          },
-          later.parse
-            .recur()
-            .on(59)
-            .minute()
-            .on(45)
-            .second()
-        );
-      }
-      if (now.getMinutes() <= 1 && now.getSeconds() < 55) {
-        later.setTimeout(
-          async () => {
-            await MixerState.playNewsEnd();
-          },
-          later.parse
-            .recur()
-            .on(1)
-            .minute()
-            .on(55)
-            .second()
-        );
-      }
-    }
-  }
-
   async onMessage(evt: MessageEvent) {
     const data = JSON.parse(evt.data);
     switch (data.kind) {
       case "HELLO":
+        this.onStateChange("CONNECTING");
         console.log("WS HELLO, our client ID is " + data.connectionId);
         this.dispatch(BroadcastState.setWsID(data.connectionId));
         if (this.state !== "HELLO") {
           this.ws!.close();
         }
+
+        this.createPeerConnection(data.iceServers);
+
         if (!this.pc) {
           throw new Error(
             "Tried to do websocket fuckery with a null PeerConnection!"
@@ -209,11 +133,42 @@ export class WebRTCStreamer extends Streamer {
         // oo-er
         // server thinks we've lost connection
         // kill it on our end and trigger a reconnect
-        await this.stop();
+        await this.stop("server DIED");
         await this.start();
         this.unexpectedDeath = true;
         break;
     }
+  }
+
+  createPeerConnection(iceServers: RTCIceServer[]) {
+    this.pc = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: [
+            "stun:stun.l.google.com:19302",
+            "stun:stun1.l.google.com:19302",
+            "stun:stun2.l.google.com:19302",
+            "stun:stun3.l.google.com:19302",
+            "stun:stun4.l.google.com:19302",
+          ],
+        },
+        ...iceServers,
+      ],
+    });
+    this.pc.oniceconnectionstatechange = async (e) => {
+      if (!this.pc) {
+        throw new Error(
+          "Received ICEConnectionStateChange but PC was null?????"
+        );
+      }
+      console.log("ICE Connection state change: " + this.pc.iceConnectionState);
+      if (this.pc.iceConnectionState === "failed") {
+        await this.stop("ICE failure");
+      }
+      this.onStateChange(this.mapStateToConnectionState());
+    };
+    this.stream.getAudioTracks().forEach((track) => this.pc!.addTrack(track));
+    console.log("PC created");
   }
 
   async getStatistics() {
@@ -259,6 +214,11 @@ export class WebRTCStreamer extends Streamer {
         return "NOT_CONNECTED";
       }
     }
+    console.log(
+      "Relevant values: ",
+      this.pc?.iceConnectionState,
+      this.ws?.readyState
+    );
     switch (this.pc.iceConnectionState) {
       case "connected":
       case "completed":

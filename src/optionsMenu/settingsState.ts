@@ -4,6 +4,8 @@ interface Settings {
   showDebugInfo: boolean;
   enableRecording: boolean;
   tracklist: "always" | "while_live" | "never";
+  doTheNews: "always" | "while_live" | "never";
+  proMode: boolean;
 }
 
 const settingsState = createSlice({
@@ -12,6 +14,8 @@ const settingsState = createSlice({
     showDebugInfo: false,
     enableRecording: false,
     tracklist: "while_live",
+    doTheNews: "while_live",
+    proMode: false,
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(
