@@ -35,6 +35,7 @@ interface PlayerState {
   state: PlayerStateEnum;
   volume: number;
   gain: number;
+  trim: number;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -63,6 +64,7 @@ const BasePlayerState: PlayerState = {
   state: "stopped",
   volume: 1,
   gain: 1,
+  trim: 0,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -81,7 +83,7 @@ const mixerState = createSlice({
       open: false,
       volume: 1,
       gain: 1,
-      baseGain: 1,
+      baseGain: 0,
       openError: null,
       id: "None",
     },
@@ -138,6 +140,15 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].gain = action.payload.gain;
+    },
+    setPlayerTrim(
+      state,
+      action: PayloadAction<{
+        player: number;
+        trim: number;
+      }>
+    ) {
+      state.players[action.payload.player].trim = action.payload.trim;
     },
     setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
       state.mic.openError = action.payload;
@@ -489,11 +500,11 @@ export const setVolume = (
   let uiLevel: number;
   switch (level) {
     case "off":
-      volume = 0;
+      volume = -36;
       uiLevel = 0;
       break;
     case "bed":
-      volume = 0.1;
+      volume = -12;
       uiLevel = 0.5;
       break;
     case "full":
@@ -531,7 +542,6 @@ export const setVolume = (
     });
   const gainTween = new Between(currentGain, volume)
     .time(FADE_TIME_SECONDS * 1000)
-    .easing((Between as any).Easing.Exponential.InOut)
     .on("update", (val: number) => {
       if (typeof audioEngine.players[player] !== "undefined") {
         audioEngine.players[player]?.setVolume(val);
@@ -547,6 +557,13 @@ export const setVolume = (
     target: level,
     tweens: [volumeTween, gainTween],
   };
+};
+
+export const setChannelTrim = (player: number, val: number): AppThunk => async (
+  dispatch
+) => {
+  dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
+  audioEngine.players[player]?.setTrim(val);
 };
 
 export const openMicrophone = (micID: string): AppThunk => async (

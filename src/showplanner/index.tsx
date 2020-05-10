@@ -54,11 +54,11 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
             {...provided.droppableProps}
           >
             {data
-                  .filter((x) => x.channel === id)
-                  .sort((a, b) => a.weight - b.weight)
-                  .map((x, index) => (
-                    <Item key={itemId(x)} item={x} index={index} column={id} />
-                  ))}
+              .filter((x) => x.channel === id)
+              .sort((a, b) => a.weight - b.weight)
+              .map((x, index) => (
+                <Item key={itemId(x)} item={x} index={index} column={id} />
+              ))}
             {provided.placeholder}
           </div>
         )}

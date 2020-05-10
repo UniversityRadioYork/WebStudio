@@ -675,6 +675,9 @@ module.exports = function(webpackEnv) {
             // a route with query params (e.g. auth callbacks).
             new RegExp("/[^/?]+\\.[^/]+$")
           ],
+          navigateFallbackAllowlist: [
+              /\/webstudio(?:-dev)?/
+          ],
           runtimeCaching: [
             {
               urlPattern: /NIPSWeb\/(secure|managed)_play/,

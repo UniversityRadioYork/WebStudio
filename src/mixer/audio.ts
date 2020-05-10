@@ -21,6 +21,8 @@ const PlayerEmitter: StrictEmitter<
 > = EventEmitter as any;
 
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
+  private volume = 1;
+  private trim = 1;
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
@@ -64,7 +66,25 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   setVolume(val: number) {
-    this.wavesurfer.setVolume(val);
+    this.volume = val;
+    this._applyVolume();
+  }
+
+  setTrim(val: number) {
+    this.trim = val;
+    this._applyVolume();
+  }
+
+  _applyVolume() {
+    const level = this.volume + this.trim;
+    const linear = Math.pow(10, level / 10);
+    if (linear < 1) {
+      this.wavesurfer.setVolume(linear);
+      (this.wavesurfer as any).backend.gainNode.gain.value = 1;
+    } else {
+      this.wavesurfer.setVolume(1);
+      (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+    }
   }
 
   public static create(engine: AudioEngine, player: number, url: string) {
@@ -266,7 +286,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   setMicCalibrationGain(value: number) {
-    this.micCalibrationGain.gain.value = value;
+    this.micCalibrationGain.gain.value =
+      value === 0 ? 1 : Math.pow(10, value / 10);
   }
 
   setMicVolume(value: number) {
@@ -291,7 +312,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     for (let i = 0; i < this.analysisBuffer.length; i++) {
       peak = Math.max(peak, Math.abs(this.analysisBuffer[i]));
     }
-    return 10 * Math.log10(peak);
+    return 20 * Math.log10(peak);
   }
 
   async playNewsEnd() {

@@ -124,9 +124,9 @@ export function MicTab() {
         <div>
           <input
             type="range"
-            min={1.0 / 10}
-            max={3}
-            step={0.05}
+            min={-24}
+            max={24}
+            step={0.2}
             value={state.baseGain}
             onChange={(e) =>
               dispatch(MixerState.setMicBaseGain(parseFloat(e.target.value)))
