@@ -64,7 +64,7 @@ const BasePlayerState: PlayerState = {
   state: "stopped",
   volume: 1,
   gain: 0,
-  trim: 0,
+  trim: -3,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -105,7 +105,7 @@ const mixerState = createSlice({
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
       if (action.payload.resetTrim) {
-        state.players[action.payload.player].trim = 0;
+        state.players[action.payload.player].trim = -3;
       }
     },
     itemLoadPercentage(
@@ -513,7 +513,7 @@ export const setVolume = (
       uiLevel = 0;
       break;
     case "bed":
-      volume = -12;
+      volume = -9;
       uiLevel = 0.5;
       break;
     case "full":
