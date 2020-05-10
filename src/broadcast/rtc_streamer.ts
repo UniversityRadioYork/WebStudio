@@ -45,7 +45,7 @@ export class WebRTCStreamer extends Streamer {
 
   async stop(reason?: string): Promise<void> {
     raygun("send", {
-      error: new Error("Connection stop due to " + reason)
+      error: new Error("Connection stop due to " + reason),
     });
     if (this.ws) {
       this.ws.close();

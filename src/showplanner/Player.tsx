@@ -77,9 +77,7 @@ export function Player({ id }: { id: number }) {
             &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
-        {proMode && (
-            <ProModeButtons channel={id} />
-        )}
+        {proMode && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
           <span className="card-title">
             <strong>

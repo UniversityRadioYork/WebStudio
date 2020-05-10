@@ -15,7 +15,7 @@ const settingsState = createSlice({
     enableRecording: false,
     tracklist: "while_live",
     doTheNews: "while_live",
-    proMode: false
+    proMode: false,
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(

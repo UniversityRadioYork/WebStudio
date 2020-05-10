@@ -559,7 +559,9 @@ export const setVolume = (
   };
 };
 
-export const setChannelTrim = (player: number, val: number): AppThunk => async dispatch => {
+export const setChannelTrim = (player: number, val: number): AppThunk => async (
+  dispatch
+) => {
   dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
   audioEngine.players[player]?.setTrim(val);
 };
