@@ -94,6 +94,7 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         item: PlanItem | Track | AuxItem;
+        resetTrim?: boolean;
       }>
     ) {
       state.players[action.payload.player].loadedItem = action.payload.item;
@@ -103,6 +104,9 @@ const mixerState = createSlice({
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
+      if (action.payload.resetTrim) {
+        state.players[action.payload.player].trim = 0;
+      }
     },
     itemLoadPercentage(
       state,
@@ -261,7 +265,11 @@ export const load = (
   }
   loadAbortControllers[player] = new AbortController();
 
-  dispatch(mixerState.actions.loadItem({ player, item }));
+  const shouldResetTrim = getState().settings.resetTrimOnLoad;
+
+  dispatch(
+    mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
+  );
 
   let url;
 
@@ -401,6 +409,7 @@ export const load = (
     }
 
     playerInstance.setVolume(getState().mixer.players[player].gain);
+    playerInstance.setTrim(getState().mixer.players[player].trim);
     delete loadAbortControllers[player];
   } catch (e) {
     if ("name" in e && e.name === "AbortError") {
