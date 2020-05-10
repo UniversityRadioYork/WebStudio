@@ -2,7 +2,12 @@ import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
 
-import { FaRegClock, FaRegUser } from "react-icons/fa";
+import {
+  FaCircle,
+  FaRegClock,
+  FaRegUser,
+  FaBroadcastTower,
+} from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
 
@@ -107,28 +112,36 @@ export function NavBar() {
           }}
         >
           {connectButtonAnimating ? (
-            <span className="dot-pulse" />
+            <span className="dot-pulse mr-2" />
           ) : (
             <>
+              <FaBroadcastTower size={17} className="mr-2" />
               {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
               {broadcastState.stage === "REGISTERED" && "Cancel registration"}
             </>
           )}
         </li>
         {settings.enableRecording && (
-          <li className="nav-item nav-link">
-            <button
-              className=""
-              onClick={() =>
-                dispatch(
-                  broadcastState.recordingState === "NOT_CONNECTED"
-                    ? BroadcastState.startRecording()
-                    : BroadcastState.stopRecording()
-                )
-              }
-            >
-              R: {broadcastState.recordingState}
-            </button>
+          <li
+            className={
+              "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
+              (broadcastState.recordingState === "CONNECTED"
+                ? "btn-outline-danger active"
+                : "btn-outline-warning")
+            }
+            onClick={() =>
+              dispatch(
+                broadcastState.recordingState === "NOT_CONNECTED"
+                  ? BroadcastState.startRecording()
+                  : BroadcastState.stopRecording()
+              )
+            }
+          >
+            <FaCircle size={17} />
+            &nbsp; Rec:{" "}
+            {broadcastState.recordingState === "CONNECTED"
+              ? "Recording"
+              : "Not Recording"}
           </li>
         )}
         <span className="navbar-brand divider ml-3 mr-2 mt-2 mb-0"></span>
