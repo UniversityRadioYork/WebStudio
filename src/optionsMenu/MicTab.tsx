@@ -71,7 +71,7 @@ export function MicTab() {
   return (
     <>
       <h3>Mic Selection</h3>
-      <p>Click the "Find Microphones" button, then choose the microphone you want from the dropdown.</p>
+      <p>Click the "<b>Find Microphones</b>" button, then choose the microphone you want from the dropdown.</p>
       <button
         onClick={fetchMicNames}
         disabled={micList !== null}
