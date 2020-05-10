@@ -111,9 +111,10 @@ export function NavBar() {
           }}
         >
           {connectButtonAnimating ? (
-            <span className="dot-pulse" />
+            <span className="dot-pulse mr-2" />
           ) : (
             <>
+              <FaBroadcastTower size={17} className="mr-2" />
               {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
               {broadcastState.stage === "REGISTERED" && "Cancel registration"}
             </>
