@@ -76,7 +76,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   _applyVolume() {
-    const level = this.volume * (this.trim === 0 ? 1 : this.trim);
+    const level = this.volume + this.trim;
     const linear = Math.pow(10, (level/10));
     if (linear < 1) {
       this.wavesurfer.setVolume(linear);

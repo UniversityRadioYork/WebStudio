@@ -500,11 +500,11 @@ export const setVolume = (
   let uiLevel: number;
   switch (level) {
     case "off":
-      volume = 0;
+      volume = -36;
       uiLevel = 0;
       break;
     case "bed":
-      volume = 0.1;
+      volume = -12;
       uiLevel = 0.5;
       break;
     case "full":
@@ -542,7 +542,6 @@ export const setVolume = (
     });
   const gainTween = new Between(currentGain, volume)
     .time(FADE_TIME_SECONDS * 1000)
-    .easing((Between as any).Easing.Exponential.InOut)
     .on("update", (val: number) => {
       if (typeof audioEngine.players[player] !== "undefined") {
         audioEngine.players[player]?.setVolume(val);
