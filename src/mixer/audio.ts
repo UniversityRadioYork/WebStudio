@@ -21,8 +21,8 @@ const PlayerEmitter: StrictEmitter<
 > = EventEmitter as any;
 
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
-  private volume = 1;
-  private trim = 1;
+  private volume = 0;
+  private trim = 0;
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
