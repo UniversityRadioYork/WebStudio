@@ -26,15 +26,14 @@ export function VUMeter(props: VUMeterProps) {
 
   const isMic = props.source.substr(0, 3) === "mic";
 
-  const animate = useCallback(() => {
-    if (!isMic || isMicOpen) {
-      const result = audioEngine.getLevel(props.source);
-      setPeak(result);
-      rafRef.current = requestAnimationFrame(animate);
-    }
-  }, [isMicOpen, props.source, isMic]);
-
   useEffect(() => {
+    const animate = () => {
+      if (!isMic || isMicOpen) {
+        const result = audioEngine.getLevel(props.source);
+        setPeak(result);
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
     if (!isMic || isMicOpen) {
       rafRef.current = requestAnimationFrame(animate);
     }
@@ -44,7 +43,7 @@ export function VUMeter(props: VUMeterProps) {
         rafRef.current = null;
       }
     };
-  }, [animate, isMicOpen, isMic]);
+  }, [isMicOpen, isMic, props.source]);
 
   useLayoutEffect(() => {
     if (canvasRef.current) {

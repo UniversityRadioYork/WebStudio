@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import {useSelector, useDispatch, shallowEqual, useStore} from "react-redux";
 import {
   FaLevelDownAlt,
   FaPlayCircle,
@@ -8,6 +8,7 @@ import {
   FaPause,
   FaStop,
 } from "react-icons/fa";
+import { omit } from "lodash";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { secToHHMM, timestampToHHMM } from "../lib/utils";
@@ -15,19 +16,54 @@ import ProModeButtons from "./ProModeButtons";
 
 export const USE_REAL_GAIN_VALUE = false;
 
+function PlayerNumbers({ id } : { id: number}) {
+  const store = useStore<RootState, any>();
+  const [[timeCurrent, timeLength, timeRemaining, endTime], setTimings] = useState([0, 0, 0, 0]);
+  const tickerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    tickerRef.current = window.setInterval(() => {
+      const now = new Date();
+      const state = store.getState().mixer.players[id];
+      setTimings([
+          state.timeCurrent,
+          state.timeLength,
+          state.timeRemaining,
+        now.valueOf() / 1000 + state.timeRemaining
+      ]);
+    }, 1000);
+    return () => window.clearInterval(tickerRef.current);
+  }, []);
+
+  return (
+      <>
+        <span id={"current-" + id} className="m-0 current bypass-click">
+            {secToHHMM(timeCurrent)}
+          </span>
+        <span id={"length-" + id} className="m-0 length bypass-click">
+            {secToHHMM(timeLength)}
+          </span>
+        <span id={"remaining-" + id} className="m-0 remaining bypass-click">
+            {secToHHMM(timeRemaining)}
+          </span>
+        <span id={"ends-" + id} className="m-0 outro bypass-click">
+            End -{" "}
+          {timestampToHHMM(endTime)}
+          </span>
+      </>
+  );
+}
+
 export function Player({ id }: { id: number }) {
   const playerState = useSelector(
-    (state: RootState) => state.mixer.players[id]
+    (state: RootState) => state.mixer.players[id],
+      (a, b) => shallowEqual(
+          omit(a, "timeCurrent", "timeRemaining"),
+          omit(b, "timeCurrent", "timeRemaining")
+      )
   );
   const proMode = useSelector((state: RootState) => state.settings.proMode);
   const dispatch = useDispatch();
-
-  const [now, setNow] = useState<Date>(new Date());
-  const tickerRef = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    tickerRef.current = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(tickerRef.current);
-  }, []);
 
   return (
     <div
@@ -144,19 +180,7 @@ export function Player({ id }: { id: number }) {
         </div>
 
         <div className="p-0 card-footer waveform">
-          <span id={"current-" + id} className="m-0 current bypass-click">
-            {secToHHMM(playerState.timeCurrent)}
-          </span>
-          <span id={"length-" + id} className="m-0 length bypass-click">
-            {secToHHMM(playerState.timeLength)}
-          </span>
-          <span id={"remaining-" + id} className="m-0 remaining bypass-click">
-            {secToHHMM(playerState.timeRemaining)}
-          </span>
-          <span id={"ends-" + id} className="m-0 outro bypass-click">
-            End -{" "}
-            {timestampToHHMM(now.valueOf() / 1000 + playerState.timeRemaining)}
-          </span>
+          <PlayerNumbers id={id} />
           {playerState.loadedItem !== null &&
             "intro" in playerState.loadedItem && (
               <span className="m-0 intro bypass-click">
