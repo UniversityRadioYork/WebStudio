@@ -298,7 +298,7 @@ class Session(object):
             await self.pc.setRemoteDescription(offer)
 
             answer = await self.pc.createAnswer()
-            answer.sdp += "\na=fmtp:111 minptime=10;useinbandfec=0;maxaveragebitrate=393216;stereo=1;sprop-stereo=1;cbr=1"
+            answer.sdp += "\na=fmtp:111 minptime=10;useinbandfec=0;maxaveragebitrate=262144;stereo=1;sprop-stereo=1;cbr=1"
             await self.pc.setLocalDescription(answer)
 
             assert self.websocket is not None
