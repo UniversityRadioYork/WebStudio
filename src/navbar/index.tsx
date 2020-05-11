@@ -19,6 +19,7 @@ import "./navbar.scss";
 import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
+import {StreamHealthIndicator} from "../broadcast/stream_health";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -90,6 +91,10 @@ export function NavBar() {
       <ul className="nav navbar-nav navbar-right">
         <li className="nav-item">
           <VUMeter width={250} height={40} source="master" range={[-40, 3]} />
+        </li>
+
+        <li className="nav-item">
+          <StreamHealthIndicator />
         </li>
 
         <li className="nav-item" style={{ color: "white" }}>
