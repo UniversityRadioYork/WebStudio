@@ -276,6 +276,9 @@ def post_registerCheck() -> Any:
             # they've already registered, return the existing session
             print("found existing connection {} for {}".format(conn["connid"], conn["timeslotid"]))
             connection = conn
+            # make sure we update their wsID 
+            if "wsid" in content:
+                connection["wsid"] = content["wsid"]
 
     new_connection = False
     if connection is None:
