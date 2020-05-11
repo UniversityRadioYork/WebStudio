@@ -6,6 +6,7 @@ interface Settings {
   tracklist: "always" | "while_live" | "never";
   doTheNews: "always" | "while_live" | "never";
   proMode: boolean;
+  resetTrimOnLoad: boolean;
 }
 
 const settingsState = createSlice({
@@ -16,6 +17,7 @@ const settingsState = createSlice({
     tracklist: "while_live",
     doTheNews: "while_live",
     proMode: false,
+    resetTrimOnLoad: true,
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(

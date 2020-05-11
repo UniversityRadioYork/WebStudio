@@ -21,8 +21,8 @@ const PlayerEmitter: StrictEmitter<
 > = EventEmitter as any;
 
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
-  private volume = 1;
-  private trim = 1;
+  private volume = 0;
+  private trim = 0;
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
@@ -99,6 +99,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       waveColor: "#CCCCFF",
       progressColor: "#9999FF",
       backend: "MediaElementWebAudio",
+      barWidth: 2,
       responsive: true,
       xhr: {
         credentials: "include",
@@ -201,6 +202,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.finalCompressor.threshold.value = -0.5;
     this.finalCompressor.attack.value = 0;
     this.finalCompressor.release.value = 0.2;
+    this.finalCompressor.knee.value = 0;
 
     this.streamingAnalyser = this.audioContext.createAnalyser();
     this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
@@ -231,6 +233,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micCompressor.threshold.value = -18;
     this.micCompressor.attack.value = 0.01;
     this.micCompressor.release.value = 0.1;
+    this.micCompressor.knee.value = 1;
 
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
@@ -267,6 +270,12 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   async openMic(deviceId: string) {
+    if (this.micSource !== null && this.micMedia !== null) {
+      this.micMedia.getAudioTracks()[0].stop();
+      this.micSource.disconnect();
+      this.micSource = null;
+      this.micMedia = null;
+    }
     console.log("opening mic", deviceId);
     this.micMedia = await navigator.mediaDevices.getUserMedia({
       audio: {
