@@ -71,7 +71,10 @@ export function MicTab() {
   return (
     <>
       <h3>Mic Selection</h3>
-      <p>Click the "<b>Find Microphones</b>" button, then choose the microphone you want from the dropdown.</p>
+      <p>
+        Click the "<b>Find Microphones</b>" button, then choose the microphone
+        you want from the dropdown.
+      </p>
       <button
         onClick={fetchMicNames}
         disabled={micList !== null}
@@ -111,8 +114,9 @@ export function MicTab() {
       <div style={{ opacity: state.open ? 1 : 0.5 }}>
         <h3>Calibration</h3>
         <p>
-          Speak into the microphone at your <b>nomal presenting volume</b>. Adjust the gain slider
-          until the bar below is <b>green</b> when you're speaking.
+          Speak into the microphone at your <b>nomal presenting volume</b>.
+          Adjust the gain slider until the bar below is <b>green</b> when you're
+          speaking.
         </p>
         <div>
           <VUMeter

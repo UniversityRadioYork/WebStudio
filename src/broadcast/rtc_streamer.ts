@@ -142,7 +142,7 @@ export class WebRTCStreamer extends Streamer {
 
   createPeerConnection(iceServers: RTCIceServer[]) {
     this.pc = new RTCPeerConnection({
-      iceServers
+      iceServers,
     });
     this.pc.oniceconnectionstatechange = async (e) => {
       if (!this.pc) {
