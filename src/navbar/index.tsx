@@ -76,7 +76,10 @@ export function NavBar() {
           <img className="logo-webstudio" src={appLogo} alt="Web Studio Logo" />
           <img className="logo-myradio" src={myradioLogo} alt="MyRadio Logo" />
         </a>
-        <div className="nav-item nav-link" id="timelord">
+        <div className="nav-item nav-link" id="timelord" onClick={(e) => {
+          e.preventDefault();
+          let w = window.open('http://ury.org.uk/timelord/', 'Ury - Timelord', 'resizable,status');
+        }}>
           <a href='http://ury.org.uk/timelord/' target='_blank'>
             <div className="time">
               <Clock
