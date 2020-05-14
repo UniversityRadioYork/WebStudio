@@ -250,6 +250,22 @@ $dot-color: #fff;
   max-height: 36.5px;
 }
 
+#timelord a {
+  text-decoration: none;
+  color: white;
+  cursor: pointer;
+  &:hover{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+  }
+  &:visited{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+  }
+}
+
 #timelord .time {
   font-weight: bold;
   font-size: 1.1em;
@@ -257,10 +273,4 @@ $dot-color: #fff;
 
 .nav-link.connect {
   min-width: 80px;
-}
-
-a, a:hover, a:visited {
-  text-decoration: none;
-  color: white;
-  cursor: pointer;
 }
