@@ -179,16 +179,23 @@ function MicLiveIndicator() {
 }
 
 function MicLiveIndicatorWithBed() {
-  const mixerState = useSelector((state: RootState) => state.mixer);
+  const micState = useSelector((state: RootState) => state.mixer.mic);
+  const mixerVolState1 = useSelector((state: RootState) => state.mixer.players[0].volume);
+  const mixerVolState2 = useSelector((state: RootState) => state.mixer.players[1].volume);
+  const mixerVolState3 = useSelector((state: RootState) => state.mixer.players[2].volume);
+  const mixerState1 = useSelector((state: RootState) => state.mixer.players[0].state);
+  const mixerState2 = useSelector((state: RootState) => state.mixer.players[1].state);
+  const mixerState3 = useSelector((state: RootState) => state.mixer.players[2].state);
+
   if (
-    mixerState.mic.open &&
-    mixerState.mic.volume <= 0 &&
-    ((mixerState.players[0].volume === 0.5 &&
-      mixerState.players[0].state === "playing") ||
-      (mixerState.players[1].volume === 0.5 &&
-        mixerState.players[1].state === "playing") ||
-      (mixerState.players[2].volume === 0.5 &&
-        mixerState.players[2].state === "playing"))
+    micState.open &&
+    micState.volume <= 0 &&
+    ((mixerVolState1 === 0.5 &&
+      mixerState1 === "playing") ||
+      (mixerVolState2 === 0.5 &&
+        mixerState2 === "playing") ||
+      (mixerVolState3 === 0.5 &&
+        mixerState3 === "playing"))
   ) {
     return <div className="sp-mic-live-no-bed" />;
   }
