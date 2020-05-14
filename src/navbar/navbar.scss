@@ -258,3 +258,9 @@ $dot-color: #fff;
 .nav-link.connect {
   min-width: 80px;
 }
+
+a, a:hover, a:visited {
+  text-decoration: none;
+  color: white;
+  cursor: pointer;
+}
