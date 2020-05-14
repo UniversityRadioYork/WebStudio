@@ -1,4 +1,4 @@
-import React, { useState, useReducer, useEffect } from "react";
+import React, { useState, useReducer, useEffect, shallowEqual } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
 import { FaAlignJustify, FaBookOpen, FaMicrophone } from "react-icons/fa";
@@ -180,22 +180,21 @@ function MicLiveIndicator() {
 
 function MicLiveIndicatorWithBed() {
   const micState = useSelector((state: RootState) => state.mixer.mic);
-  const mixerVolState1 = useSelector((state: RootState) => state.mixer.players[0].volume);
-  const mixerVolState2 = useSelector((state: RootState) => state.mixer.players[1].volume);
-  const mixerVolState3 = useSelector((state: RootState) => state.mixer.players[2].volume);
-  const mixerState1 = useSelector((state: RootState) => state.mixer.players[0].state);
-  const mixerState2 = useSelector((state: RootState) => state.mixer.players[1].state);
-  const mixerState3 = useSelector((state: RootState) => state.mixer.players[2].state);
+  const [vol1, vol2, vol3] = useSelector(
+    (state: RootState) => state.mixer.players.map((p) => p.volume),
+    shallowEqual
+  );
+  const [state1, state2, state3] = useSelector(
+    (state: RootState) => state.mixer.players.map((p) => p.state),
+    shallowEqual
+  );
 
   if (
     micState.open &&
     micState.volume <= 0 &&
-    ((mixerVolState1 === 0.5 &&
-      mixerState1 === "playing") ||
-      (mixerVolState2 === 0.5 &&
-        mixerState2 === "playing") ||
-      (mixerVolState3 === 0.5 &&
-        mixerState3 === "playing"))
+    ((vol1 === 0.5 && state1 === "playing") ||
+      (vol2 === 0.5 && state2 === "playing") ||
+      (vol3 === 0.5 && state3 === "playing"))
   ) {
     return <div className="sp-mic-live-no-bed" />;
   }
@@ -206,7 +205,7 @@ function incrReducer(state: number, action: any) {
   return state + 1;
 }
 
-const Showplanner: React.FC<{ timeslotId: number }> = function ({ timeslotId }) {
+const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   const {
     plan: showplan,
     planLoadError,
@@ -235,7 +234,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function ({ timeslotId }) 
     if (element) {
       element.classList.toggle("hidden");
     }
-    setTimeout(function () {
+    setTimeout(function() {
       dispatch(MixerState.redrawWavesurfers());
     }, 500);
   }
