@@ -85,7 +85,7 @@ export function NavBar() {
               let w = window.open(
                 "http://ury.org.uk/timelord/",
                 "URY - Timelord",
-                "resizable,status"
+                "resizable"
               );
             }}
           >

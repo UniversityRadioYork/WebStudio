@@ -178,11 +178,28 @@ function MicLiveIndicator() {
   return null;
 }
 
+function MicLiveIndicatorWithBed() {
+  const mixerState = useSelector((state: RootState) => state.mixer);
+  if (
+    mixerState.mic.open &&
+    mixerState.mic.volume <= 0 &&
+    ((mixerState.players[0].volume === 0.5 &&
+      mixerState.players[0].state === "playing") ||
+      (mixerState.players[1].volume === 0.5 &&
+        mixerState.players[1].state === "playing") ||
+      (mixerState.players[2].volume === 0.5 &&
+        mixerState.players[2].state === "playing"))
+  ) {
+    return <div className="sp-mic-live-no-bed" />;
+  }
+  return null;
+}
+
 function incrReducer(state: number, action: any) {
   return state + 1;
 }
 
-const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
+const Showplanner: React.FC<{ timeslotId: number }> = function ({ timeslotId }) {
   const {
     plan: showplan,
     planLoadError,
@@ -211,7 +228,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     if (element) {
       element.classList.toggle("hidden");
     }
-    setTimeout(function() {
+    setTimeout(function () {
       dispatch(MixerState.redrawWavesurfers());
     }, 500);
   }
@@ -321,6 +338,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       />
       <PisModal close={() => setShowPisModal(false)} isOpen={showPisModal} />
       <MicLiveIndicator />
+      <MicLiveIndicatorWithBed />
     </div>
   );
 };
