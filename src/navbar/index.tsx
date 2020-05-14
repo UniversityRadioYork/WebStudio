@@ -76,11 +76,19 @@ export function NavBar() {
           <img className="logo-webstudio" src={appLogo} alt="Web Studio Logo" />
           <img className="logo-myradio" src={myradioLogo} alt="MyRadio Logo" />
         </a>
-        <div className="nav-item nav-link" id="timelord" >
-          <a href='http://ury.org.uk/timelord/' target='_blank' onClick={(e) => {
-            e.preventDefault();
-            let w = window.open('http://ury.org.uk/timelord/', 'Ury - Timelord', 'resizable,status');
-          }}>
+        <div className="nav-item nav-link" id="timelord">
+          <a
+            href="http://ury.org.uk/timelord/"
+            target="_blank"
+            onClick={(e) => {
+              e.preventDefault();
+              let w = window.open(
+                "http://ury.org.uk/timelord/",
+                "URY - Timelord",
+                "resizable,status"
+              );
+            }}
+          >
             <div className="time">
               <Clock
                 format={"HH:mm:ss"}
@@ -119,12 +127,12 @@ export function NavBar() {
           {connectButtonAnimating ? (
             <span className="dot-pulse mr-2" />
           ) : (
-              <>
-                <FaBroadcastTower size={17} className="mr-2" />
-                {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
-                {broadcastState.stage === "REGISTERED" && "Cancel registration"}
-              </>
-            )}
+            <>
+              <FaBroadcastTower size={17} className="mr-2" />
+              {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
+              {broadcastState.stage === "REGISTERED" && "Cancel registration"}
+            </>
+          )}
         </li>
         {settings.enableRecording && (
           <li
@@ -236,7 +244,7 @@ function AlertBar() {
     <div
       className={`alertbar alert alert-${state?.color} ${
         state !== null ? "visible" : ""
-        }`}
+      }`}
     >
       {state?.content}
       {state?.closure !== null && (
