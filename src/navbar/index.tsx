@@ -77,13 +77,26 @@ export function NavBar() {
           <img className="logo-myradio" src={myradioLogo} alt="MyRadio Logo" />
         </a>
         <div className="nav-item nav-link" id="timelord">
-          <div className="time">
-            <Clock
-              format={"HH:mm:ss"}
-              ticking={true}
-              timezone={"europe/london"}
-            />
-          </div>
+          <a
+            href="http://ury.org.uk/timelord/"
+            target="_blank"
+            onClick={(e) => {
+              e.preventDefault();
+              let w = window.open(
+                "http://ury.org.uk/timelord/",
+                "URY - Timelord",
+                "resizable,status"
+              );
+            }}
+          >
+            <div className="time">
+              <Clock
+                format={"HH:mm:ss"}
+                ticking={true}
+                timezone={"europe/london"}
+              />
+            </div>
+          </a>
         </div>
       </div>
 

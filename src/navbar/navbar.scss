@@ -248,6 +248,12 @@ $dot-color: #fff;
   max-width: 40vw;
   height: 100%;
   max-height: 36.5px;
+  cursor: pointer;
+}
+
+#timelord a {
+  text-decoration: none;
+  color: white;
 }
 
 #timelord .time {
