@@ -636,12 +636,12 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
   // processing latency
   if (levelVal !== 0) {
     dispatch(
-      mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
+      mixerState.actions.setMicLevels({ volume: levelVal })
     );
   } else {
     window.setTimeout(() => {
       dispatch(
-        mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
+        mixerState.actions.setMicLevels({ volume: levelVal })
       );
       // latency, plus a little buffer
     }, audioEngine.audioContext.baseLatency * 1000 + 150);
