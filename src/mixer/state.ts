@@ -294,6 +294,14 @@ export const load = (
 
   console.log("loading");
 
+  let waveform = document.getElementById("waveform-" + player.toString());
+  if (waveform == null) {
+    throw new Error();
+  }
+  waveform.innerHTML = ""; // clear previous (ghost) wavesurfer
+  // wavesurfer also sets the background white, remove for progress bar to work.
+  waveform.style.removeProperty("background");
+
   try {
     const signal = loadAbortControllers[player].signal; // hang on to the signal, even if its controller gets replaced
     const result = await fetch(url, {
@@ -627,14 +635,10 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for
   // processing latency
   if (levelVal !== 0) {
-    dispatch(
-      mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
-    );
+    dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
   } else {
     window.setTimeout(() => {
-      dispatch(
-        mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
-      );
+      dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
       // latency, plus a little buffer
     }, audioEngine.audioContext.baseLatency * 1000 + 150);
   }
