@@ -112,8 +112,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
           customShowTimeStyle: {
             "background-color": "#000",
             color: "#fff",
-            padding: "2px",
-            "font-size": "10px",
+            padding: "4px",
+            "font-size": "14px",
           },
         }),
         RegionsPlugin.create({}),
