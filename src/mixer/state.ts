@@ -294,6 +294,14 @@ export const load = (
 
   console.log("loading");
 
+  let waveform = document.getElementById("waveform-" + player.toString());
+  if (waveform == null) {
+    throw new Error();
+  }
+  waveform.innerHTML = ""; // clear previous (ghost) wavesurfer
+  // wavesurfer also sets the background white, remove for progress bar to work.
+  waveform.style.removeProperty("background");
+
   try {
     const signal = loadAbortControllers[player].signal; // hang on to the signal, even if its controller gets replaced
     const result = await fetch(url, {

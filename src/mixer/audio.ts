@@ -97,6 +97,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       audioContext: engine.audioContext,
       container: "#waveform-" + player.toString(),
       waveColor: "#CCCCFF",
+      backgroundColor: "#FFFFFF",
       progressColor: "#9999FF",
       backend: "MediaElementWebAudio",
       barWidth: 2,
