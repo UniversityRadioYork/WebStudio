@@ -47,7 +47,7 @@ const App: React.FC = () => {
     return <SessionHandler />;
   } else {
     var timeslotid: number | null = null;
-    if (("timeslot_id" in q) && (typeof q.timeslot_id === "string")) {
+    if ("timeslot_id" in q && typeof q.timeslot_id === "string") {
       timeslotid = parseInt(q.timeslot_id);
     } else if (currentTimeslot.timeslot_id != null) {
       timeslotid = currentTimeslot.timeslot_id;

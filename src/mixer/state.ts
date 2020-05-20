@@ -635,14 +635,10 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for
   // processing latency
   if (levelVal !== 0) {
-    dispatch(
-      mixerState.actions.setMicLevels({ volume: levelVal })
-    );
+    dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
   } else {
     window.setTimeout(() => {
-      dispatch(
-        mixerState.actions.setMicLevels({ volume: levelVal })
-      );
+      dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
       // latency, plus a little buffer
     }, audioEngine.audioContext.baseLatency * 1000 + 150);
   }
