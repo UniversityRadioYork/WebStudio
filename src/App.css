@@ -134,7 +134,7 @@ button {
   background: transparent;
 }
 
-.waveform .graph wave {
+.waveform .graph>wave {
   height: 6vh !important;
 }
 
