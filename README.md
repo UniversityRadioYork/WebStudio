@@ -34,7 +34,7 @@ $ pip install -r requirements.txt
 
 Start the client by running `yarn start`.
 
-Start the server by running `python3 server.py`.
+Start the server by running `python3 stateserver.py` and `python3 shittyserver.py`.
 
 Don't forget to ensure that both TypeScript and MyPy pass, as your code will be rejected by CI otherwise - run `tsc --noEmit` and/or `mypy server.py` to check.
 

@@ -1,6 +1,6 @@
 {
   "name": "webstudio",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "dependencies": {
     "@babel/core": "7.6.0",
@@ -99,7 +99,7 @@
     "ts-pnp": "1.1.4",
     "typescript": "3.7.2",
     "url-loader": "2.1.0",
-    "wavesurfer.js": "github.com/UniversityRadioYork/wavesurfer.js#ury",
+    "wavesurfer.js": "3.3.3",
     "webpack": "4.41.0",
     "webpack-dev-server": "3.2.1",
     "webpack-manifest-plugin": "2.1.1",
