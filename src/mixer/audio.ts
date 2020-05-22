@@ -280,7 +280,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     const existingPlayer = this.players[number];
     if (existingPlayer != null) {
       // already a player setup. Clean it.
-      existingPlayer.cleanup()
+      existingPlayer.cleanup();
     }
     this.players[number] = undefined;
   }
