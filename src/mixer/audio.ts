@@ -149,6 +149,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
     return instance;
   }
+
+  cleanup() {
+    // Let wavesurfer remove the old media, otherwise ram leak!
+    this.wavesurfer.destroy();
+  }
 }
 
 export type LevelsSource = "mic-precomp" | "mic-final" | "master";
@@ -268,6 +273,16 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     const player = Player.create(this, number, url);
     this.players[number] = player;
     return player;
+  }
+
+  // Wavesurfer needs cleanup to remove the old audio mediaelements. Memory leak!
+  public destroyPlayer(number: number) {
+    const existingPlayer = this.players[number];
+    if (existingPlayer != null) {
+      // already a player setup. Clean it.
+      existingPlayer.cleanup()
+    }
+    this.players[number] = undefined;
   }
 
   async openMic(deviceId: string) {

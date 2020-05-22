@@ -298,7 +298,8 @@ export const load = (
   if (waveform == null) {
     throw new Error();
   }
-  waveform.innerHTML = ""; // clear previous (ghost) wavesurfer
+  audioEngine.destroyPlayer(player);// clear previous (ghost) wavesurfer and it's media elements.
+  //waveform.innerHTML = "";
   // wavesurfer also sets the background white, remove for progress bar to work.
   waveform.style.removeProperty("background");
 
