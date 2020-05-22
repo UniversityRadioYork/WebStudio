@@ -30,7 +30,6 @@ export function VUMeter(props: VUMeterProps) {
     const animate = () => {
       if (!isMic || isMicOpen) {
         const result = audioEngine.getLevel(props.source);
-        console.log(result);
         setPeak(result);
         rafRef.current = requestAnimationFrame(animate);
       }
@@ -88,7 +87,8 @@ export function VUMeter(props: VUMeterProps) {
       ctx.fillStyle = "#e8d120";
     }
 
-    const valueOffset = (Math.max(peak, props.range[0]) - props.range[0]) / valueRange;
+    const valueOffset =
+      (Math.max(peak, props.range[0]) - props.range[0]) / valueRange;
 
     ctx.fillRect(0, 0, valueOffset * width, height - 10);
 
