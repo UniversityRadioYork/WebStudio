@@ -8,6 +8,7 @@ import * as OptionsState from "./state";
 import { MicTab } from "./MicTab";
 import { AboutTab } from "./AboutTab";
 import { StatsTab } from "./StatsTab";
+import { MidiTab } from "./MidiTab";
 import { AdvancedTab } from "./AdvancedTab";
 import { FaTimes } from "react-icons/fa";
 import { ProModeTab } from "./ProModeTab";
@@ -47,6 +48,14 @@ export function OptionsMenu() {
         </NavItem>
         <NavItem>
           <NavLink
+            className={state.currentTab === "midi" ? "active" : ""}
+            onClick={() => dispatch(OptionsState.changeTab("midi"))}
+          >
+            MIDI Control
+          </NavLink>
+        </NavItem>
+        <NavItem>
+          <NavLink
             className={state.currentTab === "advanced" ? "active" : ""}
             onClick={() => dispatch(OptionsState.changeTab("advanced"))}
           >
@@ -79,6 +88,9 @@ export function OptionsMenu() {
         </TabPane>
         <TabPane tabId="pro">
           <ProModeTab />
+        </TabPane>
+        <TabPane tabId="midi">
+          <MidiTab />
         </TabPane>
         <TabPane tabId="advanced">
           <AdvancedTab />

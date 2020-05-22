@@ -9,6 +9,8 @@ import Between from "between.js";
 import { itemId, PlanItem } from "../showplanner/state";
 import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
+import webmidi from "webmidi";
+
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
@@ -56,6 +58,7 @@ interface MicState {
 interface MixerState {
   players: PlayerState[];
   mic: MicState;
+  midi: boolean;
 }
 
 const BasePlayerState: PlayerState = {
@@ -87,6 +90,7 @@ const mixerState = createSlice({
       openError: null,
       id: "None",
     },
+    midi: false,
   } as MixerState,
   reducers: {
     loadItem(
@@ -236,6 +240,9 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].tracklistItemID = action.payload.id;
+    },
+    setMidi(state) {
+      state.midi = true;
     },
   },
 });
@@ -528,6 +535,9 @@ export const setVolume = (
       volume = 0;
       uiLevel = 1;
       break;
+    default:
+      volume = level;
+      uiLevel = level;
   }
 
   // Right, okay, big fun is happen.
@@ -667,6 +677,11 @@ export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   if (newState.mic.volume !== oldState.mic.volume) {
     audioEngine.setMicVolume(newState.mic.volume);
   }
+
+  if (newState.midi === false) {
+    store.dispatch(mixerState.actions.setMidi());
+    store.dispatch(startMidi());
+  }
   return result;
 };
 
@@ -737,4 +752,45 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   });
 
   return (next) => (action) => next(action);
+};
+
+export const startMidi = (): AppThunk => (dispatch, getState) => {
+  webmidi.enable(function(err) {
+    if (err) {
+      console.log("WebMidi could not be enabled.", err);
+      return;
+    } else {
+      console.log("WebMidi enabled!");
+    }
+
+    console.log(webmidi.inputs);
+    console.log(webmidi.outputs);
+
+    if (webmidi.inputs.length === 0) {
+      return;
+    }
+    var input = webmidi.inputs[0];
+
+    input.addListener("noteon", "all", function(e) {
+      console.log(e);
+      dispatch(pause(e.note.number - 1));
+    });
+    input.addListener("controlchange", "all", function(e) {
+      //console.log(e.controller.number);
+      //console.log(e.value);
+      var midi_fader_maps = [3, 11, 34];
+      var channel = midi_fader_maps.indexOf(e.controller.number);
+      var level = e.value / 127;
+
+      var gainDB = Math.max(-36, 10 * Math.log(level));
+      if (channel > -1) {
+        dispatch(
+          mixerState.actions.setPlayerVolume({ player: channel, volume: level })
+        );
+        dispatch(
+          mixerState.actions.setPlayerGain({ player: channel, gain: gainDB })
+        );
+      }
+    });
+  });
 };
