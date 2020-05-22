@@ -77,7 +77,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   _applyVolume() {
     const level = this.volume + this.trim;
-    const linear = Math.pow(10, level / 10);
+    const linear = Math.pow(10, level / 20);
     if (linear < 1) {
       this.wavesurfer.setVolume(linear);
       (this.wavesurfer as any).backend.gainNode.gain.value = 1;
@@ -312,7 +312,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   setMicCalibrationGain(value: number) {
     this.micCalibrationGain.gain.value =
-      value === 0 ? 1 : Math.pow(10, value / 10);
+      value === 0 ? 1 : Math.pow(10, value / 20);
   }
 
   setMicVolume(value: number) {
