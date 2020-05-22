@@ -30,6 +30,7 @@ export function VUMeter(props: VUMeterProps) {
     const animate = () => {
       if (!isMic || isMicOpen) {
         const result = audioEngine.getLevel(props.source);
+        console.log(result);
         setPeak(result);
         rafRef.current = requestAnimationFrame(animate);
       }
