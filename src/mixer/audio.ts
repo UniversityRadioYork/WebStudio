@@ -276,9 +276,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   // Wavesurfer needs cleanup to remove the old audio mediaelements. Memory leak!
-  public destroyPlayer(number: number) {
+  public destroyPlayerIfExists(number: number) {
     const existingPlayer = this.players[number];
-    if (existingPlayer != null) {
+    if (existingPlayer !== undefined) {
       // already a player setup. Clean it.
       existingPlayer.cleanup();
     }
