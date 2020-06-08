@@ -193,7 +193,12 @@ $dot-color: #fff;
   }
   .navbar-ury .navbar-nav .open .dropdown-menu > .active > .dropdown-item,
   .navbar-ury .navbar-nav .open .dropdown-menu > .active > .dropdown-item:hover,
-  .navbar-ury .navbar-nav .open .dropdown-menu > .active > .dropdown-item:focus {
+  .navbar-ury
+    .navbar-nav
+    .open
+    .dropdown-menu
+    > .active
+    > .dropdown-item:focus {
     color: #e1e1e1;
     background-color: #2d425f;
   }

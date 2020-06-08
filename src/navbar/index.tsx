@@ -186,7 +186,10 @@ export function NavBar() {
             </a>
             <button
               className="dropdown-item"
-              onClick={() => sessionState.currentTimeslot !== null && dispatch(getShowplan(sessionState.currentTimeslot.timeslot_id))}
+              onClick={() =>
+                sessionState.currentTimeslot !== null &&
+                dispatch(getShowplan(sessionState.currentTimeslot.timeslot_id))
+              }
             >
               Reload Show Plan
             </button>
