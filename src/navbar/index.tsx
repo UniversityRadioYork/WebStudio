@@ -19,6 +19,7 @@ import "./navbar.scss";
 import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
+import { getShowplan } from "../showplanner/state";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -183,6 +184,12 @@ export function NavBar() {
             >
               Switch Timeslot
             </a>
+            <button
+              className="dropdown-item"
+              onClick={() => sessionState.currentTimeslot !== null && dispatch(getShowplan(sessionState.currentTimeslot.timeslot_id))}
+            >
+              Reload Show Plan
+            </button>
             <h6 className="dropdown-header">
               {sessionState.currentTimeslot?.title}
             </h6>
