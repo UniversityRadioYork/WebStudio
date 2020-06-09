@@ -77,7 +77,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   _applyVolume() {
     const level = this.volume + this.trim;
-    const linear = Math.pow(10, level / 10);
+    const linear = Math.pow(10, level / 20);
     if (linear < 1) {
       this.wavesurfer.setVolume(linear);
       (this.wavesurfer as any).backend.gainNode.gain.value = 1;
@@ -148,6 +148,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     wavesurfer.load(url);
 
     return instance;
+  }
+
+  cleanup() {
+    // Let wavesurfer remove the old media, otherwise ram leak!
+    this.wavesurfer.destroy();
   }
 }
 
@@ -270,6 +275,16 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     return player;
   }
 
+  // Wavesurfer needs cleanup to remove the old audio mediaelements. Memory leak!
+  public destroyPlayerIfExists(number: number) {
+    const existingPlayer = this.players[number];
+    if (existingPlayer !== undefined) {
+      // already a player setup. Clean it.
+      existingPlayer.cleanup();
+    }
+    this.players[number] = undefined;
+  }
+
   async openMic(deviceId: string) {
     if (this.micSource !== null && this.micMedia !== null) {
       this.micMedia.getAudioTracks()[0].stop();
@@ -297,7 +312,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   setMicCalibrationGain(value: number) {
     this.micCalibrationGain.gain.value =
-      value === 0 ? 1 : Math.pow(10, value / 10);
+      value === 0 ? 1 : Math.pow(10, value / 20);
   }
 
   setMicVolume(value: number) {

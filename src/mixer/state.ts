@@ -28,6 +28,8 @@ type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
+const defaultTrimDB = -6; // The default trim applied to channel players.
+
 interface PlayerState {
   loadedItem: PlanItem | Track | AuxItem | null;
   loading: number;
@@ -64,7 +66,7 @@ const BasePlayerState: PlayerState = {
   state: "stopped",
   volume: 1,
   gain: 0,
-  trim: -3,
+  trim: defaultTrimDB,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -105,7 +107,7 @@ const mixerState = createSlice({
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
       if (action.payload.resetTrim) {
-        state.players[action.payload.player].trim = -3;
+        state.players[action.payload.player].trim = defaultTrimDB;
       }
     },
     itemLoadPercentage(
@@ -298,7 +300,7 @@ export const load = (
   if (waveform == null) {
     throw new Error();
   }
-  waveform.innerHTML = ""; // clear previous (ghost) wavesurfer
+  audioEngine.destroyPlayerIfExists(player); // clear previous (ghost) wavesurfer and it's media elements.
   // wavesurfer also sets the background white, remove for progress bar to work.
   waveform.style.removeProperty("background");
 
