@@ -54,6 +54,7 @@ export const Item = memo(function Item({
         <div
           ref={provided.innerRef}
           key={id}
+          data-itemid={id}
           className={`item ${
             column >= 0 &&
             playerState &&

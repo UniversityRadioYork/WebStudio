@@ -1,6 +1,6 @@
 {
   "name": "webstudio",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "private": true,
   "dependencies": {
     "@babel/core": "7.6.0",
@@ -130,6 +130,7 @@
     ]
   },
   "devDependencies": {
+    "@types/puppeteer": "^3.0.0",
     "@ury1350/prettier-config": "^1.0.0",
     "node-sass": "^4.13.1",
     "prettier": "^1.19.1"

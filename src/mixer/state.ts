@@ -30,6 +30,8 @@ type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
+const defaultTrimDB = -6; // The default trim applied to channel players.
+
 interface PlayerState {
   loadedItem: PlanItem | Track | AuxItem | null;
   loading: number;
@@ -67,7 +69,7 @@ const BasePlayerState: PlayerState = {
   state: "stopped",
   volume: 1,
   gain: 0,
-  trim: -3,
+  trim: defaultTrimDB,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -109,7 +111,7 @@ const mixerState = createSlice({
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
       if (action.payload.resetTrim) {
-        state.players[action.payload.player].trim = -3;
+        state.players[action.payload.player].trim = defaultTrimDB;
       }
     },
     itemLoadPercentage(
