@@ -9,13 +9,13 @@ import Between from "between.js";
 import { itemId, PlanItem } from "../showplanner/state";
 import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
-import webmidi from "webmidi";
 
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import { audioEngine } from "./audio";
 import * as TheNews from "./the_news";
+import { startMidi} from "./midi";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -515,7 +515,7 @@ export const redrawWavesurfers = (): AppThunk => () => {
   });
 };
 
-export const { setTracklistItemID } = mixerState.actions;
+export const { setTracklistItemID, setPlayerGain, setPlayerVolume } = mixerState.actions;
 
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
@@ -756,43 +756,4 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   return (next) => (action) => next(action);
 };
 
-export const startMidi = (): AppThunk => (dispatch, getState) => {
-  webmidi.enable(function(err) {
-    if (err) {
-      console.log("WebMidi could not be enabled.", err);
-      return;
-    } else {
-      console.log("WebMidi enabled!");
-    }
 
-    console.log(webmidi.inputs);
-    console.log(webmidi.outputs);
-
-    if (webmidi.inputs.length === 0) {
-      return;
-    }
-    var input = webmidi.inputs[0];
-
-    input.addListener("noteon", "all", function(e) {
-      console.log(e);
-      dispatch(pause(e.note.number - 1));
-    });
-    input.addListener("controlchange", "all", function(e) {
-      //console.log(e.controller.number);
-      //console.log(e.value);
-      var midi_fader_maps = [3, 11, 34];
-      var channel = midi_fader_maps.indexOf(e.controller.number);
-      var level = e.value / 127;
-
-      var gainDB = Math.max(-36, 10 * Math.log(level));
-      if (channel > -1) {
-        dispatch(
-          mixerState.actions.setPlayerVolume({ player: channel, volume: level })
-        );
-        dispatch(
-          mixerState.actions.setPlayerGain({ player: channel, gain: gainDB })
-        );
-      }
-    });
-  });
-};
