@@ -3,10 +3,12 @@ import { RootState } from "../rootReducer";
 import { useSelector, useDispatch } from "react-redux";
 import { changeSetting } from "./settingsState";
 import { changeBroadcastSetting } from "../broadcast/state";
+import { changeMIDISetting } from "./midiSettingsState";
 
 export function MidiTab() {
   const settings = useSelector((state: RootState) => state.settings);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
+  const midiSettingsState = useSelector((state: RootState) => state.midiSettings);
   const dispatch = useDispatch();
 
   // @ts-ignore
@@ -16,19 +18,21 @@ export function MidiTab() {
 
       <div className="form-group">
         <label>
-          Selector Source (Don't change this unless you know what you're doing!)
+          Mapping Selection:
         </label>
         <select
           className="form-control"
-          id="broadcastSourceSelect"
-          value={broadcastState.sourceID}
-          onChange={(e) =>
-            dispatch(
-              changeBroadcastSetting("sourceID", parseInt(e.target.value))
-            )
+          id="midiMappingSelect"
+          value={midiSettingsState.keyMapping}
+          onChange={(e) => {
+            if (e.target.value in ["custom" | "xTouchCompact" | "mattsDJController"]) {
+              dispatch(
+                changeMIDISetting("keyMapping", e.target.value)
+              )
+            }
           }
         >
-          <option value="4">4 (OB-Line)</option>
+          <option value="">4 (OB-Line)</option>
           <option value="5">5 (WebStudio Direct)</option>
         </select>
       </div>

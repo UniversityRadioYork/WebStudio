@@ -1,10 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface MIDIkeyMapping {}
-interface MIDISettings {
-  enabled: boolean;
-  selectedDeviceName: String | null;
-}
+
+
+
 
 interface Settings {
   showDebugInfo: boolean;
