@@ -568,6 +568,11 @@ export const setVolume = (
       }
     })
     .on("complete", () => {
+
+      if (level === 0) {
+        volume = -100; // Allow a smooth fade to near silence, then kill it dead.
+      }
+
       dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
       // clean up when done
       delete playerGainTweens[player];
