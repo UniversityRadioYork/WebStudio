@@ -390,7 +390,7 @@ def post_wsSessions() -> Any:
                 # they should be on air now, but they've just died. go to jukebox.
                 # but don't kill it during the news, or after the end time, to avoid unexpected jukeboxing
                 # Also, avoid killing them if they're on a non-WS source
-                if currentShow["sourceid"] != 5:
+                if currentShow["sourceid"] != SOURCE_WS:
                     now = datetime.datetime.now().timestamp()
                     if now < (currentShow["endTimestamp"] - 15):
                         print("jukeboxing due to their disappearance...")
