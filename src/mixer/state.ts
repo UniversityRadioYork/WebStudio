@@ -519,11 +519,11 @@ export const setVolume = (
   let uiLevel: number;
   switch (level) {
     case "off":
-      volume = -36;
+      volume = -40;
       uiLevel = 0;
       break;
     case "bed":
-      volume = -7;
+      volume = -13;
       uiLevel = 0.5;
       break;
     case "full":

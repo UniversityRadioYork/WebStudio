@@ -389,11 +389,13 @@ def post_wsSessions() -> Any:
             if currentShow and currentShow["connid"] == conn["connid"]:
                 # they should be on air now, but they've just died. go to jukebox.
                 # but don't kill it during the news, or after the end time, to avoid unexpected jukeboxing
-                now = datetime.datetime.now().timestamp()
-                if now < (currentShow["endTimestamp"] - 15):
-                    print("jukeboxing due to their disappearance...")
-                    subprocess.Popen(['sel', str(SOURCE_JUKEBOX)])
-                    do_ws_srv_telnet("NUL")
+                # Also, avoid killing them if they're on a non-WS source
+                if currentShow["sourceid"] == SOURCE_WS:
+                    now = datetime.datetime.now().timestamp()
+                    if now < (currentShow["endTimestamp"] - 15):
+                        print("jukeboxing due to their disappearance...")
+                        subprocess.Popen(['sel', str(SOURCE_JUKEBOX)])
+                        do_ws_srv_telnet("NUL")
     return genPayload("Thx, K, bye.")
 
 

@@ -366,7 +366,7 @@ async def serve(websocket: websockets.WebSocketServerProtocol, path: str) -> Non
 
 
 start_server = websockets.serve(
-    serve, "localhost", int(config.get("shittyserver", "websocket_port"))
+    serve, host=None, port=int(config.get("shittyserver", "websocket_port"))
 )
 
 print("Shittyserver WS starting on port {}.".format(config.get("shittyserver", "websocket_port")))
