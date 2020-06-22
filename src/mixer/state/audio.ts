@@ -4,31 +4,25 @@ import StrictEmitter from "strict-event-emitter-types";
 import WaveSurfer from "wavesurfer.js";
 import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
-import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
-import NewsIntro from "../assets/audio/NewsIntro.wav";
+import NewsEndCountdown from "../../assets/audio/NewsEndCountdown.wav";
+import NewsIntro from "../../assets/audio/NewsIntro.wav";
+import {Store} from "redux";
+import {RootState} from "../../rootReducer";
+import {mixerState} from "./state";
+import * as BroadcastState from "../../broadcast/state";
+import {load} from "./actions";
 
-interface PlayerEvents {
-  loadComplete: (duration: number) => void;
-  timeChange: (time: number) => void;
-  play: () => void;
-  pause: () => void;
-  finish: () => void;
-}
-
-const PlayerEmitter: StrictEmitter<
-  EventEmitter,
-  PlayerEvents
-> = EventEmitter as any;
-
-class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
+class Player {
   private volume = 0;
   private trim = 0;
+
   private constructor(
+    private readonly store: Store<RootState>,
     private readonly engine: AudioEngine,
+    private readonly player: number,
     private wavesurfer: WaveSurfer,
     private readonly waveform: HTMLElement
   ) {
-    super();
   }
 
   get isPlaying() {
@@ -55,16 +49,6 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this.wavesurfer.drawBuffer();
   }
 
-  setIntro(duration: number) {
-    this.wavesurfer.addRegion({
-      id: "intro",
-      resize: false,
-      start: 0,
-      end: duration,
-      color: "rgba(125,0,255, 0.12)",
-    });
-  }
-
   setVolume(val: number) {
     this.volume = val;
     this._applyVolume();
@@ -87,7 +71,103 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     }
   }
 
-  public static create(engine: AudioEngine, player: number, url: string) {
+  private handleEvents() {
+    this.wavesurfer.on("ready", () => {
+      console.log("ready");
+      this.store.dispatch(mixerState.actions.itemLoadComplete({
+        player: this.player,
+        duration: this.wavesurfer.getDuration()
+      }));
+      const state = this.store.getState().mixer.players[this.player];
+      if (state) {
+        if (state.playOnLoad) {
+          this.wavesurfer.play();
+        }
+        if (state.loadedItem && "intro" in state.loadedItem) {
+          this.wavesurfer.addRegion({
+            id: "intro",
+            resize: false,
+            start: 0,
+            end: state.loadedItem.intro,
+            color: "rgba(125,0,255, 0.12)",
+          });
+        }
+      }
+    });
+
+    this.wavesurfer.on("play", () => {
+      this.store.dispatch(mixerState.actions.setPlayerState({player: this.player, state: "playing"}));
+    });
+
+    this.wavesurfer.on("pause", () => {
+      this.store.dispatch(
+        mixerState.actions.setPlayerState({
+          player: this.player,
+          state: this.wavesurfer.getCurrentTime() === 0 ? "stopped" : "paused",
+        })
+      );
+    });
+
+    this.wavesurfer.on("seek", () => {
+      this.handleTimeChange();
+    });
+
+    this.wavesurfer.on("finish", () => {
+      this.handleFinish();
+    });
+
+    this.wavesurfer.on("audioprocess", () => {
+      this.handleTimeChange();
+    });
+  }
+
+  private handleFinish() {
+    this.store.dispatch(mixerState.actions.setPlayerState({ player: this.player, state: "stopped" }));
+    const state = this.store.getState().mixer.players[this.player];
+    const item = state.loadedItem!;
+    if (state.tracklistItemID !== -1) {
+      this.store.dispatch(BroadcastState.tracklistEnd(state.tracklistItemID) as any); // TODO should probably not be in here
+    }
+    if (state.repeat === "one") {
+      this.play();
+    } else if (state.repeat === "all") {
+      if ("channel" in item) {
+        // it's not in the CML/libraries "column"
+        const itsChannel = this.store.getState()
+          .showplan.plan!.filter((x) => x.channel === item.channel)
+          .sort((x, y) => x.weight - y.weight);
+        const itsIndex = itsChannel.indexOf(item);
+        if (itsIndex === itsChannel.length - 1) {
+          this.store.dispatch(load(this.player, itsChannel[0]) as any); // TODO should probably not be in here
+        }
+      }
+    } else if (state.autoAdvance) {
+      if ("channel" in item) {
+        // it's not in the CML/libraries "column"
+        const itsChannel = this.store.getState()
+          .showplan.plan!.filter((x) => x.channel === item.channel)
+          .sort((x, y) => x.weight - y.weight);
+        const itsIndex = itsChannel.indexOf(item);
+        if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
+          this.store.dispatch(load(this.player, itsChannel[itsIndex + 1]) as any); // TODO should probably not be in here
+        }
+      }
+    }
+  }
+
+  private handleTimeChange() {
+    const time = this.wavesurfer.getCurrentTime();
+    if (Math.abs(time - this.store.getState().mixer.players[this.player].timeCurrent) > 0.5) {
+      this.store.dispatch(
+        mixerState.actions.setTimeCurrent({
+          player: this.player,
+          time,
+        })
+      );
+    }
+  }
+
+  public static create(store: Store<RootState>, engine: AudioEngine, player: number, url: string) {
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
       throw new Error();
@@ -120,27 +200,9 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       ],
     });
 
-    const instance = new this(engine, wavesurfer, waveform);
+    const instance = new this(store, engine, player, wavesurfer, waveform);
 
-    wavesurfer.on("ready", () => {
-      console.log("ready");
-      instance.emit("loadComplete", wavesurfer.getDuration());
-    });
-    wavesurfer.on("play", () => {
-      instance.emit("play");
-    });
-    wavesurfer.on("pause", () => {
-      instance.emit("pause");
-    });
-    wavesurfer.on("seek", () => {
-      instance.emit("timeChange", wavesurfer.getCurrentTime());
-    });
-    wavesurfer.on("finish", () => {
-      instance.emit("finish");
-    });
-    wavesurfer.on("audioprocess", () => {
-      instance.emit("timeChange", wavesurfer.getCurrentTime());
-    });
+    instance.handleEvents();
 
     (wavesurfer as any).backend.gainNode.disconnect();
     (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
@@ -164,10 +226,8 @@ interface EngineEvents {
   micOpen: () => void;
 }
 
-const EngineEmitter: StrictEmitter<
-  EventEmitter,
-  EngineEvents
-> = EventEmitter as any;
+const EngineEmitter: StrictEmitter<EventEmitter,
+  EngineEvents> = EventEmitter as any;
 
 export class AudioEngine extends ((EngineEmitter as unknown) as {
   new (): EventEmitter;
@@ -196,7 +256,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   analysisBuffer: Float32Array;
 
-  constructor() {
+  constructor(private readonly store: Store<RootState>) {
     super();
     this.audioContext = new AudioContext({
       sampleRate: 44100,
@@ -270,7 +330,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   public createPlayer(number: number, url: string) {
-    const player = Player.create(this, number, url);
+    const player = Player.create(this.store, this, number, url);
     this.players[number] = player;
     return player;
   }
@@ -295,7 +355,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     console.log("opening mic", deviceId);
     this.micMedia = await navigator.mediaDevices.getUserMedia({
       audio: {
-        deviceId: { exact: deviceId },
+        deviceId: {exact: deviceId},
         echoCancellation: false,
         autoGainControl: false,
         noiseSuppression: false,
@@ -350,6 +410,3 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     await this.newsStartCountdownEl.play();
   }
 }
-
-export const audioEngine = new AudioEngine();
-(window as any).AE = audioEngine;

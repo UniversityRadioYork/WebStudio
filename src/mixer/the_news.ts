@@ -1,14 +1,15 @@
 import { broadcastApiRequest } from "../api";
 import * as later from "later";
-import { audioEngine } from "./audio";
 import { add, set } from "date-fns";
 import { Timer } from "later";
 import { RootState } from "../rootReducer";
+import {AudioEngine} from "./state/audio";
 
 /**
  * But now it's time for the news!
  */
 async function actuallyDoTheNews() {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   console.log("actually doing the news");
   // Sanity check
   const now = new Date();

@@ -8,6 +8,7 @@ import raygun from "raygun4js";
 
 import store from "./store";
 import { Provider } from "react-redux";
+import {AudioEngineProvider} from "./mixer/engineContext";
 
 raygun("apiKey", "mtj24r3YzPoYyCG8cVArA");
 raygun("enableCrashReporting", true);
@@ -21,7 +22,9 @@ if (
 function render() {
   ReactDOM.render(
     <Provider store={store}>
-      <App />
+      <AudioEngineProvider>
+          <App />
+      </AudioEngineProvider>
     </Provider>,
     document.getElementById("root")
   );

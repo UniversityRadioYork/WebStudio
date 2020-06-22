@@ -94,8 +94,10 @@ export const mixerState = createSlice({
     ) {
       state.players[action.payload.player].loading = action.payload.percent;
     },
-    itemLoadComplete(state, action: PayloadAction<{ player: number }>) {
+    itemLoadComplete(state, action: PayloadAction<{ player: number, duration: number }>) {
       state.players[action.payload.player].loading = -1;
+      state.players[action.payload.player].timeLength = action.payload.duration;
+      state.players[action.payload.player].timeCurrent = 0;
     },
     itemLoadError(state, action: PayloadAction<{ player: number }>) {
       state.players[action.payload.player].loading = -1;

@@ -6,7 +6,7 @@ import * as MixerState from "../mixer/state";
 import * as NavbarState from "../navbar/state";
 import { ConnectionStateEnum } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
-import { audioEngine } from "../mixer/audio";
+import {AudioEngine} from "../mixer/state/audio";
 
 export let streamer: WebRTCStreamer | null = null;
 
@@ -291,7 +291,7 @@ export function sendTracklistStart(trackid: number): Promise<TrackListItem> {
   });
 }
 
-export const goOnAir = (): AppThunk => async (dispatch, getState) => {
+export const goOnAir = (audioEngine: AudioEngine): AppThunk => async (dispatch, getState) => {
   if (!getState().session.userCanBroadcast) {
     dispatch(
       NavbarState.showAlert({
@@ -331,7 +331,7 @@ export const stopStreaming = (): AppThunk => async (dispatch) => {
 
 let recorder: RecordingStreamer;
 
-export const startRecording = (): AppThunk => async (dispatch) => {
+export const startRecording = (audioEngine: AudioEngine): AppThunk => async (dispatch) => {
   recorder = new RecordingStreamer(audioEngine.streamingDestination.stream);
   recorder.addConnectionStateListener((state) => {
     dispatch(broadcastState.actions.setRecordingState(state));

@@ -20,6 +20,7 @@ import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import { getShowplan } from "../showplanner/state";
+import {useAudioEngine} from "../mixer/engineContext";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -46,7 +47,7 @@ export function NavBar() {
   const sessionState = useSelector((state: RootState) => state.session);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
   const settings = useSelector((state: RootState) => state.settings);
-  const redirect_url = encodeURIComponent(window.location.toString());
+  const audioEngine = useAudioEngine();
 
   const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
 
@@ -57,6 +58,8 @@ export function NavBar() {
     }
     prevRegistrationStage.current = broadcastState.stage;
   }, [broadcastState.stage]);
+
+  const redirect_url = encodeURIComponent(window.location.toString());
 
   return (
     <>
@@ -117,7 +120,7 @@ export function NavBar() {
             setConnectButtonAnimating(true);
             switch (broadcastState.stage) {
               case "NOT_REGISTERED":
-                dispatch(BroadcastState.goOnAir());
+                dispatch(BroadcastState.goOnAir(audioEngine));
                 break;
               case "REGISTERED":
                 dispatch(BroadcastState.cancelTimeslot());
@@ -146,7 +149,7 @@ export function NavBar() {
             onClick={() =>
               dispatch(
                 broadcastState.recordingState === "NOT_CONNECTED"
-                  ? BroadcastState.startRecording()
+                  ? BroadcastState.startRecording(audioEngine)
                   : BroadcastState.stopRecording()
               )
             }

@@ -8,7 +8,8 @@ import React, {
 } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../rootReducer";
-import { audioEngine, LevelsSource } from "../../mixer/audio";
+import { LevelsSource } from "../../mixer/state/audio";
+import {useAudioEngine} from "../../mixer/engineContext";
 
 interface VUMeterProps extends HTMLProps<HTMLCanvasElement> {
   range: [number, number];
@@ -17,6 +18,8 @@ interface VUMeterProps extends HTMLProps<HTMLCanvasElement> {
 }
 
 export function VUMeter(props: VUMeterProps) {
+  const audioEngine = useAudioEngine();
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 

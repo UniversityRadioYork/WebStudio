@@ -2,11 +2,11 @@ import {mixerState} from "./state";
 import {itemId, PlanItem} from "../../showplanner/state";
 import {AuxItem, MYRADIO_NON_API_BASE, Track} from "../../api";
 import {AppThunk} from "../../store";
-import {audioEngine} from "../audio";
 import fetchProgress, {FetchProgressData} from "fetch-progress";
 import * as BroadcastState from "../../broadcast/state";
 import Between from "between.js";
 import {MicVolumePresetEnum, VolumePresetEnum} from "./types";
+import {AudioEngine} from "./audio";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -19,6 +19,7 @@ export const load = (
   player: number,
   item: PlanItem | Track | AuxItem
 ): AppThunk => async (dispatch, getState) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   if (typeof audioEngine.players[player] !== "undefined") {
     if (audioEngine.players[player]?.isPlaying) {
       // already playing, don't kill playback
@@ -103,84 +104,6 @@ export const load = (
     }
     lastObjectURLs[player] = objectUrl;
 
-    playerInstance.on("loadComplete", (duration) => {
-      console.log("loadComplete");
-      dispatch(mixerState.actions.itemLoadComplete({ player }));
-      dispatch(
-        mixerState.actions.setTimeLength({
-          player,
-          time: duration,
-        })
-      );
-      dispatch(
-        mixerState.actions.setTimeCurrent({
-          player,
-          time: 0,
-        })
-      );
-      const state = getState().mixer.players[player];
-      if (state.playOnLoad) {
-        playerInstance.play();
-      }
-      if (state.loadedItem && "intro" in state.loadedItem) {
-        playerInstance.setIntro(state.loadedItem.intro);
-      }
-    });
-
-    playerInstance.on("play", () => {
-      dispatch(mixerState.actions.setPlayerState({ player, state: "playing" }));
-    });
-    playerInstance.on("pause", () => {
-      dispatch(
-        mixerState.actions.setPlayerState({
-          player,
-          state: playerInstance.currentTime === 0 ? "stopped" : "paused",
-        })
-      );
-    });
-    playerInstance.on("timeChange", (time) => {
-      if (Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5) {
-        dispatch(
-          mixerState.actions.setTimeCurrent({
-            player,
-            time,
-          })
-        );
-      }
-    });
-    playerInstance.on("finish", () => {
-      dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
-      const state = getState().mixer.players[player];
-      if (state.tracklistItemID !== -1) {
-        dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
-      }
-      if (state.repeat === "one") {
-        playerInstance.play();
-      } else if (state.repeat === "all") {
-        if ("channel" in item) {
-          // it's not in the CML/libraries "column"
-          const itsChannel = getState()
-            .showplan.plan!.filter((x) => x.channel === item.channel)
-            .sort((x, y) => x.weight - y.weight);
-          const itsIndex = itsChannel.indexOf(item);
-          if (itsIndex === itsChannel.length - 1) {
-            dispatch(load(player, itsChannel[0]));
-          }
-        }
-      } else if (state.autoAdvance) {
-        if ("channel" in item) {
-          // it's not in the CML/libraries "column"
-          const itsChannel = getState()
-            .showplan.plan!.filter((x) => x.channel === item.channel)
-            .sort((x, y) => x.weight - y.weight);
-          const itsIndex = itsChannel.indexOf(item);
-          if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
-            dispatch(load(player, itsChannel[itsIndex + 1]));
-          }
-        }
-      }
-    });
-
     // Double-check we haven't been aborted since
     if (signal.aborted) {
       // noinspection ExceptionCaughtLocallyJS
@@ -204,6 +127,7 @@ export const play = (player: number): AppThunk => async (
   dispatch,
   getState
 ) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
@@ -231,6 +155,7 @@ export const play = (player: number): AppThunk => async (
 };
 
 export const pause = (player: number): AppThunk => (dispatch, getState) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
@@ -247,6 +172,7 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
@@ -272,6 +198,7 @@ export const {
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   audioEngine.players.forEach(function(item) {
     item?.redraw();
   });
@@ -284,6 +211,7 @@ export const setVolume = (
   player: number,
   level: VolumePresetEnum
 ): AppThunk => (dispatch, getState) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   let volume: number;
   let uiLevel: number;
   switch (level) {
@@ -351,6 +279,7 @@ export const setVolume = (
 export const setChannelTrim = (player: number, val: number): AppThunk => async (
   dispatch
 ) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
   audioEngine.players[player]?.setTrim(val);
 };
@@ -359,6 +288,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
   dispatch,
   getState
 ) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   // TODO: not sure why this is here, and I have a hunch it may break shit, so disabling
   // File a ticket if it breaks stuff. -Marks
   // if (getState().mixer.mic.open) {
@@ -401,6 +331,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
   dispatch
 ) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
   // no tween fuckery here, just cut the level
   const levelVal = level === "full" ? 1 : 0;
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for

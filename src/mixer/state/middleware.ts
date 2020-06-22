@@ -2,9 +2,9 @@ import {AppThunk} from "../../store";
 import * as TheNews from "../the_news";
 import {Dispatch, Middleware} from "@reduxjs/toolkit";
 import {RootState} from "../../rootReducer";
-import {audioEngine} from "../audio";
 import Keys from "keymaster";
 import {pause, play, setMicVolume, setVolume, stop} from "./actions";
+import {AudioEngine} from "./audio";
 
 export const startNewsTimer = (): AppThunk => (_, getState) => {
   TheNews.butNowItsTimeFor(getState);
@@ -12,24 +12,27 @@ export const startNewsTimer = (): AppThunk => (_, getState) => {
 
 export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   store
-) => (next) => (action) => {
-  const oldState = store.getState().mixer;
-  const result = next(action);
-  const newState = store.getState().mixer;
+) => {
+  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  return (next) => (action) => {
+    const oldState = store.getState().mixer;
+    const result = next(action);
+    const newState = store.getState().mixer;
 
-  newState.players.forEach((state, index) => {
-    if (oldState.players[index].gain !== newState.players[index].gain) {
-      audioEngine.players[index]?.setVolume(state.gain);
+    newState.players.forEach((state, index) => {
+      if (oldState.players[index].gain !== newState.players[index].gain) {
+        audioEngine.players[index]?.setVolume(state.gain);
+      }
+    });
+
+    if (newState.mic.baseGain !== oldState.mic.baseGain) {
+      audioEngine.setMicCalibrationGain(newState.mic.baseGain);
     }
-  });
-
-  if (newState.mic.baseGain !== oldState.mic.baseGain) {
-    audioEngine.setMicCalibrationGain(newState.mic.baseGain);
-  }
-  if (newState.mic.volume !== oldState.mic.volume) {
-    audioEngine.setMicVolume(newState.mic.volume);
-  }
-  return result;
+    if (newState.mic.volume !== oldState.mic.volume) {
+      audioEngine.setMicVolume(newState.mic.volume);
+    }
+    return result;
+  };
 };
 
 export const mixerKeyboardShortcutsMiddleware: Middleware<
