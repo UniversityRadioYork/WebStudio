@@ -19,7 +19,7 @@ export const load = (
   player: number,
   item: PlanItem | Track | AuxItem
 ): AppThunk => async (dispatch, getState) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   if (typeof audioEngine.players[player] !== "undefined") {
     if (audioEngine.players[player]?.isPlaying) {
       // already playing, don't kill playback
@@ -127,7 +127,7 @@ export const play = (player: number): AppThunk => async (
   dispatch,
   getState
 ) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
@@ -155,7 +155,7 @@ export const play = (player: number): AppThunk => async (
 };
 
 export const pause = (player: number): AppThunk => (dispatch, getState) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
@@ -172,7 +172,7 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   if (typeof audioEngine.players[player] === "undefined") {
     console.log("nothing loaded");
     return;
@@ -198,7 +198,7 @@ export const {
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   audioEngine.players.forEach(function(item) {
     item?.redraw();
   });
@@ -211,7 +211,7 @@ export const setVolume = (
   player: number,
   level: VolumePresetEnum
 ): AppThunk => (dispatch, getState) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   let volume: number;
   let uiLevel: number;
   switch (level) {
@@ -279,7 +279,7 @@ export const setVolume = (
 export const setChannelTrim = (player: number, val: number): AppThunk => async (
   dispatch
 ) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
   audioEngine.players[player]?.setTrim(val);
 };
@@ -288,7 +288,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
   dispatch,
   getState
 ) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   // TODO: not sure why this is here, and I have a hunch it may break shit, so disabling
   // File a ticket if it breaks stuff. -Marks
   // if (getState().mixer.mic.open) {
@@ -331,7 +331,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
   dispatch
 ) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   // no tween fuckery here, just cut the level
   const levelVal = level === "full" ? 1 : 0;
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for

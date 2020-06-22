@@ -13,7 +13,7 @@ export const startNewsTimer = (): AppThunk => (_, getState) => {
 export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   store
 ) => {
-  const audioEngine: AudioEngine = (window as any).AE; // TODO
+  const audioEngine: AudioEngine = window.AE; // TODO
   return (next) => (action) => {
     const oldState = store.getState().mixer;
     const result = next(action);

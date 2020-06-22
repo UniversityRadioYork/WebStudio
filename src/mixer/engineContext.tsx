@@ -9,13 +9,19 @@ export function useAudioEngine(): AudioEngine {
     return useContext(EngineContext);
 }
 
+declare global {
+    interface Window {
+        AE: AudioEngine;
+    }
+}
+
 export function AudioEngineProvider(props: any) {
     const store = useStore();
     const engine = useMemo(() => new AudioEngine(store), [store]);
     useLayoutEffect(() => {
-        (window as any).AE = engine;
+        window.AE = engine;
         return () => {
-            delete (window as any).AE;
+            delete window.AE;
         }
     }, [engine]);
 
