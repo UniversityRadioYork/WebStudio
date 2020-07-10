@@ -47,3 +47,10 @@ Deploying to https://ury.org.uk/webstudio is also automated but slightly more in
 1. Change the `version` field in `package.json` to ensure the "about" page is up to date
 2. Push up your version bump and create a pull request to the `production` branch - https://github.com/UniversityRadioYork/WebStudio/compare/production...master
 3. Once your changes are merged into `production` they'll get deployed automatically (although you will need to restart the server - ssh to Dolby and run `sudo systemctl restart webstudioserver`)
+
+### Screenshots
+![Mic Live With Main Screen](images/HomeWithMic.png?raw=true "Mic Live on Main Screen")
+
+![Home Page of webstudio](images/Home.png?raw=true "Home Page of WebStudio")
+
+![Mic Selection Screen](images/MicSelection.png?raw=true "Mic Selection Screen")
