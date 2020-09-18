@@ -14,6 +14,7 @@ export interface ItemGhost {
   weight: number;
   intro: number;
   clean: boolean;
+  played: boolean;
 }
 
 export type PlanItem = TimeslotItem | ItemGhost;
@@ -375,6 +376,17 @@ export const removeItem = (
   //   return;
   // }
   dispatch(showplan.actions.applyOps(ops));
+};
+
+
+// Set the item as being played/unplayed in this session.
+export const setItemPlayed = (
+  itemid: string,
+  played: boolean
+): AppThunk => async (dispatch, getState) => {
+  const plan = cloneDeep(getState().showplan.plan!);
+  const item = plan.find((x) => itemId(x) === itemid)!;
+  item.played = played;
 };
 
 export const getShowplan = (timeslotId: number): AppThunk => async (

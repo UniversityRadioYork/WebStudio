@@ -23,6 +23,7 @@ import {
   moveItem,
   addItem,
   removeItem,
+  setItemPlayed,
   getPlaylists,
 } from "./state";
 
@@ -241,6 +242,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
+        played: false,
         ...data,
       };
       dispatch(addItem(timeslotId, newItem));
@@ -255,6 +257,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
+        played: false,
         ...data,
       } as any;
       dispatch(addItem(timeslotId, newItem));
@@ -272,6 +275,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   async function onCtxRemoveClick(e: any, data: { id: string }) {
     dispatch(removeItem(timeslotId, data.id));
+  }
+  async function onCtxUnPlayedClick(e: any, data: { id: string }) {
+    dispatch(setItemPlayed(data.id, false));
   }
 
   if (showplan === null) {
@@ -319,6 +325,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       </div>
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
+        <MenuItem onClick={onCtxUnPlayedClick}>Mark Unplayed</MenuItem>
       </ContextMenu>
       <OptionsMenu />
       <WelcomeModal

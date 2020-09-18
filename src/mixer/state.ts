@@ -6,7 +6,7 @@ import {
 } from "@reduxjs/toolkit";
 import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
-import { itemId, PlanItem } from "../showplanner/state";
+import { itemId, PlanItem, setItemPlayed } from "../showplanner/state";
 import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
@@ -14,6 +14,7 @@ import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import { audioEngine } from "./audio";
 import * as TheNews from "./the_news";
+import Showplanner from "../showplanner";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -359,7 +360,13 @@ export const load = (
     });
 
     playerInstance.on("play", () => {
+
       dispatch(mixerState.actions.setPlayerState({ player, state: "playing" }));
+
+      const state = getState().mixer.players[player];
+      if (state.loadedItem != null) {
+        dispatch(setItemPlayed(state.loadedItem.id, true));
+      }
     });
     playerInstance.on("pause", () => {
       dispatch(
