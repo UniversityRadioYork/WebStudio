@@ -10,7 +10,7 @@ function DevWarning() {
   }
   return (
     <>
-      <div className="p-2 bg-warning">
+      <div className="p-2 alert-warning">
         <h1>Development Version</h1>
         <strong>You are using a development version of WebStudio.</strong> This
         version is NOT tested and may have severe bugs and performance problems.
@@ -63,8 +63,8 @@ export function PisModal({
   return (
     <Modal isOpen={isOpen} onRequestClose={close}>
       <div className="text-right">
-        <Button onClick={close} color="primary">
-          Close <FaTimes />
+        <Button onClick={close} className="pt-1" color="primary">
+          <FaTimes />
         </Button>
       </div>
       <hr className="m-1" />
@@ -85,6 +85,10 @@ export function PisModal({
           </em>
         </div>
       )}
+      <br />
+      <Button onClick={close} color="primary">
+        <FaTimes /> Close
+      </Button>
     </Modal>
   );
 }
