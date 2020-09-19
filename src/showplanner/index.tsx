@@ -1,7 +1,7 @@
 import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { FaAlignJustify, FaBookOpen, FaMicrophone } from "react-icons/fa";
+import { FaAlignJustify, FaBookOpen, FaMicrophone, FaUpload } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 
 import { TimeslotItem } from "../api";
@@ -41,7 +41,9 @@ import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
+import { LibraryUploadModal } from "./LibraryUploadModal";
 import "./channel.scss";
+import { Button } from "reactstrap";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -75,16 +77,30 @@ function LibraryColumn() {
     (state: RootState) => state.showplan
   );
 
+  const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
+
   useEffect(() => {
     dispatch(getPlaylists());
   }, [dispatch]);
 
   return (
+    <>
+    <LibraryUploadModal
+      isOpen={showLibraryUploadModal}
+      close={() => setShowLibraryModal(false)}
+    />
     <div className="library-column">
-      <h2>
-        <FaBookOpen className="mx-2" size={28} />
-        Libraries
-      </h2>
+      <div className="mr-2 my-1">
+        <h2 className="d-inline">
+          <FaBookOpen className="mx-2" size={28} />
+          Libraries
+        </h2>
+        <Button className="ml-1 float-right" color="primary" title="Upload to Library">
+          <FaUpload
+            onClick={() => setShowLibraryModal(true)}
+          />
+        </Button>
+      </div>
       <div className="px-2">
         <select
           className="form-control"
@@ -126,6 +142,7 @@ function LibraryColumn() {
         Select a library to search.
       </span>
     </div>
+    </>
   );
 }
 
