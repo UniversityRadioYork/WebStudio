@@ -151,7 +151,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   cleanup() {
+    // Unsubscribe from events.
+    this.wavesurfer.unAll();
     // Let wavesurfer remove the old media, otherwise ram leak!
+    // See https://github.com/katspaugh/wavesurfer.js/issues/1940.
+    delete (this.wavesurfer as any).backend.buffer;
     this.wavesurfer.destroy();
   }
 }
