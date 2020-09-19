@@ -83,7 +83,7 @@ export function NavBar() {
             target="_blank"
             onClick={(e) => {
               e.preventDefault();
-              let w = window.open(
+              window.open(
                 "http://ury.org.uk/timelord/",
                 "URY - Timelord",
                 "resizable,status"
