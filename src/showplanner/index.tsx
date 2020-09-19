@@ -95,10 +95,8 @@ function LibraryColumn() {
           <FaBookOpen className="mx-2" size={28} />
           Libraries
         </h2>
-        <Button className="ml-1 float-right" color="primary" title="Upload to Library">
-          <FaUpload
-            onClick={() => setShowLibraryModal(true)}
-          />
+          <Button className="ml-1 float-right" color="primary" title="Upload to Library" onClick={() => setShowLibraryModal(true)}>
+          <FaUpload/>
         </Button>
       </div>
       <div className="px-2">
