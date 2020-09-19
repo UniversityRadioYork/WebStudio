@@ -1,7 +1,7 @@
 import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { FaAlignJustify, FaBookOpen, FaMicrophone, FaUpload } from "react-icons/fa";
+import { FaAlignJustify, FaBookOpen, FaFileImport, FaMicrophone, FaUpload } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 
 import { TimeslotItem } from "../api";
@@ -42,6 +42,7 @@ import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
 import { LibraryUploadModal } from "./LibraryUploadModal";
+import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
 import { Button } from "reactstrap";
 
@@ -78,6 +79,7 @@ function LibraryColumn() {
   );
 
   const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
+  const [showImporterModal, setShowImporterModal] = useState(false);
 
   useEffect(() => {
     dispatch(getPlaylists());
@@ -89,14 +91,18 @@ function LibraryColumn() {
       isOpen={showLibraryUploadModal}
       close={() => setShowLibraryModal(false)}
     />
+    <ImporterModal close={() => setShowImporterModal(false)} isOpen={showImporterModal} />
     <div className="library-column">
-      <div className="mr-2 my-1">
-        <h2 className="d-inline">
+      <div className="mx-2 mb-2">
+        <h2>
           <FaBookOpen className="mx-2" size={28} />
           Libraries
         </h2>
-          <Button className="ml-1 float-right" color="primary" title="Upload to Library" onClick={() => setShowLibraryModal(true)}>
-          <FaUpload/>
+        <Button className="mr-1" color="primary" title="Import From Showplan" size="sm" outline={true} onClick={() => setShowImporterModal(true)}>
+          <FaFileImport/> Import
+        </Button>
+        <Button className="mr-1" color="primary" title="Upload to Library" size="sm" outline={true} onClick={() => setShowLibraryModal(true)}>
+          <FaUpload/> Upload
         </Button>
       </div>
       <div className="px-2">
