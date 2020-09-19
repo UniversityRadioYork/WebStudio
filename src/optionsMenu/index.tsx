@@ -13,7 +13,7 @@ import { FaTimes } from "react-icons/fa";
 import { ProModeTab } from "./ProModeTab";
 
 export function OptionsMenu() {
-  Modal.setAppElement('#root');
+  Modal.setAppElement("#root");
   const state = useSelector((state: RootState) => state.optionsMenu);
   const dispatch = useDispatch();
   return (

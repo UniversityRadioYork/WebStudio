@@ -503,7 +503,7 @@ export const {
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
-  audioEngine.players.forEach(function(item) {
+  audioEngine.players.forEach(function (item) {
     item?.redraw();
   });
 };

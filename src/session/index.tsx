@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 import { LoadingDialogue } from "../showplanner";
 
-const SessionHandler: React.FC = function() {
+const SessionHandler: React.FC = function () {
   const dispatch = useDispatch();
 
   useEffect(() => {
