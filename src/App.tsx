@@ -11,7 +11,7 @@ import "./App.scss";
 const forceReducer = (state: boolean) => !state;
 function useForceUpdate() {
   const [, action] = useReducer(forceReducer, false);
-  return () => action(null);
+  return () => action();
 }
 
 const App: React.FC = () => {
