@@ -1,12 +1,14 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
+import Stopwatch from 'react-stopwatch';
 
 import {
   FaCircle,
   FaRegClock,
   FaRegUser,
   FaBroadcastTower,
+  FaSpinner
 } from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
@@ -41,7 +43,7 @@ function nicifyConnectionState(state: ConnectionStateEnum): string {
   }
 }
 
-export function NavBar() {
+export function NavBarMain() {
   const dispatch = useDispatch();
   const sessionState = useSelector((state: RootState) => state.session);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
@@ -77,89 +79,9 @@ export function NavBar() {
           <img className="logo-webstudio" src={appLogo} alt="Web Studio Logo" />
           <img className="logo-myradio" src={myradioLogo} alt="MyRadio Logo" />
         </a>
-        <div className="nav-item nav-link" id="timelord">
-          <a
-            href="http://ury.org.uk/timelord/"
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => {
-              e.preventDefault();
-              window.open(
-                "http://ury.org.uk/timelord/",
-                "URY - Timelord",
-                "resizable,status"
-              );
-            }}
-          >
-            <div className="time">
-              <Clock
-                format={"HH:mm:ss"}
-                ticking={true}
-                timezone={"europe/london"}
-              />
-            </div>
-          </a>
-        </div>
       </div>
 
       <ul className="nav navbar-nav navbar-right">
-        <li className="nav-item">
-          <VUMeter width={250} height={40} source="master" range={[-40, 3]} />
-        </li>
-
-        <li className="nav-item" style={{ color: "white" }}>
-          <div className="nav-link">
-            <b>{nicifyConnectionState(broadcastState.connectionState)}</b>
-          </div>
-        </li>
-        <li
-          className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link connect"
-          onClick={() => {
-            setConnectButtonAnimating(true);
-            switch (broadcastState.stage) {
-              case "NOT_REGISTERED":
-                dispatch(BroadcastState.goOnAir());
-                break;
-              case "REGISTERED":
-                dispatch(BroadcastState.cancelTimeslot());
-                break;
-            }
-          }}
-        >
-          {connectButtonAnimating ? (
-            <span className="dot-pulse mr-2" />
-          ) : (
-            <>
-              <FaBroadcastTower size={17} className="mr-2" />
-              {broadcastState.stage === "NOT_REGISTERED" && "Register for show"}
-              {broadcastState.stage === "REGISTERED" && "Cancel registration"}
-            </>
-          )}
-        </li>
-        {settings.enableRecording && (
-          <li
-            className={
-              "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
-              (broadcastState.recordingState === "CONNECTED"
-                ? "btn-outline-danger active"
-                : "btn-outline-warning")
-            }
-            onClick={() =>
-              dispatch(
-                broadcastState.recordingState === "NOT_CONNECTED"
-                  ? BroadcastState.startRecording()
-                  : BroadcastState.stopRecording()
-              )
-            }
-          >
-            <FaCircle size={17} />
-            &nbsp; Rec:{" "}
-            {broadcastState.recordingState === "CONNECTED"
-              ? "Recording"
-              : "Not Recording"}
-          </li>
-        )}
-        <span className="navbar-brand divider ml-3 mr-2 mt-2 mb-0"></span>
         <li className="nav-item dropdown">
           <a
             className="nav-link dropdown-toggle"
@@ -201,7 +123,7 @@ export function NavBar() {
             </h6>
           </div>
         </li>
-        <li className="nav-item dropdown">
+        <li className="nav-item navbar-profile dropdown">
           <a
             className="nav-link dropdown-toggle"
             href={MYRADIO_NON_API_BASE + "/Profile/default/"}
@@ -229,6 +151,123 @@ export function NavBar() {
               Logout
             </a>
           </div>
+        </li>
+      </ul>
+    </>
+  );
+}
+
+export function NavBarWebStudio() {
+  const dispatch = useDispatch();
+  const sessionState = useSelector((state: RootState) => state.session);
+  const broadcastState = useSelector((state: RootState) => state.broadcast);
+  const settings = useSelector((state: RootState) => state.settings);
+  const redirect_url = encodeURIComponent(window.location.toString());
+
+  const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
+
+  const prevRegistrationStage = useRef(broadcastState.stage);
+  useEffect(() => {
+    if (broadcastState.stage !== prevRegistrationStage.current) {
+      setConnectButtonAnimating(false);
+    }
+    prevRegistrationStage.current = broadcastState.stage;
+  }, [broadcastState.stage]);
+
+  return (
+    <>
+      <ul className="nav navbar-nav navbar-left">
+        <li
+          className="btn rounded-0 pt-2 pb-1 nav-link nav-item"
+            id="timelord"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(
+                "http://ury.org.uk/timelord/",
+                "URY - Timelord",
+                "resizable,status"
+              );
+            }}
+          >
+              <Clock
+                format={"HH:mm:ss"}
+                ticking={true}
+                timezone={"europe/london"}
+              />
+          </li>
+      </ul>
+
+      <ul className="nav navbar-nav navbar-right mr-0 pr-0">
+
+        <li className="nav-item" style={{ color: "white" }}>
+          <div className="nav-link">
+            <b>{nicifyConnectionState(broadcastState.connectionState)}</b>
+          </div>
+        </li>
+        <li
+          className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link connect"
+          onClick={() => {
+            setConnectButtonAnimating(true);
+            switch (broadcastState.stage) {
+              case "NOT_REGISTERED":
+                dispatch(BroadcastState.goOnAir());
+                break;
+              case "REGISTERED":
+                dispatch(BroadcastState.cancelTimeslot());
+                break;
+            }
+          }}
+        >
+          {connectButtonAnimating ? (
+            <>
+              <FaBroadcastTower size={17} className="mr-2" />
+              <FaSpinner size={17} className="nav-spin mr-2" />
+            </>
+          ) : (
+            <>
+              <FaBroadcastTower size={17} className="mr-2" />
+              {broadcastState.stage === "NOT_REGISTERED" && "Register"}
+              {broadcastState.stage === "REGISTERED" && "Stop"}
+            </>
+          )}
+        </li>
+        {settings.enableRecording && (
+          <li
+            className={
+              "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
+              (broadcastState.recordingState === "CONNECTED"
+                ? "btn-outline-danger active"
+                : "btn-outline-warning")
+            }
+            onClick={() =>
+              dispatch(
+                broadcastState.recordingState === "NOT_CONNECTED"
+                  ? BroadcastState.startRecording()
+                  : BroadcastState.stopRecording()
+              )
+            }
+          >
+            <FaCircle size={17}
+              className={
+              broadcastState.recordingState === "CONNECTED" ? "rec-blink" : "rec-stop"}
+            />
+            {" "}
+            {broadcastState.recordingState === "CONNECTED"
+              ? <Stopwatch
+               seconds={0}
+               minutes={0}
+               hours={0}
+               render={({ formatted }) => {
+                 return (
+                   <span>{formatted}</span>
+                 );
+               }}
+              />
+              : "Record"}
+          </li>
+        )}
+        <li className="nav-item px-2 nav-vu">
+          <VUMeter width={235} height={40} source="master" range={[-40, 3]} />
         </li>
       </ul>
     </>
@@ -270,12 +309,11 @@ function AlertBar() {
 }
 
 export function CombinedNavAlertBar() {
-  // TODO
   return (
     <>
       <AlertBar />
       <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
-        <nav className="container-fluid">
+        <nav className="container-fluid px-0">
           <button
             className="navbar-toggler"
             type="button"
@@ -287,7 +325,23 @@ export function CombinedNavAlertBar() {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-          <NavBar />
+          <NavBarMain />
+        </nav>
+      </header>
+      <header className="navbar navbar-webstudio navbar-expand-md p-0 bd-navbar">
+        <nav className="container-fluid px-0">
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-toggle="collapse"
+            data-target="#collapsed"
+            aria-controls="collapsed"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <NavBarWebStudio />
         </nav>
       </header>
     </>
