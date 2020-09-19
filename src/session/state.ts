@@ -12,7 +12,7 @@ import raygun from "raygun4js";
 
 const BROADCAST_PERMISSION_ID = 340;
 
-interface sessionState {
+interface sessionStateInterface {
   currentUser: User | null;
   currentTimeslot: Timeslot | null;
   userCanBroadcast: boolean;
@@ -32,7 +32,7 @@ const sessionState = createSlice({
     userLoadError: null,
     timeslotLoading: false,
     timeslotLoadError: null,
-  } as sessionState,
+  } as sessionStateInterface,
   reducers: {
     setCurrentUser(
       state,
