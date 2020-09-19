@@ -67,7 +67,7 @@ export function PisModal({
           <FaTimes />
         </Button>
       </div>
-      <hr className="m-1" />
+      <hr className="mt-1 mb-3" />
       <DevWarning />
       <h1>Presenter News</h1>
       {(news === "loading" || news === "not_loaded") && (
