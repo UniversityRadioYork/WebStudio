@@ -10,7 +10,7 @@ function DevWarning() {
   }
   return (
     <>
-      <div className="p-2 btn-warning">
+      <div className="p-2 bg-warning">
         <h1>Development Version</h1>
         <strong>You are using a development version of WebStudio.</strong> This
         version is NOT tested and may have severe bugs and performance problems.
