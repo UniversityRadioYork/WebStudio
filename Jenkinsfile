@@ -71,7 +71,7 @@ pipeline {
         }
         steps {
           sh 'sed -i -e \'s/ury.org.uk\\/webstudio-dev/ury.org.uk\\/webstudio/\' package.json'
-          sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
+          sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_PRODUCTION=true yarn build'
           sshagent(credentials: ['ury']) {
            sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio'
           }
