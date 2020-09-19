@@ -10,22 +10,22 @@ function DevWarning() {
   }
   return (
     <>
-    <div className="p-2 btn-warning">
-      <h1>Development Version</h1>
-      <strong>You are using a development version of WebStudio.</strong> This
-      version is NOT tested and may have severe bugs and performance problems.
-      <br />
-      <em>
-        <strong>DO NOT BROADCAST LIVE SHOWS USING THIS VERSION!</strong>
-      </em>
-      <br />
-      For the latest and greatest tested WebStudio, go to{" "}
-      <a href={process.env.REACT_APP_HOMEPAGE}>
-        {process.env.REACT_APP_HOMEPAGE}
-      </a>
-      .
-    </div>
-    <hr />
+      <div className="p-2 btn-warning">
+        <h1>Development Version</h1>
+        <strong>You are using a development version of WebStudio.</strong> This
+        version is NOT tested and may have severe bugs and performance problems.
+        <br />
+        <em>
+          <strong>DO NOT BROADCAST LIVE SHOWS USING THIS VERSION!</strong>
+        </em>
+        <br />
+        For the latest and greatest tested WebStudio, go to{" "}
+        <a href={process.env.REACT_APP_HOMEPAGE}>
+          {process.env.REACT_APP_HOMEPAGE}
+        </a>
+        .
+      </div>
+      <hr />
     </>
   );
 }
@@ -85,7 +85,6 @@ export function PisModal({
           </em>
         </div>
       )}
-
     </Modal>
   );
 }
