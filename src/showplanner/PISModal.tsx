@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { getLatestNewsItem, NewsEntry } from "../api";
 import { Button } from "reactstrap";
+import { FaTimes } from "react-icons/fa";
 
 function DevWarning() {
   if (process.env.REACT_APP_PRODUCTION === "true") {
     return null;
   }
   return (
-    <div style={{ color: "white", backgroundColor: "#960000" }}>
+    <>
+    <div className="p-2 btn-warning">
       <h1>Development Version</h1>
       <strong>You are using a development version of WebStudio.</strong> This
       version is NOT tested and may have severe bugs and performance problems.
@@ -23,6 +25,8 @@ function DevWarning() {
       </a>
       .
     </div>
+    <hr />
+    </>
   );
 }
 
@@ -58,6 +62,12 @@ export function PisModal({
 
   return (
     <Modal isOpen={isOpen} onRequestClose={close}>
+      <div className="text-right">
+        <Button onClick={close} color="primary">
+          Close <FaTimes />
+        </Button>
+      </div>
+      <hr className="m-1" />
       <DevWarning />
       <h1>Presenter News</h1>
       {(news === "loading" || news === "not_loaded") && (
@@ -75,9 +85,7 @@ export function PisModal({
           </em>
         </div>
       )}
-      <Button onClick={close} color="primary">
-        Close
-      </Button>
+
     </Modal>
   );
 }
