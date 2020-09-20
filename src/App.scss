@@ -40,7 +40,11 @@ $number-of-channels: 3;
     padding: 10px;
 
     .channel-vu {
-      width: 100%;
+      text-align: center;
+      background: black;
+      canvas {
+        max-width: 100%;
+      }
     }
   }
   #sidebar {
@@ -131,9 +135,10 @@ $number-of-channels: 3;
 }
 
 #micMeter {
-  height: 40px;
-
+  background: black;
+  max-height: 40px;
+  text-align: center;
   canvas {
-    width: 100%;
+    max-width: 100%;
   }
 }
