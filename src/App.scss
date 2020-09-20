@@ -90,3 +90,50 @@ $number-of-channels: 3;
   height: 60vh;
   box-sizing: content-box;
 }
+
+
+.sp-mic-live {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9000;
+  pointer-events: none;
+  box-shadow: inset 0 0 3px 6px red;
+}
+
+#micLiveTimer {
+  background: black;
+  border: 3px solid red;
+  color: white;
+  font-weight: bold;
+  padding: 2px;
+  width: 100%;
+  display: inline-block;
+  text-align: center;
+
+  padding: 0;
+
+  .text {
+    margin: 0;
+    float: left;
+    padding: 0 10px;
+    border-right: 3px solid red;
+  }
+
+
+  &.live .text {
+    background: red;
+    color: white;
+  }
+
+}
+
+#micMeter {
+  height: 40px;
+
+  canvas {
+    width: 100%;
+  }
+}
