@@ -78,7 +78,7 @@ export function Player({ id }: { id: number }) {
       case 2:
         return "player-2";
       default:
-        return "master";
+        throw new Error("Unknown Player VUMeter source: " + id);
     }
   };
   return (
