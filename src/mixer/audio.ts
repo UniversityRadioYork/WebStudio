@@ -201,9 +201,6 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   finalCompressor: DynamicsCompressorNode;
   streamingDestination: MediaStreamAudioDestinationNode;
 
-  player0Analyser: typeof StereoAnalyserNode;
-  player1Analyser: typeof StereoAnalyserNode;
-  player2Analyser: typeof StereoAnalyserNode;
   playerAnalysers: typeof StereoAnalyserNode[];
 
   streamingAnalyser: typeof StereoAnalyserNode;
@@ -228,18 +225,12 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.finalCompressor.release.value = 0.2;
     this.finalCompressor.knee.value = 0;
 
-    this.player0Analyser = new StereoAnalyserNode(this.audioContext);
-    this.player0Analyser.fftSize = ANALYSIS_FFT_SIZE;
-    this.player1Analyser = new StereoAnalyserNode(this.audioContext);
-    this.player1Analyser.fftSize = ANALYSIS_FFT_SIZE;
-    this.player2Analyser = new StereoAnalyserNode(this.audioContext);
-    this.player2Analyser.fftSize = ANALYSIS_FFT_SIZE;
-
-    this.playerAnalysers = [
-      this.player0Analyser,
-      this.player1Analyser,
-      this.player2Analyser,
-    ];
+    this.playerAnalysers = [];
+    for (let i = 0; i < 3; i++) {
+      let analyser = new StereoAnalyserNode(this.audioContext);
+      analyser.fftSize = ANALYSIS_FFT_SIZE;
+      this.playerAnalysers.push(analyser);
+    }
 
     this.streamingAnalyser = new StereoAnalyserNode(this.audioContext);
     this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
@@ -372,19 +363,19 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
         );
         break;
       case "player-0":
-        this.player0Analyser.getFloatTimeDomainData(
+        this.playerAnalysers[0].getFloatTimeDomainData(
           analysisBuffer,
           analysisBuffer2
         );
         break;
       case "player-1":
-        this.player1Analyser.getFloatTimeDomainData(
+        this.playerAnalysers[1].getFloatTimeDomainData(
           analysisBuffer,
           analysisBuffer2
         );
         break;
       case "player-2":
-        this.player2Analyser.getFloatTimeDomainData(
+        this.playerAnalysers[2].getFloatTimeDomainData(
           analysisBuffer,
           analysisBuffer2
         );
