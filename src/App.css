@@ -96,6 +96,11 @@ button {
 }
 
 .waveform .current,
+.waveform .remaining {
+  margin-top: -5px;
+}
+
+.waveform .current,
 .waveform .remaining,
 .waveform .length {
   font-weight: 800;
@@ -110,7 +115,7 @@ button {
 .waveform .intro,
 .waveform .outro,
 .waveform .length {
-  bottom: 0;
+  bottom: -5px;
   position: absolute;
 }
 

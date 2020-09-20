@@ -41,16 +41,16 @@ function PlayerNumbers({ id }: { id: number }) {
 
   return (
     <>
-      <span id={"current-" + id} className="m-0 current bypass-click">
+      <span id={"current-" + id} className="current bypass-click">
         {secToHHMM(timeCurrent)}
       </span>
-      <span id={"length-" + id} className="m-0 length bypass-click">
+      <span id={"length-" + id} className="length bypass-click">
         {secToHHMM(timeLength)}
       </span>
-      <span id={"remaining-" + id} className="m-0 remaining bypass-click">
+      <span id={"remaining-" + id} className="remaining bypass-click">
         {secToHHMM(timeRemaining)}
       </span>
-      <span id={"ends-" + id} className="m-0 outro bypass-click">
+      <span id={"ends-" + id} className="outro bypass-click">
         End - {timestampToHHMM(endTime)}
       </span>
     </>
