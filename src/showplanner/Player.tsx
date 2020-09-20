@@ -259,6 +259,7 @@ export function Player({ id }: { id: number }) {
         height={40}
         source={VUsource(id)}
         range={[-40, 0]}
+        stereo={true}
       />}
     </div>
   );

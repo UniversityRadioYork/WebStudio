@@ -96,6 +96,7 @@
     "sdp-transform": "^2.14.0",
     "semver": "7.3.2",
     "serialize-javascript": "^5.0.1",
+    "stereo-analyser-node": "^1.0.0",
     "strict-event-emitter-types": "^2.0.0",
     "style-loader": "1.2.1",
     "terser-webpack-plugin": "4.2.2",
