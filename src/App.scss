@@ -140,7 +140,7 @@ $number-of-channels: 3;
 
 #micLiveTimer {
   background: black;
-  border: 3px solid red;
+  border: 3px solid white;
   color: white;
   font-weight: bold;
   padding: 2px;
@@ -154,12 +154,16 @@ $number-of-channels: 3;
     margin: 0;
     float: left;
     padding: 0 10px;
-    border-right: 3px solid red;
+  border-right: 3px solid white;
   }
 
-  &.live .text {
-    background: red;
-    color: white;
+  &.live {
+    border: 3px solid red;
+    .text {
+      border-right: 3px solid red;
+      background: red;
+      color: white;
+    }
   }
 }
 
