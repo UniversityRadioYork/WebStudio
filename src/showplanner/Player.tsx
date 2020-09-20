@@ -67,6 +67,8 @@ export function Player({ id }: { id: number }) {
       )
   );
   const proMode = useSelector((state: RootState) => state.settings.proMode);
+  const vuEnabled = useSelector((state: RootState) => state.settings.channelVUs);
+  const vuStereo = useSelector((state: RootState) => state.settings.channelVUsStereo);
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {
@@ -254,14 +256,14 @@ export function Player({ id }: { id: number }) {
         </button>
       </div>
 
-      {proMode && (
+      {proMode && vuEnabled && (
         <div className="channel-vu">
           <VUMeter
             width={300}
             height={40}
             source={VUsource(id)}
             range={[-40, 0]}
-            stereo={true}
+            stereo={vuStereo}
           />
         </div>
       )}
