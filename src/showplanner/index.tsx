@@ -172,6 +172,7 @@ function MicControl() {
           source="mic-final"
           range={[-40, 3]}
           greenRange={[-10, -5]}
+          stereo={true}
         />
       </div>
       <div className={`mixer-buttons ${!state.open && "disabled"}`}>

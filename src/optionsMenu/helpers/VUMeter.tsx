@@ -14,6 +14,7 @@ interface VUMeterProps extends HTMLProps<HTMLCanvasElement> {
   range: [number, number];
   greenRange?: [number, number];
   source: LevelsSource;
+  stereo: boolean;
 }
 
 export function VUMeter(props: VUMeterProps) {
@@ -22,15 +23,19 @@ export function VUMeter(props: VUMeterProps) {
 
   const isMicOpen = useSelector((state: RootState) => state.mixer.mic.open);
   const rafRef = useRef<number | null>(null);
-  const [peak, setPeak] = useState(-Infinity);
+  const [peakL, setPeakL] = useState(-Infinity);
+  const [peakR, setPeakR] = useState(-Infinity);
 
   const isMic = props.source.substr(0, 3) === "mic";
 
   useEffect(() => {
     const animate = () => {
       if (!isMic || isMicOpen) {
-        const result = audioEngine.getLevel(props.source);
-        setPeak(result);
+        const result = audioEngine.getLevels(props.source, props.stereo);
+        setPeakL(result[0]);
+        if (props.stereo) {
+          setPeakR(result[1]);
+        }
         rafRef.current = requestAnimationFrame(animate);
       }
     };
@@ -43,7 +48,7 @@ export function VUMeter(props: VUMeterProps) {
         rafRef.current = null;
       }
     };
-  }, [isMicOpen, isMic, props.source]);
+  }, [isMicOpen, isMic, props.source, props.stereo]);
 
   useLayoutEffect(() => {
     if (canvasRef.current) {
@@ -76,9 +81,15 @@ export function VUMeter(props: VUMeterProps) {
         height
       );
 
-      if (peak >= props.greenRange[0] && peak <= props.greenRange[1]) {
+      if (
+        (peakL >= props.greenRange[0] && peakL <= props.greenRange[1])
+        || (props.stereo && peakR >= props.greenRange[0] && peakR <= props.greenRange[1])
+      ) {
         ctx.fillStyle = "#00ff00";
-      } else if (peak < props.greenRange[0]) {
+      } else if (
+        (peakL < props.greenRange[0])
+        || (props.stereo && peakR < props.greenRange[0])
+      ) {
         ctx.fillStyle = "#e8d120";
       } else {
         ctx.fillStyle = "#ff0000";
@@ -87,17 +98,28 @@ export function VUMeter(props: VUMeterProps) {
       ctx.fillStyle = "#e8d120";
     }
 
-    const valueOffset =
-      (Math.max(peak, props.range[0]) - props.range[0]) / valueRange;
 
-    ctx.fillRect(0, 0, valueOffset * width, height - 10);
+    const valueOffsetL =
+      (Math.max(peakL, props.range[0]) - props.range[0]) / valueRange;
+
+    let valueOffsetR = 0;
+    if (props.stereo) {
+      valueOffsetR =
+        (Math.max(peakR, props.range[0]) - props.range[0]) / valueRange;
+    } else {
+      valueOffsetR = valueOffsetL;
+    }
+
+
+    ctx.fillRect(0, 0, valueOffsetL * width, height/2 - 7);
+    ctx.fillRect(0, height/2 - 6, valueOffsetR * width, height / 2 - 7);
 
     ctx.fillStyle = "#fff";
     for (let i = 0; i < 10; i++) {
       const value = (props.range[0] + valueRange * (i / 10)).toFixed(0);
-      ctx.fillText(value, width * (i / 10), height - 7);
+      ctx.fillText(value, width * (i / 10), height - 2);
     }
-  }, [peak, props.range, props.greenRange]);
+  }, [peakL, peakR, props.range, props.greenRange, props.stereo]);
 
   const { value, range, greenRange, source, ...rest } = props;
 

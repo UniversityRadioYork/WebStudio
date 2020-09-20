@@ -269,7 +269,7 @@ export function NavBarWebStudio() {
           </li>
         )}
         <li className="nav-item px-2 nav-vu">
-          <VUMeter width={235} height={40} source="master" range={[-40, 3]} />
+          <VUMeter width={235} height={40} source="master" range={[-40, 3]} stereo={true} />
         </li>
       </ul>
     </>
