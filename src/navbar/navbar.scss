@@ -78,6 +78,16 @@
   border: none;
   max-height: 7vh;
   flex-shrink: 0;
+  transition: height 70ms;
+
+  @media (max-height: 900px) {
+
+    height: 10px;
+
+    &:hover {
+      height: 40px;
+    }
+  }
 }
 
 .navbar-ury .navbar-brand {

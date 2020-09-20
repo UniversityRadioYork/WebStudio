@@ -312,35 +312,13 @@ export function CombinedNavAlertBar() {
   return (
     <>
       <AlertBar />
-      <header className="navbar navbar-ury navbar-expand-md p-0 bd-navbar">
+      <header className="navbar navbar-ury navbar-expand-sm p-0 bd-navbar">
         <nav className="container-fluid px-0">
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-toggle="collapse"
-            data-target="#collapsed"
-            aria-controls="collapsed"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
           <NavBarMain />
         </nav>
       </header>
-      <header className="navbar navbar-webstudio navbar-expand-md p-0 bd-navbar">
+      <header className="navbar navbar-webstudio navbar-expand-sm p-0 bd-navbar">
         <nav className="container-fluid px-0">
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-toggle="collapse"
-            data-target="#collapsed"
-            aria-controls="collapsed"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
           <NavBarWebStudio />
         </nav>
       </header>
