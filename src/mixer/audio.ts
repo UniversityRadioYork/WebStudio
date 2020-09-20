@@ -186,20 +186,20 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   micMedia: MediaStream | null = null;
   micSource: MediaStreamAudioSourceNode | null = null;
   micCalibrationGain: GainNode;
-  micPrecompAnalyser: StereoAnalyserNode;
+  micPrecompAnalyser: typeof StereoAnalyserNode;
   micCompressor: DynamicsCompressorNode;
   micMixGain: GainNode;
-  micFinalAnalyser: StereoAnalyserNode;
+  micFinalAnalyser: typeof StereoAnalyserNode;
 
   finalCompressor: DynamicsCompressorNode;
   streamingDestination: MediaStreamAudioDestinationNode;
 
-  player0Analyser: StereoAnalyserNode;
-  player1Analyser: StereoAnalyserNode;
-  player2Analyser: StereoAnalyserNode;
-  playerAnalysers: StereoAnalyserNode[];
+  player0Analyser: typeof StereoAnalyserNode;
+  player1Analyser: typeof StereoAnalyserNode;
+  player2Analyser: typeof StereoAnalyserNode;
+  playerAnalysers: typeof StereoAnalyserNode[];
 
-  streamingAnalyser: StereoAnalyserNode;
+  streamingAnalyser: typeof StereoAnalyserNode;
 
   newsStartCountdownEl: HTMLAudioElement;
   newsStartCountdownNode: MediaElementAudioSourceNode;

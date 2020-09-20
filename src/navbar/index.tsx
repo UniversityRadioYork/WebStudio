@@ -259,7 +259,7 @@ export function NavBarWebStudio() {
                seconds={0}
                minutes={0}
                hours={0}
-               render={({ formatted }) => {
+               render={({text: formatted}) => {
                  return (
                    <span>{formatted}</span>
                  );
