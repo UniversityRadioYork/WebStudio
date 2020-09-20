@@ -3,6 +3,7 @@ import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
 import { FaAlignJustify, FaBookOpen, FaFileImport, FaMicrophone, FaUpload } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
+import Stopwatch from 'react-stopwatch';
 
 import { TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
@@ -152,6 +153,7 @@ function LibraryColumn() {
 
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
+  const proMode = useSelector((state: RootState) => state.settings.proMode);
   const dispatch = useDispatch();
 
   return (
@@ -165,6 +167,22 @@ function MicControl() {
           The microphone has not been setup. Go to options.
         </p>
       )}
+      {proMode && (<span id="micLiveTimer" className={state.open && state.volume > 0 ? "live" : ""}>
+        <span className="text">Mic Live:{" "}</span>
+          {state.open && state.volume > 0
+          ? <Stopwatch
+          seconds={0}
+          minutes={0}
+          hours={0}
+          render={({ formatted }) => {
+            return (
+              <span>{formatted}</span>
+            );
+          }}
+          />
+        : "00:00:00"}
+        </span>
+      )}
       <div id="micMeter">
         <VUMeter
           width={250}
@@ -172,7 +190,7 @@ function MicControl() {
           source="mic-final"
           range={[-40, 3]}
           greenRange={[-10, -5]}
-          stereo={true}
+          stereo={proMode}
         />
       </div>
       <div className={`mixer-buttons ${!state.open && "disabled"}`}>
