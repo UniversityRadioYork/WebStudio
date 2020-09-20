@@ -1,9 +1,6 @@
 /* Stuff to get the nav to collapse at 991px (when the menu collapses)
  * Taken from http://stackoverflow.com/a/36289507/995325 */
 
-$dot-color: #fff;
-@import "~three-dots/sass/three-dots";
-
 @media (max-width: 991px) {
   .navbar-header {
     float: none;
@@ -42,6 +39,37 @@ $dot-color: #fff;
   }
 }
 
+.navbar-nav {
+  margin: 0;
+}
+
+.navbar-webstudio {
+  background-color: #2d425f;
+  border-color: #2d425f;
+  border: none;
+  max-height: 7vh;
+  flex-shrink: 0;
+
+
+  .nav-vu {
+    background: black;
+  }
+
+  .nav-spin {
+    animation-name: spin;
+    animation-duration: 2000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+  @keyframes spin {
+      from {
+          transform:rotate(0deg);
+      }
+      to {
+          transform:rotate(360deg);
+      }
+  }
+}
 /** MyRadio bootstrap navbar overides taken from http://work.smarchal.com/twbscolor/css/2D425F2D425Fffffffe1e1e11 **/
 
 .navbar-ury {
@@ -246,14 +274,7 @@ $dot-color: #fff;
 #timelord {
   background: black;
   border: red 1px solid;
-  padding: 0.2rem;
-  margin: auto 0;
   color: white;
-  width: 100%;
-  max-width: 40vw;
-  height: 100%;
-  max-height: 36.5px;
-  cursor: pointer;
 }
 
 #timelord a {
@@ -267,5 +288,5 @@ $dot-color: #fff;
 }
 
 .nav-link.connect {
-  min-width: 80px;
+  min-width: 90px;
 }
