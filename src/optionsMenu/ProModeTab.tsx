@@ -48,7 +48,7 @@ export function ProModeTab() {
           Reset trim when loading a new file
         </label>
       </div>
-      <hr/>
+      <hr />
       <h2>Metering</h2>
       <p>Turn down these options if suffering from performance issues.</p>
       <div className="form-check">
@@ -66,9 +66,7 @@ export function ProModeTab() {
             )
           }
         />
-        <label className="form-check-label">
-          Enable meters per channel
-        </label>
+        <label className="form-check-label">Enable meters per channel</label>
       </div>
       <div className="form-check">
         <input
@@ -85,9 +83,7 @@ export function ProModeTab() {
             )
           }
         />
-        <label className="form-check-label">
-          Use stereo metering
-        </label>
+        <label className="form-check-label">Use stereo metering</label>
       </div>
     </>
   );

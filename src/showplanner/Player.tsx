@@ -67,8 +67,12 @@ export function Player({ id }: { id: number }) {
       )
   );
   const proMode = useSelector((state: RootState) => state.settings.proMode);
-  const vuEnabled = useSelector((state: RootState) => state.settings.channelVUs);
-  const vuStereo = useSelector((state: RootState) => state.settings.channelVUsStereo);
+  const vuEnabled = useSelector(
+    (state: RootState) => state.settings.channelVUs
+  );
+  const vuStereo = useSelector(
+    (state: RootState) => state.settings.channelVUsStereo
+  );
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {
