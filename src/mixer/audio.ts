@@ -144,6 +144,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
     (wavesurfer as any).backend.gainNode.disconnect();
     (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+    (wavesurfer as any).backend.gainNode.connect(engine.playerAnalysers[player])
 
     wavesurfer.load(url);
 
@@ -160,7 +161,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 }
 
-export type LevelsSource = "mic-precomp" | "mic-final" | "master";
+export type LevelsSource = "mic-precomp" | "mic-final" | "master" | "player-0" | "player-1" | "player-2";
 
 const ANALYSIS_FFT_SIZE = 8192;
 
@@ -190,6 +191,11 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   finalCompressor: DynamicsCompressorNode;
   streamingDestination: MediaStreamAudioDestinationNode;
 
+  player0Analyser: AnalyserNode;
+  player1Analyser: AnalyserNode;
+  player2Analyser: AnalyserNode;
+  playerAnalysers: AnalyserNode[];
+
   streamingAnalyser: AnalyserNode;
 
   newsStartCountdownEl: HTMLAudioElement;
@@ -213,6 +219,14 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.finalCompressor.attack.value = 0;
     this.finalCompressor.release.value = 0.2;
     this.finalCompressor.knee.value = 0;
+
+    this.player0Analyser = this.audioContext.createAnalyser();
+    this.player0Analyser.fftSize = ANALYSIS_FFT_SIZE;
+    this.player1Analyser = this.audioContext.createAnalyser();
+    this.player1Analyser.fftSize = ANALYSIS_FFT_SIZE;
+    this.player2Analyser = this.audioContext.createAnalyser();
+    this.player2Analyser.fftSize = ANALYSIS_FFT_SIZE;
+    this.playerAnalysers = [this.player0Analyser, this.player1Analyser, this.player2Analyser];
 
     this.streamingAnalyser = this.audioContext.createAnalyser();
     this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
@@ -333,6 +347,15 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
         break;
       case "master":
         this.streamingAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        break;
+      case "player-0":
+        this.player0Analyser.getFloatTimeDomainData(this.analysisBuffer);
+        break;
+      case "player-1":
+        this.player1Analyser.getFloatTimeDomainData(this.analysisBuffer);
+        break;
+      case "player-2":
+        this.player2Analyser.getFloatTimeDomainData(this.analysisBuffer);
         break;
       default:
         throw new Error("can't getLevel " + source);
