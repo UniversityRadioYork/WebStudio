@@ -11,7 +11,7 @@ function DevWarning() {
   return (
     <>
       <div className="p-2 alert-warning">
-        <h1>Development Version</h1>
+        <h2>Development Version</h2>
         <strong>You are using a development version of WebStudio.</strong> This
         version is NOT tested and may have severe bugs and performance problems.
         <br />
@@ -62,14 +62,12 @@ export function PisModal({
 
   return (
     <Modal isOpen={isOpen} onRequestClose={close}>
-      <div className="text-right">
-        <Button onClick={close} className="pt-1" color="primary">
-          <FaTimes />
-        </Button>
-      </div>
+      <h1 className="d-inline">Presenter News</h1>
+      <Button onClick={close} className="float-right pt-1" color="primary">
+        <FaTimes />
+      </Button>
       <hr className="mt-1 mb-3" />
       <DevWarning />
-      <h1>Presenter News</h1>
       {(news === "loading" || news === "not_loaded") && (
         <p>Loading the news...</p>
       )}
@@ -78,11 +76,12 @@ export function PisModal({
         <p>There was an error getting the news. Computing are aware.</p>
       )}
       {typeof news === "object" && (
-        <div style={{ fontSize: "90%" }}>
-          <p dangerouslySetInnerHTML={{ __html: news.content }} />
+        <div>
           <em>
             ~{news.author}, {news.posted}
           </em>
+          <br />
+          <p dangerouslySetInnerHTML={{ __html: news.content }} />
         </div>
       )}
       <br />
