@@ -15,7 +15,10 @@ export default function ProModeButtons({ channel }: { channel: number }) {
 
   return (
     <>
-      <div className="row m-0 p-1 card-header channelButtons proMode">
+      <div className="row m-0 p-1 card-header channelButtons proMode hover-menu">
+        <span className="hover-label">
+          ProMode
+        </span>
         {(activeButton === null || activeButton === "trim") && (
           <button className="btn btn-warning" title="Trim">
             <FaTachometerAlt

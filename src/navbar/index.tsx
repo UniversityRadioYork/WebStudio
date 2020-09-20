@@ -314,7 +314,10 @@ export function CombinedNavAlertBar() {
   return (
     <>
       <AlertBar />
-      <header className="navbar navbar-ury navbar-expand-sm p-0 bd-navbar">
+      <header className="navbar navbar-ury navbar-expand-sm hover-menu p-0 bd-navbar">
+        <span className="hover-label hover-label-hide text-light text-center">
+          Hover for MyRadio Menu
+        </span>
         <nav className="container-fluid px-0">
           <NavBarMain />
         </nav>
