@@ -91,7 +91,10 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
-        <div className="row m-0 p-1 card-header channelButtons">
+        <div className="row m-0 p-1 card-header channelButtons hover-menu">
+          <span className="hover-label">
+            Channel Controls
+          </span>
           <button
             className={
               (playerState.autoAdvance

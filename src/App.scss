@@ -23,6 +23,42 @@ $number-of-channels: 3;
   }
 }
 
+.hover-menu {
+
+  .hover-label {
+    display: none;
+  }
+
+  @media (max-height: 900px) {
+
+    overflow: hidden;
+    height: 15px;
+
+
+    .hover-label {
+      font-size: 10px;
+      margin-top: -5px;
+      display: block;
+      width: 100%;
+
+    }
+
+    &:hover {
+      height: 100%;
+
+      .hover-label-hide {
+        display: none;
+      }
+    }
+
+    &:not(:hover) {
+      > *:not(.hover-label){
+        display: none !important;
+      }
+    }
+  }
+}
+
 .sp {
   display: grid;
   grid-template-areas: "channels sb-tg sb";
