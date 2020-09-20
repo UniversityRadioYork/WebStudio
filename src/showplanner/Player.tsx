@@ -13,6 +13,7 @@ import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
+import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -68,6 +69,19 @@ export function Player({ id }: { id: number }) {
   const proMode = useSelector((state: RootState) => state.settings.proMode);
   const dispatch = useDispatch();
 
+  const VUsource =
+    (id: number) => {
+      switch(id) {
+        case 0:
+          return "player-0";
+        case 1:
+          return "player-1";
+        case 2:
+          return "player-2";
+        default:
+          return "master";
+    }
+  };
   return (
     <div
       className={
@@ -239,6 +253,13 @@ export function Player({ id }: { id: number }) {
           Full
         </button>
       </div>
+      { proMode && <VUMeter
+        className="channel-vu"
+        width={200}
+        height={40}
+        source={VUsource(id)}
+        range={[-40, 0]}
+      />}
     </div>
   );
 }
