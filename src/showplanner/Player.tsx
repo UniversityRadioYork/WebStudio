@@ -253,14 +253,17 @@ export function Player({ id }: { id: number }) {
           Full
         </button>
       </div>
-      { proMode && <VUMeter
-        className="channel-vu"
-        width={200}
-        height={40}
-        source={VUsource(id)}
-        range={[-40, 0]}
-        stereo={true}
-      />}
+
+      { proMode &&
+        <div className="channel-vu">
+          <VUMeter
+            width={300}
+            height={40}
+            source={VUsource(id)}
+            range={[-40, 0]}
+            stereo={true}
+          />
+        </div>}
     </div>
   );
 }
