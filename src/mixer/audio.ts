@@ -9,7 +9,6 @@ import NewsIntro from "../assets/audio/NewsIntro.wav";
 
 import StereoAnalyserNode from "stereo-analyser-node";
 
-
 interface PlayerEvents {
   loadComplete: (duration: number) => void;
   timeChange: (time: number) => void;
@@ -147,7 +146,9 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
     (wavesurfer as any).backend.gainNode.disconnect();
     (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
-    (wavesurfer as any).backend.gainNode.connect(engine.playerAnalysers[player])
+    (wavesurfer as any).backend.gainNode.connect(
+      engine.playerAnalysers[player]
+    );
 
     wavesurfer.load(url);
 
@@ -164,7 +165,13 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 }
 
-export type LevelsSource = "mic-precomp" | "mic-final" | "master" | "player-0" | "player-1" | "player-2";
+export type LevelsSource =
+  | "mic-precomp"
+  | "mic-final"
+  | "master"
+  | "player-0"
+  | "player-1"
+  | "player-2";
 
 const ANALYSIS_FFT_SIZE = 8192;
 
@@ -207,7 +214,6 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   newsEndCountdownEl: HTMLAudioElement;
   newsEndCountdownNode: MediaElementAudioSourceNode;
 
-
   constructor() {
     super();
     this.audioContext = new AudioContext({
@@ -229,10 +235,11 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.player2Analyser = new StereoAnalyserNode(this.audioContext);
     this.player2Analyser.fftSize = ANALYSIS_FFT_SIZE;
 
-
-
-
-    this.playerAnalysers = [this.player0Analyser, this.player1Analyser, this.player2Analyser];
+    this.playerAnalysers = [
+      this.player0Analyser,
+      this.player1Analyser,
+      this.player2Analyser,
+    ];
 
     this.streamingAnalyser = new StereoAnalyserNode(this.audioContext);
     this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
@@ -267,8 +274,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
 
-    this.micCalibrationGain
-      .connect(this.micPrecompAnalyser)
+    this.micCalibrationGain.connect(this.micPrecompAnalyser);
     this.micCalibrationGain
       .connect(this.micCompressor)
       .connect(this.micMixGain)
@@ -348,22 +354,40 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     let analysisBuffer2 = new Float32Array(ANALYSIS_FFT_SIZE);
     switch (source) {
       case "mic-precomp":
-        this.micPrecompAnalyser.getFloatTimeDomainData(analysisBuffer, analysisBuffer2);
+        this.micPrecompAnalyser.getFloatTimeDomainData(
+          analysisBuffer,
+          analysisBuffer2
+        );
         break;
       case "mic-final":
-        this.micFinalAnalyser.getFloatTimeDomainData(analysisBuffer, analysisBuffer2);
+        this.micFinalAnalyser.getFloatTimeDomainData(
+          analysisBuffer,
+          analysisBuffer2
+        );
         break;
       case "master":
-        this.streamingAnalyser.getFloatTimeDomainData(analysisBuffer, analysisBuffer2);
+        this.streamingAnalyser.getFloatTimeDomainData(
+          analysisBuffer,
+          analysisBuffer2
+        );
         break;
       case "player-0":
-        this.player0Analyser.getFloatTimeDomainData(analysisBuffer, analysisBuffer2);
+        this.player0Analyser.getFloatTimeDomainData(
+          analysisBuffer,
+          analysisBuffer2
+        );
         break;
       case "player-1":
-        this.player1Analyser.getFloatTimeDomainData(analysisBuffer, analysisBuffer2);
+        this.player1Analyser.getFloatTimeDomainData(
+          analysisBuffer,
+          analysisBuffer2
+        );
         break;
       case "player-2":
-        this.player2Analyser.getFloatTimeDomainData(analysisBuffer, analysisBuffer2);
+        this.player2Analyser.getFloatTimeDomainData(
+          analysisBuffer,
+          analysisBuffer2
+        );
         break;
       default:
         throw new Error("can't getLevel " + source);
@@ -380,7 +404,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
         peakR = Math.max(peakR, Math.abs(analysisBuffer2[i]));
       }
       peakR = 20 * Math.log10(peakR);
-      return [peakL, peakR]
+      return [peakL, peakR];
     }
     return [peakL];
   }

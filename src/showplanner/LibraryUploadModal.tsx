@@ -12,8 +12,15 @@ export function LibraryUploadModal(props: LibraryUploadProps) {
   return (
     <Modal isOpen={props.isOpen} onRequestClose={props.close}>
       <div>
-        <h1 className="d-inline"><FaUpload className="mx-2" size={30} />Upload to Library</h1>
-        <Button onClick={props.close} className="float-right pt-1" color="primary">
+        <h1 className="d-inline">
+          <FaUpload className="mx-2" size={30} />
+          Upload to Library
+        </h1>
+        <Button
+          onClick={props.close}
+          className="float-right pt-1"
+          color="primary"
+        >
           <FaTimes />
         </Button>
       </div>
@@ -23,11 +30,8 @@ export function LibraryUploadModal(props: LibraryUploadProps) {
         src="https://ury.org.uk/myradio/NIPSWeb/manage_library/"
         frameBorder="0"
         title="Upload to Library"
-      >
-      </iframe>
-      <div>
-
-      </div>
+      ></iframe>
+      <div></div>
     </Modal>
   );
 }

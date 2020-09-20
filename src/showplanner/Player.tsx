@@ -69,17 +69,16 @@ export function Player({ id }: { id: number }) {
   const proMode = useSelector((state: RootState) => state.settings.proMode);
   const dispatch = useDispatch();
 
-  const VUsource =
-    (id: number) => {
-      switch(id) {
-        case 0:
-          return "player-0";
-        case 1:
-          return "player-1";
-        case 2:
-          return "player-2";
-        default:
-          return "master";
+  const VUsource = (id: number) => {
+    switch (id) {
+      case 0:
+        return "player-0";
+      case 1:
+        return "player-1";
+      case 2:
+        return "player-2";
+      default:
+        return "master";
     }
   };
   return (
@@ -92,9 +91,7 @@ export function Player({ id }: { id: number }) {
     >
       <div className="card text-center">
         <div className="row m-0 p-1 card-header channelButtons hover-menu">
-          <span className="hover-label">
-            Channel Controls
-          </span>
+          <span className="hover-label">Channel Controls</span>
           <button
             className={
               (playerState.autoAdvance
@@ -257,7 +254,7 @@ export function Player({ id }: { id: number }) {
         </button>
       </div>
 
-      { proMode &&
+      {proMode && (
         <div className="channel-vu">
           <VUMeter
             width={300}
@@ -266,7 +263,8 @@ export function Player({ id }: { id: number }) {
             range={[-40, 0]}
             stereo={true}
           />
-        </div>}
+        </div>
+      )}
     </div>
   );
 }

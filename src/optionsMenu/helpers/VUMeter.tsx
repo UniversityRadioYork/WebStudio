@@ -82,13 +82,15 @@ export function VUMeter(props: VUMeterProps) {
       );
 
       if (
-        (peakL >= props.greenRange[0] && peakL <= props.greenRange[1])
-        || (props.stereo && peakR >= props.greenRange[0] && peakR <= props.greenRange[1])
+        (peakL >= props.greenRange[0] && peakL <= props.greenRange[1]) ||
+        (props.stereo &&
+          peakR >= props.greenRange[0] &&
+          peakR <= props.greenRange[1])
       ) {
         ctx.fillStyle = "#00ff00";
       } else if (
-        (peakL < props.greenRange[0])
-        || (props.stereo && peakR < props.greenRange[0])
+        peakL < props.greenRange[0] ||
+        (props.stereo && peakR < props.greenRange[0])
       ) {
         ctx.fillStyle = "#e8d120";
       } else {
@@ -97,7 +99,6 @@ export function VUMeter(props: VUMeterProps) {
     } else {
       ctx.fillStyle = "#e8d120";
     }
-
 
     const valueOffsetL =
       (Math.max(peakL, props.range[0]) - props.range[0]) / valueRange;
@@ -110,9 +111,8 @@ export function VUMeter(props: VUMeterProps) {
       valueOffsetR = valueOffsetL;
     }
 
-
-    ctx.fillRect(0, 0, valueOffsetL * width, height/2 - 7);
-    ctx.fillRect(0, height/2 - 6, valueOffsetR * width, height / 2 - 7);
+    ctx.fillRect(0, 0, valueOffsetL * width, height / 2 - 7);
+    ctx.fillRect(0, height / 2 - 6, valueOffsetR * width, height / 2 - 7);
 
     ctx.fillStyle = "#fff";
     for (let i = 0; i < 10; i++) {

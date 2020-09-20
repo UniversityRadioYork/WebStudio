@@ -1,14 +1,14 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
-import Stopwatch from 'react-stopwatch';
+import Stopwatch from "react-stopwatch";
 
 import {
   FaCircle,
   FaRegClock,
   FaRegUser,
   FaBroadcastTower,
-  FaSpinner
+  FaSpinner,
 } from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
@@ -181,26 +181,25 @@ export function NavBarWebStudio() {
       <ul className="nav navbar-nav navbar-left">
         <li
           className="btn rounded-0 pt-2 pb-1 nav-link nav-item"
-            id="timelord"
-            onClick={(e) => {
-              e.preventDefault();
-              window.open(
-                "http://ury.org.uk/timelord/",
-                "URY - Timelord",
-                "resizable,status"
-              );
-            }}
-          >
-              <Clock
-                format={"HH:mm:ss"}
-                ticking={true}
-                timezone={"europe/london"}
-              />
-          </li>
+          id="timelord"
+          onClick={(e) => {
+            e.preventDefault();
+            window.open(
+              "http://ury.org.uk/timelord/",
+              "URY - Timelord",
+              "resizable,status"
+            );
+          }}
+        >
+          <Clock
+            format={"HH:mm:ss"}
+            ticking={true}
+            timezone={"europe/london"}
+          />
+        </li>
       </ul>
 
       <ul className="nav navbar-nav navbar-right mr-0 pr-0">
-
         <li className="nav-item" style={{ color: "white" }}>
           <div className="nav-link">
             <b>{nicifyConnectionState(broadcastState.connectionState)}</b>
@@ -249,27 +248,36 @@ export function NavBarWebStudio() {
               )
             }
           >
-            <FaCircle size={17}
+            <FaCircle
+              size={17}
               className={
-              broadcastState.recordingState === "CONNECTED" ? "rec-blink" : "rec-stop"}
-            />
-            {" "}
-            {broadcastState.recordingState === "CONNECTED"
-              ? <Stopwatch
-               seconds={0}
-               minutes={0}
-               hours={0}
-               render={({formatted}) => {
-                 return (
-                   <span>{formatted}</span>
-                 );
-               }}
+                broadcastState.recordingState === "CONNECTED"
+                  ? "rec-blink"
+                  : "rec-stop"
+              }
+            />{" "}
+            {broadcastState.recordingState === "CONNECTED" ? (
+              <Stopwatch
+                seconds={0}
+                minutes={0}
+                hours={0}
+                render={({ formatted }) => {
+                  return <span>{formatted}</span>;
+                }}
               />
-              : "Record"}
+            ) : (
+              "Record"
+            )}
           </li>
         )}
         <li className="nav-item px-2 nav-vu">
-          <VUMeter width={235} height={40} source="master" range={[-40, 3]} stereo={true} />
+          <VUMeter
+            width={235}
+            height={40}
+            source="master"
+            range={[-40, 3]}
+            stereo={true}
+          />
         </li>
       </ul>
     </>

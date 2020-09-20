@@ -24,19 +24,16 @@ $number-of-channels: 3;
 }
 
 .hover-menu {
-
   .hover-label {
     display: none;
   }
 
   @media (max-height: 900px) {
-
     .hover-label {
       font-size: 10px;
       margin-top: -5px;
       display: block;
       width: 100%;
-
     }
 
     &:hover {
@@ -51,7 +48,7 @@ $number-of-channels: 3;
       overflow: hidden;
       height: 15px;
 
-      > *:not(.hover-label){
+      > *:not(.hover-label) {
         display: none !important;
       }
     }
@@ -130,7 +127,6 @@ $number-of-channels: 3;
   box-sizing: content-box;
 }
 
-
 .sp-mic-live {
   position: fixed;
   top: 0;
@@ -161,12 +157,10 @@ $number-of-channels: 3;
     border-right: 3px solid red;
   }
 
-
   &.live .text {
     background: red;
     color: white;
   }
-
 }
 
 #micMeter {

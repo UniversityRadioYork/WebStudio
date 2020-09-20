@@ -1,5 +1,4 @@
-
-declare module 'react-stopwatch' {
+declare module "react-stopwatch" {
   import * as React from "react";
 
   class Stopwatch extends React.Component<StopwatchProps, any> {}
@@ -8,13 +7,13 @@ declare module 'react-stopwatch' {
     hours: number;
     minutes: number;
     seconds: number;
-    render ( args: {
+    render(args: {
       formatted?: string;
       hours?: number;
       minutes?: number;
       seconds?: number;
-    }): React.ReactNode
-  };
+    }): React.ReactNode;
+  }
 
   export default Stopwatch;
-};
+}

@@ -50,7 +50,6 @@
   max-height: 7vh;
   flex-shrink: 0;
 
-
   .nav-vu {
     background: black;
   }
@@ -62,12 +61,12 @@
     animation-timing-function: linear;
   }
   @keyframes spin {
-      from {
-          transform:rotate(0deg);
-      }
-      to {
-          transform:rotate(360deg);
-      }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 }
 /** MyRadio bootstrap navbar overides taken from http://work.smarchal.com/twbscolor/css/2D425F2D425Fffffffe1e1e11 **/
@@ -78,7 +77,6 @@
   border: none;
   max-height: 7vh;
   flex-shrink: 0;
-
 }
 
 .navbar-ury .navbar-brand {

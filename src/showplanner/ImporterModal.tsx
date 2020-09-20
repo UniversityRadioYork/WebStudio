@@ -14,8 +14,15 @@ export function ImporterModal(props: ImporterProps) {
   return (
     <Modal isOpen={props.isOpen} onRequestClose={props.close}>
       <div>
-        <h1 className="d-inline"><FaFileImport className="mx-2" size={30} />Import from Showplan</h1>
-        <Button onClick={props.close} className="float-right pt-1" color="primary">
+        <h1 className="d-inline">
+          <FaFileImport className="mx-2" size={30} />
+          Import from Showplan
+        </h1>
+        <Button
+          onClick={props.close}
+          className="float-right pt-1"
+          color="primary"
+        >
           <FaTimes />
         </Button>
       </div>
@@ -25,11 +32,8 @@ export function ImporterModal(props: ImporterProps) {
         src="https://ury.org.uk/myradio/NIPSWeb/import/"
         frameBorder="0"
         title="Import From Showplan"
-      >
-      </iframe>
-      <div>
-
-      </div>
+      ></iframe>
+      <div></div>
     </Modal>
   );
 }

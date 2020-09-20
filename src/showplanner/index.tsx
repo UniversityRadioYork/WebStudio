@@ -1,9 +1,15 @@
 import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { FaAlignJustify, FaBookOpen, FaFileImport, FaMicrophone, FaUpload } from "react-icons/fa";
+import {
+  FaAlignJustify,
+  FaBookOpen,
+  FaFileImport,
+  FaMicrophone,
+  FaUpload,
+} from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
-import Stopwatch from 'react-stopwatch';
+import Stopwatch from "react-stopwatch";
 
 import { TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
@@ -88,65 +94,84 @@ function LibraryColumn() {
 
   return (
     <>
-    <LibraryUploadModal
-      isOpen={showLibraryUploadModal}
-      close={() => setShowLibraryModal(false)}
-    />
-    <ImporterModal close={() => setShowImporterModal(false)} isOpen={showImporterModal} />
-    <div className="library-column">
-      <div className="mx-2 mb-2">
-        <h2>
-          <FaBookOpen className="mx-2" size={28} />
-          Libraries
-        </h2>
-        <Button className="mr-1" color="primary" title="Import From Showplan" size="sm" outline={true} onClick={() => setShowImporterModal(true)}>
-          <FaFileImport/> Import
-        </Button>
-        <Button className="mr-1" color="primary" title="Upload to Library" size="sm" outline={true} onClick={() => setShowLibraryModal(true)}>
-          <FaUpload/> Upload
-        </Button>
-      </div>
-      <div className="px-2">
-        <select
-          className="form-control"
-          style={{ flex: "none" }}
-          value={sauce}
-          onChange={(e) => setSauce(e.target.value)}
+      <LibraryUploadModal
+        isOpen={showLibraryUploadModal}
+        close={() => setShowLibraryModal(false)}
+      />
+      <ImporterModal
+        close={() => setShowImporterModal(false)}
+        isOpen={showImporterModal}
+      />
+      <div className="library-column">
+        <div className="mx-2 mb-2">
+          <h2>
+            <FaBookOpen className="mx-2" size={28} />
+            Libraries
+          </h2>
+          <Button
+            className="mr-1"
+            color="primary"
+            title="Import From Showplan"
+            size="sm"
+            outline={true}
+            onClick={() => setShowImporterModal(true)}
+          >
+            <FaFileImport /> Import
+          </Button>
+          <Button
+            className="mr-1"
+            color="primary"
+            title="Upload to Library"
+            size="sm"
+            outline={true}
+            onClick={() => setShowLibraryModal(true)}
+          >
+            <FaUpload /> Upload
+          </Button>
+        </div>
+        <div className="px-2">
+          <select
+            className="form-control"
+            style={{ flex: "none" }}
+            value={sauce}
+            onChange={(e) => setSauce(e.target.value)}
+          >
+            <option value={"None"} disabled>
+              Choose a library
+            </option>
+            <option value={"CentralMusicLibrary"}>Central Music Library</option>
+            <option disabled>Personal Resources</option>
+            {userPlaylists.map((playlist) => (
+              <option key={playlist.managedid} value={playlist.managedid}>
+                {playlist.title}
+              </option>
+            ))}
+            <option disabled>Shared Resources</option>
+            {auxPlaylists.map((playlist) => (
+              <option
+                key={"aux-" + playlist.managedid}
+                value={"aux-" + playlist.managedid}
+              >
+                {playlist.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="border-top my-2"></div>
+        {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
+        {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
+          <AuxLibrary libraryId={sauce} />
+        )}
+        <span
+          className={
+            sauce === "None" ? "mt-5 text-center text-muted" : "d-none"
+          }
         >
-          <option value={"None"} disabled>
-            Choose a library
-          </option>
-          <option value={"CentralMusicLibrary"}>Central Music Library</option>
-          <option disabled>Personal Resources</option>
-          {userPlaylists.map((playlist) => (
-            <option key={playlist.managedid} value={playlist.managedid}>
-              {playlist.title}
-            </option>
-          ))}
-          <option disabled>Shared Resources</option>
-          {auxPlaylists.map((playlist) => (
-            <option
-              key={"aux-" + playlist.managedid}
-              value={"aux-" + playlist.managedid}
-            >
-              {playlist.title}
-            </option>
-          ))}
-        </select>
+          <FaBookOpen size={56} />
+          <br />
+          Select a library to search.
+        </span>
       </div>
-      <div className="border-top my-2"></div>
-      {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
-      {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
-        <AuxLibrary libraryId={sauce} />
-      )}
-      <span
-        className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
-      >
-        <FaBookOpen size={56} />
-        <br />
-        Select a library to search.
-      </span>
-    </div>
     </>
   );
 }
@@ -167,20 +192,24 @@ function MicControl() {
           The microphone has not been setup. Go to options.
         </p>
       )}
-      {proMode && (<span id="micLiveTimer" className={state.open && state.volume > 0 ? "live" : ""}>
-        <span className="text">Mic Live:{" "}</span>
-          {state.open && state.volume > 0
-          ? <Stopwatch
-          seconds={0}
-          minutes={0}
-          hours={0}
-          render={({ formatted }) => {
-            return (
-              <span>{formatted}</span>
-            );
-          }}
-          />
-        : "00:00:00"}
+      {proMode && (
+        <span
+          id="micLiveTimer"
+          className={state.open && state.volume > 0 ? "live" : ""}
+        >
+          <span className="text">Mic Live: </span>
+          {state.open && state.volume > 0 ? (
+            <Stopwatch
+              seconds={0}
+              minutes={0}
+              hours={0}
+              render={({ formatted }) => {
+                return <span>{formatted}</span>;
+              }}
+            />
+          ) : (
+            "00:00:00"
+          )}
         </span>
       )}
       <div id="micMeter">
