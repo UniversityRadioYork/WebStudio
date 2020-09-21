@@ -34,6 +34,7 @@ import {
   CML_CACHE,
   AuxLibrary,
   AUX_CACHE,
+  ManagedPlaylistLibrary
 } from "./libraries";
 import { Player } from "./Player";
 
@@ -71,7 +72,7 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   const dispatch = useDispatch();
-  const { auxPlaylists, userPlaylists } = useSelector(
+  const { auxPlaylists, managedPlaylists, userPlaylists } = useSelector(
     (state: RootState) => state.showplan
   );
 
@@ -111,12 +112,24 @@ function LibraryColumn() {
               {playlist.title}
             </option>
           ))}
+          <option disabled>Playlists</option>
+          {managedPlaylists.map((playlist) => (
+            <option
+              key={"managed-" + playlist.playlistid}
+              value={"managed-" + playlist.playlistid}
+            >
+              {playlist.title}
+            </option>
+          ))}
         </select>
       </div>
       <div className="border-top my-2"></div>
       {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
       {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
         <AuxLibrary libraryId={sauce} />
+      )}
+      {sauce.startsWith("managed-") && (
+        <ManagedPlaylistLibrary libraryId={sauce.substr(8)} />
       )}
       <span
         className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}

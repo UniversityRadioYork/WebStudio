@@ -185,14 +185,20 @@ export function searchForTracks(
   });
 }
 
-export interface ManagedPlaylist {
+export interface NipswebPlaylist {
   type: "userPlaylist";
   title: string;
   managedid: string;
   folder: string;
 }
+export interface ManagedPlaylist {
+  type: "managedPlaylist";
+  title: string;
+  playlistid: string;
+  folder: string;
+}
 
-export function getUserPlaylists(): Promise<Array<ManagedPlaylist>> {
+export function getUserPlaylists(): Promise<Array<NipswebPlaylist>> {
   return myradioApiRequest(
     "/nipswebUserPlaylist/allmanageduserplaylists",
     "GET",
@@ -200,7 +206,15 @@ export function getUserPlaylists(): Promise<Array<ManagedPlaylist>> {
   );
 }
 
-export function getAuxPlaylists(): Promise<Array<ManagedPlaylist>> {
+export function getManagedPlaylists(): Promise<Array<ManagedPlaylist>> {
+  return myradioApiRequest(
+    "/playlist/allitonesplaylists",
+    "GET",
+    {}
+  );
+}
+
+export function getAuxPlaylists(): Promise<Array<NipswebPlaylist>> {
   return myradioApiRequest("/nipswebPlaylist/allmanagedplaylists", "GET", {});
 }
 
@@ -208,6 +222,10 @@ export function loadAuxLibrary(libraryId: string): Promise<AuxItem[]> {
   return apiRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
     libraryid: libraryId,
   }).then((res) => res.json());
+}
+
+export function loadPlaylistLibrary(libraryId: string): Promise<Track[]> {
+  return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
 }
 
 export type UpdateOp =

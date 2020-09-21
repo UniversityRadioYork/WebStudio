@@ -42,8 +42,9 @@ interface ShowplanState {
   plan: null | PlanItem[];
   planSaving: boolean;
   planSaveError: string | null;
-  auxPlaylists: api.ManagedPlaylist[];
-  userPlaylists: api.ManagedPlaylist[];
+  auxPlaylists: api.NipswebPlaylist[];
+  managedPlaylists: api.ManagedPlaylist[];
+  userPlaylists: api.NipswebPlaylist[];
 }
 
 const initialState: ShowplanState = {
@@ -53,6 +54,7 @@ const initialState: ShowplanState = {
   planSaving: false,
   planSaveError: null,
   auxPlaylists: [],
+  managedPlaylists: [],
   userPlaylists: [],
 };
 
@@ -128,10 +130,13 @@ const showplan = createSlice({
       }
       state.plan![idx] = action.payload.newItemData;
     },
-    addUserPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
+    addUserPlaylists(state, action: PayloadAction<api.NipswebPlaylist[]>) {
       state.userPlaylists = state.userPlaylists.concat(action.payload);
     },
-    addAuxPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
+    addManagedPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
+      state.managedPlaylists = state.managedPlaylists.concat(action.payload);
+    },
+    addAuxPlaylists(state, action: PayloadAction<api.NipswebPlaylist[]>) {
       state.auxPlaylists = state.auxPlaylists.concat(action.payload);
     },
   },
@@ -457,6 +462,13 @@ export const getPlaylists = (): AppThunk => async (dispatch) => {
     const userPlaylists = await api.getUserPlaylists();
 
     dispatch(showplan.actions.addUserPlaylists(userPlaylists));
+  } catch (e) {
+    console.error(e);
+  }
+
+  try {
+    const managedPlaylists = await api.getManagedPlaylists();
+    dispatch(showplan.actions.addManagedPlaylists(managedPlaylists));
   } catch (e) {
     console.error(e);
   }
