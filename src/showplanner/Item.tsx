@@ -74,7 +74,7 @@ export const Item = memo(function Item({
             <span className={"icon " + x.type} />
             &nbsp;
             {x.title.toString()}
-            {"artist" in x && " - " + x.artist}
+            {"artist" in x && x.artist !== "" && " - " + x.artist}
             <small
               className={
                 "border rounded border-danger text-danger p-1 m-1" +
