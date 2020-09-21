@@ -34,7 +34,7 @@ import {
   CML_CACHE,
   AuxLibrary,
   AUX_CACHE,
-  ManagedPlaylistLibrary
+  ManagedPlaylistLibrary,
 } from "./libraries";
 import { Player } from "./Player";
 

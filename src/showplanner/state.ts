@@ -305,16 +305,16 @@ export const addItem = (
   const ghostId = Math.random().toString(10);
 
   const ghost: ItemGhost = {
-      ghostid: ghostId,
-      channel: newItemData.channel,
-      weight: newItemData.weight,
-      title: newItemData.title,
-      artist: newItemData.type === "central" ? newItemData.artist : "",
-      length: newItemData.length,
-      clean: newItemData.clean,
-      intro: newItemData.type === "central" ? newItemData.intro : 0,
-      type: "ghost",
-    };
+    ghostid: ghostId,
+    channel: newItemData.channel,
+    weight: newItemData.weight,
+    title: newItemData.title,
+    artist: newItemData.type === "central" ? newItemData.artist : "",
+    length: newItemData.length,
+    clean: newItemData.clean,
+    intro: newItemData.type === "central" ? newItemData.intro : 0,
+    type: "ghost",
+  };
 
   const idForServer =
     newItemData.type === "central"

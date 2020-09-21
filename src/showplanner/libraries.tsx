@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import useDebounce from "../lib/useDebounce";
-import { Track, searchForTracks, loadAuxLibrary, AuxItem, loadPlaylistLibrary } from "../api";
+import {
+  Track,
+  searchForTracks,
+  loadAuxLibrary,
+  AuxItem,
+  loadPlaylistLibrary,
+} from "../api";
 import { itemId } from "./state";
 import { Droppable } from "react-beautiful-dnd";
 import { FaCog, FaSearch, FaTimesCircle } from "react-icons/fa";
@@ -94,25 +100,25 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
 
   const [state, setState] = useState<searchingStateEnum>("not-searching");
 
-    useEffect(() => {
-      async function load() {
-        setItems([]);
-        setState("searching");
-        const libItems = await loadPlaylistLibrary(libraryId);
-        libItems.forEach((item) => {
-          const id = itemId(item);
-          if (!(id in CML_CACHE)) {
-            CML_CACHE[id] = item;
-          }
-        });
-        setItems(libItems);
-        if (libItems.length === 0) {
-          setState("no-results");
-        } else {
-          setState("results");
+  useEffect(() => {
+    async function load() {
+      setItems([]);
+      setState("searching");
+      const libItems = await loadPlaylistLibrary(libraryId);
+      libItems.forEach((item) => {
+        const id = itemId(item);
+        if (!(id in CML_CACHE)) {
+          CML_CACHE[id] = item;
         }
+      });
+      setItems(libItems);
+      if (libItems.length === 0) {
+        setState("no-results");
+      } else {
+        setState("results");
       }
-      load();
+    }
+    load();
   }, [libraryId]);
   return (
     <div className="library library-central">
@@ -141,22 +147,29 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
-            {items.filter(
-              (its) =>
-                its.title
-                  .toString()
-                  .toLowerCase()
-                  .indexOf(debouncedTrack.toLowerCase()) > -1
-            )
-            .filter(
-              (its) =>
-                its.artist
-                  .toString()
-                  .toLowerCase()
-                  .indexOf(debouncedArtist.toLowerCase()) > -1
-            ).map((item, index) => (
-              <Item key={itemId(item)} item={item} index={index} column={-1} />
-            ))}
+            {items
+              .filter(
+                (its) =>
+                  its.title
+                    .toString()
+                    .toLowerCase()
+                    .indexOf(debouncedTrack.toLowerCase()) > -1
+              )
+              .filter(
+                (its) =>
+                  its.artist
+                    .toString()
+                    .toLowerCase()
+                    .indexOf(debouncedArtist.toLowerCase()) > -1
+              )
+              .map((item, index) => (
+                <Item
+                  key={itemId(item)}
+                  item={item}
+                  index={index}
+                  column={-1}
+                />
+              ))}
             {provided.placeholder}
           </div>
         )}
@@ -164,7 +177,6 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
     </div>
   );
 }
-
 
 export const AUX_CACHE: { [auxid: string]: AuxItem } = {};
 

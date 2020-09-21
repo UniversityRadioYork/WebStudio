@@ -207,11 +207,7 @@ export function getUserPlaylists(): Promise<Array<NipswebPlaylist>> {
 }
 
 export function getManagedPlaylists(): Promise<Array<ManagedPlaylist>> {
-  return myradioApiRequest(
-    "/playlist/allitonesplaylists",
-    "GET",
-    {}
-  );
+  return myradioApiRequest("/playlist/allitonesplaylists", "GET", {});
 }
 
 export function getAuxPlaylists(): Promise<Array<NipswebPlaylist>> {
