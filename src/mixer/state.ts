@@ -174,6 +174,18 @@ const mixerState = createSlice({
         loadedItem.intro = action.payload.secs;
       }
     },
+    setLoadedItemOutro(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem?.type === "central") {
+        loadedItem.outro = action.payload.secs;
+      }
+    },
     setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
       state.mic.openError = action.payload;
     },
@@ -267,13 +279,27 @@ export const { setMicBaseGain } = mixerState.actions;
 export const setLoadedItemIntro = (
   player: number,
   secs: number
-): AppThunk => async (dispatch, getState) => {
+): AppThunk => async (dispatch) => {
   dispatch(
     mixerState.actions.setLoadedItemIntro({player, secs})
   )
   const playerInstance = audioEngine.getPlayer(player);
   if (playerInstance) {
     playerInstance.setIntro(secs);
+  }
+
+}
+
+export const setLoadedItemOutro = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch) => {
+  dispatch(
+    mixerState.actions.setLoadedItemOutro({ player, secs })
+  )
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setOutro(secs);
   }
 
 }
@@ -395,6 +421,9 @@ export const load = (
       }
       if (state.loadedItem && "intro" in state.loadedItem) {
         playerInstance.setIntro(state.loadedItem.intro);
+      }
+      if (state.loadedItem && "outro" in state.loadedItem) {
+        playerInstance.setOutro(state.loadedItem.outro);
       }
     });
 

@@ -71,6 +71,28 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     });
   }
 
+  setOutro(startTime: number) {
+    if ("outro" in this.wavesurfer.regions.list) {
+      // If the outro is set to 0, we assume that's no outro.
+      if (startTime === 0) {
+        delete this.wavesurfer.regions.list.outro;
+      } else {
+        this.wavesurfer.regions.list.outro.end = startTime;
+      }
+
+      this.redraw();
+      return;
+    }
+
+    this.wavesurfer.addRegion({
+      id: "outro",
+      resize: false,
+      start: startTime,
+      end: this.wavesurfer.getDuration(),
+      color: "rgba(125,0,255, 0.12)",
+    });
+  }
+
   setVolume(val: number) {
     this.volume = val;
     this._applyVolume();

@@ -91,6 +91,7 @@ interface TimeslotItemCentral {
   type: "central";
   artist: string;
   intro: number;
+  outro: number;
   clean: boolean;
   digitised: boolean;
   album: Album;
@@ -167,6 +168,7 @@ export interface Track {
   trackid: number;
   length: string;
   intro: number;
+  outro: number;
   clean: boolean;
   digitised: boolean;
 }
@@ -226,6 +228,12 @@ export function loadPlaylistLibrary(libraryId: string): Promise<Track[]> {
 
 export function setTrackIntro(trackId: number, secs: number): Promise<null> {
   return myradioApiRequest("/track/" + trackId + "/intro", "PUT", {
+    duration: secs
+  });
+}
+
+export function setTrackOutro(trackId: number, secs: number): Promise<null> {
+  return myradioApiRequest("/track/" + trackId + "/outro", "PUT", {
     duration: secs
   });
 }

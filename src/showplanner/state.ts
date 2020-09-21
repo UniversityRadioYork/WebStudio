@@ -13,6 +13,7 @@ export interface ItemGhost {
   channel: number;
   weight: number;
   intro: number;
+  outro: number;
   clean: boolean;
 }
 
@@ -313,6 +314,7 @@ export const addItem = (
     length: newItemData.length,
     clean: newItemData.clean,
     intro: newItemData.type === "central" ? newItemData.intro : 0,
+    outro: newItemData.type === "central" ? newItemData.outro : 0,
     type: "ghost",
   };
 

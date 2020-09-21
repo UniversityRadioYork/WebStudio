@@ -67,6 +67,15 @@ const setTrackIntro = (trackid: number, secs: number, player: number): AppThunk 
   }
 };
 
+const setTrackOutro = (trackid: number, secs: number, player: number): AppThunk => async (dispatch) => {
+  try {
+    await api.setTrackOutro(trackid, secs);
+    dispatch(MixerState.setLoadedItemOutro(player, secs));
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 
 function TimingButtons({ id }: { id: number }) {
   const dispatch = useDispatch();
@@ -85,7 +94,13 @@ function TimingButtons({ id }: { id: number }) {
       <div className="outro">
           Create Cue Point
       </div>
-      <div className="outro">
+      <div className="outro" onClick={
+        () => {
+          if (state.loadedItem?.type === "central") {
+            dispatch(setTrackOutro(state.loadedItem.trackid, state.timeCurrent, id ))
+          }
+        }
+      }>
           Create Outro
       </div>
     </div>
