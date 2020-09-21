@@ -14,6 +14,7 @@ import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import { audioEngine } from "./audio";
 import * as TheNews from "./the_news";
+import { type } from "os";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -95,12 +96,17 @@ const mixerState = createSlice({
       state,
       action: PayloadAction<{
         player: number;
-        item: PlanItem | Track | AuxItem;
+        item: PlanItem | Track | AuxItem | null;
         resetTrim?: boolean;
       }>
     ) {
       state.players[action.payload.player].loadedItem = action.payload.item;
-      state.players[action.payload.player].loading = 0;
+      if (action.payload.item !== null) {
+        state.players[action.payload.player].loading = 0;
+      } else {
+        // Unloaded player, No media selected.
+        state.players[action.payload.player].loading = -1;
+      }
       state.players[action.payload.player].timeCurrent = 0;
       state.players[action.payload.player].timeRemaining = 0;
       state.players[action.payload.player].timeLength = 0;
@@ -269,13 +275,21 @@ export const load = (
 
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
 
-  dispatch(
-    mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
-  );
+  // Can't really load a ghost. Unload instead.
+  if (item.type === "ghost") {
+    dispatch(
+      mixerState.actions.loadItem({ player, item: null, resetTrim: shouldResetTrim })
+    );
+    return;
+  } else {
+    dispatch(
+      mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
+    );
+  }
 
   let url;
 
-  if ("album" in item) {
+  if (item.type === "central") {
     // track
     url =
       MYRADIO_NON_API_BASE +
