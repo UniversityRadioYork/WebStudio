@@ -254,18 +254,19 @@ export const moveItem = (
   });
 
   dispatch(showplan.actions.applyOps(ops));
-  // const result = await api.updateShowplan(timeslotid, ops);
-  // if (!result.every(x => x.status)) {
-  //   dispatch(showplan.actions.planSaveError("Server says no!"));
-  // } else {
-  dispatch(showplan.actions.setPlanSaving(false));
-  // }
+  const result = await api.updateShowplan(timeslotid, ops);
+  if (!result.every((x) => x.status)) {
+    dispatch(showplan.actions.planSaveError("Server says no!"));
+  } else {
+    dispatch(showplan.actions.setPlanSaving(false));
+  }
 };
 
 export const addItem = (
   timeslotId: number,
   newItemData: TimeslotItem
 ): AppThunk => async (dispatch, getState) => {
+  console.log("New Weight: " + newItemData.weight);
   const plan = cloneDeep(getState().showplan.plan!);
   const ops: api.UpdateOp[] = [];
 
@@ -294,47 +295,64 @@ export const addItem = (
   //
   // TODO: no we won't, we'll just insert it directly
   dispatch(showplan.actions.applyOps(ops));
-  dispatch(showplan.actions.addItem(newItemData));
+  //dispatch(showplan.actions.addItem(newItemData));
 
-  // const ghostId = Math.random().toString(10);
-  // const newItemTitle =
-  //   newItemData.type === "central"
-  //     ? newItemData.artist + "-" + newItemData.title
-  //     : newItemData.title;
-  // const ghost: ItemGhost = {
-  //   ghostid: ghostId,
-  //   channel: newItemData.channel,
-  //   weight: newItemData.weight,
-  //   title: newItemTitle
-  // };
+  const ghostId = Math.random().toString(10);
 
-  // const idForServer =
-  //   newItemData.type === "central"
-  //     ? `${newItemData.album.recordid}-${newItemData.trackid}`
-  //     : `ManagedDB-${newItemData.auxid}`;
+  let ghost: ItemGhost;
+  if (newItemData.type === "central") {
+    ghost = {
+      ghostid: ghostId,
+      channel: newItemData.channel,
+      weight: newItemData.weight,
+      title: newItemData.artist + "-" + newItemData.title,
+      artist: newItemData.artist,
+      length: newItemData.length,
+      clean: newItemData.clean,
+      intro: newItemData.intro,
+      type: "ghost",
+    };
+  } else {
+    ghost = {
+      ghostid: ghostId,
+      channel: newItemData.channel,
+      weight: newItemData.weight,
+      title: newItemData.title,
+      artist: "",
+      length: newItemData.length,
+      clean: newItemData.clean,
+      intro: 0,
+      type: "ghost",
+    };
+  }
 
-  // dispatch(showplan.actions.insertGhost(ghost));
-  // ops.push({
-  //   op: "AddItem",
-  //   channel: newItemData.channel,
-  //   weight: newItemData.weight,
-  //   id: idForServer
-  // });
-  // const result = await api.updateShowplan(timeslotId, ops);
-  // if (!result.every(x => x.status)) {
-  //   dispatch(showplan.actions.planSaveError("Server says no!"));
-  //   return;
-  // }
-  // const lastResult = result[result.length - 1]; // this is the add op
-  // const newItemId = lastResult.timeslotitemid!;
+  const idForServer =
+    newItemData.type === "central"
+      ? `${newItemData.album.recordid}-${newItemData.trackid}`
+      : `ManagedDB-${newItemData.managedid}`;
 
-  // newItemData.timeslotitemid = newItemId;
-  // dispatch(
-  //   showplan.actions.replaceGhost({
-  //     ghostId: "G" + ghostId,
-  //     newItemData
-  //   })
-  // );
+  dispatch(showplan.actions.insertGhost(ghost));
+  ops.push({
+    op: "AddItem",
+    channel: newItemData.channel,
+    weight: newItemData.weight,
+    id: idForServer,
+  });
+  const result = await api.updateShowplan(timeslotId, ops);
+  if (!result.every((x) => x.status)) {
+    dispatch(showplan.actions.planSaveError("Server says no!"));
+    return;
+  }
+  const lastResult = result[result.length - 1]; // this is the add op
+  const newItemId = lastResult.timeslotitemid!;
+
+  newItemData.timeslotitemid = newItemId;
+  dispatch(
+    showplan.actions.replaceGhost({
+      ghostId: "G" + ghostId,
+      newItemData,
+    })
+  );
 };
 
 export const removeItem = (
@@ -369,11 +387,11 @@ export const removeItem = (
     movingItem.weight -= 1;
   }
 
-  // const result = await api.updateShowplan(timeslotId, ops);
-  // if (!result.every(x => x.status)) {
-  //   dispatch(showplan.actions.planSaveError("Server says no!"));
-  //   return;
-  // }
+  const result = await api.updateShowplan(timeslotId, ops);
+  if (!result.every((x) => x.status)) {
+    dispatch(showplan.actions.planSaveError("Server says no!"));
+    return;
+  }
   dispatch(showplan.actions.applyOps(ops));
 };
 
