@@ -87,6 +87,17 @@ button {
   padding: 0.3em;
 }
 
+.timing-buttons {
+  width: 100%;
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+.timing-buttons div {
+  padding: 0 5px;
+  flex: 1;
+}
+
 .waveform span {
   float: left;
   position: relative;

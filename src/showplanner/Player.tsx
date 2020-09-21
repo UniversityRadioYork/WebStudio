@@ -13,6 +13,8 @@ import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
+import * as api from "../api";
+import { AppThunk } from "../store";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -53,6 +55,40 @@ function PlayerNumbers({ id }: { id: number }) {
         End - {timestampToHHMM(endTime)}
       </span>
     </>
+  );
+}
+
+const setTrackIntro = (trackid: number, secs: number, player: number): AppThunk => async (dispatch) => {
+  try {
+    await api.setTrackIntro(trackid, secs);
+    dispatch(MixerState.setLoadedItemIntro(player, secs));
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+
+function TimingButtons({ id }: { id: number }) {
+  const dispatch = useDispatch();
+  const state = useSelector((state: RootState) => state.mixer.players[id]);
+  return (
+    <div className="timing-buttons">
+      <div className="intro" onClick={
+        () => {
+          if (state.loadedItem?.type === "central") {
+            dispatch(setTrackIntro(state.loadedItem.trackid, state.timeCurrent, id ))
+          }
+        }
+      }>
+          Create Intro
+      </div>
+      <div className="outro">
+          Create Cue Point
+      </div>
+      <div className="outro">
+          Create Outro
+      </div>
+    </div>
   );
 }
 
@@ -182,34 +218,37 @@ export function Player({ id }: { id: number }) {
           </div>
         </div>
 
-        <div className="p-0 card-footer waveform">
-          <PlayerNumbers id={id} />
-          {playerState.loadedItem !== null &&
-            "intro" in playerState.loadedItem && (
-              <span className="m-0 intro bypass-click">
-                {playerState.loadedItem !== null
-                  ? secToHHMM(
-                      playerState.loadedItem.intro
-                        ? playerState.loadedItem.intro
-                        : 0
-                    )
-                  : "00:00:00"}{" "}
-                - In
-              </span>
-            )}
-          <div
-            className={
-              "m-0 graph" + (playerState.loading !== -1 ? " loading" : "")
-            }
-            id={"waveform-" + id}
-            style={
-              playerState.loading !== -1
-                ? {
-                    width: playerState.loading * 100 + "%",
-                  }
-                : {}
-            }
-          ></div>
+        <div className="p-0 card-footer">
+          <TimingButtons id={id} />
+          <div className="waveform">
+            <PlayerNumbers id={id} />
+            {playerState.loadedItem !== null &&
+              "intro" in playerState.loadedItem && (
+                <span className="m-0 intro bypass-click">
+                  {playerState.loadedItem !== null
+                    ? secToHHMM(
+                        playerState.loadedItem.intro
+                          ? playerState.loadedItem.intro
+                          : 0
+                      )
+                    : "00:00:00"}{" "}
+                  - In
+                </span>
+              )}
+            <div
+              className={
+                "m-0 graph" + (playerState.loading !== -1 ? " loading" : "")
+              }
+              id={"waveform-" + id}
+              style={
+                playerState.loading !== -1
+                  ? {
+                      width: playerState.loading * 100 + "%",
+                    }
+                  : {}
+              }
+            ></div>
+          </div>
         </div>
       </div>
       <div

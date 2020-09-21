@@ -56,6 +56,12 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   setIntro(duration: number) {
+    if ("intro" in this.wavesurfer.regions.list) {
+      this.wavesurfer.regions.list.intro.end = duration;
+      this.redraw();
+      return;
+    }
+
     this.wavesurfer.addRegion({
       id: "intro",
       resize: false,
@@ -277,6 +283,13 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     const player = Player.create(this, number, url);
     this.players[number] = player;
     return player;
+  }
+
+  public getPlayer(number: number) {
+    if (number < this.players.length) {
+      return this.players[number];
+    }
+    return null;
   }
 
   // Wavesurfer needs cleanup to remove the old audio mediaelements. Memory leak!

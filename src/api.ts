@@ -224,6 +224,12 @@ export function loadPlaylistLibrary(libraryId: string): Promise<Track[]> {
   return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
 }
 
+export function setTrackIntro(trackId: number, secs: number): Promise<null> {
+  return myradioApiRequest("/track/" + trackId + "/intro", "PUT", {
+    duration: secs
+  });
+}
+
 export type UpdateOp =
   | {
       op: "MoveItem";

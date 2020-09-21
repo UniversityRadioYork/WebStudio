@@ -162,6 +162,18 @@ const mixerState = createSlice({
     ) {
       state.players[action.payload.player].trim = action.payload.trim;
     },
+    setLoadedItemIntro(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem?.type === "central") {
+        loadedItem.intro = action.payload.secs;
+      }
+    },
     setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
       state.mic.openError = action.payload;
     },
@@ -251,6 +263,20 @@ const mixerState = createSlice({
 export default mixerState.reducer;
 
 export const { setMicBaseGain } = mixerState.actions;
+
+export const setLoadedItemIntro = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch, getState) => {
+  dispatch(
+    mixerState.actions.setLoadedItemIntro({player, secs})
+  )
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setIntro(secs);
+  }
+
+}
 
 export const load = (
   player: number,
