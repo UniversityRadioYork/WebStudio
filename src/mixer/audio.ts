@@ -55,6 +55,10 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this.wavesurfer.drawBuffer();
   }
 
+  setCurrentTime(secs: number) {
+    this.wavesurfer.setCurrentTime(secs);
+  }
+
   setIntro(duration: number) {
     if ("intro" in this.wavesurfer.regions.list) {
       this.wavesurfer.regions.list.intro.end = duration;
@@ -149,6 +153,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     const wavesurfer = WaveSurfer.create({
       audioContext: engine.audioContext,
       container: "#waveform-" + player.toString(),
+      cursorColor: "#777",
+      cursorWidth: 3,
       waveColor: "#CCCCFF",
       backgroundColor: "#FFFFFF",
       progressColor: "#9999FF",

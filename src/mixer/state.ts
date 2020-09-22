@@ -450,6 +450,7 @@ export const load = (
       }
       if (state.loadedItem && "cue" in state.loadedItem) {
         playerInstance.setCue(state.loadedItem.cue);
+        playerInstance.setCurrentTime(state.loadedItem.cue);
       }
       if (state.loadedItem && "outro" in state.loadedItem) {
         playerInstance.setOutro(state.loadedItem.outro);
@@ -576,7 +577,9 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
-  if (typeof audioEngine.players[player] === "undefined") {
+
+  const playerInstance = audioEngine.players[player];
+  if (typeof playerInstance === "undefined") {
     console.log("nothing loaded");
     return;
   }
@@ -585,7 +588,21 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
     console.log("not ready");
     return;
   }
-  audioEngine.players[player]?.stop();
+
+
+  let cueTime = 0;
+
+  console.log(Math.round(playerInstance.currentTime));
+  if (state.loadedItem && "cue" in state.loadedItem && Math.round(playerInstance.currentTime) !== Math.round(state.loadedItem.cue)) {
+    cueTime = state.loadedItem.cue;
+    console.log(cueTime);
+  }
+
+  playerInstance.stop();
+
+  dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime}))
+  playerInstance.setCurrentTime(cueTime);
+
   // Incase wavesurver wasn't playing, it won't 'finish', so just make sure the UI is stopped.
   dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
 
