@@ -65,6 +65,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this.wavesurfer.addRegion({
       id: "intro",
       resize: false,
+      drag: false,
       start: 0,
       end: duration,
       color: "rgba(125,0,255, 0.12)",
@@ -84,13 +85,17 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       return;
     }
 
-    this.wavesurfer.addRegion({
-      id: "outro",
-      resize: false,
-      start: startTime,
-      end: this.wavesurfer.getDuration(),
-      color: "rgba(125,0,255, 0.12)",
-    });
+    // Again, only show a region if it's not the whole song with default of 0.
+    if (startTime !== 0) {
+      this.wavesurfer.addRegion({
+        id: "outro",
+        resize: false,
+        drag: false,
+        start: startTime,
+        end: this.wavesurfer.getDuration(),
+        color: "rgba(125,0,255, 0.12)",
+      });
+    }
   }
 
   setVolume(val: number) {
