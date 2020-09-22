@@ -78,7 +78,7 @@ const setTrackOutro = (trackid: number, secs: number, player: number): AppThunk 
 
 const setTrackCue = (timeslotItemId: string, secs: number, player: number): AppThunk => async (dispatch) => {
   try {
-    //await api.setTimeslotItemCue(timeslotItemId, secs);
+    await api.setTimeslotItemCue(timeslotItemId, secs);
     dispatch(MixerState.setLoadedItemCue(player, secs));
   } catch (e) {
     console.error(e);

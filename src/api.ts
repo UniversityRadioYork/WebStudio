@@ -227,6 +227,12 @@ export function loadPlaylistLibrary(libraryId: string): Promise<Track[]> {
   return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
 }
 
+export function setTimeslotItemCue(timeslotItemId: string, secs: number): Promise<null> {
+  return myradioApiRequest("/timeslotItem/" + timeslotItemId + "/cue", "PUT", {
+    start_time: secs
+  });
+}
+
 export function setTrackIntro(trackId: number, secs: number): Promise<null> {
   return myradioApiRequest("/track/" + trackId + "/intro", "PUT", {
     duration: secs
