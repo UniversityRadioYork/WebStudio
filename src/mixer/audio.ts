@@ -102,7 +102,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       if (startTime === 0) {
         delete this.wavesurfer.regions.list.outro;
       } else {
-        this.wavesurfer.regions.list.outro.end = startTime;
+        this.wavesurfer.regions.list.outro.start = startTime;
       }
 
       this.redraw();
