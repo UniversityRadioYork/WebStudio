@@ -82,26 +82,27 @@ function TimingButtons({ id }: { id: number }) {
   const state = useSelector((state: RootState) => state.mixer.players[id]);
   return (
     <div className="timing-buttons">
-      <div className="intro" onClick={
+      <div className="label">Set Marker:</div>
+      <div className="intro btn btn-sm btn-outline-secondary rounded-0" onClick={
         () => {
           if (state.loadedItem?.type === "central") {
             dispatch(setTrackIntro(state.loadedItem.trackid, state.timeCurrent, id ))
           }
         }
       }>
-          Create Intro
+          Intro
       </div>
-      <div className="outro">
-          Create Cue Point
+      <div className="cue btn btn-sm btn-outline-secondary rounded-0">
+          Cue
       </div>
-      <div className="outro" onClick={
+      <div className="outro btn btn-sm btn-outline-secondary rounded-0" onClick={
         () => {
           if (state.loadedItem?.type === "central") {
             dispatch(setTrackOutro(state.loadedItem.trackid, state.timeCurrent, id ))
           }
         }
       }>
-          Create Outro
+          Outro
       </div>
     </div>
   );

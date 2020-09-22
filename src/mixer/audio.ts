@@ -68,7 +68,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       drag: false,
       start: 0,
       end: duration,
-      color: "rgba(125,0,255, 0.12)",
+      color: "rgba(125,0,255, 0.3)",
     });
   }
 
@@ -93,7 +93,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
         drag: false,
         start: startTime,
         end: this.wavesurfer.getDuration(),
-        color: "rgba(125,0,255, 0.12)",
+        color: "rgba(255, 0, 0, 0.2)",
       });
     }
   }
