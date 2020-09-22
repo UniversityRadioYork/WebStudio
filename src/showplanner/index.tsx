@@ -254,6 +254,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
+        cue: 0,
         ...data,
       };
       dispatch(addItem(timeslotId, newItem));
@@ -268,6 +269,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
+        cue: 0,
         ...data,
       } as any;
       dispatch(addItem(timeslotId, newItem));

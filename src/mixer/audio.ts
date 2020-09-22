@@ -72,6 +72,26 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     });
   }
 
+  setCue(startTime: number) {
+    const duration = this.wavesurfer.getDuration();
+    const cueWidth = 0.01 * duration; // Cue region marker to be 1% of track length
+    if ("cue" in this.wavesurfer.regions.list) {
+      this.wavesurfer.regions.list.cue.start = startTime;
+      this.wavesurfer.regions.list.cue.end = startTime+cueWidth;
+      this.redraw();
+      return;
+    }
+
+    this.wavesurfer.addRegion({
+      id: "cue",
+      resize: false,
+      drag: false,
+      start: startTime,
+      end: startTime+cueWidth,
+      color: "rgba(0,100,0, 0.8)",
+    });
+  }
+
   setOutro(startTime: number) {
     if ("outro" in this.wavesurfer.regions.list) {
       // If the outro is set to 0, we assume that's no outro.

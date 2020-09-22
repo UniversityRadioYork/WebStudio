@@ -76,6 +76,15 @@ const setTrackOutro = (trackid: number, secs: number, player: number): AppThunk 
   }
 };
 
+const setTrackCue = (timeslotItemId: string, secs: number, player: number): AppThunk => async (dispatch) => {
+  try {
+    //await api.setTimeslotItemCue(timeslotItemId, secs);
+    dispatch(MixerState.setLoadedItemCue(player, secs));
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 
 function TimingButtons({ id }: { id: number }) {
   const dispatch = useDispatch();
@@ -92,7 +101,13 @@ function TimingButtons({ id }: { id: number }) {
       }>
           Intro
       </div>
-      <div className="cue btn btn-sm btn-outline-secondary rounded-0">
+      <div className="cue btn btn-sm btn-outline-secondary rounded-0" onClick={
+        () => {
+          if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
+            dispatch(setTrackCue(state.loadedItem.timeslotitemid, state.timeCurrent, id ))
+          }
+        }
+      }>
           Cue
       </div>
       <div className="outro btn btn-sm btn-outline-secondary rounded-0" onClick={

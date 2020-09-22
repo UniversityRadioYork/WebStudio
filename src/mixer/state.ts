@@ -174,6 +174,18 @@ const mixerState = createSlice({
         loadedItem.intro = action.payload.secs;
       }
     },
+    setLoadedItemCue(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem && "cue" in loadedItem) {
+        loadedItem.cue = action.payload.secs;
+      }
+    },
     setLoadedItemOutro(
       state,
       action: PayloadAction<{
@@ -286,6 +298,20 @@ export const setLoadedItemIntro = (
   const playerInstance = audioEngine.getPlayer(player);
   if (playerInstance) {
     playerInstance.setIntro(secs);
+  }
+
+}
+
+export const setLoadedItemCue = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch) => {
+  dispatch(
+    mixerState.actions.setLoadedItemCue({ player, secs })
+  )
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setCue(secs);
   }
 
 }
@@ -421,6 +447,9 @@ export const load = (
       }
       if (state.loadedItem && "intro" in state.loadedItem) {
         playerInstance.setIntro(state.loadedItem.intro);
+      }
+      if (state.loadedItem && "cue" in state.loadedItem) {
+        playerInstance.setCue(state.loadedItem.cue);
       }
       if (state.loadedItem && "outro" in state.loadedItem) {
         playerInstance.setOutro(state.loadedItem.outro);
