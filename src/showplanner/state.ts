@@ -22,18 +22,18 @@ export type PlanItem = TimeslotItem | ItemGhost;
 
 export type Plan = PlanItem[][];
 
-export function itemId(item: PlanItem | Track | AuxItem) {
-  if ("timeslotitemid" in item) {
+export function itemId(item: PlanItem | Track | AuxItem, resourceOnly: boolean = false) {
+  if ("timeslotitemid" in item && !resourceOnly) {
     return item.timeslotitemid;
   }
   if ("auxid" in item) {
-    return "A" + item.auxid;
+    return (!resourceOnly ? "A" : "") + item.auxid;
   }
-  if ("ghostid" in item) {
+  if ("ghostid" in item && !resourceOnly) {
     return "G" + item.ghostid;
   }
   if ("trackid" in item) {
-    return "T" + item.album.recordid + "-" + item.trackid;
+    return resourceOnly ? item.trackid.toString() : "T" + item.album.recordid + "-" + item.trackid;
   }
   throw new Error();
 }
@@ -120,6 +120,38 @@ const showplan = createSlice({
     addItem(state, action: PayloadAction<TimeslotItem>) {
       state.plan!.push(action.payload);
     },
+    setItemTimings(state, action: PayloadAction<{ item: TimeslotItem | Track | AuxItem, intro?: number, cue?: number, outro?: number}>) {
+      const item = action.payload.item;
+      const plan = state.plan;
+      if (!plan) {
+        throw new Error("Tried to set timings on empty showplan.");
+      }
+
+      // Try to find all plan items in the show plan that match the one we've given it.
+      const planItems = plan!.filter((x) => itemId(x, true) === itemId(item, true) && x.type === item.type);
+
+      // Given we've loaded the track in, it *should* exist, but we could have deleted it.
+      if (planItems.length === 0) {
+        return;
+      }
+
+      planItems.forEach(planItem => {
+        // Here we're setting all instances of the track/aux item with the updated intro/outro points.
+
+        if (action.payload.intro && "intro" in planItem) {
+          planItem.intro = action.payload.intro;
+        }
+
+        if (action.payload.outro && "outro" in planItem) {
+          planItem.outro = action.payload.outro;
+        }
+
+        // Cue's are special, they are per timeslotitem (so you can have multiple cue points with multiple timeslotitem instances of the track etc...)
+        if (action.payload.cue && "cue" in planItem && "timeslotitemid" in planItem && "timeslotitemid" in item && item.timeslotitemid === planItem.timeslotitemid) {
+          planItem.cue = action.payload.cue;
+        }
+      });
+    },
     replaceGhost(
       state,
       action: PayloadAction<{ ghostId: string; newItemData: TimeslotItem }>
@@ -145,6 +177,8 @@ const showplan = createSlice({
 });
 
 export default showplan.reducer;
+
+export const { setItemTimings } = showplan.actions;
 
 export const moveItem = (
   timeslotid: number,
