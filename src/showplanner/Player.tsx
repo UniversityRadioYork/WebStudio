@@ -37,7 +37,7 @@ function PlayerNumbers({ id }: { id: number }) {
       ]);
     }, 1000);
     return () => window.clearInterval(tickerRef.current);
-  }, []);
+  });
 
   return (
     <>

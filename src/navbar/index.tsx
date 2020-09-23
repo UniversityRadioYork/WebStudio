@@ -90,7 +90,6 @@ export function NavBarMain() {
             }
             id="timeslotDropdown"
             data-toggle="dropdown"
-            aria-haspopup="true"
             aria-expanded="false"
           >
             <FaRegClock />
@@ -130,7 +129,6 @@ export function NavBarMain() {
             href={MYRADIO_NON_API_BASE + "/Profile/default/"}
             id="dropdown07"
             data-toggle="dropdown"
-            aria-haspopup="true"
             aria-expanded="false"
           >
             <FaRegUser />

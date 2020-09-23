@@ -51,6 +51,7 @@ import { PisModal } from "./PISModal";
 import { LibraryUploadModal } from "./LibraryUploadModal";
 import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
+import Modal from "react-modal";
 import { Button } from "reactstrap";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
@@ -265,6 +266,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     planSaveError,
     planSaving,
   } = useSelector((state: RootState) => state.showplan);
+
+  // Tell Modals that #root is the main page content, for accessability reasons.
+  Modal.setAppElement("#root");
+
   const session = useSelector((state: RootState) => state.session);
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(
@@ -306,7 +311,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // TODO: this is ugly, should be in redux
       const data = CML_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
-        type: "central",
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
@@ -319,7 +323,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // TODO: this is ugly, should be in redux
       const data = AUX_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
-        type: "aux",
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
