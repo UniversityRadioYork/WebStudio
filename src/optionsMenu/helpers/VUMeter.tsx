@@ -30,7 +30,10 @@ export function VUMeter(props: VUMeterProps) {
   useEffect(() => {
     const animate = () => {
       if (!isMic || isMicOpen) {
-        const result = audioEngine.getLevels(props.source, props.stereo ? props.stereo : false);
+        const result = audioEngine.getLevels(
+          props.source,
+          props.stereo ? props.stereo : false
+        );
         setPeakL(result[0]);
         if (props.stereo) {
           setPeakR(result[1]);
@@ -119,7 +122,6 @@ export function VUMeter(props: VUMeterProps) {
       ctx.fillText(value, width * (i / 10), height - 2);
     }
   }, [peakL, peakR, props.range, props.greenRange, props.stereo]);
-
 
   const { value, range, greenRange, source, ...rest } = props;
 
