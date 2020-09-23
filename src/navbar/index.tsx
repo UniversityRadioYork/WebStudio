@@ -81,9 +81,10 @@ export function NavBar() {
           <a
             href="http://ury.org.uk/timelord/"
             target="_blank"
+            rel="noreferrer noopener"
             onClick={(e) => {
               e.preventDefault();
-              let w = window.open(
+              window.open(
                 "http://ury.org.uk/timelord/",
                 "URY - Timelord",
                 "resizable,status"
@@ -167,7 +168,6 @@ export function NavBar() {
             }
             id="timeslotDropdown"
             data-toggle="dropdown"
-            aria-haspopup="true"
             aria-expanded="false"
           >
             <FaRegClock />
@@ -207,7 +207,6 @@ export function NavBar() {
             href={MYRADIO_NON_API_BASE + "/Profile/default/"}
             id="dropdown07"
             data-toggle="dropdown"
-            aria-haspopup="true"
             aria-expanded="false"
           >
             <FaRegUser />
