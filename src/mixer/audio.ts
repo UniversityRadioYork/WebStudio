@@ -81,7 +81,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     const cueWidth = 0.01 * duration; // Cue region marker to be 1% of track length
     if ("cue" in this.wavesurfer.regions.list) {
       this.wavesurfer.regions.list.cue.start = startTime;
-      this.wavesurfer.regions.list.cue.end = startTime+cueWidth;
+      this.wavesurfer.regions.list.cue.end = startTime + cueWidth;
       this.redraw();
       return;
     }
@@ -91,7 +91,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       resize: false,
       drag: false,
       start: startTime,
-      end: startTime+cueWidth,
+      end: startTime + cueWidth,
       color: "rgba(0,100,0, 0.8)",
     });
   }

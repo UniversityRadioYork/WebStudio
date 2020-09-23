@@ -59,7 +59,11 @@ function PlayerNumbers({ id }: { id: number }) {
   );
 }
 
-const setTrackIntro = (track: api.Track, secs: number, player: number): AppThunk => async (dispatch) => {
+const setTrackIntro = (
+  track: api.Track,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch) => {
   try {
     await api.setTrackIntro(track.trackid, secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
@@ -69,7 +73,11 @@ const setTrackIntro = (track: api.Track, secs: number, player: number): AppThunk
   }
 };
 
-const setTrackOutro = (track: api.Track, secs: number, player: number): AppThunk => async (dispatch) => {
+const setTrackOutro = (
+  track: api.Track,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch) => {
   try {
     await api.setTrackOutro(track.trackid, secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
@@ -79,16 +87,19 @@ const setTrackOutro = (track: api.Track, secs: number, player: number): AppThunk
   }
 };
 
-const setTrackCue = (item: api.TimeslotItem, secs: number, player: number): AppThunk => async (dispatch) => {
+const setTrackCue = (
+  item: api.TimeslotItem,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch) => {
   try {
     await api.setTimeslotItemCue(item.timeslotitemid, secs);
     dispatch(MixerState.setLoadedItemCue(player, secs));
-    dispatch(ShowPlanState.setItemTimings({ item, cue: secs}));
+    dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
   } catch (e) {
     console.error(e);
   }
 };
-
 
 function TimingButtons({ id }: { id: number }) {
   const dispatch = useDispatch();
@@ -96,32 +107,35 @@ function TimingButtons({ id }: { id: number }) {
   return (
     <div className="timing-buttons">
       <div className="label">Set Marker:</div>
-      <div className="intro btn btn-sm btn-outline-secondary rounded-0" onClick={
-        () => {
+      <div
+        className="intro btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
           if (state.loadedItem?.type === "central") {
-            dispatch(setTrackIntro(state.loadedItem, state.timeCurrent, id ))
+            dispatch(setTrackIntro(state.loadedItem, state.timeCurrent, id));
           }
-        }
-      }>
-          Intro
+        }}
+      >
+        Intro
       </div>
-      <div className="cue btn btn-sm btn-outline-secondary rounded-0" onClick={
-        () => {
+      <div
+        className="cue btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
           if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
-            dispatch(setTrackCue(state.loadedItem, state.timeCurrent, id ))
+            dispatch(setTrackCue(state.loadedItem, state.timeCurrent, id));
           }
-        }
-      }>
-          Cue
+        }}
+      >
+        Cue
       </div>
-      <div className="outro btn btn-sm btn-outline-secondary rounded-0" onClick={
-        () => {
+      <div
+        className="outro btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
           if (state.loadedItem?.type === "central") {
-            dispatch(setTrackOutro(state.loadedItem, state.timeCurrent, id ))
+            dispatch(setTrackOutro(state.loadedItem, state.timeCurrent, id));
           }
-        }
-      }>
-          Outro
+        }}
+      >
+        Outro
       </div>
     </div>
   );

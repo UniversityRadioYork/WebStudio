@@ -292,43 +292,34 @@ export const setLoadedItemIntro = (
   player: number,
   secs: number
 ): AppThunk => async (dispatch) => {
-  dispatch(
-    mixerState.actions.setLoadedItemIntro({player, secs})
-  )
+  dispatch(mixerState.actions.setLoadedItemIntro({ player, secs }));
   const playerInstance = audioEngine.getPlayer(player);
   if (playerInstance) {
     playerInstance.setIntro(secs);
   }
-
-}
+};
 
 export const setLoadedItemCue = (
   player: number,
   secs: number
 ): AppThunk => async (dispatch) => {
-  dispatch(
-    mixerState.actions.setLoadedItemCue({ player, secs })
-  )
+  dispatch(mixerState.actions.setLoadedItemCue({ player, secs }));
   const playerInstance = audioEngine.getPlayer(player);
   if (playerInstance) {
     playerInstance.setCue(secs);
   }
-
-}
+};
 
 export const setLoadedItemOutro = (
   player: number,
   secs: number
 ): AppThunk => async (dispatch) => {
-  dispatch(
-    mixerState.actions.setLoadedItemOutro({ player, secs })
-  )
+  dispatch(mixerState.actions.setLoadedItemOutro({ player, secs }));
   const playerInstance = audioEngine.getPlayer(player);
   if (playerInstance) {
     playerInstance.setOutro(secs);
   }
-
-}
+};
 
 export const load = (
   player: number,
@@ -356,7 +347,11 @@ export const load = (
   // Can't really load a ghost. Unload instead.
   if (item.type === "ghost") {
     dispatch(
-      mixerState.actions.loadItem({ player, item: null, resetTrim: shouldResetTrim })
+      mixerState.actions.loadItem({
+        player,
+        item: null,
+        resetTrim: shouldResetTrim,
+      })
     );
     return;
   } else {
@@ -577,7 +572,6 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
-
   const playerInstance = audioEngine.players[player];
   if (typeof playerInstance === "undefined") {
     console.log("nothing loaded");
@@ -589,18 +583,21 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
     return;
   }
 
-
   let cueTime = 0;
 
   console.log(Math.round(playerInstance.currentTime));
-  if (state.loadedItem && "cue" in state.loadedItem && Math.round(playerInstance.currentTime) !== Math.round(state.loadedItem.cue)) {
+  if (
+    state.loadedItem &&
+    "cue" in state.loadedItem &&
+    Math.round(playerInstance.currentTime) !== Math.round(state.loadedItem.cue)
+  ) {
     cueTime = state.loadedItem.cue;
     console.log(cueTime);
   }
 
   playerInstance.stop();
 
-  dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime}))
+  dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime }));
   playerInstance.setCurrentTime(cueTime);
 
   // Incase wavesurver wasn't playing, it won't 'finish', so just make sure the UI is stopped.

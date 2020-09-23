@@ -22,7 +22,10 @@ export type PlanItem = TimeslotItem | ItemGhost;
 
 export type Plan = PlanItem[][];
 
-export function itemId(item: PlanItem | Track | AuxItem, resourceOnly: boolean = false) {
+export function itemId(
+  item: PlanItem | Track | AuxItem,
+  resourceOnly: boolean = false
+) {
   if ("timeslotitemid" in item && !resourceOnly) {
     return item.timeslotitemid;
   }
@@ -33,7 +36,9 @@ export function itemId(item: PlanItem | Track | AuxItem, resourceOnly: boolean =
     return "G" + item.ghostid;
   }
   if ("trackid" in item) {
-    return resourceOnly ? item.trackid.toString() : "T" + item.album.recordid + "-" + item.trackid;
+    return resourceOnly
+      ? item.trackid.toString()
+      : "T" + item.album.recordid + "-" + item.trackid;
   }
   throw new Error();
 }
@@ -120,7 +125,15 @@ const showplan = createSlice({
     addItem(state, action: PayloadAction<TimeslotItem>) {
       state.plan!.push(action.payload);
     },
-    setItemTimings(state, action: PayloadAction<{ item: TimeslotItem | Track | AuxItem, intro?: number, cue?: number, outro?: number}>) {
+    setItemTimings(
+      state,
+      action: PayloadAction<{
+        item: TimeslotItem | Track | AuxItem;
+        intro?: number;
+        cue?: number;
+        outro?: number;
+      }>
+    ) {
       const item = action.payload.item;
       const plan = state.plan;
       if (!plan) {
@@ -128,14 +141,16 @@ const showplan = createSlice({
       }
 
       // Try to find all plan items in the show plan that match the one we've given it.
-      const planItems = plan!.filter((x) => itemId(x, true) === itemId(item, true) && x.type === item.type);
+      const planItems = plan!.filter(
+        (x) => itemId(x, true) === itemId(item, true) && x.type === item.type
+      );
 
       // Given we've loaded the track in, it *should* exist, but we could have deleted it.
       if (planItems.length === 0) {
         return;
       }
 
-      planItems.forEach(planItem => {
+      planItems.forEach((planItem) => {
         // Here we're setting all instances of the track/aux item with the updated intro/outro points.
 
         if (action.payload.intro && "intro" in planItem) {
@@ -147,7 +162,13 @@ const showplan = createSlice({
         }
 
         // Cue's are special, they are per timeslotitem (so you can have multiple cue points with multiple timeslotitem instances of the track etc...)
-        if (action.payload.cue && "cue" in planItem && "timeslotitemid" in planItem && "timeslotitemid" in item && item.timeslotitemid === planItem.timeslotitemid) {
+        if (
+          action.payload.cue &&
+          "cue" in planItem &&
+          "timeslotitemid" in planItem &&
+          "timeslotitemid" in item &&
+          item.timeslotitemid === planItem.timeslotitemid
+        ) {
           planItem.cue = action.payload.cue;
         }
       });
@@ -466,7 +487,7 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
 
       console.log("Repairing showplan", ops);
       const updateResult = await api.updateShowplan(timeslotId, ops);
-      if (!updateResult.every(x => x.status)) {
+      if (!updateResult.every((x) => x.status)) {
         console.error("Repair failed!");
         dispatch(showplan.actions.getShowplanError("Repair failed!"));
         return;
