@@ -242,7 +242,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // TODO: this is ugly, should be in redux
       const data = CML_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
-        type: "central",
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
@@ -255,7 +254,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // TODO: this is ugly, should be in redux
       const data = AUX_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
-        type: "aux",
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
