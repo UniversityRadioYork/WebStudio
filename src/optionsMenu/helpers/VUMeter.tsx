@@ -13,7 +13,7 @@ interface VUMeterProps extends HTMLProps<HTMLCanvasElement> {
   range: [number, number];
   greenRange?: [number, number];
   source: LevelsSource;
-  stereo: boolean;
+  stereo?: boolean;
 }
 
 export function VUMeter(props: VUMeterProps) {
@@ -30,7 +30,7 @@ export function VUMeter(props: VUMeterProps) {
   useEffect(() => {
     const animate = () => {
       if (!isMic || isMicOpen) {
-        const result = audioEngine.getLevels(props.source, props.stereo);
+        const result = audioEngine.getLevels(props.source, props.stereo ? props.stereo : false);
         setPeakL(result[0]);
         if (props.stereo) {
           setPeakR(result[1]);
@@ -120,7 +120,11 @@ export function VUMeter(props: VUMeterProps) {
     }
   }, [peakL, peakR, props.range, props.greenRange, props.stereo]);
 
+
   const { value, range, greenRange, source, ...rest } = props;
+
+  // Can't put boolean values into HTML DOM.
+  delete rest.stereo;
 
   return <canvas ref={canvasRef} {...rest} />;
 }
