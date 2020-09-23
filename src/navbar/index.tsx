@@ -81,7 +81,7 @@ export function NavBar() {
           <a
             href="http://ury.org.uk/timelord/"
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
             onClick={(e) => {
               e.preventDefault();
               window.open(
