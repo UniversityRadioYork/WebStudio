@@ -46,19 +46,7 @@ function nicifyConnectionState(state: ConnectionStateEnum): string {
 export function NavBarMain() {
   const dispatch = useDispatch();
   const sessionState = useSelector((state: RootState) => state.session);
-  const broadcastState = useSelector((state: RootState) => state.broadcast);
-  const settings = useSelector((state: RootState) => state.settings);
   const redirect_url = encodeURIComponent(window.location.toString());
-
-  const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
-
-  const prevRegistrationStage = useRef(broadcastState.stage);
-  useEffect(() => {
-    if (broadcastState.stage !== prevRegistrationStage.current) {
-      setConnectButtonAnimating(false);
-    }
-    prevRegistrationStage.current = broadcastState.stage;
-  }, [broadcastState.stage]);
 
   return (
     <>
@@ -159,10 +147,8 @@ export function NavBarMain() {
 
 export function NavBarWebStudio() {
   const dispatch = useDispatch();
-  const sessionState = useSelector((state: RootState) => state.session);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
   const settings = useSelector((state: RootState) => state.settings);
-  const redirect_url = encodeURIComponent(window.location.toString());
 
   const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
 
