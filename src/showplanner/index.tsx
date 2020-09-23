@@ -199,7 +199,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   } = useSelector((state: RootState) => state.showplan);
 
   // Tell Modals that #root is the main page content, for accessability reasons.
-  Modal.setAppElement('#root');
+  Modal.setAppElement("#root");
 
   const session = useSelector((state: RootState) => state.session);
 

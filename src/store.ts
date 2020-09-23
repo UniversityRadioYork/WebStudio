@@ -1,5 +1,11 @@
 import raygun from "raygun4js";
-import { configureStore, Action, getDefaultMiddleware, Middleware, Dispatch } from "@reduxjs/toolkit";
+import {
+  configureStore,
+  Action,
+  getDefaultMiddleware,
+  Middleware,
+  Dispatch,
+} from "@reduxjs/toolkit";
 import rootReducer, { RootState } from "./rootReducer";
 import { ThunkAction } from "redux-thunk";
 import {
@@ -14,13 +20,15 @@ import {
   PAUSE,
   PERSIST,
   PURGE,
-  REGISTER
+  REGISTER,
 } from "redux-persist";
 
-const raygunMiddleware: Middleware < {}, RootState, Dispatch < any >> = (store) => (next) => (action) => {
+const raygunMiddleware: Middleware<{}, RootState, Dispatch<any>> = (store) => (
+  next
+) => (action) => {
   raygun("recordBreadcrumb", "redux-action", action);
   return next(action);
-}
+};
 
 // See https://github.com/rt2zz/redux-persist/issues/988 for getDefaultMiddleware tweak.
 const store = configureStore({
@@ -31,9 +39,9 @@ const store = configureStore({
     raygunMiddleware,
     ...getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER]
-      }
-    })
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
   ],
 });
 
