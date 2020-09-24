@@ -123,10 +123,7 @@ export function VUMeter(props: VUMeterProps) {
     }
   }, [peakL, peakR, props.range, props.greenRange, props.stereo]);
 
-  const { value, range, greenRange, source, ...rest } = props;
-
-  // Can't put boolean values into HTML DOM.
-  delete rest.stereo;
+  const { value, range, greenRange, source, stereo, ...rest } = props;
 
   return <canvas ref={canvasRef} {...rest} />;
 }
