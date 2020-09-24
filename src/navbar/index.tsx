@@ -43,7 +43,7 @@ function nicifyConnectionState(state: ConnectionStateEnum): string {
   }
 }
 
-export function NavBarMain() {
+export function NavBarMyRadio() {
   const dispatch = useDispatch();
   const sessionState = useSelector((state: RootState) => state.session);
   const redirect_url = encodeURIComponent(window.location.toString());
@@ -145,7 +145,7 @@ export function NavBarMain() {
   );
 }
 
-export function NavBarWebStudio() {
+export function NavBarMain() {
   const dispatch = useDispatch();
   const broadcastState = useSelector((state: RootState) => state.broadcast);
   const settings = useSelector((state: RootState) => state.settings);
@@ -306,17 +306,17 @@ export function CombinedNavAlertBar() {
   return (
     <>
       <AlertBar />
-      <header className="navbar navbar-ury navbar-expand-sm hover-menu p-0 bd-navbar">
+      <header className="navbar navbar-myradio navbar-expand-sm hover-menu p-0 bd-navbar">
         <span className="hover-label hover-label-hide text-light text-center">
           Hover for MyRadio Menu
         </span>
         <nav className="container-fluid px-0">
-          <NavBarMain />
+          <NavBarMyRadio />
         </nav>
       </header>
-      <header className="navbar navbar-webstudio navbar-expand-sm p-0 bd-navbar">
+      <header className="navbar navbar-main navbar-expand-sm p-0 bd-navbar">
         <nav className="container-fluid px-0">
-          <NavBarWebStudio />
+          <NavBarMain />
         </nav>
       </header>
     </>
