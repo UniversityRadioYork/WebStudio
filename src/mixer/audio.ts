@@ -340,7 +340,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain.gain.value = value;
   }
 
-  getLevels(source: LevelsSource, stereo: boolean) {
+
+  getLevels(source: LevelsSource, stereo: boolean): [number, number] {
     let analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
     let analysisBuffer2 = new Float32Array(ANALYSIS_FFT_SIZE);
     switch (source) {
@@ -397,7 +398,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       peakR = 20 * Math.log10(peakR);
       return [peakL, peakR];
     }
-    return [peakL];
+    return [peakL,0];
   }
 
   async playNewsEnd() {
