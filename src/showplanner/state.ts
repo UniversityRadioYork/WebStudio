@@ -199,7 +199,7 @@ const showplan = createSlice({
 
 export default showplan.reducer;
 
-export const { setItemTimings } = showplan.actions;
+export const { setItemTimings, planSaveError } = showplan.actions;
 
 export const moveItem = (
   timeslotid: number,

@@ -70,7 +70,8 @@ const setTrackIntro = (
     await api.setTrackIntro(track.trackid, secs);
     dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
   } catch (e) {
-    console.error("Failed to Set Track Intro: " + e);
+    dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
+    console.error("Failed to set track intro: " + e);
   }
 };
 
@@ -84,7 +85,8 @@ const setTrackOutro = (
     await api.setTrackOutro(track.trackid, secs);
     dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
   } catch (e) {
-    console.error("Failed to Set Track Outro: " + e);
+    dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
+    console.error("Failed to set track outro: " + e);
   }
 };
 
@@ -98,7 +100,8 @@ const setTrackCue = (
     await api.setTimeslotItemCue(item.timeslotitemid, secs);
     dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
   } catch (e) {
-    console.error("Failed to Set Track Cue: " + e);
+    dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
+    console.error("Failed to set track cue: " + e);
   }
 };
 
