@@ -354,10 +354,8 @@ export const addItem = (
   // Now, we're going to insert a "ghost" item into the plan while we wait for it to save
   // Note that we're going to flush the move-over operations to Redux now, so that the hole
   // is there - then, once we get a timeslotitemid, replace it with a proper item
-  //
-  // TODO: no we won't, we'll just insert it directly
+
   dispatch(showplan.actions.applyOps(ops));
-  //dispatch(showplan.actions.addItem(newItemData));
 
   const ghostId = Math.random().toString(10);
 
