@@ -1,8 +1,15 @@
 import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import { FaAlignJustify, FaBookOpen, FaMicrophone } from "react-icons/fa";
+import {
+  FaAlignJustify,
+  FaBookOpen,
+  FaFileImport,
+  FaMicrophone,
+  FaUpload,
+} from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
+import Stopwatch from "react-stopwatch";
 
 import { TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
@@ -42,7 +49,11 @@ import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
+import { LibraryUploadModal } from "./LibraryUploadModal";
+import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
+import Modal from "react-modal";
+import { Button } from "reactstrap";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -76,74 +87,112 @@ function LibraryColumn() {
     (state: RootState) => state.showplan
   );
 
+  const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
+  const [showImporterModal, setShowImporterModal] = useState(false);
+
   useEffect(() => {
     dispatch(getPlaylists());
   }, [dispatch]);
 
   return (
-    <div className="library-column">
-      <h2>
-        <FaBookOpen className="mx-2" size={28} />
-        Libraries
-      </h2>
-      <div className="px-2">
-        <select
-          className="form-control"
-          style={{ flex: "none" }}
-          value={sauce}
-          onChange={(e) => setSauce(e.target.value)}
+    <>
+      <LibraryUploadModal
+        isOpen={showLibraryUploadModal}
+        close={() => setShowLibraryModal(false)}
+      />
+      <ImporterModal
+        close={() => setShowImporterModal(false)}
+        isOpen={showImporterModal}
+      />
+      <div className="library-column">
+        <div className="mx-2 mb-2">
+          <h2>
+            <FaBookOpen className="mx-2" size={28} />
+            Libraries
+          </h2>
+          <Button
+            className="mr-1"
+            color="primary"
+            title="Import From Showplan"
+            size="sm"
+            outline={true}
+            onClick={() => setShowImporterModal(true)}
+          >
+            <FaFileImport /> Import
+          </Button>
+          <Button
+            className="mr-1"
+            color="primary"
+            title="Upload to Library"
+            size="sm"
+            outline={true}
+            onClick={() => setShowLibraryModal(true)}
+          >
+            <FaUpload /> Upload
+          </Button>
+        </div>
+        <div className="px-2">
+          <select
+            className="form-control"
+            style={{ flex: "none" }}
+            value={sauce}
+            onChange={(e) => setSauce(e.target.value)}
+          >
+            <option value={"None"} disabled>
+              Choose a library
+            </option>
+            <option value={"CentralMusicLibrary"}>Central Music Library</option>
+            <option disabled>Personal Resources</option>
+            {userPlaylists.map((playlist) => (
+              <option key={playlist.managedid} value={playlist.managedid}>
+                {playlist.title}
+              </option>
+            ))}
+            <option disabled>Shared Resources</option>
+            {auxPlaylists.map((playlist) => (
+              <option
+                key={"aux-" + playlist.managedid}
+                value={"aux-" + playlist.managedid}
+              >
+                {playlist.title}
+              </option>
+            ))}
+            <option disabled>Playlists</option>
+            {managedPlaylists.map((playlist) => (
+              <option
+                key={"managed-" + playlist.playlistid}
+                value={"managed-" + playlist.playlistid}
+              >
+                {playlist.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="border-top my-2"></div>
+        {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
+        {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
+          <AuxLibrary libraryId={sauce} />
+        )}
+        {sauce.startsWith("managed-") && (
+          <ManagedPlaylistLibrary libraryId={sauce.substr(8)} />
+        )}
+        <span
+          className={
+            sauce === "None" ? "mt-5 text-center text-muted" : "d-none"
+          }
         >
-          <option value={"None"} disabled>
-            Choose a library
-          </option>
-          <option value={"CentralMusicLibrary"}>Central Music Library</option>
-          <option disabled>Personal Resources</option>
-          {userPlaylists.map((playlist) => (
-            <option key={playlist.managedid} value={playlist.managedid}>
-              {playlist.title}
-            </option>
-          ))}
-          <option disabled>Shared Resources</option>
-          {auxPlaylists.map((playlist) => (
-            <option
-              key={"aux-" + playlist.managedid}
-              value={"aux-" + playlist.managedid}
-            >
-              {playlist.title}
-            </option>
-          ))}
-          <option disabled>Playlists</option>
-          {managedPlaylists.map((playlist) => (
-            <option
-              key={"managed-" + playlist.playlistid}
-              value={"managed-" + playlist.playlistid}
-            >
-              {playlist.title}
-            </option>
-          ))}
-        </select>
+          <FaBookOpen size={56} />
+          <br />
+          Select a library to search.
+        </span>
       </div>
-      <div className="border-top my-2"></div>
-      {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
-      {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
-        <AuxLibrary libraryId={sauce} />
-      )}
-      {sauce.startsWith("managed-") && (
-        <ManagedPlaylistLibrary libraryId={sauce.substr(8)} />
-      )}
-      <span
-        className={sauce === "None" ? "mt-5 text-center text-muted" : "d-none"}
-      >
-        <FaBookOpen size={56} />
-        <br />
-        Select a library to search.
-      </span>
-    </div>
+    </>
   );
 }
 
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
+  const proMode = useSelector((state: RootState) => state.settings.proMode);
   const dispatch = useDispatch();
 
   return (
@@ -157,6 +206,26 @@ function MicControl() {
           The microphone has not been setup. Go to options.
         </p>
       )}
+      {proMode && (
+        <span
+          id="micLiveTimer"
+          className={state.open && state.volume > 0 ? "live" : ""}
+        >
+          <span className="text">Mic Live: </span>
+          {state.open && state.volume > 0 ? (
+            <Stopwatch
+              seconds={0}
+              minutes={0}
+              hours={0}
+              render={({ formatted }) => {
+                return <span>{formatted}</span>;
+              }}
+            />
+          ) : (
+            "00:00:00"
+          )}
+        </span>
+      )}
       <div id="micMeter">
         <VUMeter
           width={250}
@@ -164,6 +233,7 @@ function MicControl() {
           source="mic-final"
           range={[-40, 3]}
           greenRange={[-10, -5]}
+          stereo={proMode}
         />
       </div>
       <div className={`mixer-buttons ${!state.open && "disabled"}`}>
@@ -209,6 +279,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     planSaveError,
     planSaving,
   } = useSelector((state: RootState) => state.showplan);
+
+  // Tell Modals that #root is the main page content, for accessability reasons.
+  Modal.setAppElement("#root");
+
   const session = useSelector((state: RootState) => state.session);
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(
@@ -250,7 +324,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // TODO: this is ugly, should be in redux
       const data = CML_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
-        type: "central",
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
@@ -264,7 +337,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // TODO: this is ugly, should be in redux
       const data = AUX_CACHE[result.draggableId];
       const newItem: TimeslotItem = {
-        type: "aux",
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,

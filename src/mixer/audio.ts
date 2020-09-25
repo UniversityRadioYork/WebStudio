@@ -7,6 +7,8 @@ import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 
+import StereoAnalyserNode from "stereo-analyser-node";
+
 interface PlayerEvents {
   loadComplete: (duration: number) => void;
   timeChange: (time: number) => void;
@@ -203,6 +205,9 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
     (wavesurfer as any).backend.gainNode.disconnect();
     (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+    (wavesurfer as any).backend.gainNode.connect(
+      engine.playerAnalysers[player]
+    );
 
     wavesurfer.load(url);
 
@@ -219,9 +224,17 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 }
 
-export type LevelsSource = "mic-precomp" | "mic-final" | "master";
+export type LevelsSource =
+  | "mic-precomp"
+  | "mic-final"
+  | "master"
+  | "player-0"
+  | "player-1"
+  | "player-2";
 
-const ANALYSIS_FFT_SIZE = 8192;
+// Setting this directly affects the performance of .getFloatTimeDomainData()
+// Must be a power of 2.
+const ANALYSIS_FFT_SIZE = 2048;
 
 interface EngineEvents {
   micOpen: () => void;
@@ -241,23 +254,25 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   micMedia: MediaStream | null = null;
   micSource: MediaStreamAudioSourceNode | null = null;
   micCalibrationGain: GainNode;
-  micPrecompAnalyser: AnalyserNode;
+  micPrecompAnalyser: typeof StereoAnalyserNode;
   micCompressor: DynamicsCompressorNode;
   micMixGain: GainNode;
-  micFinalAnalyser: AnalyserNode;
+  micFinalAnalyser: typeof StereoAnalyserNode;
 
   finalCompressor: DynamicsCompressorNode;
   streamingDestination: MediaStreamAudioDestinationNode;
 
-  streamingAnalyser: AnalyserNode;
+  playerAnalysers: typeof StereoAnalyserNode[];
+
+  streamingAnalyser: typeof StereoAnalyserNode;
 
   newsStartCountdownEl: HTMLAudioElement;
   newsStartCountdownNode: MediaElementAudioSourceNode;
 
   newsEndCountdownEl: HTMLAudioElement;
   newsEndCountdownNode: MediaElementAudioSourceNode;
-
   analysisBuffer: Float32Array;
+  analysisBuffer2: Float32Array;
 
   constructor() {
     super();
@@ -273,8 +288,16 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.finalCompressor.release.value = 0.2;
     this.finalCompressor.knee.value = 0;
 
-    this.streamingAnalyser = this.audioContext.createAnalyser();
+    this.playerAnalysers = [];
+    for (let i = 0; i < 3; i++) {
+      let analyser = new StereoAnalyserNode(this.audioContext);
+      analyser.fftSize = ANALYSIS_FFT_SIZE;
+      this.playerAnalysers.push(analyser);
+    }
+
+    this.streamingAnalyser = new StereoAnalyserNode(this.audioContext);
     this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+
     // this.streamingAnalyser.maxDecibels = 0;
 
     this.streamingDestination = this.audioContext.createMediaStreamDestination();
@@ -287,15 +310,13 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
     this.micCalibrationGain = this.audioContext.createGain();
 
-    this.micPrecompAnalyser = this.audioContext.createAnalyser();
+    this.micPrecompAnalyser = new StereoAnalyserNode(this.audioContext);
     this.micPrecompAnalyser.fftSize = ANALYSIS_FFT_SIZE;
     this.micPrecompAnalyser.maxDecibels = 0;
 
-    this.micFinalAnalyser = this.audioContext.createAnalyser();
+    this.micFinalAnalyser = new StereoAnalyserNode(this.audioContext);
     this.micFinalAnalyser.fftSize = ANALYSIS_FFT_SIZE;
     this.micFinalAnalyser.maxDecibels = 0;
-
-    this.analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
 
     this.micCompressor = this.audioContext.createDynamicsCompressor();
     this.micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
@@ -307,8 +328,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
 
+    this.micCalibrationGain.connect(this.micPrecompAnalyser);
     this.micCalibrationGain
-      .connect(this.micPrecompAnalyser)
       .connect(this.micCompressor)
       .connect(this.micMixGain)
       .connect(this.micFinalAnalyser)
@@ -330,6 +351,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       this.newsStartCountdownEl
     );
     this.newsStartCountdownNode.connect(this.audioContext.destination);
+
+    this.analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
+    this.analysisBuffer2 = new Float32Array(ANALYSIS_FFT_SIZE);
   }
 
   public createPlayer(number: number, url: string) {
@@ -389,25 +413,62 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain.gain.value = value;
   }
 
-  getLevel(source: LevelsSource) {
+  getLevels(source: LevelsSource, stereo: boolean): [number, number] {
     switch (source) {
       case "mic-precomp":
-        this.micPrecompAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        this.micPrecompAnalyser.getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
         break;
       case "mic-final":
-        this.micFinalAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        this.micFinalAnalyser.getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
         break;
       case "master":
-        this.streamingAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        this.streamingAnalyser.getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
+      case "player-0":
+        this.playerAnalysers[0].getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
+      case "player-1":
+        this.playerAnalysers[1].getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
+      case "player-2":
+        this.playerAnalysers[2].getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
         break;
       default:
         throw new Error("can't getLevel " + source);
     }
-    let peak = 0;
+    let peakL = 0;
     for (let i = 0; i < this.analysisBuffer.length; i++) {
-      peak = Math.max(peak, Math.abs(this.analysisBuffer[i]));
+      peakL = Math.max(peakL, Math.abs(this.analysisBuffer[i]));
     }
-    return 20 * Math.log10(peak);
+    peakL = 20 * Math.log10(peakL);
+
+    if (stereo) {
+      let peakR = 0;
+      for (let i = 0; i < this.analysisBuffer2.length; i++) {
+        peakR = Math.max(peakR, Math.abs(this.analysisBuffer2[i]));
+      }
+      peakR = 20 * Math.log10(peakR);
+      return [peakL, peakR];
+    }
+    return [peakL, 0];
   }
 
   async playNewsEnd() {
