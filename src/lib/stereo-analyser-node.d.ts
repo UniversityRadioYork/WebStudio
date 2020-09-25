@@ -17,5 +17,5 @@ declare module "stereo-analyser-node" {
       getByteTimeDomainData(arrayL: Uint8Array, arrayR: Uint8Array): void;
     };
   }
-  export default StereoAnalyserNode.StereoAnalyserNode();
+  export default StereoAnalyserNode.StereoAnalyserNode;
 }
