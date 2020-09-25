@@ -70,7 +70,7 @@ const setTrackIntro = (
     await api.setTrackIntro(track.trackid, secs);
     dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
   } catch (e) {
-    dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
+    dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
     console.error("Failed to set track intro: " + e);
   }
 };
