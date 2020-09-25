@@ -13,6 +13,7 @@ import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import { secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
+import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -40,16 +41,16 @@ function PlayerNumbers({ id }: { id: number }) {
 
   return (
     <>
-      <span id={"current-" + id} className="m-0 current bypass-click">
+      <span id={"current-" + id} className="current bypass-click">
         {secToHHMM(timeCurrent)}
       </span>
-      <span id={"length-" + id} className="m-0 length bypass-click">
+      <span id={"length-" + id} className="length bypass-click">
         {secToHHMM(timeLength)}
       </span>
-      <span id={"remaining-" + id} className="m-0 remaining bypass-click">
+      <span id={"remaining-" + id} className="remaining bypass-click">
         {secToHHMM(timeRemaining)}
       </span>
-      <span id={"ends-" + id} className="m-0 outro bypass-click">
+      <span id={"ends-" + id} className="outro bypass-click">
         End - {timestampToHHMM(endTime)}
       </span>
     </>
@@ -66,8 +67,26 @@ export function Player({ id }: { id: number }) {
       )
   );
   const proMode = useSelector((state: RootState) => state.settings.proMode);
+  const vuEnabled = useSelector(
+    (state: RootState) => state.settings.channelVUs
+  );
+  const vuStereo = useSelector(
+    (state: RootState) => state.settings.channelVUsStereo
+  );
   const dispatch = useDispatch();
 
+  const VUsource = (id: number) => {
+    switch (id) {
+      case 0:
+        return "player-0";
+      case 1:
+        return "player-1";
+      case 2:
+        return "player-2";
+      default:
+        throw new Error("Unknown Player VUMeter source: " + id);
+    }
+  };
   return (
     <div
       className={
@@ -77,7 +96,8 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
-        <div className="row m-0 p-1 card-header channelButtons">
+        <div className="row m-0 p-1 card-header channelButtons hover-menu">
+          <span className="hover-label">Channel Controls</span>
           <button
             className={
               (playerState.autoAdvance
@@ -239,6 +259,18 @@ export function Player({ id }: { id: number }) {
           Full
         </button>
       </div>
+
+      {proMode && vuEnabled && (
+        <div className="channel-vu">
+          <VUMeter
+            width={300}
+            height={40}
+            source={VUsource(id)}
+            range={[-40, 0]}
+            stereo={vuStereo}
+          />
+        </div>
+      )}
     </div>
   );
 }

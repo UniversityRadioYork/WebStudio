@@ -125,6 +125,7 @@ export function MicTab() {
             source="mic-precomp"
             range={[-70, 0]}
             greenRange={[-14, -10]}
+            stereo={true}
           />
         </div>
         <div>

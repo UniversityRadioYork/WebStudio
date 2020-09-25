@@ -96,6 +96,11 @@ button {
 }
 
 .waveform .current,
+.waveform .remaining {
+  margin-top: -5px;
+}
+
+.waveform .current,
 .waveform .remaining,
 .waveform .length {
   font-weight: 800;
@@ -110,7 +115,7 @@ button {
 .waveform .intro,
 .waveform .outro,
 .waveform .length {
-  bottom: 0;
+  bottom: -5px;
   position: absolute;
 }
 
@@ -155,23 +160,4 @@ button {
 
 .ReactModal__Overlay {
   z-index: 10000;
-}
-
-.sp-mic-live {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9000;
-  pointer-events: none;
-  box-shadow: inset 0 0 3px 6px red;
-}
-
-#micMeter {
-  margin: 0.4rem 0.6rem;
-}
-
-#micMeter canvas {
-  width: 100%;
 }
