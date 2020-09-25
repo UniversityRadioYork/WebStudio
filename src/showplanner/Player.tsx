@@ -66,8 +66,8 @@ const setTrackIntro = (
   player: number
 ): AppThunk => async (dispatch) => {
   try {
-    await api.setTrackIntro(track.trackid, secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
+    await api.setTrackIntro(track.trackid, secs);
     dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
   } catch (e) {
     console.error(e);
@@ -80,8 +80,8 @@ const setTrackOutro = (
   player: number
 ): AppThunk => async (dispatch) => {
   try {
-    await api.setTrackOutro(track.trackid, secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
+    await api.setTrackOutro(track.trackid, secs);
     dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
   } catch (e) {
     console.error(e);
@@ -94,8 +94,8 @@ const setTrackCue = (
   player: number
 ): AppThunk => async (dispatch) => {
   try {
-    await api.setTimeslotItemCue(item.timeslotitemid, secs);
     dispatch(MixerState.setLoadedItemCue(player, secs));
+    await api.setTimeslotItemCue(item.timeslotitemid, secs);
     dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
   } catch (e) {
     console.error(e);
