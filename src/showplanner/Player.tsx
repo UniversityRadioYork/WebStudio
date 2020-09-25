@@ -70,7 +70,7 @@ const setTrackIntro = (
     await api.setTrackIntro(track.trackid, secs);
     dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
   } catch (e) {
-    console.error(e);
+    console.error("Failed to Set Track Intro: " + e);
   }
 };
 
@@ -84,7 +84,7 @@ const setTrackOutro = (
     await api.setTrackOutro(track.trackid, secs);
     dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
   } catch (e) {
-    console.error(e);
+    console.error("Failed to Set Track Outro: " + e);
   }
 };
 
@@ -98,7 +98,7 @@ const setTrackCue = (
     await api.setTimeslotItemCue(item.timeslotitemid, secs);
     dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
   } catch (e) {
-    console.error(e);
+    console.error("Failed to Set Track Cue: " + e);
   }
 };
 
