@@ -330,6 +330,12 @@ export const load = (
       return;
     }
   }
+
+  // Can't really load a ghost, it'll break setting cues etc. Do nothing.
+  if (item.type === "ghost") {
+    return;
+  }
+
   // If this is already the currently loaded item, don't bother
   const currentItem = getState().mixer.players[player].loadedItem;
   if (currentItem !== null && itemId(currentItem) === itemId(item)) {
@@ -343,21 +349,9 @@ export const load = (
 
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
 
-  // Can't really load a ghost. Unload instead.
-  if (item.type === "ghost") {
-    dispatch(
-      mixerState.actions.loadItem({
-        player,
-        item: null,
-        resetTrim: shouldResetTrim,
-      })
-    );
-    return;
-  } else {
-    dispatch(
-      mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
-    );
-  }
+  dispatch(
+    mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
+  );
 
   let url;
 

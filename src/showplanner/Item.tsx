@@ -55,14 +55,18 @@ export const Item = memo(function Item({
           ref={provided.innerRef}
           key={id}
           data-itemid={id}
-          className={`item ${
-            column >= 0 &&
-            playerState &&
-            playerState.loadedItem !== null &&
-            itemId(playerState.loadedItem) === id
-              ? "active"
-              : ""
-          }`}
+          className={
+            "item " +
+            x.type +
+            `${
+              column >= 0 &&
+              playerState &&
+              playerState.loadedItem !== null &&
+              itemId(playerState.loadedItem) === id
+                ? "active"
+                : ""
+            }`
+          }
           onClick={triggerClick}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
