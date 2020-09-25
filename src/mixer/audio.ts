@@ -173,7 +173,10 @@ export type LevelsSource =
   | "player-1"
   | "player-2";
 
-const ANALYSIS_FFT_SIZE = 8192;
+
+// Setting this directly affects the performance of .getFloatTimeDomainData()
+// Must be a power of 2.
+const ANALYSIS_FFT_SIZE = 2048;
 
 interface EngineEvents {
   micOpen: () => void;
@@ -210,6 +213,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   newsEndCountdownEl: HTMLAudioElement;
   newsEndCountdownNode: MediaElementAudioSourceNode;
+  analysisBuffer: Float32Array;
+  analysisBuffer2: Float32Array;
 
   constructor() {
     super();
@@ -288,6 +293,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       this.newsStartCountdownEl
     );
     this.newsStartCountdownNode.connect(this.audioContext.destination);
+
+    this.analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
+    this.analysisBuffer2 = new Float32Array(ANALYSIS_FFT_SIZE);
   }
 
   public createPlayer(number: number, url: string) {
@@ -342,58 +350,57 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
 
   getLevels(source: LevelsSource, stereo: boolean): [number, number] {
-    let analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
-    let analysisBuffer2 = new Float32Array(ANALYSIS_FFT_SIZE);
+
     switch (source) {
       case "mic-precomp":
         this.micPrecompAnalyser.getFloatTimeDomainData(
-          analysisBuffer,
-          analysisBuffer2
+          this.analysisBuffer,
+          this.analysisBuffer2
         );
         break;
       case "mic-final":
         this.micFinalAnalyser.getFloatTimeDomainData(
-          analysisBuffer,
-          analysisBuffer2
+          this.analysisBuffer,
+          this.analysisBuffer2
         );
         break;
       case "master":
         this.streamingAnalyser.getFloatTimeDomainData(
-          analysisBuffer,
-          analysisBuffer2
+          this.analysisBuffer,
+          this.analysisBuffer2
         );
         break;
       case "player-0":
         this.playerAnalysers[0].getFloatTimeDomainData(
-          analysisBuffer,
-          analysisBuffer2
+          this.analysisBuffer,
+          this.analysisBuffer2
         );
         break;
       case "player-1":
         this.playerAnalysers[1].getFloatTimeDomainData(
-          analysisBuffer,
-          analysisBuffer2
+          this.analysisBuffer,
+          this.analysisBuffer2
         );
         break;
       case "player-2":
         this.playerAnalysers[2].getFloatTimeDomainData(
-          analysisBuffer,
-          analysisBuffer2
+          this.analysisBuffer,
+          this.analysisBuffer2
         );
         break;
       default:
         throw new Error("can't getLevel " + source);
     }
     let peakL = 0;
-    for (let i = 0; i < analysisBuffer.length; i++) {
-      peakL = Math.max(peakL, Math.abs(analysisBuffer[i]));
+    for (let i = 0; i < this.analysisBuffer.length; i++) {
+      peakL = Math.max(peakL, Math.abs(this.analysisBuffer[i]));
     }
     peakL = 20 * Math.log10(peakL);
 
     if (stereo) {
       let peakR = 0;
-      for (let i = 0; i < analysisBuffer2.length; i++) {
-        peakR = Math.max(peakR, Math.abs(analysisBuffer2[i]));
+      for (let i = 0; i < this.analysisBuffer2.length; i++) {
+        peakR = Math.max(peakR, Math.abs(this.analysisBuffer2[i]));
       }
       peakR = 20 * Math.log10(peakR);
       return [peakL, peakR];
