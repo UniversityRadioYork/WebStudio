@@ -318,16 +318,17 @@ export const moveItem = (
   dispatch(showplan.actions.applyOps(ops));
   const result = await api.updateShowplan(timeslotid, ops);
   if (!result.every((x) => x.status)) {
-    dispatch(showplan.actions.planSaveError("Server says no!"));
-  } else {
-    dispatch(showplan.actions.setPlanSaving(false));
+    dispatch(showplan.actions.planSaveError("Failed to update show plan."));
   }
+
+  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const addItem = (
   timeslotId: number,
   newItemData: TimeslotItem
 ): AppThunk => async (dispatch, getState) => {
+  dispatch(showplan.actions.setPlanSaving(true));
   console.log("New Weight: " + newItemData.weight);
   const plan = cloneDeep(getState().showplan.plan!);
   const ops: api.UpdateOp[] = [];
@@ -387,7 +388,8 @@ export const addItem = (
   });
   const result = await api.updateShowplan(timeslotId, ops);
   if (!result.every((x) => x.status)) {
-    dispatch(showplan.actions.planSaveError("Server says no!"));
+    dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+    dispatch(showplan.actions.setPlanSaving(false));
     return;
   }
   const lastResult = result[result.length - 1]; // this is the add op
@@ -400,12 +402,14 @@ export const addItem = (
       newItemData,
     })
   );
+  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const removeItem = (
   timeslotId: number,
   itemid: string
 ): AppThunk => async (dispatch, getState) => {
+  dispatch(showplan.actions.setPlanSaving(true));
   // This is a simplified version of the second case of moveItem
   const plan = cloneDeep(getState().showplan.plan!);
   const item = plan.find((x) => itemId(x) === itemid)!;
@@ -436,10 +440,12 @@ export const removeItem = (
 
   const result = await api.updateShowplan(timeslotId, ops);
   if (!result.every((x) => x.status)) {
-    dispatch(showplan.actions.planSaveError("Server says no!"));
+    dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+    dispatch(showplan.actions.setPlanSaving(false));
     return;
   }
   dispatch(showplan.actions.applyOps(ops));
+  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const getShowplan = (timeslotId: number): AppThunk => async (

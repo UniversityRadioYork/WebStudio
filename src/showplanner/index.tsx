@@ -272,13 +272,9 @@ function incrReducer(state: number, action: any) {
 }
 
 const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
-  const {
-    plan: showplan,
-    planLoadError,
-    planLoading,
-    planSaveError,
-    planSaving,
-  } = useSelector((state: RootState) => state.showplan);
+  const { plan: showplan, planLoadError, planLoading } = useSelector(
+    (state: RootState) => state.showplan
+  );
 
   // Tell Modals that #root is the main page content, for accessability reasons.
   Modal.setAppElement("#root");
@@ -374,14 +370,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   return (
     <div className="sp-container m-0">
       <CombinedNavAlertBar />
-      <div className="sp-status">
-        {planSaving && <em>Plan saving...</em>}
-        {planSaveError && (
-          <strong>
-            Catastrophe! <code>{planSaveError}</code>
-          </strong>
-        )}
-      </div>
       <div className="sp">
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="channels">

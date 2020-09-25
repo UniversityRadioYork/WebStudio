@@ -9,6 +9,7 @@ import {
   FaRegUser,
   FaBroadcastTower,
   FaSpinner,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
@@ -160,11 +161,15 @@ export function NavBarMain() {
     prevRegistrationStage.current = broadcastState.stage;
   }, [broadcastState.stage]);
 
+  const { planSaveError, planSaving } = useSelector(
+    (state: RootState) => state.showplan
+  );
+
   return (
     <>
       <ul className="nav navbar-nav navbar-left">
         <li
-          className="btn rounded-0 pt-2 pb-1 nav-link nav-item"
+          className="btn rounded-0 py-2 nav-link nav-item"
           id="timelord"
           onClick={(e) => {
             e.preventDefault();
@@ -181,6 +186,17 @@ export function NavBarMain() {
             timezone={"europe/london"}
           />
         </li>
+        {planSaving && (
+          <li className="btn rounded-0 py-2 nav-item alert-info">
+            <FaSpinner className="nav-spin mb-1" /> Saving show plan...
+          </li>
+        )}
+        {planSaveError && (
+          <li className="btn rounded-0 py-2 nav-item alert-danger">
+            <FaExclamationTriangle className="p-0 mr-1" />
+            {planSaveError}
+          </li>
+        )}
       </ul>
 
       <ul className="nav navbar-nav navbar-right mr-0 pr-0">
