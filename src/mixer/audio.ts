@@ -173,7 +173,6 @@ export type LevelsSource =
   | "player-1"
   | "player-2";
 
-
 // Setting this directly affects the performance of .getFloatTimeDomainData()
 // Must be a power of 2.
 const ANALYSIS_FFT_SIZE = 2048;
@@ -348,9 +347,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain.gain.value = value;
   }
 
-
   getLevels(source: LevelsSource, stereo: boolean): [number, number] {
-
     switch (source) {
       case "mic-precomp":
         this.micPrecompAnalyser.getFloatTimeDomainData(
@@ -405,7 +402,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       peakR = 20 * Math.log10(peakR);
       return [peakL, peakR];
     }
-    return [peakL,0];
+    return [peakL, 0];
   }
 
   async playNewsEnd() {

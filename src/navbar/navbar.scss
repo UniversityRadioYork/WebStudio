@@ -159,8 +159,18 @@
 }
 
 .navbar-myradio .navbar-nav .open .dropdown-menu > .active > .dropdown-item,
-.navbar-myradio .navbar-nav .open .dropdown-menu > .active > .dropdown-item:hover,
-.navbar-myradio .navbar-nav .open .dropdown-menu > .active > .dropdown-item:focus {
+.navbar-myradio
+  .navbar-nav
+  .open
+  .dropdown-menu
+  > .active
+  > .dropdown-item:hover,
+.navbar-myradio
+  .navbar-nav
+  .open
+  .dropdown-menu
+  > .active
+  > .dropdown-item:focus {
   color: #e1e1e1;
   background-color: #2d333c;
 }
@@ -219,7 +229,12 @@
     color: #e1e1e1;
   }
   .navbar-myradio .navbar-nav .open .dropdown-menu > .active > .dropdown-item,
-  .navbar-myradio .navbar-nav .open .dropdown-menu > .active > .dropdown-item:hover,
+  .navbar-myradio
+    .navbar-nav
+    .open
+    .dropdown-menu
+    > .active
+    > .dropdown-item:hover,
   .navbar-myradio
     .navbar-nav
     .open
