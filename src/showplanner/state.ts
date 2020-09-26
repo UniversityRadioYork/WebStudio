@@ -316,9 +316,12 @@ export const moveItem = (
   });
 
   dispatch(showplan.actions.applyOps(ops));
-  const result = await api.updateShowplan(timeslotid, ops);
-  if (!result.every((x) => x.status)) {
-    dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+
+  if (getState().settings.saveShowPlanChanges) {
+    const result = await api.updateShowplan(timeslotid, ops);
+    if (!result.every((x) => x.status)) {
+      dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+    }
   }
 
   dispatch(showplan.actions.setPlanSaving(false));
@@ -358,50 +361,55 @@ export const addItem = (
 
   dispatch(showplan.actions.applyOps(ops));
 
-  const ghostId = Math.random().toString(10);
+  if (getState().settings.saveShowPlanChanges) {
+    const ghostId = Math.random().toString(10);
 
-  const ghost: ItemGhost = {
-    ghostid: ghostId,
-    channel: newItemData.channel,
-    weight: newItemData.weight,
-    title: newItemData.title,
-    artist: newItemData.type === "central" ? newItemData.artist : "",
-    length: newItemData.length,
-    clean: newItemData.clean,
-    intro: newItemData.type === "central" ? newItemData.intro : 0,
-    outro: newItemData.type === "central" ? newItemData.outro : 0,
-    cue: 0,
-    type: "ghost",
-  };
+    const ghost: ItemGhost = {
+      ghostid: ghostId,
+      channel: newItemData.channel,
+      weight: newItemData.weight,
+      title: newItemData.title,
+      artist: newItemData.type === "central" ? newItemData.artist : "",
+      length: newItemData.length,
+      clean: newItemData.clean,
+      intro: newItemData.type === "central" ? newItemData.intro : 0,
+      outro: newItemData.type === "central" ? newItemData.outro : 0,
+      cue: 0,
+      type: "ghost",
+    };
 
-  const idForServer =
-    newItemData.type === "central"
-      ? `${newItemData.album.recordid}-${newItemData.trackid}`
-      : `ManagedDB-${newItemData.managedid}`;
+    const idForServer =
+      newItemData.type === "central"
+        ? `${newItemData.album.recordid}-${newItemData.trackid}`
+        : `ManagedDB-${newItemData.managedid}`;
 
-  dispatch(showplan.actions.insertGhost(ghost));
-  ops.push({
-    op: "AddItem",
-    channel: newItemData.channel,
-    weight: newItemData.weight,
-    id: idForServer,
-  });
-  const result = await api.updateShowplan(timeslotId, ops);
-  if (!result.every((x) => x.status)) {
-    dispatch(showplan.actions.planSaveError("Failed to update show plan."));
-    dispatch(showplan.actions.setPlanSaving(false));
-    return;
+    dispatch(showplan.actions.insertGhost(ghost));
+    ops.push({
+      op: "AddItem",
+      channel: newItemData.channel,
+      weight: newItemData.weight,
+      id: idForServer,
+    });
+    const result = await api.updateShowplan(timeslotId, ops);
+    if (!result.every((x) => x.status)) {
+      dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+      dispatch(showplan.actions.setPlanSaving(false));
+      return;
+    }
+    const lastResult = result[result.length - 1]; // this is the add op
+    const newItemId = lastResult.timeslotitemid!;
+
+    newItemData.timeslotitemid = newItemId;
+    dispatch(
+      showplan.actions.replaceGhost({
+        ghostId: "G" + ghostId,
+        newItemData,
+      })
+    );
+  } else {
+    // Just add it straight to the show plan without updating the server.
+    dispatch(showplan.actions.addItem(newItemData));
   }
-  const lastResult = result[result.length - 1]; // this is the add op
-  const newItemId = lastResult.timeslotitemid!;
-
-  newItemData.timeslotitemid = newItemId;
-  dispatch(
-    showplan.actions.replaceGhost({
-      ghostId: "G" + ghostId,
-      newItemData,
-    })
-  );
   dispatch(showplan.actions.setPlanSaving(false));
 };
 
@@ -438,11 +446,13 @@ export const removeItem = (
     movingItem.weight -= 1;
   }
 
-  const result = await api.updateShowplan(timeslotId, ops);
-  if (!result.every((x) => x.status)) {
-    dispatch(showplan.actions.planSaveError("Failed to update show plan."));
-    dispatch(showplan.actions.setPlanSaving(false));
-    return;
+  if (getState().settings.saveShowPlanChanges) {
+    const result = await api.updateShowplan(timeslotId, ops);
+    if (!result.every((x) => x.status)) {
+      dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+      dispatch(showplan.actions.setPlanSaving(false));
+      return;
+    }
   }
   dispatch(showplan.actions.applyOps(ops));
   dispatch(showplan.actions.setPlanSaving(false));

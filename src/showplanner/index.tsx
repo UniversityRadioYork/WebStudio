@@ -6,6 +6,7 @@ import {
   FaBookOpen,
   FaFileImport,
   FaMicrophone,
+  FaTrash,
   FaUpload,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
@@ -394,6 +395,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       </div>
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
+        <MenuItem onClick={onCtxRemoveClick}>
+          <FaTrash /> Remove
+        </MenuItem>
       </ContextMenu>
       <OptionsMenu />
       <WelcomeModal
