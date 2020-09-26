@@ -321,6 +321,7 @@ export const moveItem = (
     const result = await api.updateShowplan(timeslotid, ops);
     if (!result.every((x) => x.status)) {
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+      return;
     }
   }
 
@@ -393,7 +394,6 @@ export const addItem = (
     const result = await api.updateShowplan(timeslotId, ops);
     if (!result.every((x) => x.status)) {
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
-      dispatch(showplan.actions.setPlanSaving(false));
       return;
     }
     const lastResult = result[result.length - 1]; // this is the add op
@@ -450,7 +450,6 @@ export const removeItem = (
     const result = await api.updateShowplan(timeslotId, ops);
     if (!result.every((x) => x.status)) {
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
-      dispatch(showplan.actions.setPlanSaving(false));
       return;
     }
   }
