@@ -87,6 +87,34 @@ button {
   padding: 0.3em;
 }
 
+.timing-buttons {
+  width: 100%;
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+.timing-buttons div {
+  padding: 0 5px;
+  margin: 0 2px;
+  flex: 1;
+  font-size: 0.8em;
+}
+
+.timing-buttons .intro {
+  border-color: rgba(125, 0, 255, 0.8);
+  color: rgba(125, 0, 255, 0.8);
+}
+
+.timing-buttons .cue {
+  border-color: rgba(0, 100, 0, 0.9);
+  color: rgba(0, 100, 0, 0.9);
+}
+
+.timing-buttons .outro {
+  border-color: rgba(255, 0, 0, 0.7);
+  color: rgba(255, 0, 0, 0.7);
+}
+
 .waveform span {
   float: left;
   position: relative;

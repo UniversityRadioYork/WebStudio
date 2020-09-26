@@ -9,6 +9,7 @@ interface Settings {
   channelVUs: boolean;
   channelVUsStereo: boolean;
   resetTrimOnLoad: boolean;
+  saveShowPlanChanges: boolean;
 }
 
 const settingsState = createSlice({
@@ -22,6 +23,7 @@ const settingsState = createSlice({
     channelVUs: true,
     channelVUsStereo: true,
     resetTrimOnLoad: true,
+    saveShowPlanChanges: false,
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(

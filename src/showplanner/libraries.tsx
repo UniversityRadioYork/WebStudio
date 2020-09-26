@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import useDebounce from "../lib/useDebounce";
-import { Track, searchForTracks, loadAuxLibrary, AuxItem } from "../api";
+import {
+  Track,
+  searchForTracks,
+  loadAuxLibrary,
+  AuxItem,
+  loadPlaylistLibrary,
+} from "../api";
 import { itemId } from "./state";
 import { Droppable } from "react-beautiful-dnd";
 import { FaCog, FaSearch, FaTimesCircle } from "react-icons/fa";
@@ -77,6 +83,93 @@ export function CentralMusicLibrary() {
             {items.map((item, index) => (
               <Item key={itemId(item)} item={item} index={index} column={-1} />
             ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </div>
+  );
+}
+
+export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
+  const [track, setTrack] = useState("");
+  const [artist, setArtist] = useState("");
+  const debouncedTrack = useDebounce(track, 600);
+  const debouncedArtist = useDebounce(artist, 600);
+  const [items, setItems] = useState<Track[]>([]);
+
+  const [state, setState] = useState<searchingStateEnum>("not-searching");
+
+  useEffect(() => {
+    async function load() {
+      setItems([]);
+      setState("searching");
+      const libItems = await loadPlaylistLibrary(libraryId);
+      libItems.forEach((item) => {
+        const id = itemId(item);
+        if (!(id in CML_CACHE)) {
+          CML_CACHE[id] = item;
+        }
+      });
+      setItems(libItems);
+      if (libItems.length === 0) {
+        setState("no-results");
+      } else {
+        setState("results");
+      }
+    }
+    load();
+  }, [libraryId]);
+  return (
+    <div className="library library-central">
+      <span className="px-2">
+        <input
+          className="form-control"
+          type="text"
+          placeholder="Filter by track..."
+          value={track}
+          onChange={(e) => setTrack(e.target.value)}
+        />
+        <input
+          className="form-control mt-2"
+          type="text"
+          placeholder="Filter by artist..."
+          value={artist}
+          onChange={(e) => setArtist(e.target.value)}
+        />
+      </span>
+      <div className="border-top mt-2"></div>
+      <ResultsPlaceholder state={state} />
+      <Droppable droppableId="$CML">
+        {(provided, snapshot) => (
+          <div
+            className="library-item-list"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {items
+              .filter(
+                (its) =>
+                  its.title
+                    .toString()
+                    .toLowerCase()
+                    .indexOf(debouncedTrack.toLowerCase()) > -1
+              )
+              .filter(
+                (its) =>
+                  its.artist
+                    .toString()
+                    .toLowerCase()
+                    .indexOf(debouncedArtist.toLowerCase()) > -1
+              )
+              .map((item, index) => (
+                <Item
+                  key={itemId(item)}
+                  item={item}
+                  index={index}
+                  column={-1}
+                />
+              ))}
             {provided.placeholder}
           </div>
         )}

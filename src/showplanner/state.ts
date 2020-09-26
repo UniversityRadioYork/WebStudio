@@ -13,6 +13,8 @@ export interface ItemGhost {
   channel: number;
   weight: number;
   intro: number;
+  cue: number;
+  outro: number;
   clean: boolean;
 }
 
@@ -20,18 +22,23 @@ export type PlanItem = TimeslotItem | ItemGhost;
 
 export type Plan = PlanItem[][];
 
-export function itemId(item: PlanItem | Track | AuxItem) {
-  if ("timeslotitemid" in item) {
+export function itemId(
+  item: PlanItem | Track | AuxItem,
+  resourceOnly: boolean = false
+) {
+  if ("timeslotitemid" in item && !resourceOnly) {
     return item.timeslotitemid;
   }
   if ("auxid" in item) {
-    return "A" + item.auxid;
+    return (!resourceOnly ? "A" : "") + item.auxid;
   }
-  if ("ghostid" in item) {
+  if ("ghostid" in item && !resourceOnly) {
     return "G" + item.ghostid;
   }
   if ("trackid" in item) {
-    return "T" + item.album.recordid + "-" + item.trackid;
+    return resourceOnly
+      ? item.trackid.toString()
+      : "T" + item.album.recordid + "-" + item.trackid;
   }
   throw new Error();
 }
@@ -42,8 +49,9 @@ interface ShowplanState {
   plan: null | PlanItem[];
   planSaving: boolean;
   planSaveError: string | null;
-  auxPlaylists: api.ManagedPlaylist[];
-  userPlaylists: api.ManagedPlaylist[];
+  auxPlaylists: api.NipswebPlaylist[];
+  managedPlaylists: api.ManagedPlaylist[];
+  userPlaylists: api.NipswebPlaylist[];
 }
 
 const initialState: ShowplanState = {
@@ -53,6 +61,7 @@ const initialState: ShowplanState = {
   planSaving: false,
   planSaveError: null,
   auxPlaylists: [],
+  managedPlaylists: [],
   userPlaylists: [],
 };
 
@@ -116,6 +125,54 @@ const showplan = createSlice({
     addItem(state, action: PayloadAction<TimeslotItem>) {
       state.plan!.push(action.payload);
     },
+    setItemTimings(
+      state,
+      action: PayloadAction<{
+        item: TimeslotItem | Track | AuxItem;
+        intro?: number;
+        cue?: number;
+        outro?: number;
+      }>
+    ) {
+      const item = action.payload.item;
+      const plan = state.plan;
+      if (!plan) {
+        throw new Error("Tried to set timings on empty showplan.");
+      }
+
+      // Try to find all plan items in the show plan that match the one we've given it.
+      const planItems = plan!.filter(
+        (x) => itemId(x, true) === itemId(item, true) && x.type === item.type
+      );
+
+      // Given we've loaded the track in, it *should* exist, but we could have deleted it.
+      if (planItems.length === 0) {
+        return;
+      }
+
+      planItems.forEach((planItem) => {
+        // Here we're setting all instances of the track/aux item with the updated intro/outro points.
+
+        if (action.payload.intro && "intro" in planItem) {
+          planItem.intro = action.payload.intro;
+        }
+
+        if (action.payload.outro && "outro" in planItem) {
+          planItem.outro = action.payload.outro;
+        }
+
+        // Cue's are special, they are per timeslotitem (so you can have multiple cue points with multiple timeslotitem instances of the track etc...)
+        if (
+          action.payload.cue &&
+          "cue" in planItem &&
+          "timeslotitemid" in planItem &&
+          "timeslotitemid" in item &&
+          item.timeslotitemid === planItem.timeslotitemid
+        ) {
+          planItem.cue = action.payload.cue;
+        }
+      });
+    },
     replaceGhost(
       state,
       action: PayloadAction<{ ghostId: string; newItemData: TimeslotItem }>
@@ -128,16 +185,21 @@ const showplan = createSlice({
       }
       state.plan![idx] = action.payload.newItemData;
     },
-    addUserPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
+    addUserPlaylists(state, action: PayloadAction<api.NipswebPlaylist[]>) {
       state.userPlaylists = state.userPlaylists.concat(action.payload);
     },
-    addAuxPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
+    addManagedPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
+      state.managedPlaylists = state.managedPlaylists.concat(action.payload);
+    },
+    addAuxPlaylists(state, action: PayloadAction<api.NipswebPlaylist[]>) {
       state.auxPlaylists = state.auxPlaylists.concat(action.payload);
     },
   },
 });
 
 export default showplan.reducer;
+
+export const { setItemTimings, planSaveError } = showplan.actions;
 
 export const moveItem = (
   timeslotid: number,
@@ -254,18 +316,24 @@ export const moveItem = (
   });
 
   dispatch(showplan.actions.applyOps(ops));
-  // const result = await api.updateShowplan(timeslotid, ops);
-  // if (!result.every(x => x.status)) {
-  //   dispatch(showplan.actions.planSaveError("Server says no!"));
-  // } else {
+
+  if (getState().settings.saveShowPlanChanges) {
+    const result = await api.updateShowplan(timeslotid, ops);
+    if (!result.every((x) => x.status)) {
+      dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+      return;
+    }
+  }
+
   dispatch(showplan.actions.setPlanSaving(false));
-  // }
 };
 
 export const addItem = (
   timeslotId: number,
   newItemData: TimeslotItem
 ): AppThunk => async (dispatch, getState) => {
+  dispatch(showplan.actions.setPlanSaving(true));
+  console.log("New Weight: " + newItemData.weight);
   const plan = cloneDeep(getState().showplan.plan!);
   const ops: api.UpdateOp[] = [];
 
@@ -291,56 +359,65 @@ export const addItem = (
   // Now, we're going to insert a "ghost" item into the plan while we wait for it to save
   // Note that we're going to flush the move-over operations to Redux now, so that the hole
   // is there - then, once we get a timeslotitemid, replace it with a proper item
-  //
-  // TODO: no we won't, we'll just insert it directly
+
   dispatch(showplan.actions.applyOps(ops));
-  dispatch(showplan.actions.addItem(newItemData));
 
-  // const ghostId = Math.random().toString(10);
-  // const newItemTitle =
-  //   newItemData.type === "central"
-  //     ? newItemData.artist + "-" + newItemData.title
-  //     : newItemData.title;
-  // const ghost: ItemGhost = {
-  //   ghostid: ghostId,
-  //   channel: newItemData.channel,
-  //   weight: newItemData.weight,
-  //   title: newItemTitle
-  // };
+  if (getState().settings.saveShowPlanChanges) {
+    const ghostId = Math.random().toString(10);
 
-  // const idForServer =
-  //   newItemData.type === "central"
-  //     ? `${newItemData.album.recordid}-${newItemData.trackid}`
-  //     : `ManagedDB-${newItemData.auxid}`;
+    const ghost: ItemGhost = {
+      ghostid: ghostId,
+      channel: newItemData.channel,
+      weight: newItemData.weight,
+      title: newItemData.title,
+      artist: newItemData.type === "central" ? newItemData.artist : "",
+      length: newItemData.length,
+      clean: newItemData.clean,
+      intro: newItemData.type === "central" ? newItemData.intro : 0,
+      outro: newItemData.type === "central" ? newItemData.outro : 0,
+      cue: 0,
+      type: "ghost",
+    };
 
-  // dispatch(showplan.actions.insertGhost(ghost));
-  // ops.push({
-  //   op: "AddItem",
-  //   channel: newItemData.channel,
-  //   weight: newItemData.weight,
-  //   id: idForServer
-  // });
-  // const result = await api.updateShowplan(timeslotId, ops);
-  // if (!result.every(x => x.status)) {
-  //   dispatch(showplan.actions.planSaveError("Server says no!"));
-  //   return;
-  // }
-  // const lastResult = result[result.length - 1]; // this is the add op
-  // const newItemId = lastResult.timeslotitemid!;
+    const idForServer =
+      newItemData.type === "central"
+        ? `${newItemData.album.recordid}-${newItemData.trackid}`
+        : `ManagedDB-${newItemData.managedid}`;
 
-  // newItemData.timeslotitemid = newItemId;
-  // dispatch(
-  //   showplan.actions.replaceGhost({
-  //     ghostId: "G" + ghostId,
-  //     newItemData
-  //   })
-  // );
+    dispatch(showplan.actions.insertGhost(ghost));
+    ops.push({
+      op: "AddItem",
+      channel: newItemData.channel,
+      weight: newItemData.weight,
+      id: idForServer,
+    });
+    const result = await api.updateShowplan(timeslotId, ops);
+    if (!result.every((x) => x.status)) {
+      dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+      return;
+    }
+    const lastResult = result[result.length - 1]; // this is the add op
+    const newItemId = lastResult.timeslotitemid!;
+
+    newItemData.timeslotitemid = newItemId;
+    dispatch(
+      showplan.actions.replaceGhost({
+        ghostId: "G" + ghostId,
+        newItemData,
+      })
+    );
+  } else {
+    // Just add it straight to the show plan without updating the server.
+    dispatch(showplan.actions.addItem(newItemData));
+  }
+  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const removeItem = (
   timeslotId: number,
   itemid: string
 ): AppThunk => async (dispatch, getState) => {
+  dispatch(showplan.actions.setPlanSaving(true));
   // This is a simplified version of the second case of moveItem
   const plan = cloneDeep(getState().showplan.plan!);
   const item = plan.find((x) => itemId(x) === itemid)!;
@@ -369,12 +446,15 @@ export const removeItem = (
     movingItem.weight -= 1;
   }
 
-  // const result = await api.updateShowplan(timeslotId, ops);
-  // if (!result.every(x => x.status)) {
-  //   dispatch(showplan.actions.planSaveError("Server says no!"));
-  //   return;
-  // }
+  if (getState().settings.saveShowPlanChanges) {
+    const result = await api.updateShowplan(timeslotId, ops);
+    if (!result.every((x) => x.status)) {
+      dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+      return;
+    }
+  }
   dispatch(showplan.actions.applyOps(ops));
+  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const getShowplan = (timeslotId: number): AppThunk => async (
@@ -417,15 +497,14 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
     if (ops.length > 0) {
       console.log("Is corrupt, repairing locally");
       dispatch(showplan.actions.applyOps(ops));
-      /*
+
       console.log("Repairing showplan", ops);
       const updateResult = await api.updateShowplan(timeslotId, ops);
-      if (!updateResult.every(x => x.status)) {
+      if (!updateResult.every((x) => x.status)) {
         console.error("Repair failed!");
         dispatch(showplan.actions.getShowplanError("Repair failed!"));
         return;
       }
-      */
     }
     dispatch(showplan.actions.getShowplanSuccess(plan.flat(2)));
   } catch (e) {
@@ -439,6 +518,13 @@ export const getPlaylists = (): AppThunk => async (dispatch) => {
     const userPlaylists = await api.getUserPlaylists();
 
     dispatch(showplan.actions.addUserPlaylists(userPlaylists));
+  } catch (e) {
+    console.error(e);
+  }
+
+  try {
+    const managedPlaylists = await api.getManagedPlaylists();
+    dispatch(showplan.actions.addManagedPlaylists(managedPlaylists));
   } catch (e) {
     console.error(e);
   }

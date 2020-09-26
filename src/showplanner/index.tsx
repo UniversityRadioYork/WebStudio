@@ -6,6 +6,7 @@ import {
   FaBookOpen,
   FaFileImport,
   FaMicrophone,
+  FaTrash,
   FaUpload,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
@@ -41,6 +42,7 @@ import {
   CML_CACHE,
   AuxLibrary,
   AUX_CACHE,
+  ManagedPlaylistLibrary,
 } from "./libraries";
 import { Player } from "./Player";
 
@@ -82,7 +84,7 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   const dispatch = useDispatch();
-  const { auxPlaylists, userPlaylists } = useSelector(
+  const { auxPlaylists, managedPlaylists, userPlaylists } = useSelector(
     (state: RootState) => state.showplan
   );
 
@@ -156,12 +158,24 @@ function LibraryColumn() {
                 {playlist.title}
               </option>
             ))}
+            <option disabled>Playlists</option>
+            {managedPlaylists.map((playlist) => (
+              <option
+                key={"managed-" + playlist.playlistid}
+                value={"managed-" + playlist.playlistid}
+              >
+                {playlist.title}
+              </option>
+            ))}
           </select>
         </div>
         <div className="border-top my-2"></div>
         {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
         {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
           <AuxLibrary libraryId={sauce} />
+        )}
+        {sauce.startsWith("managed-") && (
+          <ManagedPlaylistLibrary libraryId={sauce.substr(8)} />
         )}
         <span
           className={
@@ -259,13 +273,9 @@ function incrReducer(state: number, action: any) {
 }
 
 const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
-  const {
-    plan: showplan,
-    planLoadError,
-    planLoading,
-    planSaveError,
-    planSaving,
-  } = useSelector((state: RootState) => state.showplan);
+  const { plan: showplan, planLoadError, planLoading } = useSelector(
+    (state: RootState) => state.showplan
+  );
 
   // Tell Modals that #root is the main page content, for accessability reasons.
   Modal.setAppElement("#root");
@@ -314,6 +324,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
+        cue: 0,
         ...data,
       };
       dispatch(addItem(timeslotId, newItem));
@@ -327,6 +338,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
+        cue: 0,
         ...data,
       } as any;
       dispatch(addItem(timeslotId, newItem));
@@ -359,14 +371,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   return (
     <div className="sp-container m-0">
       <CombinedNavAlertBar />
-      <div className="sp-status">
-        {planSaving && <em>Plan saving...</em>}
-        {planSaveError && (
-          <strong>
-            Catastrophe! <code>{planSaveError}</code>
-          </strong>
-        )}
-      </div>
       <div className="sp">
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="channels">
@@ -391,6 +395,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       </div>
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
+        <MenuItem onClick={onCtxRemoveClick}>
+          <FaTrash /> Remove
+        </MenuItem>
       </ContextMenu>
       <OptionsMenu />
       <WelcomeModal

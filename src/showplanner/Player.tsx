@@ -11,9 +11,12 @@ import {
 import { omit } from "lodash";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
+import * as ShowPlanState from "../showplanner/state";
 import { secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
+import * as api from "../api";
+import { AppThunk } from "../store";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -54,6 +57,91 @@ function PlayerNumbers({ id }: { id: number }) {
         End - {timestampToHHMM(endTime)}
       </span>
     </>
+  );
+}
+
+const setTrackIntro = (
+  track: api.Track,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch) => {
+  try {
+    dispatch(MixerState.setLoadedItemIntro(player, secs));
+    await api.setTrackIntro(track.trackid, secs);
+    dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
+    console.error("Failed to set track intro: " + e);
+  }
+};
+
+const setTrackOutro = (
+  track: api.Track,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch) => {
+  try {
+    dispatch(MixerState.setLoadedItemOutro(player, secs));
+    await api.setTrackOutro(track.trackid, secs);
+    dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
+    console.error("Failed to set track outro: " + e);
+  }
+};
+
+const setTrackCue = (
+  item: api.TimeslotItem,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch) => {
+  try {
+    dispatch(MixerState.setLoadedItemCue(player, secs));
+    await api.setTimeslotItemCue(item.timeslotitemid, secs);
+    dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
+    console.error("Failed to set track cue: " + e);
+  }
+};
+
+function TimingButtons({ id }: { id: number }) {
+  const dispatch = useDispatch();
+  const state = useSelector((state: RootState) => state.mixer.players[id]);
+  return (
+    <div className="timing-buttons">
+      <div className="label">Set Marker:</div>
+      <div
+        className="intro btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
+          if (state.loadedItem?.type === "central") {
+            dispatch(setTrackIntro(state.loadedItem, state.timeCurrent, id));
+          }
+        }}
+      >
+        Intro
+      </div>
+      <div
+        className="cue btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
+          if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
+            dispatch(setTrackCue(state.loadedItem, state.timeCurrent, id));
+          }
+        }}
+      >
+        Cue
+      </div>
+      <div
+        className="outro btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
+          if (state.loadedItem?.type === "central") {
+            dispatch(setTrackOutro(state.loadedItem, state.timeCurrent, id));
+          }
+        }}
+      >
+        Outro
+      </div>
+    </div>
   );
 }
 
@@ -202,34 +290,37 @@ export function Player({ id }: { id: number }) {
           </div>
         </div>
 
-        <div className="p-0 card-footer waveform">
-          <PlayerNumbers id={id} />
-          {playerState.loadedItem !== null &&
-            "intro" in playerState.loadedItem && (
-              <span className="m-0 intro bypass-click">
-                {playerState.loadedItem !== null
-                  ? secToHHMM(
-                      playerState.loadedItem.intro
-                        ? playerState.loadedItem.intro
-                        : 0
-                    )
-                  : "00:00:00"}{" "}
-                - In
-              </span>
-            )}
-          <div
-            className={
-              "m-0 graph" + (playerState.loading !== -1 ? " loading" : "")
-            }
-            id={"waveform-" + id}
-            style={
-              playerState.loading !== -1
-                ? {
-                    width: playerState.loading * 100 + "%",
-                  }
-                : {}
-            }
-          ></div>
+        <div className="p-0 card-footer">
+          <TimingButtons id={id} />
+          <div className="waveform">
+            <PlayerNumbers id={id} />
+            {playerState.loadedItem !== null &&
+              "intro" in playerState.loadedItem && (
+                <span className="m-0 intro bypass-click">
+                  {playerState.loadedItem !== null
+                    ? secToHHMM(
+                        playerState.loadedItem.intro
+                          ? playerState.loadedItem.intro
+                          : 0
+                      )
+                    : "00:00:00"}{" "}
+                  - In
+                </span>
+              )}
+            <div
+              className={
+                "m-0 graph" + (playerState.loading !== -1 ? " loading" : "")
+              }
+              id={"waveform-" + id}
+              style={
+                playerState.loading !== -1
+                  ? {
+                      width: playerState.loading * 100 + "%",
+                    }
+                  : {}
+              }
+            ></div>
+          </div>
         </div>
       </div>
       <div

@@ -57,14 +57,71 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this.wavesurfer.drawBuffer();
   }
 
+  setCurrentTime(secs: number) {
+    this.wavesurfer.setCurrentTime(secs);
+  }
+
   setIntro(duration: number) {
+    if ("intro" in this.wavesurfer.regions.list) {
+      this.wavesurfer.regions.list.intro.end = duration;
+      this.redraw();
+      return;
+    }
+
     this.wavesurfer.addRegion({
       id: "intro",
       resize: false,
+      drag: false,
       start: 0,
       end: duration,
-      color: "rgba(125,0,255, 0.12)",
+      color: "rgba(125,0,255, 0.3)",
     });
+  }
+
+  setCue(startTime: number) {
+    const duration = this.wavesurfer.getDuration();
+    const cueWidth = 0.01 * duration; // Cue region marker to be 1% of track length
+    if ("cue" in this.wavesurfer.regions.list) {
+      this.wavesurfer.regions.list.cue.start = startTime;
+      this.wavesurfer.regions.list.cue.end = startTime + cueWidth;
+      this.redraw();
+      return;
+    }
+
+    this.wavesurfer.addRegion({
+      id: "cue",
+      resize: false,
+      drag: false,
+      start: startTime,
+      end: startTime + cueWidth,
+      color: "rgba(0,100,0, 0.8)",
+    });
+  }
+
+  setOutro(startTime: number) {
+    if ("outro" in this.wavesurfer.regions.list) {
+      // If the outro is set to 0, we assume that's no outro.
+      if (startTime === 0) {
+        delete this.wavesurfer.regions.list.outro;
+      } else {
+        this.wavesurfer.regions.list.outro.start = startTime;
+      }
+
+      this.redraw();
+      return;
+    }
+
+    // Again, only show a region if it's not the whole song with default of 0.
+    if (startTime !== 0) {
+      this.wavesurfer.addRegion({
+        id: "outro",
+        resize: false,
+        drag: false,
+        start: startTime,
+        end: this.wavesurfer.getDuration(),
+        color: "rgba(255, 0, 0, 0.2)",
+      });
+    }
   }
 
   setVolume(val: number) {
@@ -98,6 +155,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     const wavesurfer = WaveSurfer.create({
       audioContext: engine.audioContext,
       container: "#waveform-" + player.toString(),
+      cursorColor: "#777",
+      cursorWidth: 3,
       waveColor: "#CCCCFF",
       backgroundColor: "#FFFFFF",
       progressColor: "#9999FF",
@@ -301,6 +360,13 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     const player = Player.create(this, number, url);
     this.players[number] = player;
     return player;
+  }
+
+  public getPlayer(number: number) {
+    if (number < this.players.length) {
+      return this.players[number];
+    }
+    return null;
   }
 
   // Wavesurfer needs cleanup to remove the old audio mediaelements. Memory leak!

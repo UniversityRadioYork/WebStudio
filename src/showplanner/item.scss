@@ -11,6 +11,10 @@
     background-color: #10c998 !important;
   }
 
+  &.ghost {
+    opacity: 0.5;
+  }
+
   .icon {
     margin: auto auto;
     margin-top: 2px;
