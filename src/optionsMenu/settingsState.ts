@@ -23,7 +23,7 @@ const settingsState = createSlice({
     channelVUs: true,
     channelVUsStereo: true,
     resetTrimOnLoad: true,
-    saveShowPlanChanges: true,
+    saveShowPlanChanges: false,
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(
