@@ -63,7 +63,7 @@ export const Item = memo(function Item({
               playerState &&
               playerState.loadedItem !== null &&
               itemId(playerState.loadedItem) === id
-                ? "active"
+                ? " active"
                 : ""
             }`
           }

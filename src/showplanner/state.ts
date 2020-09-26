@@ -40,7 +40,7 @@ export function itemId(
       ? item.trackid.toString()
       : "T" + item.album.recordid + "-" + item.trackid;
   }
-  throw new Error();
+  throw new Error("Can't get id of unknown item.");
 }
 
 interface ShowplanState {
