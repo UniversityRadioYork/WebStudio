@@ -204,7 +204,15 @@ function MicControl() {
       </h2>
       {!state.open && (
         <p className="alert-info p-2 mb-0">
-          The microphone has not been setup. Go to options.
+          The microphone has not been setup. Go to{" "}
+          <button
+            className="btn btn-link m-0 mb-1 p-0"
+            onClick={() => dispatch(OptionsMenuState.open())}
+          >
+            {" "}
+            options
+          </button>
+          .
         </p>
       )}
       {state.open && proMode && (
@@ -252,11 +260,6 @@ function MicControl() {
           </div>
         </>
       )}
-      <div>
-        <button onClick={() => dispatch(OptionsMenuState.open())}>
-          Options
-        </button>
-      </div>
     </div>
   );
 }
