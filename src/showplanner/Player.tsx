@@ -7,6 +7,7 @@ import {
   FaPlay,
   FaPause,
   FaStop,
+  FaTrash,
 } from "react-icons/fa";
 import { omit } from "lodash";
 import { RootState } from "../rootReducer";
@@ -108,14 +109,26 @@ const setTrackCue = (
 function TimingButtons({ id }: { id: number }) {
   const dispatch = useDispatch();
   const state = useSelector((state: RootState) => state.mixer.players[id]);
+  const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+
   return (
-    <div className="timing-buttons">
-      <div className="label">Set Marker:</div>
+    <div
+      className={
+        "timing-buttons" + (showDeleteMenu ? " bg-dark text-light" : "")
+      }
+    >
+      <div className="label">{showDeleteMenu ? "Delete:" : "Set"} Marker:</div>
       <div
         className="intro btn btn-sm btn-outline-secondary rounded-0"
         onClick={() => {
           if (state.loadedItem?.type === "central") {
-            dispatch(setTrackIntro(state.loadedItem, state.timeCurrent, id));
+            dispatch(
+              setTrackIntro(
+                state.loadedItem,
+                showDeleteMenu ? 0 : state.timeCurrent,
+                id
+              )
+            );
           }
         }}
       >
@@ -125,7 +138,13 @@ function TimingButtons({ id }: { id: number }) {
         className="cue btn btn-sm btn-outline-secondary rounded-0"
         onClick={() => {
           if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
-            dispatch(setTrackCue(state.loadedItem, state.timeCurrent, id));
+            dispatch(
+              setTrackCue(
+                state.loadedItem,
+                showDeleteMenu ? 0 : state.timeCurrent,
+                id
+              )
+            );
           }
         }}
       >
@@ -135,11 +154,28 @@ function TimingButtons({ id }: { id: number }) {
         className="outro btn btn-sm btn-outline-secondary rounded-0"
         onClick={() => {
           if (state.loadedItem?.type === "central") {
-            dispatch(setTrackOutro(state.loadedItem, state.timeCurrent, id));
+            dispatch(
+              setTrackOutro(
+                state.loadedItem,
+                showDeleteMenu ? 0 : state.timeCurrent,
+                id
+              )
+            );
           }
         }}
       >
         Outro
+      </div>
+      <div
+        className={
+          "delete btn btn-sm btn-outline-secondary rounded-0" +
+          (showDeleteMenu ? " active" : "")
+        }
+        onClick={() => {
+          setShowDeleteMenu(!showDeleteMenu);
+        }}
+      >
+        <FaTrash />
       </div>
     </div>
   );
