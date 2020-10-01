@@ -394,7 +394,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         </DragDropContext>
       </div>
       <ContextMenu id={TS_ITEM_MENU_ID}>
-        <MenuItem onClick={onCtxRemoveClick}>Remove</MenuItem>
         <MenuItem onClick={onCtxRemoveClick}>
           <FaTrash /> Remove
         </MenuItem>
