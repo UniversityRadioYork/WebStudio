@@ -28,7 +28,7 @@ export function ImporterModal(props: ImporterProps) {
       </div>
       <hr />
       <iframe
-        id="uploadIframe"
+        id="importerIframe"
         src="https://ury.org.uk/myradio/NIPSWeb/import/"
         frameBorder="0"
         title="Import From Showplan"
