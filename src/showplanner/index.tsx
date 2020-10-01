@@ -207,13 +207,10 @@ function MicControl() {
           The microphone has not been setup. Go to options.
         </p>
       )}
-      {proMode && (
-        <span
-          id="micLiveTimer"
-          className={state.open && state.volume > 0 ? "live" : ""}
-        >
+      {state.open && proMode && (
+        <span id="micLiveTimer" className={state.volume > 0 ? "live" : ""}>
           <span className="text">Mic Live: </span>
-          {state.open && state.volume > 0 ? (
+          {state.volume > 0 ? (
             <Stopwatch
               seconds={0}
               minutes={0}
@@ -227,30 +224,34 @@ function MicControl() {
           )}
         </span>
       )}
-      <div id="micMeter">
-        <VUMeter
-          width={250}
-          height={40}
-          source="mic-final"
-          range={[-40, 3]}
-          greenRange={[-10, -5]}
-          stereo={proMode}
-        />
-      </div>
-      <div className={`mixer-buttons ${!state.open && "disabled"}`}>
-        <div
-          className="mixer-buttons-backdrop"
-          style={{
-            width: state.volume * 100 + "%",
-          }}
-        ></div>
-        <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
-          Off
-        </button>
-        <button onClick={() => dispatch(MixerState.setMicVolume("full"))}>
-          Full
-        </button>
-      </div>
+      {state.open && (
+        <>
+          <div id="micMeter">
+            <VUMeter
+              width={250}
+              height={40}
+              source="mic-final"
+              range={[-40, 3]}
+              greenRange={[-10, -5]}
+              stereo={proMode}
+            />
+          </div>
+          <div className={`mixer-buttons ${!state.open && "disabled"}`}>
+            <div
+              className="mixer-buttons-backdrop"
+              style={{
+                width: state.volume * 100 + "%",
+              }}
+            ></div>
+            <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
+              Off
+            </button>
+            <button onClick={() => dispatch(MixerState.setMicVolume("full"))}>
+              Full
+            </button>
+          </div>
+        </>
+      )}
       <div>
         <button onClick={() => dispatch(OptionsMenuState.open())}>
           Options
