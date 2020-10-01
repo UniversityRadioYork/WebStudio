@@ -65,10 +65,12 @@ const setTrackIntro = (
   track: api.Track,
   secs: number,
   player: number
-): AppThunk => async (dispatch) => {
+): AppThunk => async (dispatch, getState) => {
   try {
     dispatch(MixerState.setLoadedItemIntro(player, secs));
-    await api.setTrackIntro(track.trackid, secs);
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTrackIntro(track.trackid, secs);
+    }
     dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
@@ -80,10 +82,12 @@ const setTrackOutro = (
   track: api.Track,
   secs: number,
   player: number
-): AppThunk => async (dispatch) => {
+): AppThunk => async (dispatch, getState) => {
   try {
     dispatch(MixerState.setLoadedItemOutro(player, secs));
-    await api.setTrackOutro(track.trackid, secs);
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTrackOutro(track.trackid, secs);
+    }
     dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
@@ -95,10 +99,12 @@ const setTrackCue = (
   item: api.TimeslotItem,
   secs: number,
   player: number
-): AppThunk => async (dispatch) => {
+): AppThunk => async (dispatch, getState) => {
   try {
     dispatch(MixerState.setLoadedItemCue(player, secs));
-    await api.setTimeslotItemCue(item.timeslotitemid, secs);
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTimeslotItemCue(item.timeslotitemid, secs);
+    }
     dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
