@@ -120,6 +120,11 @@ button {
   color: rgb(255, 0, 0);
 }
 
+.timing-buttons.not-central .intro,
+.timing-buttons.not-central .outro {
+  opacity: 0.2;
+}
+
 .timing-buttons.text-light > * {
   color: white;
 }

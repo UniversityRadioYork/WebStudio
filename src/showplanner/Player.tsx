@@ -114,7 +114,11 @@ function TimingButtons({ id }: { id: number }) {
   return (
     <div
       className={
-        "timing-buttons" + (showDeleteMenu ? " bg-dark text-light" : "")
+        "timing-buttons " +
+        (state.loadedItem && state.loadedItem.type !== "central"
+          ? "not-central"
+          : "") +
+        (showDeleteMenu ? " bg-dark text-light" : "")
       }
     >
       <div className="label">{showDeleteMenu ? "Delete:" : "Set"} Marker:</div>
