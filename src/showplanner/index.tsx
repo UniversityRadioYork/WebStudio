@@ -2,9 +2,9 @@ import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
 import {
-  FaAlignJustify,
   FaBookOpen,
   FaFileImport,
+  FaBars,
   FaMicrophone,
   FaTrash,
   FaUpload,
@@ -198,68 +198,73 @@ function MicControl() {
 
   return (
     <div className="mic-control">
-      <h2>
-        <FaMicrophone className="mx-1" size={28} />
-        Microphone
-      </h2>
-      {!state.open && (
-        <p className="alert-info p-2 mb-0">
-          The microphone has not been setup. Go to{" "}
-          <button
-            className="btn btn-link m-0 mb-1 p-0"
-            onClick={() => dispatch(OptionsMenuState.open())}
-          >
-            {" "}
-            options
-          </button>
-          .
-        </p>
-      )}
-      {state.open && proMode && (
-        <span id="micLiveTimer" className={state.volume > 0 ? "live" : ""}>
-          <span className="text">Mic Live: </span>
-          {state.volume > 0 ? (
-            <Stopwatch
-              seconds={0}
-              minutes={0}
-              hours={0}
-              render={({ formatted }) => {
-                return <span>{formatted}</span>;
-              }}
-            />
-          ) : (
-            "00:00:00"
-          )}
-        </span>
-      )}
-      {state.open && (
-        <>
-          <div id="micMeter">
-            <VUMeter
-              width={250}
-              height={40}
-              source="mic-final"
-              range={[-40, 3]}
-              greenRange={[-10, -5]}
-              stereo={proMode}
-            />
-          </div>
-          <div className={`mixer-buttons ${!state.open && "disabled"}`}>
-            <div
-              className="mixer-buttons-backdrop"
-              style={{
-                width: state.volume * 100 + "%",
-              }}
-            ></div>
-            <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
-              Off
+      <div data-toggle="collapse" data-target="#mic-control-menu">
+        <h2>
+          <FaMicrophone className="mx-1" size={28} />
+          Microphone
+        </h2>
+        <FaBars className="toggle mx-0 mt-2 text-muted" size={20} />
+      </div>
+      <div id="mic-control-menu" className="collapse show">
+        {!state.open && (
+          <p className="alert-info p-2 mb-0">
+            The microphone has not been setup. Go to{" "}
+            <button
+              className="btn btn-link m-0 mb-1 p-0"
+              onClick={() => dispatch(OptionsMenuState.open())}
+            >
+              {" "}
+              options
             </button>
-            <button onClick={() => dispatch(MixerState.setMicVolume("full"))}>
-              Full
-            </button>
-          </div>
-        </>
-      )}
+            .
+          </p>
+        )}
+        {state.open && proMode && (
+          <span id="micLiveTimer" className={state.volume > 0 ? "live" : ""}>
+            <span className="text">Mic Live: </span>
+            {state.volume > 0 ? (
+              <Stopwatch
+                seconds={0}
+                minutes={0}
+                hours={0}
+                render={({ formatted }) => {
+                  return <span>{formatted}</span>;
+                }}
+              />
+            ) : (
+              "00:00:00"
+            )}
+          </span>
+        )}
+        {state.open && (
+          <>
+            <div id="micMeter">
+              <VUMeter
+                width={250}
+                height={40}
+                source="mic-final"
+                range={[-40, 3]}
+                greenRange={[-10, -5]}
+                stereo={proMode}
+              />
+            </div>
+            <div className={`mixer-buttons ${!state.open && "disabled"}`}>
+              <div
+                className="mixer-buttons-backdrop"
+                style={{
+                  width: state.volume * 100 + "%",
+                }}
+              ></div>
+              <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
+                Off
+              </button>
+              <button onClick={() => dispatch(MixerState.setMicVolume("full"))}>
+                Full
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -387,7 +392,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
             className="btn btn-outline-dark btn-sm mb-0"
             onClick={() => toggleSidebar()}
           >
-            <FaAlignJustify style={{ verticalAlign: "text-bottom" }} />
+            <FaBars style={{ verticalAlign: "text-bottom" }} />
             &nbsp; Toggle Sidebar
           </span>
           <div id="sidebar">
