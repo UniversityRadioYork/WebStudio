@@ -203,7 +203,11 @@ function MicControl() {
           <FaMicrophone className="mx-1" size={28} />
           Microphone
         </h2>
-        <FaBars className="toggle mx-0 mt-2 text-muted" size={20} />
+        <FaBars
+          className="toggle mx-0 mt-2 text-muted"
+          title="Toggle Microphone Menu"
+          size={20}
+        />
       </div>
       <div id="mic-control-menu" className="collapse show">
         {!state.open && (
