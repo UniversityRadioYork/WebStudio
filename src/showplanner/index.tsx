@@ -372,17 +372,18 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   }
 
   // Add support for reloading the show plan from the iFrames.
-  window.addEventListener(
-    "message",
-    (event) => {
-      if (event.data === "reload_showplan") {
-        session.currentTimeslot !== null &&
-          dispatch(getShowplan(session.currentTimeslot.timeslot_id));
-      }
-    },
-    false
-  );
-
+  useEffect(() => {
+    window.addEventListener(
+      "message",
+      (event) => {
+        if (event.data === "reload_showplan") {
+          session.currentTimeslot !== null &&
+            dispatch(getShowplan(session.currentTimeslot.timeslot_id));
+        }
+      },
+      false
+    );
+  });
   if (showplan === null) {
     return (
       <LoadingDialogue
