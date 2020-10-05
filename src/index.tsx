@@ -18,6 +18,12 @@ if (
   raygun("setVersion", process.env.REACT_APP_VERSION);
 }
 
+raygun("withCustomData", function() {
+  return {
+    state: store.getState(),
+  };
+});
+
 function render() {
   ReactDOM.render(
     <Provider store={store}>
