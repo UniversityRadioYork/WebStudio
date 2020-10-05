@@ -45,7 +45,7 @@ export function ImporterModal(props: ImporterProps) {
       <hr />
       <iframe
         id="importerIframe"
-        src="https://ury.org.uk/myradio/NIPSWeb/import/"
+        src={process.env.REACT_APP_MYRADIO_NONAPI_BASE + "/NIPSWeb/import/"}
         frameBorder="0"
         title="Import From Showplan"
       ></iframe>
