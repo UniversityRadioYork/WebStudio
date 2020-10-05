@@ -376,6 +376,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     window.addEventListener(
       "message",
       (event) => {
+        if (!event.origin.includes("ury.org.uk")) {
+          console.log(event.origin);
+          return;
+        }
         if (event.data === "reload_showplan") {
           session.currentTimeslot !== null &&
             dispatch(getShowplan(session.currentTimeslot.timeslot_id));

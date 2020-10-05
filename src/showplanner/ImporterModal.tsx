@@ -16,6 +16,10 @@ export function ImporterModal(props: ImporterProps) {
     window.addEventListener(
       "message",
       (event) => {
+        if (!event.origin.includes("ury.org.uk")) {
+          console.log(event.origin);
+          return;
+        }
         if (event.data === "reload_showplan") {
           props.close();
         }
