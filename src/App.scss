@@ -76,6 +76,8 @@ $number-of-channels: 3;
       background: black;
       canvas {
         max-width: 100%;
+        border-left: 1px solid gray;
+        border-right: 1px solid gray;
       }
     }
   }
