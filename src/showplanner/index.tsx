@@ -372,12 +372,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   }
 
   // Add support for reloading the show plan from the iFrames.
+  // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
   useEffect(() => {
     window.addEventListener(
       "message",
       (event) => {
         if (!event.origin.includes("ury.org.uk")) {
-          console.log(event.origin);
           return;
         }
         if (event.data === "reload_showplan") {

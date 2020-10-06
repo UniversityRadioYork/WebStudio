@@ -12,12 +12,12 @@ interface ImporterProps {
 // or update the importer to work that out itself.
 export function ImporterModal(props: ImporterProps) {
   // Add support for closing the modal when the importer wants to reload the show plan.
+  // There is a similar listener in showplanner/index.tsx to actually reload the show plan.
   useEffect(() => {
     window.addEventListener(
       "message",
       (event) => {
         if (!event.origin.includes("ury.org.uk")) {
-          console.log(event.origin);
           return;
         }
         if (event.data === "reload_showplan") {
