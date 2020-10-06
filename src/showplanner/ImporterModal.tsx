@@ -27,7 +27,7 @@ export function ImporterModal(props: ImporterProps) {
     return () => {
       window.removeEventListener("message", reloadListener);
     };
-  });
+  }, [props]);
   return (
     <Modal isOpen={props.isOpen} onRequestClose={props.close}>
       <div>

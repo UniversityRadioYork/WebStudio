@@ -388,7 +388,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     return () => {
       window.removeEventListener("message", reloadListener);
     };
-  });
+  }, [dispatch, session.currentTimeslot]);
 
   if (showplan === null) {
     return (
