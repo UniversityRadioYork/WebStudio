@@ -33,7 +33,10 @@ const actionHistoryMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   while (actionHistory.length > ACTION_HISTORY_MAX_SIZE) {
     actionHistory.shift();
   }
-  actionHistory.push(action);
+  actionHistory.push({
+    ...action,
+    _timestamp: new Date().toString(),
+  });
   return next(action);
 };
 
