@@ -27,7 +27,9 @@ export function LibraryUploadModal(props: LibraryUploadProps) {
       <hr />
       <iframe
         id="uploadIframe"
-        src="https://ury.org.uk/myradio/NIPSWeb/manage_library/"
+        src={
+          process.env.REACT_APP_MYRADIO_NONAPI_BASE + "/NIPSWeb/manage_library/"
+        }
         frameBorder="0"
         title="Upload to Library"
       ></iframe>

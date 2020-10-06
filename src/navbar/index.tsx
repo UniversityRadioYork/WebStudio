@@ -10,6 +10,7 @@ import {
   FaBroadcastTower,
   FaSpinner,
   FaExclamationTriangle,
+  FaCog,
 } from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
@@ -23,6 +24,8 @@ import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import { getShowplan } from "../showplanner/state";
+
+import * as OptionsMenuState from "../optionsMenu/state";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -238,7 +241,7 @@ export function NavBarMain() {
               "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
               (broadcastState.recordingState === "CONNECTED"
                 ? "btn-outline-danger active"
-                : "btn-outline-warning")
+                : "btn-outline-light")
             }
             onClick={() =>
               dispatch(
@@ -270,6 +273,13 @@ export function NavBarMain() {
             )}
           </li>
         )}
+        <li
+          className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link"
+          onClick={() => dispatch(OptionsMenuState.open())}
+        >
+          <FaCog size={17} /> Options
+        </li>
+
         <li className="nav-item px-2 nav-vu">
           <VUMeter
             width={235}

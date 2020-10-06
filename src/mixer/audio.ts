@@ -102,7 +102,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     if ("outro" in this.wavesurfer.regions.list) {
       // If the outro is set to 0, we assume that's no outro.
       if (startTime === 0) {
-        delete this.wavesurfer.regions.list.outro;
+        // Can't just delete the outro, so set it to the end of the track to hide it.
+        this.wavesurfer.regions.list.outro.start = this.wavesurfer.regions.list.outro.end;
       } else {
         this.wavesurfer.regions.list.outro.start = startTime;
       }

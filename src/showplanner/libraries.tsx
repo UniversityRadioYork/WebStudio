@@ -57,14 +57,14 @@ export function CentralMusicLibrary() {
     <div className="library library-central">
       <span className="px-2">
         <input
-          className="form-control"
+          className="form-control form-control-sm"
           type="text"
           placeholder="Filter by track..."
           value={track}
           onChange={(e) => setTrack(e.target.value)}
         />
         <input
-          className="form-control mt-2"
+          className="form-control form-control-sm mt-2"
           type="text"
           placeholder="Filter by artist..."
           value={artist}
@@ -124,14 +124,14 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
     <div className="library library-central">
       <span className="px-2">
         <input
-          className="form-control"
+          className="form-control form-control-sm"
           type="text"
           placeholder="Filter by track..."
           value={track}
           onChange={(e) => setTrack(e.target.value)}
         />
         <input
-          className="form-control mt-2"
+          className="form-control form-control-sm mt-2"
           type="text"
           placeholder="Filter by artist..."
           value={artist}
@@ -211,7 +211,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
     <div className="library library-aux">
       <span className="px-2">
         <input
-          className="form-control"
+          className="form-control form-control-sm"
           type="text"
           placeholder="Filter..."
           value={searchQuery}
