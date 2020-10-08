@@ -325,8 +325,8 @@ export const moveItem = (
         error: new Error("Showplan update failure [moveItem]"),
         customData: {
           ops,
-          result
-        }
+          result,
+        },
       });
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
@@ -405,8 +405,8 @@ export const addItem = (
         error: new Error("Showplan update failure [addItem]"),
         customData: {
           ops,
-          result
-        }
+          result,
+        },
       });
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
@@ -468,8 +468,8 @@ export const removeItem = (
         error: new Error("Showplan update failure [removeItem]"),
         customData: {
           ops,
-          result
-        }
+          result,
+        },
       });
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
