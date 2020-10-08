@@ -3,6 +3,7 @@ import * as api from "../api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { cloneDeep } from "lodash";
+import raygun from "raygun4js";
 
 export interface ItemGhost {
   type: "ghost";
@@ -320,6 +321,13 @@ export const moveItem = (
   if (getState().settings.saveShowPlanChanges) {
     const result = await api.updateShowplan(timeslotid, ops);
     if (!result.every((x) => x.status)) {
+      raygun("send", {
+        error: new Error("Showplan update failure [moveItem]"),
+        customData: {
+          ops,
+          result,
+        },
+      });
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
     }
@@ -393,6 +401,13 @@ export const addItem = (
     });
     const result = await api.updateShowplan(timeslotId, ops);
     if (!result.every((x) => x.status)) {
+      raygun("send", {
+        error: new Error("Showplan update failure [addItem]"),
+        customData: {
+          ops,
+          result,
+        },
+      });
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
     }
@@ -449,6 +464,13 @@ export const removeItem = (
   if (getState().settings.saveShowPlanChanges) {
     const result = await api.updateShowplan(timeslotId, ops);
     if (!result.every((x) => x.status)) {
+      raygun("send", {
+        error: new Error("Showplan update failure [removeItem]"),
+        customData: {
+          ops,
+          result,
+        },
+      });
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
     }
