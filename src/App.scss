@@ -23,6 +23,38 @@ $number-of-channels: 3;
   }
 }
 
+.hover-menu {
+  .hover-label {
+    display: none;
+  }
+
+  @media (max-height: 900px) {
+    .hover-label {
+      font-size: 10px;
+      margin-top: -5px;
+      display: block;
+      width: 100%;
+    }
+
+    &:hover {
+      height: 100%;
+
+      .hover-label-hide {
+        display: none;
+      }
+    }
+
+    &:not(:hover) {
+      overflow: hidden;
+      height: 15px;
+
+      > *:not(.hover-label) {
+        display: none !important;
+      }
+    }
+  }
+}
+
 .sp {
   display: grid;
   grid-template-areas: "channels sb-tg sb";
@@ -38,6 +70,16 @@ $number-of-channels: 3;
     grid-template-rows: 100%;
     grid-gap: 10px;
     padding: 10px;
+
+    .channel-vu {
+      text-align: center;
+      background: black;
+      canvas {
+        max-width: 100%;
+        border-left: 1px solid gray;
+        border-right: 1px solid gray;
+      }
+    }
   }
   #sidebar {
     grid-area: sb;
@@ -59,7 +101,13 @@ $number-of-channels: 3;
     }
     .mic-control {
       background: var(--sidebar-background);
-      padding: 0 0 0.4rem 0;
+      position: relative;
+      .toggle {
+        cursor: pointer;
+        position: absolute;
+        right: 1em;
+        top: 0.2em;
+      }
     }
   }
   #sidebar-toggle {
@@ -77,5 +125,67 @@ $number-of-channels: 3;
     100% {
       transform: rotate(359deg);
     }
+  }
+}
+
+#uploadIframe {
+  width: 100%;
+  max-height: 600px;
+  height: 60vh;
+  box-sizing: content-box;
+}
+
+#importerIframe {
+  width: 100%;
+  height: 100%;
+  box-sizing: content-box;
+}
+
+.sp-mic-live {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9000;
+  pointer-events: none;
+  box-shadow: inset 0 0 3px 6px red;
+}
+
+#micLiveTimer {
+  background: black;
+  border: 3px solid white;
+  color: white;
+  font-weight: bold;
+  padding: 2px;
+  width: 100%;
+  display: inline-block;
+  text-align: center;
+
+  padding: 0;
+
+  .text {
+    margin: 0;
+    float: left;
+    padding: 0 10px;
+    border-right: 3px solid white;
+  }
+
+  &.live {
+    border: 3px solid red;
+    .text {
+      border-right: 3px solid red;
+      background: red;
+      color: white;
+    }
+  }
+}
+
+#micMeter {
+  background: black;
+  max-height: 40px;
+  text-align: center;
+  canvas {
+    max-width: 100%;
   }
 }
