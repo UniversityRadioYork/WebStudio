@@ -336,10 +336,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
 
-    this.micCalibrationGain.connect(this.micPrecompAnalyser);
-    this.micCalibrationGain
-      .connect(this.micCompressor)
-      .connect(this.micMixGain)
+    // We run setMicProcessingEnabled() later to either patch to the compressor, or bypass it to the mixGain node.
+    this.micCompressor.connect(this.micMixGain);
+    this.micMixGain
       .connect(this.micFinalAnalyser)
       // we don't run the mic into masterAnalyser to ensure it doesn't go to audioContext.destination
       .connect(this.streamingAnalyser);
@@ -447,6 +446,18 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   setMicVolume(value: number) {
     this.micMixGain.gain.value = value;
+  }
+
+  setMicProcessingEnabled(value: boolean) {
+    // Disconnect whatever was connected before.
+    this.micCalibrationGain.disconnect();
+    this.micCalibrationGain.connect(this.micPrecompAnalyser);
+    console.log("Setting mic processing to: ", value);
+    if (value) {
+      this.micCalibrationGain.connect(this.micCompressor);
+    } else {
+      this.micCalibrationGain.connect(this.micMixGain);
+    }
   }
 
   getLevels(source: LevelsSource, stereo: boolean): [number, number] {

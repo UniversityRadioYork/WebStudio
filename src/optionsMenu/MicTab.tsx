@@ -132,6 +132,19 @@ export function MicTab() {
         <option value={"stereo-normal"} label="Stereo" />
         <option value={"stereo-flipped"} label="Stereo - Flipped" />
       </select>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          checked={state.processing}
+          onChange={(e) => {
+            dispatch(MixerState.setMicProcessingEnabled(e.target.checked));
+          }}
+        />
+        <label className="form-check-label">
+          Apply Mic Processing (Default: On)
+        </label>
+      </div>
       <hr />
       <div style={{ opacity: state.open ? 1 : 0.5 }}>
         <h3>Calibration</h3>

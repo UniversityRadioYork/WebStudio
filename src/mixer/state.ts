@@ -53,6 +53,7 @@ interface MicState {
   volume: 1 | 0;
   baseGain: number;
   id: string | null;
+  processing: boolean;
 }
 
 interface MixerState {
@@ -88,6 +89,7 @@ const mixerState = createSlice({
       baseGain: 0,
       openError: null,
       id: "None",
+      processing: true,
     },
   } as MixerState,
   reducers: {
@@ -209,6 +211,9 @@ const mixerState = createSlice({
     },
     setMicBaseGain(state, action: PayloadAction<number>) {
       state.mic.baseGain = action.payload;
+    },
+    setMicProcessingEnabled(state, action: PayloadAction<boolean>) {
+      state.mic.processing = action.payload;
     },
     setTimeCurrent(
       state,
@@ -695,11 +700,6 @@ export const openMicrophone = (
   micID: string,
   micMapping: ChannelMapping
 ): AppThunk => async (dispatch, getState) => {
-  // TODO: not sure why this is here, and I have a hunch it may break shit, so disabling
-  // File a ticket if it breaks stuff. -Marks
-  // if (getState().mixer.mic.open) {
-  // 	micSource?.disconnect();
-  // }
   if (audioEngine.audioContext.state !== "running") {
     console.log("Resuming AudioContext because Chrome bad");
     await audioEngine.audioContext.resume();
@@ -730,8 +730,17 @@ export const openMicrophone = (
   const state = getState().mixer.mic;
   audioEngine.setMicCalibrationGain(state.baseGain);
   audioEngine.setMicVolume(state.volume);
-
+  // Now to patch in the Mic to the Compressor, or Bypass it.
+  audioEngine.setMicProcessingEnabled(state.processing);
   dispatch(mixerState.actions.micOpen(micID));
+};
+
+export const setMicProcessingEnabled = (enabled: boolean): AppThunk => async (
+  dispatch,
+  _
+) => {
+  dispatch(mixerState.actions.setMicProcessingEnabled(enabled));
+  audioEngine.setMicProcessingEnabled(enabled);
 };
 
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
