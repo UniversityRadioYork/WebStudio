@@ -233,6 +233,13 @@ export type LevelsSource =
   | "player-1"
   | "player-2";
 
+export type ChannelMapping =
+  | "stereo-normal"
+  | "stereo-flipped"
+  | "mono-left"
+  | "mono-right"
+  | "mono-both";
+
 // Setting this directly affects the performance of .getFloatTimeDomainData()
 // Must be a power of 2.
 const ANALYSIS_FFT_SIZE = 2048;
@@ -380,7 +387,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.players[number] = undefined;
   }
 
-  async openMic(deviceId: string) {
+  async openMic(deviceId: string, channelMapping: ChannelMapping) {
     if (this.micSource !== null && this.micMedia !== null) {
       this.micMedia.getAudioTracks()[0].stop();
       this.micSource.disconnect();
@@ -400,8 +407,36 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
     this.micSource = this.audioContext.createMediaStreamSource(this.micMedia);
 
-    this.micSource.connect(this.micCalibrationGain);
+    // Handle stereo mic sources.
+    const splitterNode = this.audioContext.createChannelSplitter(2);
+    const mergerNode = this.audioContext.createChannelMerger(2);
+    this.micSource.connect(splitterNode);
+    switch (channelMapping) {
+      case "stereo-normal":
+        splitterNode.connect(mergerNode, 0, 0);
+        splitterNode.connect(mergerNode, 1, 1);
+        break;
+      case "stereo-flipped":
+        splitterNode.connect(mergerNode, 1, 0);
+        splitterNode.connect(mergerNode, 0, 1);
+        break;
+      case "mono-left":
+        splitterNode.connect(mergerNode, 0, 0);
+        splitterNode.connect(mergerNode, 0, 1);
+        break;
+      case "mono-right":
+        splitterNode.connect(mergerNode, 1, 0);
+        splitterNode.connect(mergerNode, 1, 1);
+        break;
+      case "mono-both":
+      default:
+        splitterNode.connect(mergerNode, 0, 0);
+        splitterNode.connect(mergerNode, 1, 0);
+        splitterNode.connect(mergerNode, 0, 1);
+        splitterNode.connect(mergerNode, 1, 1);
+    }
 
+    mergerNode.connect(this.micCalibrationGain);
     this.emit("micOpen");
   }
 

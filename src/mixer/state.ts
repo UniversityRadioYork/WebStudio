@@ -12,7 +12,7 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import { audioEngine } from "./audio";
+import { audioEngine, ChannelMapping } from "./audio";
 import * as TheNews from "./the_news";
 
 const playerGainTweens: Array<{
@@ -691,10 +691,10 @@ export const setChannelTrim = (player: number, val: number): AppThunk => async (
   audioEngine.players[player]?.setTrim(val);
 };
 
-export const openMicrophone = (micID: string): AppThunk => async (
-  dispatch,
-  getState
-) => {
+export const openMicrophone = (
+  micID: string,
+  micMapping: ChannelMapping
+): AppThunk => async (dispatch, getState) => {
   // TODO: not sure why this is here, and I have a hunch it may break shit, so disabling
   // File a ticket if it breaks stuff. -Marks
   // if (getState().mixer.mic.open) {
@@ -711,7 +711,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
     return;
   }
   try {
-    await audioEngine.openMic(micID);
+    await audioEngine.openMic(micID, micMapping);
   } catch (e) {
     if (e instanceof DOMException) {
       switch (e.message) {

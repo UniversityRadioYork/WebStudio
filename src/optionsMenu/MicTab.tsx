@@ -4,6 +4,7 @@ import { RootState } from "../rootReducer";
 
 import * as MixerState from "../mixer/state";
 import { VUMeter } from "./helpers/VUMeter";
+import { ChannelMapping } from "../mixer/audio";
 
 type MicErrorEnum =
   | "NO_PERMISSION"
@@ -26,6 +27,9 @@ export function MicTab() {
   const [micList, setMicList] = useState<null | MediaDeviceInfo[]>(null);
   const dispatch = useDispatch();
   const [nextMicSource, setNextMicSource] = useState("$NONE");
+  const [nextMicMapping, setNextMicMapping] = useState<ChannelMapping>(
+    "mono-both"
+  );
   const [openError, setOpenError] = useState<null | MicErrorEnum>(null);
 
   async function fetchMicNames() {
@@ -65,7 +69,12 @@ export function MicTab() {
 
   function setMicSource(sourceId: string) {
     setNextMicSource(sourceId);
-    dispatch(MixerState.openMicrophone(sourceId));
+    dispatch(MixerState.openMicrophone(sourceId, nextMicMapping));
+  }
+
+  function setMicMapping(mapping: ChannelMapping) {
+    setNextMicMapping(mapping);
+    dispatch(MixerState.openMicrophone(nextMicSource, mapping));
   }
 
   return (
@@ -110,6 +119,19 @@ export function MicTab() {
             : "An error occurred when opening the microphone. Please try again."}
         </div>
       )}
+
+      <select
+        className="form-control my-2"
+        value={nextMicMapping}
+        onChange={(e) => setMicMapping(e.target.value as ChannelMapping)}
+        disabled={nextMicSource === "$NONE"}
+      >
+        <option value={"mono-both"} label="Mono (Default)" />
+        <option value={"mono-left"} label="Mono - Left Channel" />
+        <option value={"mono-right"} label="Mono - Right Channel" />
+        <option value={"stereo-normal"} label="Stereo" />
+        <option value={"stereo-flipped"} label="Stereo - Flipped" />
+      </select>
       <hr />
       <div style={{ opacity: state.open ? 1 : 0.5 }}>
         <h3>Calibration</h3>
