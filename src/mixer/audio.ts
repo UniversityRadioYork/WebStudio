@@ -28,7 +28,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
-    private readonly waveform: HTMLElement
+    private readonly waveform: HTMLElement,
+    private readonly customOutput: boolean
   ) {
     super();
   }
@@ -135,19 +136,44 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this._applyVolume();
   }
 
+  setOutputDevice(sinkId: string) {
+    if (!this.customOutput) {
+      throw Error(
+        "Can't set sinkId when player is not in customOutput mode. Please reinit player."
+      );
+    }
+    try {
+      (this.wavesurfer as any).setSinkId(sinkId);
+    } catch (e) {
+      throw Error("Tried to setSinkId " + sinkId + ", failed due to: " + e);
+    }
+  }
+
   _applyVolume() {
     const level = this.volume + this.trim;
     const linear = Math.pow(10, level / 20);
     if (linear < 1) {
       this.wavesurfer.setVolume(linear);
-      (this.wavesurfer as any).backend.gainNode.gain.value = 1;
+      if (!this.customOutput) {
+        (this.wavesurfer as any).backend.gainNode.gain.value = 1;
+      }
     } else {
       this.wavesurfer.setVolume(1);
-      (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+      if (!this.customOutput) {
+        (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+      }
     }
   }
 
-  public static create(engine: AudioEngine, player: number, url: string) {
+  public static create(
+    engine: AudioEngine,
+    player: number,
+    outputId: string,
+    url: string
+  ) {
+    // If we want to output to a custom audio device, we're gonna need to do things differently.
+    const customOutput = outputId !== "internal";
+
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
       throw new Error();
@@ -161,7 +187,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       waveColor: "#CCCCFF",
       backgroundColor: "#FFFFFF",
       progressColor: "#9999FF",
-      backend: "MediaElementWebAudio",
+      backend: customOutput ? "MediaElement" : "MediaElementWebAudio",
       barWidth: 2,
       responsive: true,
       xhr: {
@@ -182,7 +208,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       ],
     });
 
-    const instance = new this(engine, wavesurfer, waveform);
+    const instance = new this(engine, wavesurfer, waveform, customOutput);
 
     wavesurfer.on("ready", () => {
       console.log("ready");
@@ -204,13 +230,21 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       instance.emit("timeChange", wavesurfer.getCurrentTime());
     });
 
-    (wavesurfer as any).backend.gainNode.disconnect();
-    (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
-    (wavesurfer as any).backend.gainNode.connect(
-      engine.playerAnalysers[player]
-    );
-
     wavesurfer.load(url);
+
+    if (customOutput) {
+      try {
+        instance.setOutputDevice(outputId);
+      } catch (e) {
+        console.error("Failed to set channel " + player + " output." + e);
+      }
+    } else {
+      (wavesurfer as any).backend.gainNode.disconnect();
+      (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+      (wavesurfer as any).backend.gainNode.connect(
+        engine.playerAnalysers[player]
+      );
+    }
 
     return instance;
   }
@@ -392,7 +426,13 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   public createPlayer(number: number, url: string) {
-    const player = Player.create(this, number, url);
+    const player = Player.create(
+      this,
+      number,
+      "3215cc91b6238960dbd5ba14ed1e2d510cb95e19277ec3fcfb35c3b3aa2683ce",
+      url
+    );
+    //const player = Player.create(this, number, "internal", url);
     this.players[number] = player;
     return player;
   }
