@@ -425,14 +425,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.newsEndCountdownNode.connect(this.audioContext.destination);
   }
 
-  public createPlayer(number: number, url: string) {
-    const player = Player.create(
-      this,
-      number,
-      "3215cc91b6238960dbd5ba14ed1e2d510cb95e19277ec3fcfb35c3b3aa2683ce",
-      url
-    );
-    //const player = Player.create(this, number, "internal", url);
+  public createPlayer(number: number, outputId: string, url: string) {
+    const player = Player.create(this, number, outputId, url);
     this.players[number] = player;
     return player;
   }

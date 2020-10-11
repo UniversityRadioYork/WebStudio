@@ -411,7 +411,13 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const playerInstance = await audioEngine.createPlayer(player, objectUrl);
+    const channelOutputId = getState().settings.channelOutputIds[player];
+
+    const playerInstance = await audioEngine.createPlayer(
+      player,
+      channelOutputId,
+      objectUrl
+    );
 
     // Clear the last one out from memory
     if (typeof lastObjectURLs[player] === "string") {

@@ -1,13 +1,104 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { RootState } from "../rootReducer";
 import { useSelector, useDispatch } from "react-redux";
 import { changeSetting } from "./settingsState";
 import { changeBroadcastSetting } from "../broadcast/state";
 
+function reduceToOutputs(devices: MediaDeviceInfo[]) {
+  var temp: MediaDeviceInfo[] = [];
+  devices.forEach((device) => {
+    if (device.kind === "audiooutput") {
+      temp.push(device);
+    }
+  });
+  return temp;
+}
+
+function ChannelOutputSelect({
+  outputList,
+  channel,
+}: {
+  outputList: MediaDeviceInfo[] | null;
+  channel: number;
+}) {
+  const settings = useSelector((state: RootState) => state.settings);
+  const dispatch = useDispatch();
+
+  return (
+    <div className="form-group">
+      <label>Channel {channel + 1}</label>
+      <select
+        className="form-control"
+        id="broadcastSourceSelect"
+        value={settings.channelOutputIds[channel]}
+        onChange={(e) => {
+          let channelOutputIds = { ...settings.channelOutputIds };
+          channelOutputIds[channel] = e.target.value;
+          dispatch(
+            changeSetting({
+              key: "channelOutputIds",
+              // @ts-ignore
+              val: channelOutputIds,
+            })
+          );
+        }}
+      >
+        <option value="internal">Internal (Direct to Stream/Headphones)</option>
+        {(outputList || []).map(function(e, i) {
+          return (
+            <option value={e.deviceId} key={i}>
+              {e.label !== "" ? e.label : e.deviceId}
+            </option>
+          );
+        })}
+      </select>
+    </div>
+  );
+}
 export function AdvancedTab() {
   const settings = useSelector((state: RootState) => state.settings);
+  const [outputList, setOutputList] = useState<null | MediaDeviceInfo[]>(null);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
   const dispatch = useDispatch();
+
+  async function fetchOutputNames() {
+    console.log("start fetchNames");
+    //if (!("mediaDevices" in navigator)) {
+    //  setOpenError("NOT_SECURE_CONTEXT");
+    //  return;
+    //}
+    // Because Chrome, we have to call getUserMedia() before enumerateDevices()
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      console.warn(e);
+      if (e instanceof DOMException) {
+        switch (e.message) {
+          case "Permission denied":
+            //setOpenError("NO_PERMISSION");
+            break;
+          default:
+          //setOpenError("UNKNOWN");
+        }
+      } else {
+        //setOpenError("UNKNOWN");
+      }
+      return;
+    }
+    console.log("done");
+    try {
+      console.log("gUM");
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      console.log(devices);
+      setOutputList(reduceToOutputs(devices));
+    } catch (e) {
+      //setOpenError("UNKNOWN_ENUM");
+    }
+  }
+
+  useEffect(() => {
+    fetchOutputNames();
+  }, []);
 
   // @ts-ignore
   return (
@@ -71,6 +162,13 @@ export function AdvancedTab() {
         />
         <label className="form-check-label">End of Show</label>
       </div>
+
+      <hr />
+      <h2>Channel Outputs</h2>
+      <ChannelOutputSelect outputList={outputList} channel={0} />
+      <ChannelOutputSelect outputList={outputList} channel={1} />
+      <ChannelOutputSelect outputList={outputList} channel={2} />
+
       <hr />
       <h2>Misc</h2>
       <div className="form-check">
