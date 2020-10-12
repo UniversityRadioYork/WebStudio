@@ -98,6 +98,7 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         item: PlanItem | Track | AuxItem | null;
+        customOutput: boolean;
         resetTrim?: boolean;
       }>
     ) {
@@ -113,7 +114,10 @@ const mixerState = createSlice({
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
-      if (action.payload.resetTrim) {
+
+      if (action.payload.customOutput) {
+        state.players[action.payload.player].trim = 0;
+      } else if (action.payload.resetTrim) {
         state.players[action.payload.player].trim = defaultTrimDB;
       }
     },
@@ -353,9 +357,16 @@ export const load = (
   loadAbortControllers[player] = new AbortController();
 
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
+  const customOutput =
+    getState().settings.channelOutputIds[player] !== "internal";
 
   dispatch(
-    mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
+    mixerState.actions.loadItem({
+      player,
+      item,
+      customOutput,
+      resetTrim: shouldResetTrim,
+    })
   );
 
   let url;

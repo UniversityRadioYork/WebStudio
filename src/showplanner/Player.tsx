@@ -200,13 +200,8 @@ export function Player({ id }: { id: number }) {
         omit(b, "timeCurrent", "timeRemaining")
       )
   );
-  const proMode = useSelector((state: RootState) => state.settings.proMode);
-  const vuEnabled = useSelector(
-    (state: RootState) => state.settings.channelVUs
-  );
-  const vuStereo = useSelector(
-    (state: RootState) => state.settings.channelVUsStereo
-  );
+  const settings = useSelector((state: RootState) => state.settings);
+  const customOutput = settings.channelOutputIds[id] !== "internal";
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {
@@ -270,7 +265,7 @@ export function Player({ id }: { id: number }) {
             &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
-        {proMode && <ProModeButtons channel={id} />}
+        {settings.proMode && !customOutput && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
           <span className="card-title">
             <strong>
@@ -397,15 +392,22 @@ export function Player({ id }: { id: number }) {
         </button>
       </div>
 
-      {proMode && vuEnabled && (
+      {settings.proMode && settings.channelVUs && (
         <div className="channel-vu">
-          <VUMeter
-            width={300}
-            height={40}
-            source={VUsource(id)}
-            range={[-40, 0]}
-            stereo={vuStereo}
-          />
+          {customOutput && (
+            <span className="text-muted">
+              Custom audio output disables VU meters.
+            </span>
+          )}
+          {!customOutput && (
+            <VUMeter
+              width={300}
+              height={40}
+              source={VUsource(id)}
+              range={[-40, 0]}
+              stereo={settings.channelVUsStereo}
+            />
+          )}
         </div>
       )}
     </div>
