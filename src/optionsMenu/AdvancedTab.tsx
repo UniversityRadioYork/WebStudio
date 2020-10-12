@@ -165,6 +165,12 @@ export function AdvancedTab() {
 
       <hr />
       <h2>Channel Outputs</h2>
+      <p>
+        Select a sound output for each channel. <code>Internal</code> routes
+        directly to the WebStudio stream/recorder. Other outputs will disable
+        ProMode &trade; features.{" "}
+        <strong>Routing will apply upon loading a new item.</strong>
+      </p>
       <ChannelOutputSelect outputList={outputList} channel={0} />
       <ChannelOutputSelect outputList={outputList} channel={1} />
       <ChannelOutputSelect outputList={outputList} channel={2} />
