@@ -21,18 +21,20 @@ function ChannelOutputSelect({
   outputList: MediaDeviceInfo[] | null;
   channel: number;
 }) {
-  const settings = useSelector((state: RootState) => state.settings);
+  const outputIds = useSelector(
+    (state: RootState) => state.settings.channelOutputIds
+  );
+  const outputId = outputIds[channel];
   const dispatch = useDispatch();
-
   return (
     <div className="form-group">
       <label>Channel {channel + 1}</label>
       <select
         className="form-control"
         id="broadcastSourceSelect"
-        value={settings.channelOutputIds[channel]}
+        value={outputId}
         onChange={(e) => {
-          let channelOutputIds = { ...settings.channelOutputIds };
+          let channelOutputIds = { ...outputIds };
           channelOutputIds[channel] = e.target.value;
           dispatch(
             changeSetting({
@@ -43,6 +45,12 @@ function ChannelOutputSelect({
           );
         }}
       >
+        {outputId !== "internal" &&
+          !outputList?.some((id) => id.deviceId === outputId) && (
+            <option value={outputId} disabled>
+              Missing Device ({outputId})
+            </option>
+          )}
         <option value="internal">Internal (Direct to Stream/Headphones)</option>
         {(outputList || []).map(function(e, i) {
           return (
