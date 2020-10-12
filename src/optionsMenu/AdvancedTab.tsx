@@ -4,6 +4,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { changeSetting } from "./settingsState";
 import { changeBroadcastSetting } from "../broadcast/state";
 
+type ErrorEnum =
+  | "NO_PERMISSION"
+  | "NOT_SECURE_CONTEXT"
+  | "UNKNOWN"
+  | "UNKNOWN_ENUM";
+
 function reduceToOutputs(devices: MediaDeviceInfo[]) {
   var temp: MediaDeviceInfo[] = [];
   devices.forEach((device) => {
@@ -67,29 +73,30 @@ export function AdvancedTab() {
   const settings = useSelector((state: RootState) => state.settings);
   const [outputList, setOutputList] = useState<null | MediaDeviceInfo[]>(null);
   const broadcastState = useSelector((state: RootState) => state.broadcast);
+  const [openError, setOpenError] = useState<null | ErrorEnum>(null);
+
   const dispatch = useDispatch();
 
   async function fetchOutputNames() {
     console.log("start fetchNames");
-    //if (!("mediaDevices" in navigator)) {
-    //  setOpenError("NOT_SECURE_CONTEXT");
-    //  return;
-    //}
+    if (!("mediaDevices" in navigator)) {
+      setOpenError("NOT_SECURE_CONTEXT");
+      return;
+    }
     // Because Chrome, we have to call getUserMedia() before enumerateDevices()
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
-      console.warn(e);
       if (e instanceof DOMException) {
         switch (e.message) {
           case "Permission denied":
-            //setOpenError("NO_PERMISSION");
+            setOpenError("NO_PERMISSION");
             break;
           default:
-          //setOpenError("UNKNOWN");
+            setOpenError("UNKNOWN");
         }
       } else {
-        //setOpenError("UNKNOWN");
+        setOpenError("UNKNOWN");
       }
       return;
     }
@@ -100,7 +107,7 @@ export function AdvancedTab() {
       console.log(devices);
       setOutputList(reduceToOutputs(devices));
     } catch (e) {
-      //setOpenError("UNKNOWN_ENUM");
+      setOpenError("UNKNOWN_ENUM");
     }
   }
 
@@ -179,6 +186,17 @@ export function AdvancedTab() {
         ProMode &trade; features.{" "}
         <strong>Routing will apply upon loading a new item.</strong>
       </p>
+      {openError !== null && (
+        <div className="sp-alert">
+          {openError === "NO_PERMISSION"
+            ? "Please grant this page permission to use your outputs/microphone and try again."
+            : openError === "NOT_SECURE_CONTEXT"
+            ? "We can't open the outputs. Please make sure the address bar has a https:// at the start and try again."
+            : openError === "UNKNOWN_ENUM"
+            ? "An error occurred when enumerating output devices. Please try again."
+            : "An error occurred when opening the output devices. Please try again."}
+        </div>
+      )}
       <ChannelOutputSelect outputList={outputList} channel={0} />
       <ChannelOutputSelect outputList={outputList} channel={1} />
       <ChannelOutputSelect outputList={outputList} channel={2} />
