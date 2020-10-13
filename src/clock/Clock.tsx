@@ -18,11 +18,9 @@ export function Clock() {
   const timerCallback = useCallback(() => {
     let newTime = new Date().valueOf();
     if (offset !== null) {
-      console.log("setting offset.");
       newTime += offset;
     }
     if (Math.abs(newTime - time) > 500) {
-      console.log("Old " + time + "New time " + newTime);
       setTime(newTime);
     }
   }, [offset, time]);
