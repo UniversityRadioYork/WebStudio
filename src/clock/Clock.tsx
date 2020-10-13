@@ -1,31 +1,33 @@
-import React, {useCallback, useState} from "react";
-import RLClock from "react-live-clock";
-import {useSelector} from "react-redux";
-import {RootState} from "../rootReducer";
-import {useInterval} from "../lib/useInterval";
+import React, { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../rootReducer";
+import { useInterval } from "../lib/useInterval";
 
 export function Clock() {
-    const offset = useSelector((state: RootState) => state.clock.offset);
-    const [time, setTime] = useState(new Date().valueOf());
+  const offset = useSelector((state: RootState) => state.clock.offset);
+  const [time, setTime] = useState(new Date().valueOf());
 
-    const timerCallback = useCallback(() => {
-        let newTime = new Date().valueOf();
-        if (offset !== null) {
-            newTime += offset;
-        }
-        if (newTime - time > 500) {
-            setTime(newTime)
-        }
-    }, [offset, time]);
+  function timeConverter(UNIX_timestamp: number) {
+    var a = new Date(UNIX_timestamp);
+    var hour = "0" + a.getHours();
+    var min = "0" + a.getMinutes();
+    var sec = "0" + a.getSeconds();
+    var time = hour.substr(-2) + ":" + min.substr(-2) + ":" + sec.substr(-2);
+    return time;
+  }
+  const timerCallback = useCallback(() => {
+    let newTime = new Date().valueOf();
+    if (offset !== null) {
+      console.log("setting offset.");
+      newTime += offset;
+    }
+    if (Math.abs(newTime - time) > 500) {
+      console.log("Old " + time + "New time " + newTime);
+      setTime(newTime);
+    }
+  }, [offset, time]);
 
-    useInterval(timerCallback, 200);
+  useInterval(timerCallback, 200);
 
-    return (
-        <RLClock
-            format={"HH:mm:ss"}
-            ticking={true}
-            timezone={"europe/london"}
-            date={time}
-        />
-    );
+  return <>{timeConverter(time)}</>;
 }
