@@ -21,10 +21,9 @@ export async function calculateOffset(): Promise<number> {
     const t0 = t0d.valueOf();
     const t3 = t3d.valueOf();
 
-    //const delta = ((t1 - t0) + (t3 - t2)) / 2;
     const rtt = t3 - t0 - (t2 - t1);
 
-    const delta = t1 - t3;
+    const delta = t1 - t3 - rtt / 2;
 
     console.log(
       `Sync run ${i}; times ${t0} ${t1} ${t2} ${t3}; delta ${delta}; RTT ${rtt}`
