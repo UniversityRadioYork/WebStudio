@@ -28,6 +28,8 @@ type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
+const defaultTrimDB = -6; // The default trim applied to channel players.
+
 interface PlayerState {
   loadedItem: PlanItem | Track | AuxItem | null;
   loading: number;
@@ -63,8 +65,8 @@ const BasePlayerState: PlayerState = {
   loading: -1,
   state: "stopped",
   volume: 1,
-  gain: 1,
-  trim: 0,
+  gain: 0,
+  trim: defaultTrimDB,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -93,16 +95,25 @@ const mixerState = createSlice({
       state,
       action: PayloadAction<{
         player: number;
-        item: PlanItem | Track | AuxItem;
+        item: PlanItem | Track | AuxItem | null;
+        resetTrim?: boolean;
       }>
     ) {
       state.players[action.payload.player].loadedItem = action.payload.item;
-      state.players[action.payload.player].loading = 0;
+      if (action.payload.item !== null) {
+        state.players[action.payload.player].loading = 0;
+      } else {
+        // Unloaded player, No media selected.
+        state.players[action.payload.player].loading = -1;
+      }
       state.players[action.payload.player].timeCurrent = 0;
       state.players[action.payload.player].timeRemaining = 0;
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
+      if (action.payload.resetTrim) {
+        state.players[action.payload.player].trim = defaultTrimDB;
+      }
     },
     itemLoadPercentage(
       state,
@@ -149,6 +160,42 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].trim = action.payload.trim;
+    },
+    setLoadedItemIntro(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem?.type === "central") {
+        loadedItem.intro = action.payload.secs;
+      }
+    },
+    setLoadedItemCue(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem && "cue" in loadedItem) {
+        loadedItem.cue = action.payload.secs;
+      }
+    },
+    setLoadedItemOutro(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem?.type === "central") {
+        loadedItem.outro = action.payload.secs;
+      }
     },
     setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
       state.mic.openError = action.payload;
@@ -240,6 +287,39 @@ export default mixerState.reducer;
 
 export const { setMicBaseGain } = mixerState.actions;
 
+export const setLoadedItemIntro = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch) => {
+  dispatch(mixerState.actions.setLoadedItemIntro({ player, secs }));
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setIntro(secs);
+  }
+};
+
+export const setLoadedItemCue = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch) => {
+  dispatch(mixerState.actions.setLoadedItemCue({ player, secs }));
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setCue(secs);
+  }
+};
+
+export const setLoadedItemOutro = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch) => {
+  dispatch(mixerState.actions.setLoadedItemOutro({ player, secs }));
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setOutro(secs);
+  }
+};
+
 export const load = (
   player: number,
   item: PlanItem | Track | AuxItem
@@ -250,6 +330,12 @@ export const load = (
       return;
     }
   }
+
+  // Can't really load a ghost, it'll break setting cues etc. Do nothing.
+  if (item.type === "ghost") {
+    return;
+  }
+
   // If this is already the currently loaded item, don't bother
   const currentItem = getState().mixer.players[player].loadedItem;
   if (currentItem !== null && itemId(currentItem) === itemId(item)) {
@@ -261,11 +347,15 @@ export const load = (
   }
   loadAbortControllers[player] = new AbortController();
 
-  dispatch(mixerState.actions.loadItem({ player, item }));
+  const shouldResetTrim = getState().settings.resetTrimOnLoad;
+
+  dispatch(
+    mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
+  );
 
   let url;
 
-  if ("album" in item) {
+  if (item.type === "central") {
     // track
     url =
       MYRADIO_NON_API_BASE +
@@ -285,6 +375,14 @@ export const load = (
   }
 
   console.log("loading");
+
+  let waveform = document.getElementById("waveform-" + player.toString());
+  if (waveform == null) {
+    throw new Error();
+  }
+  audioEngine.destroyPlayerIfExists(player); // clear previous (ghost) wavesurfer and it's media elements.
+  // wavesurfer also sets the background white, remove for progress bar to work.
+  waveform.style.removeProperty("background");
 
   try {
     const signal = loadAbortControllers[player].signal; // hang on to the signal, even if its controller gets replaced
@@ -337,6 +435,13 @@ export const load = (
       }
       if (state.loadedItem && "intro" in state.loadedItem) {
         playerInstance.setIntro(state.loadedItem.intro);
+      }
+      if (state.loadedItem && "cue" in state.loadedItem) {
+        playerInstance.setCue(state.loadedItem.cue);
+        playerInstance.setCurrentTime(state.loadedItem.cue);
+      }
+      if (state.loadedItem && "outro" in state.loadedItem) {
+        playerInstance.setOutro(state.loadedItem.outro);
       }
     });
 
@@ -401,6 +506,7 @@ export const load = (
     }
 
     playerInstance.setVolume(getState().mixer.players[player].gain);
+    playerInstance.setTrim(getState().mixer.players[player].trim);
     delete loadAbortControllers[player];
   } catch (e) {
     if ("name" in e && e.name === "AbortError") {
@@ -459,7 +565,8 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
-  if (typeof audioEngine.players[player] === "undefined") {
+  const playerInstance = audioEngine.players[player];
+  if (typeof playerInstance === "undefined") {
     console.log("nothing loaded");
     return;
   }
@@ -468,7 +575,24 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
     console.log("not ready");
     return;
   }
-  audioEngine.players[player]?.stop();
+
+  let cueTime = 0;
+
+  console.log(Math.round(playerInstance.currentTime));
+  if (
+    state.loadedItem &&
+    "cue" in state.loadedItem &&
+    Math.round(playerInstance.currentTime) !== Math.round(state.loadedItem.cue)
+  ) {
+    cueTime = state.loadedItem.cue;
+    console.log(cueTime);
+  }
+
+  playerInstance.stop();
+
+  dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime }));
+  playerInstance.setCurrentTime(cueTime);
+
   // Incase wavesurver wasn't playing, it won't 'finish', so just make sure the UI is stopped.
   dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
 
@@ -500,15 +624,16 @@ export const setVolume = (
   let uiLevel: number;
   switch (level) {
     case "off":
-      volume = -36;
+      volume = -40;
       uiLevel = 0;
       break;
     case "bed":
-      volume = -12;
+      volume = -13;
       uiLevel = 0.5;
       break;
     case "full":
-      volume = uiLevel = 1;
+      volume = 0;
+      uiLevel = 1;
       break;
   }
 
@@ -617,14 +742,10 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for
   // processing latency
   if (levelVal !== 0) {
-    dispatch(
-      mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
-    );
+    dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
   } else {
     window.setTimeout(() => {
-      dispatch(
-        mixerState.actions.setMicLevels({ volume: levelVal, gain: levelVal })
-      );
+      dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
       // latency, plus a little buffer
     }, audioEngine.audioContext.baseLatency * 1000 + 150);
   }

@@ -73,6 +73,22 @@ export function AdvancedTab() {
       </div>
       <hr />
       <h2>Misc</h2>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          checked={settings.saveShowPlanChanges}
+          onChange={(e) =>
+            dispatch(
+              changeSetting({
+                key: "saveShowPlanChanges",
+                val: e.target.checked,
+              })
+            )
+          }
+        />
+        <label>Save show plan changes to server.</label>
+      </div>
       <div className="form-group">
         <label>
           Tracklist (Don't change this unless you know what you're doing!)

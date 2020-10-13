@@ -29,6 +29,62 @@ export function ProModeTab() {
           know what you're doing!
         </label>
       </div>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          disabled={!settings.proMode}
+          checked={settings.resetTrimOnLoad}
+          onChange={(e) =>
+            dispatch(
+              changeSetting({
+                key: "resetTrimOnLoad",
+                val: e.target.checked,
+              })
+            )
+          }
+        />
+        <label className="form-check-label">
+          Reset trim when loading a new file
+        </label>
+      </div>
+      <hr />
+      <h2>Metering</h2>
+      <p>Turn down these options if suffering from performance issues.</p>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          disabled={!settings.proMode}
+          checked={settings.channelVUs}
+          onChange={(e) =>
+            dispatch(
+              changeSetting({
+                key: "channelVUs",
+                val: e.target.checked,
+              })
+            )
+          }
+        />
+        <label className="form-check-label">Enable meters per channel</label>
+      </div>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          disabled={!settings.proMode}
+          checked={settings.channelVUsStereo}
+          onChange={(e) =>
+            dispatch(
+              changeSetting({
+                key: "channelVUsStereo",
+                val: e.target.checked,
+              })
+            )
+          }
+        />
+        <label className="form-check-label">Use stereo metering</label>
+      </div>
     </>
   );
 }

@@ -30,7 +30,7 @@ export function MicTab() {
 
   async function fetchMicNames() {
     console.log("start fetchNames");
-    if (!("getUserMedia" in navigator.mediaDevices)) {
+    if (!("mediaDevices" in navigator)) {
       setOpenError("NOT_SECURE_CONTEXT");
       return;
     }
@@ -70,15 +70,20 @@ export function MicTab() {
 
   return (
     <>
+      <h3>Mic Selection</h3>
+      <p>
+        Click the "<b>Find Microphones</b>" button, then choose the microphone
+        you want from the dropdown.
+      </p>
       <button
         onClick={fetchMicNames}
         disabled={micList !== null}
         className="btn btn-outline-dark"
       >
-        Open
+        Find Microphones
       </button>
       <select
-        className="form-control"
+        className="form-control my-2"
         style={{ width: "100%" }}
         value={nextMicSource}
         onChange={(e) => setMicSource(e.target.value)}
@@ -93,7 +98,7 @@ export function MicTab() {
           );
         })}
       </select>
-      {state.openError !== null && (
+      {(state.openError !== null || openError !== null) && (
         <div className="sp-alert">
           {state.openError === "NO_PERMISSION" || openError === "NO_PERMISSION"
             ? "Please grant this page permission to use your microphone and try again."
@@ -105,13 +110,14 @@ export function MicTab() {
             : "An error occurred when opening the microphone. Please try again."}
         </div>
       )}
-
+      <hr />
       <div style={{ opacity: state.open ? 1 : 0.5 }}>
         <h3>Calibration</h3>
-        <b>
-          Speak into the microphone at a normal volume. Adjust the gain slider
-          until the bar below is green when you're speaking.
-        </b>
+        <p>
+          Speak into the microphone at your <b>nomal presenting volume</b>.
+          Adjust the gain slider until the bar below is <b>green</b> when you're
+          speaking.
+        </p>
         <div>
           <VUMeter
             width={400}
@@ -119,10 +125,12 @@ export function MicTab() {
             source="mic-precomp"
             range={[-70, 0]}
             greenRange={[-14, -10]}
+            stereo={true}
           />
         </div>
         <div>
           <input
+            className="mr-2"
             type="range"
             min={-24}
             max={24}
@@ -132,7 +140,7 @@ export function MicTab() {
               dispatch(MixerState.setMicBaseGain(parseFloat(e.target.value)))
             }
           />
-          <b>{state.baseGain.toFixed(1)}</b>
+          <b>{state.baseGain.toFixed(1)} dB</b>
         </div>
       </div>
     </>

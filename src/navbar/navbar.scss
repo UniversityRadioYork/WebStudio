@@ -1,9 +1,6 @@
 /* Stuff to get the nav to collapse at 991px (when the menu collapses)
  * Taken from http://stackoverflow.com/a/36289507/995325 */
 
-$dot-color: #fff;
-@import "~three-dots/sass/three-dots";
-
 @media (max-width: 991px) {
   .navbar-header {
     float: none;
@@ -42,9 +39,39 @@ $dot-color: #fff;
   }
 }
 
+.navbar-nav {
+  margin: 0;
+}
+
+.navbar-main {
+  background-color: #2d425f;
+  border-color: #2d425f;
+  border: none;
+  max-height: 7vh;
+  flex-shrink: 0;
+
+  .nav-vu {
+    background: black;
+  }
+
+  .nav-spin {
+    animation-name: spin;
+    animation-duration: 2000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
 /** MyRadio bootstrap navbar overides taken from http://work.smarchal.com/twbscolor/css/2D425F2D425Fffffffe1e1e11 **/
 
-.navbar-ury {
+.navbar-myradio {
   background-color: #2d333c;
   border-color: #2d425f;
   border: none;
@@ -52,7 +79,7 @@ $dot-color: #fff;
   flex-shrink: 0;
 }
 
-.navbar-ury .navbar-brand {
+.navbar-myradio .navbar-brand {
   color: #ffffff;
   padding: 10px 15px;
   /** added to center the logo **/
@@ -61,139 +88,159 @@ $dot-color: #fff;
   margin-right: 0;
 }
 
-.navbar-ury .navbar-brand img {
+.navbar-myradio .navbar-brand img {
   max-height: 100%;
 }
 
-.navbar-ury .navbar-brand:hover,
-.navbar-ury .navbar-brand:focus {
+.navbar-myradio .navbar-brand:hover,
+.navbar-myradio .navbar-brand:focus {
   color: #e1e1e1;
 }
 
-.navbar-ury .navbar-brand.divider {
+.navbar-myradio .navbar-brand.divider {
   border-right: 1px white solid;
   margin: 14px 0;
   height: 22px;
   padding: 0;
 }
 
-.navbar-ury .navbar-text {
+.navbar-myradio .navbar-text {
   color: #ffffff;
 }
 
-.navbar-ury .navbar-nav > li > a {
+.navbar-myradio .navbar-nav > li > a {
   color: #ffffff;
 }
 
-.navbar-ury .navbar-nav > li.nav-img {
+.navbar-myradio .navbar-nav > li.nav-img {
   height: 50px;
 }
 
-.navbar-ury .navbar-nav > li.nav-img > a {
+.navbar-myradio .navbar-nav > li.nav-img > a {
   height: 100%;
   padding: 10px 10px;
 }
 
-.navbar-ury .navbar-nav > li.nav-img > a > img {
+.navbar-myradio .navbar-nav > li.nav-img > a > img {
   height: 100%;
 }
 
-.navbar-ury .navbar-nav .caret {
+.navbar-myradio .navbar-nav .caret {
   margin-left: 5px;
 }
 
-.navbar-ury .navbar-nav .glyphicon {
+.navbar-myradio .navbar-nav .glyphicon {
   margin-right: 5px;
 }
 
-.navbar-ury .navbar-nav > li > a:hover,
-.navbar-ury .navbar-nav > li > a:focus {
+.navbar-myradio .navbar-nav > li > a:hover,
+.navbar-myradio .navbar-nav > li > a:focus {
   color: #e1e1e1;
   background-color: #2d425f;
 }
 
-.navbar-ury .navbar-nav > li > .dropdown-menu {
+.navbar-myradio .navbar-nav > li > .dropdown-menu {
   background-color: #2d333c;
   border-top: none;
 }
 
-.navbar-ury .navbar-nav > li > .dropdown-menu > a {
+.navbar-myradio .navbar-nav > li > .dropdown-menu > .dropdown-item {
   color: #ffffff;
 }
 
-.navbar-ury .navbar-nav > li > .dropdown-menu > a:hover,
-.navbar-ury .navbar-nav > li > .dropdown-menu > a:focus {
+.navbar-myradio .navbar-nav > li > .dropdown-menu > .dropdown-item:hover,
+.navbar-myradio .navbar-nav > li > .dropdown-menu > .dropdown-item:focus {
   color: #e1e1e1;
   background-color: #2d425f;
 }
 
-.navbar-ury .navbar-nav > li > .dropdown-menu > .divider {
+.navbar-myradio .navbar-nav > li > .dropdown-menu > .divider {
   background-color: #2d425f;
 }
 
-.navbar-ury .navbar-nav .open .dropdown-menu > .active > a,
-.navbar-ury .navbar-nav .open .dropdown-menu > .active > a:hover,
-.navbar-ury .navbar-nav .open .dropdown-menu > .active > a:focus {
+.navbar-myradio .navbar-nav .open .dropdown-menu > .active > .dropdown-item,
+.navbar-myradio
+  .navbar-nav
+  .open
+  .dropdown-menu
+  > .active
+  > .dropdown-item:hover,
+.navbar-myradio
+  .navbar-nav
+  .open
+  .dropdown-menu
+  > .active
+  > .dropdown-item:focus {
   color: #e1e1e1;
   background-color: #2d333c;
 }
 
-.navbar-ury .navbar-nav > .active > a,
-.navbar-ury .navbar-nav > .active > a:hover,
-.navbar-ury .navbar-nav > .active > a:focus {
+.navbar-myradio .navbar-nav > .active > .dropdown-item,
+.navbar-myradio .navbar-nav > .active > .dropdown-item:hover,
+.navbar-myradio .navbar-nav > .active > .dropdown-item:focus {
   color: #e1e1e1;
   background-color: #2d333c;
 }
 
-.navbar-ury .navbar-nav > .open > a,
-.navbar-ury .navbar-nav > .open > a:hover,
-.navbar-ury .navbar-nav > .open > a:focus {
+.navbar-myradio .navbar-nav > .open > .dropdown-item,
+.navbar-myradio .navbar-nav > .open > .dropdown-item:hover,
+.navbar-myradio .navbar-nav > .open > .dropdown-item:focus {
   color: #e1e1e1;
   background-color: #2d425f !important;
 }
 
-.navbar-ury .navbar-toggle {
+.navbar-myradio .navbar-toggle {
   border-color: #2d425f;
 }
 
-.navbar-ury .navbar-toggle:hover,
-.navbar-ury .navbar-toggle:focus {
+.navbar-myradio .navbar-toggle:hover,
+.navbar-myradio .navbar-toggle:focus {
   background-color: #2d425f;
 }
 
-.navbar-ury .navbar-toggle .icon-bar {
+.navbar-myradio .navbar-toggle .icon-bar {
   background-color: #ffffff;
 }
 
-.navbar-ury .navbar-collapse,
-.navbar-ury .navbar-form {
+.navbar-myradio .navbar-collapse,
+.navbar-myradio .navbar-form {
   border-color: #ffffff;
 }
 
-.navbar-ury .navbar-link {
+.navbar-myradio .navbar-link {
   color: #ffffff;
 }
 
-.navbar-ury .navbar-link:hover {
+.navbar-myradio .navbar-link:hover {
   color: #e1e1e1;
 }
 
-.navbar-ury .navbar-brand:hover {
+.navbar-myradio .navbar-brand:hover {
   color: #e1e1e1;
   background-color: #2d425f !important;
 }
 
 @media (max-width: 767px) {
-  .navbar-ury .navbar-nav .open .dropdown-menu > li > a {
+  .navbar-myradio .navbar-nav .open .dropdown-menu > li > .dropdown-item {
     color: #ffffff;
   }
-  .navbar-ury .navbar-nav .open .dropdown-menu > li > a:hover,
-  .navbar-ury .navbar-nav .open .dropdown-menu > li > a:focus {
+  .navbar-myradio .navbar-nav .open .dropdown-menu > li > .dropdown-item:hover,
+  .navbar-myradio .navbar-nav .open .dropdown-menu > li > .dropdown-item:focus {
     color: #e1e1e1;
   }
-  .navbar-ury .navbar-nav .open .dropdown-menu > .active > a,
-  .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:hover,
-  .navbar-ury .navbar-nav .open .dropdown-menu > .active > a:focus {
+  .navbar-myradio .navbar-nav .open .dropdown-menu > .active > .dropdown-item,
+  .navbar-myradio
+    .navbar-nav
+    .open
+    .dropdown-menu
+    > .active
+    > .dropdown-item:hover,
+  .navbar-myradio
+    .navbar-nav
+    .open
+    .dropdown-menu
+    > .active
+    > .dropdown-item:focus {
     color: #e1e1e1;
     background-color: #2d425f;
   }
@@ -241,13 +288,13 @@ $dot-color: #fff;
 #timelord {
   background: black;
   border: red 1px solid;
-  padding: 0.2rem;
-  margin: auto 0;
   color: white;
-  width: 100%;
-  max-width: 40vw;
-  height: 100%;
-  max-height: 36.5px;
+  min-width: 85px;
+}
+
+#timelord a {
+  text-decoration: none;
+  color: white;
 }
 
 #timelord .time {
@@ -256,5 +303,5 @@ $dot-color: #fff;
 }
 
 .nav-link.connect {
-  min-width: 80px;
+  min-width: 90px;
 }

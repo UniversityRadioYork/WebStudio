@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual, useStore } from "react-redux";
 import {
   FaLevelDownAlt,
   FaPlayCircle,
@@ -7,28 +7,220 @@ import {
   FaPlay,
   FaPause,
   FaStop,
+  FaTrash,
 } from "react-icons/fa";
+import { omit } from "lodash";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
+import * as ShowPlanState from "../showplanner/state";
 import { secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
+import { VUMeter } from "../optionsMenu/helpers/VUMeter";
+import * as api from "../api";
+import { AppThunk } from "../store";
 
 export const USE_REAL_GAIN_VALUE = false;
 
+function PlayerNumbers({ id }: { id: number }) {
+  const store = useStore<RootState, any>();
+  const [
+    [timeCurrent, timeLength, timeRemaining, endTime],
+    setTimings,
+  ] = useState([0, 0, 0, 0]);
+  const tickerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    tickerRef.current = window.setInterval(() => {
+      const now = new Date();
+      const state = store.getState().mixer.players[id];
+      setTimings([
+        state.timeCurrent,
+        state.timeLength,
+        state.timeRemaining,
+        now.valueOf() / 1000 + state.timeRemaining,
+      ]);
+    }, 1000);
+    return () => window.clearInterval(tickerRef.current);
+  });
+
+  return (
+    <>
+      <span id={"current-" + id} className="current bypass-click">
+        {secToHHMM(timeCurrent)}
+      </span>
+      <span id={"length-" + id} className="length bypass-click">
+        {secToHHMM(timeLength)}
+      </span>
+      <span id={"remaining-" + id} className="remaining bypass-click">
+        {secToHHMM(timeRemaining)}
+      </span>
+      <span id={"ends-" + id} className="outro bypass-click">
+        End - {timestampToHHMM(endTime)}
+      </span>
+    </>
+  );
+}
+
+const setTrackIntro = (
+  track: api.Track,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch, getState) => {
+  try {
+    dispatch(MixerState.setLoadedItemIntro(player, secs));
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTrackIntro(track.trackid, secs);
+    }
+    dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
+    console.error("Failed to set track intro: " + e);
+  }
+};
+
+const setTrackOutro = (
+  track: api.Track,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch, getState) => {
+  try {
+    dispatch(MixerState.setLoadedItemOutro(player, secs));
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTrackOutro(track.trackid, secs);
+    }
+    dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
+    console.error("Failed to set track outro: " + e);
+  }
+};
+
+const setTrackCue = (
+  item: api.TimeslotItem,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch, getState) => {
+  try {
+    dispatch(MixerState.setLoadedItemCue(player, secs));
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTimeslotItemCue(item.timeslotitemid, secs);
+    }
+    dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
+    console.error("Failed to set track cue: " + e);
+  }
+};
+
+function TimingButtons({ id }: { id: number }) {
+  const dispatch = useDispatch();
+  const state = useSelector((state: RootState) => state.mixer.players[id]);
+  const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+
+  return (
+    <div
+      className={
+        "timing-buttons " +
+        (state.loadedItem && state.loadedItem.type !== "central"
+          ? "not-central"
+          : "") +
+        (showDeleteMenu ? " bg-dark text-light" : "")
+      }
+    >
+      <div className="label">{showDeleteMenu ? "Delete:" : "Set"} Marker:</div>
+      <div
+        className="intro btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
+          if (state.loadedItem?.type === "central") {
+            dispatch(
+              setTrackIntro(
+                state.loadedItem,
+                showDeleteMenu ? 0 : state.timeCurrent,
+                id
+              )
+            );
+          }
+        }}
+      >
+        Intro
+      </div>
+      <div
+        className="cue btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
+          if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
+            dispatch(
+              setTrackCue(
+                state.loadedItem,
+                showDeleteMenu ? 0 : state.timeCurrent,
+                id
+              )
+            );
+          }
+        }}
+      >
+        Cue
+      </div>
+      <div
+        className="outro btn btn-sm btn-outline-secondary rounded-0"
+        onClick={() => {
+          if (state.loadedItem?.type === "central") {
+            dispatch(
+              setTrackOutro(
+                state.loadedItem,
+                showDeleteMenu ? 0 : state.timeCurrent,
+                id
+              )
+            );
+          }
+        }}
+      >
+        Outro
+      </div>
+      <div
+        className={
+          "delete btn btn-sm btn-outline-secondary rounded-0" +
+          (showDeleteMenu ? " active" : "")
+        }
+        onClick={() => {
+          setShowDeleteMenu(!showDeleteMenu);
+        }}
+      >
+        <FaTrash />
+      </div>
+    </div>
+  );
+}
+
 export function Player({ id }: { id: number }) {
   const playerState = useSelector(
-    (state: RootState) => state.mixer.players[id]
+    (state: RootState) => state.mixer.players[id],
+    (a, b) =>
+      shallowEqual(
+        omit(a, "timeCurrent", "timeRemaining"),
+        omit(b, "timeCurrent", "timeRemaining")
+      )
   );
   const proMode = useSelector((state: RootState) => state.settings.proMode);
+  const vuEnabled = useSelector(
+    (state: RootState) => state.settings.channelVUs
+  );
+  const vuStereo = useSelector(
+    (state: RootState) => state.settings.channelVUsStereo
+  );
   const dispatch = useDispatch();
 
-  const [now, setNow] = useState<Date>(new Date());
-  const tickerRef = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    tickerRef.current = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(tickerRef.current);
-  }, []);
-
+  const VUsource = (id: number) => {
+    switch (id) {
+      case 0:
+        return "player-0";
+      case 1:
+        return "player-1";
+      case 2:
+        return "player-2";
+      default:
+        throw new Error("Unknown Player VUMeter source: " + id);
+    }
+  };
   return (
     <div
       className={
@@ -38,7 +230,8 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
-        <div className="row m-0 p-1 card-header channelButtons">
+        <div className="row m-0 p-1 card-header channelButtons hover-menu">
+          <span className="hover-label">Channel Controls</span>
           <button
             className={
               (playerState.autoAdvance
@@ -143,46 +336,37 @@ export function Player({ id }: { id: number }) {
           </div>
         </div>
 
-        <div className="p-0 card-footer waveform">
-          <span id={"current-" + id} className="m-0 current bypass-click">
-            {secToHHMM(playerState.timeCurrent)}
-          </span>
-          <span id={"length-" + id} className="m-0 length bypass-click">
-            {secToHHMM(playerState.timeLength)}
-          </span>
-          <span id={"remaining-" + id} className="m-0 remaining bypass-click">
-            {secToHHMM(playerState.timeRemaining)}
-          </span>
-          <span id={"ends-" + id} className="m-0 outro bypass-click">
-            End -{" "}
-            {timestampToHHMM(now.valueOf() / 1000 + playerState.timeRemaining)}
-          </span>
-          {playerState.loadedItem !== null &&
-            "intro" in playerState.loadedItem && (
-              <span className="m-0 intro bypass-click">
-                {playerState.loadedItem !== null
-                  ? secToHHMM(
-                      playerState.loadedItem.intro
-                        ? playerState.loadedItem.intro
-                        : 0
-                    )
-                  : "00:00:00"}{" "}
-                - In
-              </span>
-            )}
-          <div
-            className={
-              "m-0 graph" + (playerState.loading !== -1 ? " loading" : "")
-            }
-            id={"waveform-" + id}
-            style={
-              playerState.loading !== -1
-                ? {
-                    width: playerState.loading * 100 + "%",
-                  }
-                : {}
-            }
-          ></div>
+        <div className="p-0 card-footer">
+          <TimingButtons id={id} />
+          <div className="waveform">
+            <PlayerNumbers id={id} />
+            {playerState.loadedItem !== null &&
+              "intro" in playerState.loadedItem && (
+                <span className="m-0 intro bypass-click">
+                  {playerState.loadedItem !== null
+                    ? secToHHMM(
+                        playerState.loadedItem.intro
+                          ? playerState.loadedItem.intro
+                          : 0
+                      )
+                    : "00:00:00"}{" "}
+                  - In
+                </span>
+              )}
+            <div
+              className={
+                "m-0 graph" + (playerState.loading !== -1 ? " loading" : "")
+              }
+              id={"waveform-" + id}
+              style={
+                playerState.loading !== -1
+                  ? {
+                      width: playerState.loading * 100 + "%",
+                    }
+                  : {}
+              }
+            ></div>
+          </div>
         </div>
       </div>
       <div
@@ -212,6 +396,18 @@ export function Player({ id }: { id: number }) {
           Full
         </button>
       </div>
+
+      {proMode && vuEnabled && (
+        <div className="channel-vu">
+          <VUMeter
+            width={300}
+            height={40}
+            source={VUsource(id)}
+            range={[-40, 0]}
+            stereo={vuStereo}
+          />
+        </div>
+      )}
     </div>
   );
 }

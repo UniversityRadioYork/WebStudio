@@ -1,5 +1,11 @@
 import raygun from "raygun4js";
-import { configureStore, Action, getDefaultMiddleware } from "@reduxjs/toolkit";
+import {
+  configureStore,
+  Action,
+  getDefaultMiddleware,
+  Middleware,
+  Dispatch,
+} from "@reduxjs/toolkit";
 import rootReducer, { RootState } from "./rootReducer";
 import { ThunkAction } from "redux-thunk";
 import {
@@ -7,19 +13,36 @@ import {
   mixerKeyboardShortcutsMiddleware,
   startNewsTimer,
 } from "./mixer/state";
-import { persistStore } from "redux-persist";
-import {periodicallySynchroniseClock} from "./clock/state";
+import { periodicallySynchroniseClock } from "./clock/state";
+import {
+  persistStore,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from "redux-persist";
 
+const raygunMiddleware: Middleware<{}, RootState, Dispatch<any>> = (store) => (
+  next
+) => (action) => {
+  raygun("recordBreadcrumb", "redux-action", action);
+  return next(action);
+};
+
+// See https://github.com/rt2zz/redux-persist/issues/988 for getDefaultMiddleware tweak.
 const store = configureStore({
   reducer: rootReducer,
   middleware: [
     mixerMiddleware,
     mixerKeyboardShortcutsMiddleware,
-    (store) => (next) => (action) => {
-      raygun("recordBreadcrumb", "redux-action", action);
-      return next(action);
-    },
-    ...getDefaultMiddleware(),
+    raygunMiddleware,
+    ...getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
   ],
 });
 

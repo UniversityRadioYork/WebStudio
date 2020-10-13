@@ -7,6 +7,8 @@ import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
 import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 
+import StereoAnalyserNode from "stereo-analyser-node";
+
 interface PlayerEvents {
   loadComplete: (duration: number) => void;
   timeChange: (time: number) => void;
@@ -21,8 +23,8 @@ const PlayerEmitter: StrictEmitter<
 > = EventEmitter as any;
 
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
-  private volume = 1;
-  private trim = 1;
+  private volume = 0;
+  private trim = 0;
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
@@ -55,14 +57,72 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this.wavesurfer.drawBuffer();
   }
 
+  setCurrentTime(secs: number) {
+    this.wavesurfer.setCurrentTime(secs);
+  }
+
   setIntro(duration: number) {
+    if ("intro" in this.wavesurfer.regions.list) {
+      this.wavesurfer.regions.list.intro.end = duration;
+      this.redraw();
+      return;
+    }
+
     this.wavesurfer.addRegion({
       id: "intro",
       resize: false,
+      drag: false,
       start: 0,
       end: duration,
-      color: "rgba(125,0,255, 0.12)",
+      color: "rgba(125,0,255, 0.3)",
     });
+  }
+
+  setCue(startTime: number) {
+    const duration = this.wavesurfer.getDuration();
+    const cueWidth = 0.01 * duration; // Cue region marker to be 1% of track length
+    if ("cue" in this.wavesurfer.regions.list) {
+      this.wavesurfer.regions.list.cue.start = startTime;
+      this.wavesurfer.regions.list.cue.end = startTime + cueWidth;
+      this.redraw();
+      return;
+    }
+
+    this.wavesurfer.addRegion({
+      id: "cue",
+      resize: false,
+      drag: false,
+      start: startTime,
+      end: startTime + cueWidth,
+      color: "rgba(0,100,0, 0.8)",
+    });
+  }
+
+  setOutro(startTime: number) {
+    if ("outro" in this.wavesurfer.regions.list) {
+      // If the outro is set to 0, we assume that's no outro.
+      if (startTime === 0) {
+        // Can't just delete the outro, so set it to the end of the track to hide it.
+        this.wavesurfer.regions.list.outro.start = this.wavesurfer.regions.list.outro.end;
+      } else {
+        this.wavesurfer.regions.list.outro.start = startTime;
+      }
+
+      this.redraw();
+      return;
+    }
+
+    // Again, only show a region if it's not the whole song with default of 0.
+    if (startTime !== 0) {
+      this.wavesurfer.addRegion({
+        id: "outro",
+        resize: false,
+        drag: false,
+        start: startTime,
+        end: this.wavesurfer.getDuration(),
+        color: "rgba(255, 0, 0, 0.2)",
+      });
+    }
   }
 
   setVolume(val: number) {
@@ -77,7 +137,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   _applyVolume() {
     const level = this.volume + this.trim;
-    const linear = Math.pow(10, level / 10);
+    const linear = Math.pow(10, level / 20);
     if (linear < 1) {
       this.wavesurfer.setVolume(linear);
       (this.wavesurfer as any).backend.gainNode.gain.value = 1;
@@ -96,9 +156,13 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     const wavesurfer = WaveSurfer.create({
       audioContext: engine.audioContext,
       container: "#waveform-" + player.toString(),
+      cursorColor: "#777",
+      cursorWidth: 3,
       waveColor: "#CCCCFF",
+      backgroundColor: "#FFFFFF",
       progressColor: "#9999FF",
       backend: "MediaElementWebAudio",
+      barWidth: 2,
       responsive: true,
       xhr: {
         credentials: "include",
@@ -110,8 +174,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
           customShowTimeStyle: {
             "background-color": "#000",
             color: "#fff",
-            padding: "2px",
-            "font-size": "10px",
+            padding: "4px",
+            "font-size": "14px",
           },
         }),
         RegionsPlugin.create({}),
@@ -142,16 +206,36 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
     (wavesurfer as any).backend.gainNode.disconnect();
     (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+    (wavesurfer as any).backend.gainNode.connect(
+      engine.playerAnalysers[player]
+    );
 
     wavesurfer.load(url);
 
     return instance;
   }
+
+  cleanup() {
+    // Unsubscribe from events.
+    this.wavesurfer.unAll();
+    // Let wavesurfer remove the old media, otherwise ram leak!
+    // See https://github.com/katspaugh/wavesurfer.js/issues/1940.
+    delete (this.wavesurfer as any).backend.buffer;
+    this.wavesurfer.destroy();
+  }
 }
 
-export type LevelsSource = "mic-precomp" | "mic-final" | "master";
+export type LevelsSource =
+  | "mic-precomp"
+  | "mic-final"
+  | "master"
+  | "player-0"
+  | "player-1"
+  | "player-2";
 
-const ANALYSIS_FFT_SIZE = 8192;
+// Setting this directly affects the performance of .getFloatTimeDomainData()
+// Must be a power of 2.
+const ANALYSIS_FFT_SIZE = 2048;
 
 interface EngineEvents {
   micOpen: () => void;
@@ -171,23 +255,25 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   micMedia: MediaStream | null = null;
   micSource: MediaStreamAudioSourceNode | null = null;
   micCalibrationGain: GainNode;
-  micPrecompAnalyser: AnalyserNode;
+  micPrecompAnalyser: typeof StereoAnalyserNode;
   micCompressor: DynamicsCompressorNode;
   micMixGain: GainNode;
-  micFinalAnalyser: AnalyserNode;
+  micFinalAnalyser: typeof StereoAnalyserNode;
 
   finalCompressor: DynamicsCompressorNode;
   streamingDestination: MediaStreamAudioDestinationNode;
 
-  streamingAnalyser: AnalyserNode;
+  playerAnalysers: typeof StereoAnalyserNode[];
+
+  streamingAnalyser: typeof StereoAnalyserNode;
 
   newsStartCountdownEl: HTMLAudioElement;
   newsStartCountdownNode: MediaElementAudioSourceNode;
 
   newsEndCountdownEl: HTMLAudioElement;
   newsEndCountdownNode: MediaElementAudioSourceNode;
-
   analysisBuffer: Float32Array;
+  analysisBuffer2: Float32Array;
 
   constructor() {
     super();
@@ -201,9 +287,18 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.finalCompressor.threshold.value = -0.5;
     this.finalCompressor.attack.value = 0;
     this.finalCompressor.release.value = 0.2;
+    this.finalCompressor.knee.value = 0;
 
-    this.streamingAnalyser = this.audioContext.createAnalyser();
+    this.playerAnalysers = [];
+    for (let i = 0; i < 3; i++) {
+      let analyser = new StereoAnalyserNode(this.audioContext);
+      analyser.fftSize = ANALYSIS_FFT_SIZE;
+      this.playerAnalysers.push(analyser);
+    }
+
+    this.streamingAnalyser = new StereoAnalyserNode(this.audioContext);
     this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+
     // this.streamingAnalyser.maxDecibels = 0;
 
     this.streamingDestination = this.audioContext.createMediaStreamDestination();
@@ -216,27 +311,26 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
     this.micCalibrationGain = this.audioContext.createGain();
 
-    this.micPrecompAnalyser = this.audioContext.createAnalyser();
+    this.micPrecompAnalyser = new StereoAnalyserNode(this.audioContext);
     this.micPrecompAnalyser.fftSize = ANALYSIS_FFT_SIZE;
     this.micPrecompAnalyser.maxDecibels = 0;
 
-    this.micFinalAnalyser = this.audioContext.createAnalyser();
+    this.micFinalAnalyser = new StereoAnalyserNode(this.audioContext);
     this.micFinalAnalyser.fftSize = ANALYSIS_FFT_SIZE;
     this.micFinalAnalyser.maxDecibels = 0;
-
-    this.analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
 
     this.micCompressor = this.audioContext.createDynamicsCompressor();
     this.micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
     this.micCompressor.threshold.value = -18;
     this.micCompressor.attack.value = 0.01;
     this.micCompressor.release.value = 0.1;
+    this.micCompressor.knee.value = 1;
 
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
 
+    this.micCalibrationGain.connect(this.micPrecompAnalyser);
     this.micCalibrationGain
-      .connect(this.micPrecompAnalyser)
       .connect(this.micCompressor)
       .connect(this.micMixGain)
       .connect(this.micFinalAnalyser)
@@ -258,6 +352,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       this.newsStartCountdownEl
     );
     this.newsStartCountdownNode.connect(this.audioContext.destination);
+
+    this.analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
+    this.analysisBuffer2 = new Float32Array(ANALYSIS_FFT_SIZE);
   }
 
   public createPlayer(number: number, url: string) {
@@ -266,7 +363,30 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     return player;
   }
 
+  public getPlayer(number: number) {
+    if (number < this.players.length) {
+      return this.players[number];
+    }
+    return null;
+  }
+
+  // Wavesurfer needs cleanup to remove the old audio mediaelements. Memory leak!
+  public destroyPlayerIfExists(number: number) {
+    const existingPlayer = this.players[number];
+    if (existingPlayer !== undefined) {
+      // already a player setup. Clean it.
+      existingPlayer.cleanup();
+    }
+    this.players[number] = undefined;
+  }
+
   async openMic(deviceId: string) {
+    if (this.micSource !== null && this.micMedia !== null) {
+      this.micMedia.getAudioTracks()[0].stop();
+      this.micSource.disconnect();
+      this.micSource = null;
+      this.micMedia = null;
+    }
     console.log("opening mic", deviceId);
     this.micMedia = await navigator.mediaDevices.getUserMedia({
       audio: {
@@ -287,32 +407,69 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   setMicCalibrationGain(value: number) {
     this.micCalibrationGain.gain.value =
-      value === 0 ? 1 : Math.pow(10, value / 10);
+      value === 0 ? 1 : Math.pow(10, value / 20);
   }
 
   setMicVolume(value: number) {
     this.micMixGain.gain.value = value;
   }
 
-  getLevel(source: LevelsSource) {
+  getLevels(source: LevelsSource, stereo: boolean): [number, number] {
     switch (source) {
       case "mic-precomp":
-        this.micPrecompAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        this.micPrecompAnalyser.getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
         break;
       case "mic-final":
-        this.micFinalAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        this.micFinalAnalyser.getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
         break;
       case "master":
-        this.streamingAnalyser.getFloatTimeDomainData(this.analysisBuffer);
+        this.streamingAnalyser.getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
+      case "player-0":
+        this.playerAnalysers[0].getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
+      case "player-1":
+        this.playerAnalysers[1].getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
+      case "player-2":
+        this.playerAnalysers[2].getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
         break;
       default:
         throw new Error("can't getLevel " + source);
     }
-    let peak = 0;
+    let peakL = 0;
     for (let i = 0; i < this.analysisBuffer.length; i++) {
-      peak = Math.max(peak, Math.abs(this.analysisBuffer[i]));
+      peakL = Math.max(peakL, Math.abs(this.analysisBuffer[i]));
     }
-    return 20 * Math.log10(peak);
+    peakL = 20 * Math.log10(peakL);
+
+    if (stereo) {
+      let peakR = 0;
+      for (let i = 0; i < this.analysisBuffer2.length; i++) {
+        peakR = Math.max(peakR, Math.abs(this.analysisBuffer2[i]));
+      }
+      peakR = 20 * Math.log10(peakR);
+      return [peakL, peakR];
+    }
+    return [peakL, 0];
   }
 
   async playNewsEnd() {

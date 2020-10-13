@@ -6,6 +6,10 @@ interface Settings {
   tracklist: "always" | "while_live" | "never";
   doTheNews: "always" | "while_live" | "never";
   proMode: boolean;
+  channelVUs: boolean;
+  channelVUsStereo: boolean;
+  resetTrimOnLoad: boolean;
+  saveShowPlanChanges: boolean;
 }
 
 const settingsState = createSlice({
@@ -16,6 +20,10 @@ const settingsState = createSlice({
     tracklist: "while_live",
     doTheNews: "while_live",
     proMode: false,
+    channelVUs: true,
+    channelVUsStereo: true,
+    resetTrimOnLoad: true,
+    saveShowPlanChanges: false,
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(

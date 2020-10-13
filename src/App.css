@@ -87,12 +87,67 @@ button {
   padding: 0.3em;
 }
 
+.timing-buttons {
+  width: 100%;
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+.timing-buttons div {
+  padding: 0 5px;
+  margin: 0 2px;
+  flex: 1;
+  font-size: 0.8em;
+}
+.timing-buttons .delete {
+  max-width: 3em;
+  color: gray;
+  padding-bottom: 2px;
+}
+
+.timing-buttons .intro {
+  border-color: rgb(125, 0, 255);
+  color: rgb(125, 0, 255);
+}
+
+.timing-buttons .cue {
+  border-color: rgb(0, 100, 0);
+  color: rgb(0, 100, 0);
+}
+
+.timing-buttons .outro {
+  border-color: rgb(255, 0, 0);
+  color: rgb(255, 0, 0);
+}
+
+.timing-buttons.not-central .intro,
+.timing-buttons.not-central .outro {
+  opacity: 0.2;
+}
+
+.timing-buttons.text-light > * {
+  color: white;
+}
+
+.timing-buttons.text-light .intro {
+  border-color: rgb(179, 115, 248);
+}
+
+.timing-buttons.text-light .cue {
+  border-color: rgb(0, 255, 0);
+}
+
 .waveform span {
   float: left;
   position: relative;
   display: block;
   z-index: 5;
   /* padding: 1px; */
+}
+
+.waveform .current,
+.waveform .remaining {
+  margin-top: -5px;
 }
 
 .waveform .current,
@@ -110,7 +165,7 @@ button {
 .waveform .intro,
 .waveform .outro,
 .waveform .length {
-  bottom: 0;
+  bottom: -5px;
   position: absolute;
 }
 
@@ -128,9 +183,13 @@ button {
   height: 6vh;
   width: 100%;
   overflow: hidden;
+  background: white;
+}
+.waveform .graph canvas {
+  background: transparent;
 }
 
-.waveform .graph wave {
+.waveform .graph > wave {
   height: 6vh !important;
 }
 
@@ -151,23 +210,4 @@ button {
 
 .ReactModal__Overlay {
   z-index: 10000;
-}
-
-.sp-mic-live {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9000;
-  pointer-events: none;
-  box-shadow: inset 0 0 3px 6px red;
-}
-
-#micMeter {
-  margin: 0.4rem 0.6rem;
-}
-
-#micMeter canvas {
-  width: 100%;
 }
