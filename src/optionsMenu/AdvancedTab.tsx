@@ -78,7 +78,6 @@ export function AdvancedTab() {
   const dispatch = useDispatch();
 
   async function fetchOutputNames() {
-    console.log("start fetchNames");
     if (!("mediaDevices" in navigator)) {
       setOpenError("NOT_SECURE_CONTEXT");
       return;
@@ -100,11 +99,8 @@ export function AdvancedTab() {
       }
       return;
     }
-    console.log("done");
     try {
-      console.log("gUM");
       const devices = await navigator.mediaDevices.enumerateDevices();
-      console.log(devices);
       setOutputList(reduceToOutputs(devices));
     } catch (e) {
       setOpenError("UNKNOWN_ENUM");

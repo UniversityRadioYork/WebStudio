@@ -33,7 +33,6 @@ export function MicTab() {
   const [openError, setOpenError] = useState<null | MicErrorEnum>(null);
 
   async function fetchMicNames() {
-    console.log("start fetchNames");
     if (!("mediaDevices" in navigator)) {
       setOpenError("NOT_SECURE_CONTEXT");
       return;
@@ -56,9 +55,7 @@ export function MicTab() {
       }
       return;
     }
-    console.log("done");
     try {
-      console.log("gUM");
       const devices = await navigator.mediaDevices.enumerateDevices();
       console.log(devices);
       setMicList(reduceToInputs(devices));

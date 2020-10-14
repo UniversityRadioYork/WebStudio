@@ -753,8 +753,7 @@ export const openMicrophone = (
 };
 
 export const setMicProcessingEnabled = (enabled: boolean): AppThunk => async (
-  dispatch,
-  _
+  dispatch
 ) => {
   dispatch(mixerState.actions.setMicProcessingEnabled(enabled));
   audioEngine.setMicProcessingEnabled(enabled);
