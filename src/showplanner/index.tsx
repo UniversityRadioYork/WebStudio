@@ -365,6 +365,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         ])
       );
     }
+    // If we're dragging from a pseudo-column, and a search field is focused, defocus it.
+    if (result.source.droppableId[0] === "$") {
+      const focus = document.activeElement;
+      if (focus && focus instanceof HTMLInputElement && focus.type === "text") {
+        focus.blur();
+      }
+    }
   }
 
   async function onCtxRemoveClick(e: any, data: { id: string }) {
