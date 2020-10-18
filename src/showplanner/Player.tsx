@@ -13,7 +13,7 @@ import { omit } from "lodash";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import * as ShowPlanState from "../showplanner/state";
-import { secToHHMM, timestampToHHMM } from "../lib/utils";
+import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import * as api from "../api";
@@ -221,6 +221,15 @@ export function Player({ id }: { id: number }) {
         throw new Error("Unknown Player VUMeter source: " + id);
     }
   };
+
+  var duration: number = 0;
+  const plan = useSelector((state: RootState) => state.showplan.plan);
+  plan?.forEach((pItem) => {
+    if (pItem.channel === id) {
+      duration += HHMMTosec(pItem.length);
+    }
+  });
+
   return (
     <div
       className={
@@ -269,6 +278,7 @@ export function Player({ id }: { id: number }) {
             <FaRedo />
             &nbsp; Repeat {playerState.repeat}
           </button>
+          <div>Total Time: {secToHHMM(duration)}</div>
         </div>
         {proMode && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
