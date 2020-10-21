@@ -22,16 +22,10 @@ export class RecordingStreamer extends Streamer {
     this.recorder.onstop = () => {
       this.onStateChange("NOT_CONNECTED");
       const finalData = new Blob(this.chunks, {
-        type: "audio/ogg; codecs=opus",
+        type: "audio/mp3; codecs=mpeg",
       });
       this.url = URL.createObjectURL(finalData);
       this.modalCallback();
-
-      // This stuff going to be moved
-      // const a = document.createElement("a");
-      // a.href = this.url;
-      // a.download = "recorded.ogg";
-      // a.click();
     };
     this.recorder.onerror = (e) => {
       console.error(e.error);

@@ -26,7 +26,7 @@ export function AutoPlayoutModal(props: AutoPlayoutProps) {
       </div>
       <hr />
       <iframe
-        id="uploadIframe"
+        id="playoutIframe"
         src={process.env.REACT_APP_MYRADIO_NONAPI_BASE + "/NIPSWeb/playout/"}
         frameBorder="0"
         title="URY Automatic Playout"

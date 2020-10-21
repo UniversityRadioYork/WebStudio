@@ -352,7 +352,7 @@ export const stopRecording = (callback: () => void): AppThunk => async (
 export const getRecording = () => {
   if (recorder) {
     return recorder.url;
-  } else {
-    console.warn("getRecording called with no recorder");
   }
+
+  // There isn't a console.warn here, because it spammed on load for some reason
 };
