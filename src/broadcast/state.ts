@@ -339,10 +339,20 @@ export const startRecording = (): AppThunk => async (dispatch) => {
   await recorder.start();
 };
 
-export const stopRecording = (): AppThunk => async (dispatch) => {
+export const stopRecording = (callback: () => void): AppThunk => async (
+  dispatch
+) => {
   if (recorder) {
-    await recorder.stop();
+    await recorder.stop(callback);
   } else {
     console.warn("stopRecording called with no recorder!");
+  }
+};
+
+export const getRecording = () => {
+  if (recorder) {
+    return recorder.url;
+  } else {
+    console.warn("getRecording called with no recorder");
   }
 };

@@ -3,11 +3,16 @@ import { Streamer } from "./streamer";
 export class RecordingStreamer extends Streamer {
   recorder: MediaRecorder;
   chunks: Blob[];
+  url: string;
+  modalCallback: () => void;
 
   constructor(stream: MediaStream) {
     super();
     this.recorder = new MediaRecorder(stream);
     this.chunks = [];
+    this.url = "";
+    this.modalCallback = () => {};
+
     this.recorder.ondataavailable = (e) => {
       this.chunks.push(e.data);
     };
@@ -19,12 +24,14 @@ export class RecordingStreamer extends Streamer {
       const finalData = new Blob(this.chunks, {
         type: "audio/ogg; codecs=opus",
       });
-      const url = URL.createObjectURL(finalData);
+      this.url = URL.createObjectURL(finalData);
+      this.modalCallback();
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "recorded.ogg";
-      a.click();
+      // This stuff going to be moved
+      // const a = document.createElement("a");
+      // a.href = this.url;
+      // a.download = "recorded.ogg";
+      // a.click();
     };
     this.recorder.onerror = (e) => {
       console.error(e.error);
@@ -36,7 +43,10 @@ export class RecordingStreamer extends Streamer {
     this.chunks = [];
     this.recorder.start();
   }
-  async stop(): Promise<void> {
+  async stop(callback?: () => void): Promise<void> {
+    if (callback) {
+      this.modalCallback = callback;
+    }
     this.recorder.stop();
   }
 }

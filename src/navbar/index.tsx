@@ -256,11 +256,10 @@ export function NavBarMain() {
               dispatch(
                 broadcastState.recordingState === "NOT_CONNECTED"
                   ? BroadcastState.startRecording()
-                  : BroadcastState.stopRecording()
+                  : BroadcastState.stopRecording(() => {
+                      setFinishRecordingModal(true);
+                    })
               );
-              if (broadcastState.recordingState === "CONNECTED") {
-                setFinishRecordingModal(true);
-              }
             }}
           >
             <FaCircle

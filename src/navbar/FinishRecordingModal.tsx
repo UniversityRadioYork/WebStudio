@@ -2,6 +2,7 @@ import React from "react";
 import { FaTimes, FaMicrophone } from "react-icons/fa";
 import Modal from "react-modal";
 import { Button } from "reactstrap";
+import * as BroadcastState from "../broadcast/state";
 
 interface FinishRecordingModal {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export function FinishRecordingModal(props: FinishRecordingModal) {
         Your recording is now complete. You can listen to it back and then
         download it, add it to your show plan, or delete it by closing this
         window.
+        {BroadcastState.getRecording()}
       </p>
     </Modal>
   );
