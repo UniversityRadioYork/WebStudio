@@ -23,12 +23,26 @@ import {
   REGISTER,
 } from "redux-persist";
 
-const raygunMiddleware: Middleware<{}, RootState, Dispatch<any>> = (store) => (
-  next
-) => (action) => {
-  raygun("recordBreadcrumb", "redux-action", action);
+const ACTION_HISTORY_MAX_SIZE = 20;
+
+const actionHistory: Array<Action> = [];
+
+const actionHistoryMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
+  store
+) => (next) => (action) => {
+  while (actionHistory.length > ACTION_HISTORY_MAX_SIZE) {
+    actionHistory.shift();
+  }
+  actionHistory.push({
+    ...action,
+    _timestamp: new Date().toString(),
+  });
   return next(action);
 };
+
+export function getActionHistory() {
+  return actionHistory;
+}
 
 // See https://github.com/rt2zz/redux-persist/issues/988 for getDefaultMiddleware tweak.
 const store = configureStore({
@@ -36,7 +50,7 @@ const store = configureStore({
   middleware: [
     mixerMiddleware,
     mixerKeyboardShortcutsMiddleware,
-    raygunMiddleware,
+    actionHistoryMiddleware,
     ...getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
