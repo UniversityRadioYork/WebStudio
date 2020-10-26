@@ -24,6 +24,7 @@ import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import { getShowplan } from "../showplanner/state";
+import { FinishRecordingModal } from "./FinishRecordingModal";
 
 import * as OptionsMenuState from "../optionsMenu/state";
 
@@ -156,6 +157,8 @@ export function NavBarMain() {
 
   const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
 
+  const [finishRecordingModal, setFinishRecordingModal] = useState(false);
+
   const prevRegistrationStage = useRef(broadcastState.stage);
   useEffect(() => {
     if (broadcastState.stage !== prevRegistrationStage.current) {
@@ -170,6 +173,12 @@ export function NavBarMain() {
 
   return (
     <>
+      <FinishRecordingModal
+        isOpen={finishRecordingModal}
+        close={() => {
+          setFinishRecordingModal(false);
+        }}
+      />
       <ul className="nav navbar-nav navbar-left">
         <li
           className="btn rounded-0 py-2 nav-link nav-item"
@@ -243,13 +252,15 @@ export function NavBarMain() {
                 ? "btn-outline-danger active"
                 : "btn-outline-light")
             }
-            onClick={() =>
+            onClick={() => {
               dispatch(
                 broadcastState.recordingState === "NOT_CONNECTED"
                   ? BroadcastState.startRecording()
-                  : BroadcastState.stopRecording()
-              )
-            }
+                  : BroadcastState.stopRecording(() => {
+                      setFinishRecordingModal(true);
+                    })
+              );
+            }}
           >
             <FaCircle
               size={17}
