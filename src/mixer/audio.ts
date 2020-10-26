@@ -511,7 +511,13 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   setMicProcessingEnabled(value: boolean) {
-    // Disconnect whatever was connected before.
+    /*
+     * Disconnect whatever was connected before.
+     * It's either connected to micCompressor or micMixGain
+     * (depending on if we're going from enabled to disabled or vice - versa).
+     * Also connected is the micPrecompAnalyser), but you can't disconnect only one node,
+     * so you have to disconnect all anyway.
+     */
     this.micCalibrationGain.disconnect();
     this.micCalibrationGain.connect(this.micPrecompAnalyser);
     console.log("Setting mic processing to: ", value);
