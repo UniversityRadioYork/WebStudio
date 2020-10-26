@@ -47,6 +47,16 @@ export function secToHHMM(sec: number = 0) {
   return d.toLocaleString("en-GB").split(" ")[1];
 }
 
+export function HHMMTosec(timeString: string = "00:00:00") {
+  var s: number = parseInt(timeString[7]);
+  s += 10 * parseInt(timeString[6]);
+  s += 60 * parseInt(timeString[4]);
+  s += 600 * parseInt(timeString[3]);
+  s += 3600 * parseInt(timeString[1]);
+  s += 36000 * parseInt(timeString[0]);
+  return s;
+}
+
 export function timestampToHHMM(sec: number = 0) {
   return format(fromUnixTime(sec), "HH:mm:ss");
 }

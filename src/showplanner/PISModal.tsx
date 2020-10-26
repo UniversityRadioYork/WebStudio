@@ -2,6 +2,32 @@ import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { getLatestNewsItem, NewsEntry } from "../api";
 import { Button } from "reactstrap";
+import { FaTimes } from "react-icons/fa";
+
+function DevWarning() {
+  if (process.env.REACT_APP_PRODUCTION === "true") {
+    return null;
+  }
+  const wsUrl =
+    process.env.REACT_APP_MYRADIO_NONAPI_BASE + "/MyRadio/webstudio";
+  return (
+    <>
+      <div className="p-2 alert-warning">
+        <h2>Development Version</h2>
+        <strong>You are using a development version of WebStudio.</strong> This
+        version is NOT tested and may have severe bugs and performance problems.
+        <br />
+        <em>
+          <strong>DO NOT BROADCAST LIVE SHOWS USING THIS VERSION!</strong>
+        </em>
+        <br />
+        For the latest and greatest tested WebStudio, go to{" "}
+        <a href={wsUrl}>{wsUrl}</a>.
+      </div>
+      <hr />
+    </>
+  );
+}
 
 export function PisModal({
   close,
@@ -35,7 +61,12 @@ export function PisModal({
 
   return (
     <Modal isOpen={isOpen} onRequestClose={close}>
-      <h1>Presenter News</h1>
+      <h1 className="d-inline">Presenter News</h1>
+      <Button onClick={close} className="float-right pt-1" color="primary">
+        <FaTimes />
+      </Button>
+      <hr className="mt-1 mb-3" />
+      <DevWarning />
       {(news === "loading" || news === "not_loaded") && (
         <p>Loading the news...</p>
       )}
@@ -44,15 +75,17 @@ export function PisModal({
         <p>There was an error getting the news. Computing are aware.</p>
       )}
       {typeof news === "object" && (
-        <div style={{ fontSize: "90%" }}>
-          <p dangerouslySetInnerHTML={{ __html: news.content }} />
+        <div>
           <em>
             ~{news.author}, {news.posted}
           </em>
+          <br />
+          <p dangerouslySetInnerHTML={{ __html: news.content }} />
         </div>
       )}
+      <br />
       <Button onClick={close} color="primary">
-        Close
+        <FaTimes /> Close
       </Button>
     </Modal>
   );

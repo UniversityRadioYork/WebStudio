@@ -55,14 +55,18 @@ export const Item = memo(function Item({
           ref={provided.innerRef}
           key={id}
           data-itemid={id}
-          className={`item ${
-            column >= 0 &&
-            playerState &&
-            playerState.loadedItem !== null &&
-            itemId(playerState.loadedItem) === id
-              ? "active"
-              : ""
-          }`}
+          className={
+            "item " +
+            x.type +
+            `${
+              column >= 0 &&
+              playerState &&
+              playerState.loadedItem !== null &&
+              itemId(playerState.loadedItem) === id
+                ? " active"
+                : ""
+            }`
+          }
           onClick={triggerClick}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
@@ -74,7 +78,7 @@ export const Item = memo(function Item({
             <span className={"icon " + x.type} />
             &nbsp;
             {x.title.toString()}
-            {"artist" in x && " - " + x.artist}
+            {"artist" in x && x.artist !== "" && " - " + x.artist}
             <small
               className={
                 "border rounded border-danger text-danger p-1 m-1" +

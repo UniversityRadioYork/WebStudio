@@ -6,7 +6,7 @@ import * as serviceWorker from "./serviceWorkerLoader";
 
 import raygun from "raygun4js";
 
-import store from "./store";
+import store, { getActionHistory } from "./store";
 import { Provider } from "react-redux";
 
 raygun("apiKey", "mtj24r3YzPoYyCG8cVArA");
@@ -17,6 +17,13 @@ if (
 ) {
   raygun("setVersion", process.env.REACT_APP_VERSION);
 }
+
+raygun("withCustomData", function() {
+  return {
+    state: store.getState(),
+    actionHistory: getActionHistory(),
+  };
+});
 
 function render() {
   ReactDOM.render(

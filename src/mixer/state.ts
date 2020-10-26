@@ -96,12 +96,17 @@ const mixerState = createSlice({
       state,
       action: PayloadAction<{
         player: number;
-        item: PlanItem | Track | AuxItem;
+        item: PlanItem | Track | AuxItem | null;
         resetTrim?: boolean;
       }>
     ) {
       state.players[action.payload.player].loadedItem = action.payload.item;
-      state.players[action.payload.player].loading = 0;
+      if (action.payload.item !== null) {
+        state.players[action.payload.player].loading = 0;
+      } else {
+        // Unloaded player, No media selected.
+        state.players[action.payload.player].loading = -1;
+      }
       state.players[action.payload.player].timeCurrent = 0;
       state.players[action.payload.player].timeRemaining = 0;
       state.players[action.payload.player].timeLength = 0;
@@ -156,6 +161,42 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].trim = action.payload.trim;
+    },
+    setLoadedItemIntro(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem?.type === "central") {
+        loadedItem.intro = action.payload.secs;
+      }
+    },
+    setLoadedItemCue(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem && "cue" in loadedItem) {
+        loadedItem.cue = action.payload.secs;
+      }
+    },
+    setLoadedItemOutro(
+      state,
+      action: PayloadAction<{
+        player: number;
+        secs: number;
+      }>
+    ) {
+      const loadedItem = state.players[action.payload.player].loadedItem;
+      if (loadedItem?.type === "central") {
+        loadedItem.outro = action.payload.secs;
+      }
     },
     setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
       state.mic.openError = action.payload;
@@ -247,6 +288,39 @@ export default mixerState.reducer;
 
 export const { setMicBaseGain } = mixerState.actions;
 
+export const setLoadedItemIntro = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch) => {
+  dispatch(mixerState.actions.setLoadedItemIntro({ player, secs }));
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setIntro(secs);
+  }
+};
+
+export const setLoadedItemCue = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch) => {
+  dispatch(mixerState.actions.setLoadedItemCue({ player, secs }));
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setCue(secs);
+  }
+};
+
+export const setLoadedItemOutro = (
+  player: number,
+  secs: number
+): AppThunk => async (dispatch) => {
+  dispatch(mixerState.actions.setLoadedItemOutro({ player, secs }));
+  const playerInstance = audioEngine.getPlayer(player);
+  if (playerInstance) {
+    playerInstance.setOutro(secs);
+  }
+};
+
 export const load = (
   player: number,
   item: PlanItem | Track | AuxItem
@@ -257,6 +331,12 @@ export const load = (
       return;
     }
   }
+
+  // Can't really load a ghost, it'll break setting cues etc. Do nothing.
+  if (item.type === "ghost") {
+    return;
+  }
+
   // If this is already the currently loaded item, don't bother
   const currentItem = getState().mixer.players[player].loadedItem;
   if (currentItem !== null && itemId(currentItem) === itemId(item)) {
@@ -276,7 +356,7 @@ export const load = (
 
   let url;
 
-  if ("album" in item) {
+  if (item.type === "central") {
     // track
     url =
       MYRADIO_NON_API_BASE +
@@ -357,10 +437,16 @@ export const load = (
       if (state.loadedItem && "intro" in state.loadedItem) {
         playerInstance.setIntro(state.loadedItem.intro);
       }
+      if (state.loadedItem && "cue" in state.loadedItem) {
+        playerInstance.setCue(state.loadedItem.cue);
+        playerInstance.setCurrentTime(state.loadedItem.cue);
+      }
+      if (state.loadedItem && "outro" in state.loadedItem) {
+        playerInstance.setOutro(state.loadedItem.outro);
+      }
     });
 
     playerInstance.on("play", () => {
-
       dispatch(mixerState.actions.setPlayerState({ player, state: "playing" }));
 
       const state = getState().mixer.players[player];
@@ -485,7 +571,8 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
-  if (typeof audioEngine.players[player] === "undefined") {
+  const playerInstance = audioEngine.players[player];
+  if (typeof playerInstance === "undefined") {
     console.log("nothing loaded");
     return;
   }
@@ -494,7 +581,24 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
     console.log("not ready");
     return;
   }
-  audioEngine.players[player]?.stop();
+
+  let cueTime = 0;
+
+  console.log(Math.round(playerInstance.currentTime));
+  if (
+    state.loadedItem &&
+    "cue" in state.loadedItem &&
+    Math.round(playerInstance.currentTime) !== Math.round(state.loadedItem.cue)
+  ) {
+    cueTime = state.loadedItem.cue;
+    console.log(cueTime);
+  }
+
+  playerInstance.stop();
+
+  dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime }));
+  playerInstance.setCurrentTime(cueTime);
+
   // Incase wavesurver wasn't playing, it won't 'finish', so just make sure the UI is stopped.
   dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
 
@@ -526,11 +630,11 @@ export const setVolume = (
   let uiLevel: number;
   switch (level) {
     case "off":
-      volume = -36;
+      volume = -40;
       uiLevel = 0;
       break;
     case "bed":
-      volume = -7;
+      volume = -13;
       uiLevel = 0.5;
       break;
     case "full":

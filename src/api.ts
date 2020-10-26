@@ -85,6 +85,7 @@ interface TimeslotItemBase {
   length: string;
   trackid: number;
   clean: boolean;
+  cue: number;
   played: boolean;
 }
 
@@ -92,6 +93,7 @@ interface TimeslotItemCentral {
   type: "central";
   artist: string;
   intro: number;
+  outro: number;
   clean: boolean;
   digitised: boolean;
   album: Album;
@@ -168,6 +170,7 @@ export interface Track {
   trackid: number;
   length: string;
   intro: number;
+  outro: number;
   clean: boolean;
   digitised: boolean;
 }
@@ -186,14 +189,20 @@ export function searchForTracks(
   });
 }
 
-export interface ManagedPlaylist {
+export interface NipswebPlaylist {
   type: "userPlaylist";
   title: string;
   managedid: string;
   folder: string;
 }
+export interface ManagedPlaylist {
+  type: "managedPlaylist";
+  title: string;
+  playlistid: string;
+  folder: string;
+}
 
-export function getUserPlaylists(): Promise<Array<ManagedPlaylist>> {
+export function getUserPlaylists(): Promise<Array<NipswebPlaylist>> {
   return myradioApiRequest(
     "/nipswebUserPlaylist/allmanageduserplaylists",
     "GET",
@@ -201,7 +210,11 @@ export function getUserPlaylists(): Promise<Array<ManagedPlaylist>> {
   );
 }
 
-export function getAuxPlaylists(): Promise<Array<ManagedPlaylist>> {
+export function getManagedPlaylists(): Promise<Array<ManagedPlaylist>> {
+  return myradioApiRequest("/playlist/allitonesplaylists", "GET", {});
+}
+
+export function getAuxPlaylists(): Promise<Array<NipswebPlaylist>> {
   return myradioApiRequest("/nipswebPlaylist/allmanagedplaylists", "GET", {});
 }
 
@@ -209,6 +222,31 @@ export function loadAuxLibrary(libraryId: string): Promise<AuxItem[]> {
   return apiRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
     libraryid: libraryId,
   }).then((res) => res.json());
+}
+
+export function loadPlaylistLibrary(libraryId: string): Promise<Track[]> {
+  return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
+}
+
+export function setTimeslotItemCue(
+  timeslotItemId: string,
+  secs: number
+): Promise<null> {
+  return myradioApiRequest("/timeslotItem/" + timeslotItemId + "/cue", "PUT", {
+    start_time: secs,
+  });
+}
+
+export function setTrackIntro(trackId: number, secs: number): Promise<null> {
+  return myradioApiRequest("/track/" + trackId + "/intro", "PUT", {
+    duration: secs,
+  });
+}
+
+export function setTrackOutro(trackId: number, secs: number): Promise<null> {
+  return myradioApiRequest("/track/" + trackId + "/outro", "PUT", {
+    duration: secs,
+  });
 }
 
 export type UpdateOp =
