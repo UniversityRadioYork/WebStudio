@@ -8,6 +8,8 @@ function DevWarning() {
   if (process.env.REACT_APP_PRODUCTION === "true") {
     return null;
   }
+  const wsUrl =
+    process.env.REACT_APP_MYRADIO_NONAPI_BASE + "/MyRadio/webstudio";
   return (
     <>
       <div className="p-2 alert-warning">
@@ -20,10 +22,7 @@ function DevWarning() {
         </em>
         <br />
         For the latest and greatest tested WebStudio, go to{" "}
-        <a href={process.env.REACT_APP_HOMEPAGE}>
-          {process.env.REACT_APP_HOMEPAGE}
-        </a>
-        .
+        <a href={wsUrl}>{wsUrl}</a>.
       </div>
       <hr />
     </>
