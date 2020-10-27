@@ -498,7 +498,17 @@ export const load = (
           const itsChannel = getState()
             .showplan.plan!.filter((x) => x.channel === item.channel)
             .sort((x, y) => x.weight - y.weight);
-          const itsIndex = itsChannel.indexOf(item);
+          // Sadly, we can't just do .indexOf() item directly,
+          // since the player's idea of an item may be changed over it's lifecycle (setting intro/cue/outro etc.)
+          // Therefore we'll find the updated item from the plan and match that.
+          const itsChannelItem = itsChannel.filter(
+            (x) => itemId(x) === itemId(item)
+          );
+          if (itsChannelItem.length !== 1) {
+            // Somehow we've got 0 or multiple identical timeslotitems (or ghosts), bail out!
+            return;
+          }
+          const itsIndex = itsChannel.indexOf(itsChannelItem[0]);
           if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
             dispatch(load(player, itsChannel[itsIndex + 1]));
           }
@@ -585,14 +595,12 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 
   let cueTime = 0;
 
-  console.log(Math.round(playerInstance.currentTime));
   if (
     state.loadedItem &&
     "cue" in state.loadedItem &&
     Math.round(playerInstance.currentTime) !== Math.round(state.loadedItem.cue)
   ) {
     cueTime = state.loadedItem.cue;
-    console.log(cueTime);
   }
 
   playerInstance.stop();
