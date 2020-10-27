@@ -23,7 +23,7 @@ import "./navbar.scss";
 import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
-import { getShowplan } from "../showplanner/state";
+import { getShowplan, setItemPlayed } from "../showplanner/state";
 
 import * as OptionsMenuState from "../optionsMenu/state";
 
@@ -106,6 +106,15 @@ export function NavBarMyRadio() {
               }
             >
               Reload Show Plan
+            </button>
+            <button
+              className="dropdown-item"
+              onClick={() =>
+                sessionState.currentTimeslot !== null &&
+                dispatch(setItemPlayed({ itemId: "all", played: false }))
+              }
+            >
+              Mark All Items Unplayed
             </button>
             <h6 className="dropdown-header">
               {sessionState.currentTimeslot?.title}

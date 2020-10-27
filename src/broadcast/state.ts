@@ -7,6 +7,7 @@ import * as NavbarState from "../navbar/state";
 import { ConnectionStateEnum } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 import { audioEngine } from "../mixer/audio";
+import { setItemPlayed } from "../showplanner/state";
 
 export let streamer: WebRTCStreamer | null = null;
 
@@ -315,6 +316,8 @@ export const goOnAir = (): AppThunk => async (dispatch, getState) => {
     } else if (state === "CONNECTED") {
       // okay, we've connected
       dispatch(registerForShow());
+    } else if (state === "LIVE") {
+      dispatch(setItemPlayed({ itemId: "all", played: false }));
     }
   });
   await streamer.start();

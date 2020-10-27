@@ -1,4 +1,3 @@
-import raygun from "raygun4js";
 import {
   configureStore,
   Action,

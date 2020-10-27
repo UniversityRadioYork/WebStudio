@@ -8,6 +8,7 @@ import {
   FaMicrophone,
   FaTrash,
   FaUpload,
+  FaCircleNotch,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import Stopwatch from "react-stopwatch";
@@ -31,7 +32,9 @@ import {
   moveItem,
   addItem,
   removeItem,
+  setItemPlayed,
   getPlaylists,
+  PlanItemBase,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
@@ -333,10 +336,11 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is a track from the CML
       // TODO: this is ugly, should be in redux
       const data = CML_CACHE[result.draggableId];
-      const newItem: TimeslotItem = {
+      const newItem: TimeslotItem & PlanItemBase = {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
+        played: false,
         cue: 0,
         ...data,
       };
@@ -346,11 +350,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is an aux resource
       // TODO: this is ugly, should be in redux
       const data = AUX_CACHE[result.draggableId];
-      const newItem: TimeslotItem = {
+      const newItem: TimeslotItem & PlanItemBase = {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
+        played: false,
         cue: 0,
         ...data,
       } as any;
@@ -376,6 +381,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   async function onCtxRemoveClick(e: any, data: { id: string }) {
     dispatch(removeItem(timeslotId, data.id));
+  }
+  async function onCtxUnPlayedClick(e: any, data: { id: string }) {
+    dispatch(setItemPlayed({ itemId: data.id, played: false }));
   }
 
   // Add support for reloading the show plan from the iFrames.
@@ -433,6 +441,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>
           <FaTrash /> Remove
+        </MenuItem>
+        <MenuItem onClick={onCtxUnPlayedClick}>
+          <FaCircleNotch /> Mark Unplayed
         </MenuItem>
       </ContextMenu>
       <OptionsMenu />
