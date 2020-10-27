@@ -222,11 +222,15 @@ export function Player({ id }: { id: number }) {
     }
   };
 
-  var duration: number = 0;
+  var channel_duration: number = 0;
+  var channel_unplayed: number = 0;
   const plan = useSelector((state: RootState) => state.showplan.plan);
   plan?.forEach((pItem) => {
     if (pItem.channel === id) {
-      duration += HHMMTosec(pItem.length);
+      channel_duration += HHMMTosec(pItem.length);
+      if (!pItem.played) {
+        channel_unplayed += HHMMTosec(pItem.length);
+      }
     }
   });
 
@@ -239,6 +243,10 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
+        <span>
+          Total: {secToHHMM(channel_duration)}&nbsp;<strong>-</strong>
+          &nbsp;Un-played: {secToHHMM(channel_unplayed)}
+        </span>
         <div className="row m-0 p-1 card-header channelButtons hover-menu">
           <span className="hover-label">Channel Controls</span>
           <button
@@ -278,7 +286,6 @@ export function Player({ id }: { id: number }) {
             <FaRedo />
             &nbsp; Repeat {playerState.repeat}
           </button>
-          <div>Total Time: {secToHHMM(duration)}</div>
         </div>
         {proMode && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
