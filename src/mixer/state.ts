@@ -38,6 +38,7 @@ interface PlayerState {
   volume: number;
   gain: number;
   trim: number;
+  micAutoDuck: boolean;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -66,6 +67,7 @@ const BasePlayerState: PlayerState = {
   state: "stopped",
   volume: 1,
   gain: 0,
+  micAutoDuck: false,
   trim: defaultTrimDB,
   timeCurrent: 0,
   timeRemaining: 0,
@@ -160,6 +162,15 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].trim = action.payload.trim;
+    },
+    setPlayerMicAutoDuck(
+      state,
+      action: PayloadAction<{
+        player: number;
+        enabled: boolean;
+      }>
+    ) {
+      state.players[action.payload.player].micAutoDuck = action.payload.enabled;
     },
     setLoadedItemIntro(
       state,
@@ -612,6 +623,8 @@ export const {
   toggleAutoAdvance,
   togglePlayOnLoad,
   toggleRepeat,
+  setTracklistItemID,
+  setPlayerMicAutoDuck,
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
@@ -619,8 +632,6 @@ export const redrawWavesurfers = (): AppThunk => () => {
     item?.redraw();
   });
 };
-
-export const { setTracklistItemID } = mixerState.actions;
 
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
@@ -742,15 +753,31 @@ export const openMicrophone = (micID: string): AppThunk => async (
 };
 
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
-  dispatch
+  dispatch,
+  getState
 ) => {
+  const players = getState().mixer.players;
+
   // no tween fuckery here, just cut the level
   const levelVal = level === "full" ? 1 : 0;
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for
   // processing latency
+
   if (levelVal !== 0) {
     dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
+    for (let player = 0; player < players.length; player++) {
+      // If we have auto duck enabled on this channel player, tell it to fade down.
+      if (players[player].micAutoDuck) {
+        dispatch(setVolume(player, "bed"));
+      }
+    }
   } else {
+    for (let player = 0; player < players.length; player++) {
+      // If we have auto duck enabled on this channel player, tell it to fade back up.
+      if (players[player].micAutoDuck) {
+        dispatch(setVolume(player, "full"));
+      }
+    }
     window.setTimeout(() => {
       dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
       // latency, plus a little buffer
