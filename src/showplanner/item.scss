@@ -15,8 +15,11 @@
     opacity: 0.5;
   }
 
-  &.played .icon {
-    border: 4px black solid;
+  &.played {
+    background-color: #ddd;
+    .icon {
+      border: 4px black solid;
+    }
   }
 
   .icon {
