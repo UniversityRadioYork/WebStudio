@@ -63,14 +63,6 @@ const broadcastState = createSlice({
     setTracklisting(state, action: PayloadAction<boolean>) {
       state.liveForThePurposesOfTracklisting = action.payload;
     },
-    setConnID(state, action: PayloadAction<number | null>) {
-      state.connID = action.payload;
-      if (action.payload != null) {
-        state.stage = "REGISTERED";
-      } else {
-        state.stage = "NOT_REGISTERED";
-      }
-    },
     setWsID(state, action: PayloadAction<string | null>) {
       state.wsID = action.payload;
     },
