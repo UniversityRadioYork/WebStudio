@@ -666,7 +666,14 @@ export const setVolume = (
   const state = getState().mixer.players[player];
 
   const currentLevel = state.volume;
-  const currentGain = state.gain;
+  let currentGain = state.gain;
+
+  // If we can, use the engine's 'real' volume gain.
+  // This helps when we've interupted a previous fade, so the state gain won't be correct.
+  if (typeof audioEngine.players[player] !== "undefined") {
+    currentGain = audioEngine.players[player]!.getVolume();
+  }
+
   const volumeTween = new Between(currentLevel, uiLevel)
     .time(FADE_TIME_SECONDS * 1000)
     .on("update", (val: number) => {
