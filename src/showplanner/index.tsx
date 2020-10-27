@@ -33,6 +33,7 @@ import {
   removeItem,
   setItemPlayed,
   getPlaylists,
+  PlanItemBase,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
@@ -334,7 +335,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is a track from the CML
       // TODO: this is ugly, should be in redux
       const data = CML_CACHE[result.draggableId];
-      const newItem: TimeslotItem = {
+      const newItem: TimeslotItem & PlanItemBase = {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
@@ -348,7 +349,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is an aux resource
       // TODO: this is ugly, should be in redux
       const data = AUX_CACHE[result.draggableId];
-      const newItem: TimeslotItem = {
+      const newItem: TimeslotItem & PlanItemBase = {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
@@ -381,7 +382,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     dispatch(removeItem(timeslotId, data.id));
   }
   async function onCtxUnPlayedClick(e: any, data: { id: string }) {
-    dispatch(setItemPlayed(data.id, false));
+    dispatch(setItemPlayed({ itemId: data.id, played: false }));
   }
 
   // Add support for reloading the show plan from the iFrames.

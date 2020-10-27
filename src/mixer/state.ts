@@ -451,7 +451,9 @@ export const load = (
 
       const state = getState().mixer.players[player];
       if (state.loadedItem != null) {
-        dispatch(setItemPlayed(state.loadedItem.id, true));
+        dispatch(
+          setItemPlayed({ itemId: itemId(state.loadedItem), played: true })
+        );
       }
     });
     playerInstance.on("pause", () => {

@@ -17,10 +17,12 @@ export interface ItemGhost {
   cue: number;
   outro: number;
   clean: boolean;
-  played: boolean;
 }
 
-export type PlanItem = TimeslotItem | ItemGhost;
+export interface PlanItemBase {
+  played?: boolean;
+}
+export type PlanItem = (TimeslotItem | ItemGhost) & PlanItemBase;
 
 export type Plan = PlanItem[][];
 
@@ -175,6 +177,16 @@ const showplan = createSlice({
         }
       });
     },
+    // Set the item as being played/unplayed in this session.
+    setItemPlayed(
+      state,
+      action: PayloadAction<{ itemId: string; played: boolean }>
+    ) {
+      const idx = state.plan!.findIndex(
+        (x) => itemId(x) === action.payload.itemId
+      );
+      state.plan![idx].played = action.payload.played;
+    },
     replaceGhost(
       state,
       action: PayloadAction<{ ghostId: string; newItemData: TimeslotItem }>
@@ -201,7 +213,11 @@ const showplan = createSlice({
 
 export default showplan.reducer;
 
-export const { setItemTimings, planSaveError } = showplan.actions;
+export const {
+  setItemTimings,
+  setItemPlayed,
+  planSaveError,
+} = showplan.actions;
 
 export const moveItem = (
   timeslotid: number,
@@ -478,16 +494,6 @@ export const removeItem = (
   }
   dispatch(showplan.actions.applyOps(ops));
   dispatch(showplan.actions.setPlanSaving(false));
-};
-
-// Set the item as being played/unplayed in this session.
-export const setItemPlayed = (
-  itemid: string,
-  played: boolean
-): AppThunk => async (dispatch, getState) => {
-  const plan = cloneDeep(getState().showplan.plan!);
-  const item = plan.find((x) => itemId(x) === itemid)!;
-  item.played = played;
 };
 
 export const getShowplan = (timeslotId: number): AppThunk => async (

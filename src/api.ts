@@ -86,7 +86,6 @@ interface TimeslotItemBase {
   trackid: number;
   clean: boolean;
   cue: number;
-  played: boolean;
 }
 
 interface TimeslotItemCentral {

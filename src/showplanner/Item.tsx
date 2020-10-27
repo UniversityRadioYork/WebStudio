@@ -57,6 +57,7 @@ export const Item = memo(function Item({
           data-itemid={id}
           className={
             "item " +
+            ("played" in x ? (x.played ? "played " : "") : "") +
             x.type +
             `${
               column >= 0 &&
