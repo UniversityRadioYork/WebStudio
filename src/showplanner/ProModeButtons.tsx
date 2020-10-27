@@ -35,9 +35,10 @@ export default function ProModeButtons({ channel }: { channel: number }) {
               max={12}
               step={0.2}
               value={trimVal.toFixed(1)}
-              onChange={(e) =>
-                dispatch(setChannelTrim(channel, parseFloat(e.target.value)))
-              }
+              onChange={(e) => {
+                dispatch(setChannelTrim(channel, parseFloat(e.target.value)));
+                e.target.blur(); // Stop dragging from disabling the keyboard triggers.
+              }}
             />
             <b>{trimVal} dB</b>
           </>
