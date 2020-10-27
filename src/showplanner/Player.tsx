@@ -222,14 +222,14 @@ export function Player({ id }: { id: number }) {
     }
   };
 
-  var channel_duration: number = 0;
-  var channel_unplayed: number = 0;
+  let channelDuration = 0;
+  let channelUnplayed = 0;
   const plan = useSelector((state: RootState) => state.showplan.plan);
   plan?.forEach((pItem) => {
     if (pItem.channel === id) {
-      channel_duration += HHMMTosec(pItem.length);
+      channelDuration += HHMMTosec(pItem.length);
       if (!pItem.played) {
-        channel_unplayed += HHMMTosec(pItem.length);
+        channelUnplayed += HHMMTosec(pItem.length);
       }
     }
   });
@@ -243,10 +243,14 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
-        <span>
-          Total: {secToHHMM(channel_duration)}&nbsp;<strong>-</strong>
-          &nbsp;Un-played: {secToHHMM(channel_unplayed)}
-        </span>
+        <div className="d-inline mx-1">
+          <span className="float-left">
+            Total: {secToHHMM(channelDuration)}
+          </span>
+          <span className="float-right">
+            Unplayed: {secToHHMM(channelUnplayed)}
+          </span>
+        </div>
         <div className="row m-0 p-1 card-header channelButtons hover-menu">
           <span className="hover-label">Channel Controls</span>
           <button
