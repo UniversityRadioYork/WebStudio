@@ -182,6 +182,13 @@ const showplan = createSlice({
       state,
       action: PayloadAction<{ itemId: string; played: boolean }>
     ) {
+      // Used for the nav menu
+      if (action.payload.itemId === "all") {
+        state.plan!.forEach((x) => {
+          x.played = action.payload.played;
+        });
+        return;
+      }
       const idx = state.plan!.findIndex(
         (x) => itemId(x) === action.payload.itemId
       );

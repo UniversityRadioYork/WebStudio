@@ -8,6 +8,7 @@ import {
   FaMicrophone,
   FaTrash,
   FaUpload,
+  FaCircleNotch,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import Stopwatch from "react-stopwatch";
@@ -441,7 +442,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         <MenuItem onClick={onCtxRemoveClick}>
           <FaTrash /> Remove
         </MenuItem>
-        <MenuItem onClick={onCtxUnPlayedClick}>Mark Unplayed</MenuItem>
+        <MenuItem onClick={onCtxUnPlayedClick}>
+          <FaCircleNotch /> Mark Unplayed
+        </MenuItem>
       </ContextMenu>
       <OptionsMenu />
       <WelcomeModal
