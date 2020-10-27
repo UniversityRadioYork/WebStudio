@@ -8,6 +8,7 @@ import { ConnectionStateEnum } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 import { audioEngine } from "../mixer/audio";
 import { setItemPlayed } from "../showplanner/state";
+import { CONNECTED, DISCONNECTED, GONE_LIVE, REGISTERED } from "./actions";
 
 export let streamer: WebRTCStreamer | null = null;
 
@@ -80,6 +81,11 @@ const broadcastState = createSlice({
       state.recordingState = action.payload;
     },
   },
+  extraReducers: (builder) =>
+    builder.addCase(REGISTERED, (state, action) => {
+      state.connID = action.payload.connID;
+      state.stage = "REGISTERED";
+    }),
 });
 
 export default broadcastState.reducer;
@@ -133,7 +139,7 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
       );
       console.log(connID);
       if (connID !== undefined) {
-        dispatch(broadcastState.actions.setConnID(connID["connid"]));
+        dispatch(REGISTERED({ connID }));
       }
     } catch (e) {
       if (e instanceof ApiException) {
@@ -160,9 +166,9 @@ export const cancelTimeslot = (): AppThunk => async (dispatch, getState) => {
     console.log("Attempting to Cancel Broadcast.");
     try {
       var response = await sendBroadcastCancel(getState().broadcast.connID);
-      dispatch(stopStreaming());
+      await stopStreaming();
       if (response != null) {
-        dispatch(broadcastState.actions.setConnID(null));
+        dispatch(DISCONNECTED());
       }
     } catch (e) {
       if (e instanceof ApiException) {
@@ -181,7 +187,7 @@ export const cancelTimeslot = (): AppThunk => async (dispatch, getState) => {
   }
 };
 
-export const changeTimeslot = (): AppThunk => async (dispatch, getState) => {
+export const changeTimeslot = (): AppThunk => async (_, getState) => {
   var state = getState().broadcast;
   if (state.stage === "REGISTERED") {
     console.log("Attempting to Change Broadcast Options.");
@@ -309,21 +315,21 @@ export const goOnAir = (): AppThunk => async (dispatch, getState) => {
     dispatch
   );
   streamer.addConnectionStateListener((state) => {
-    dispatch(broadcastState.actions.setConnectionState(state));
+    dispatch(CONNECTED);
     if (state === "CONNECTION_LOST") {
       // un-register if we drop, let the user manually reconnect
-      dispatch(broadcastState.actions.setConnID(null));
+      dispatch(DISCONNECTED);
     } else if (state === "CONNECTED") {
       // okay, we've connected
       dispatch(registerForShow());
     } else if (state === "LIVE") {
-      dispatch(setItemPlayed({ itemId: "all", played: false }));
+      dispatch(GONE_LIVE);
     }
   });
   await streamer.start();
 };
 
-export const stopStreaming = (): AppThunk => async (dispatch) => {
+export const stopStreaming = async () => {
   if (streamer) {
     await streamer.stop("stopStreaming call");
     streamer = null;
