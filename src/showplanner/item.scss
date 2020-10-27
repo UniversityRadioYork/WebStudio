@@ -15,11 +15,15 @@
     opacity: 0.5;
   }
 
+  &.played .icon {
+    border: 4px black solid;
+  }
+
   .icon {
     margin: auto auto;
-    margin-top: 2px;
-    height: 16px;
-    width: 16px;
+    margin-bottom: -3px;
+    height: 18px;
+    width: 18px;
     display: inline-block;
     border-radius: 50%;
 
