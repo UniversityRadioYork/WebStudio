@@ -18,12 +18,14 @@ export default function ProModeButtons({ channel }: { channel: number }) {
       <div className="row m-0 p-1 card-header channelButtons proMode hover-menu">
         <span className="hover-label">Pro Mode&trade;</span>
         {(activeButton === null || activeButton === "trim") && (
-          <button className="btn btn-warning" title="Trim">
-            <FaTachometerAlt
-              onClick={() =>
-                setActiveButton(activeButton === "trim" ? null : "trim")
-              }
-            />
+          <button
+            className="btn btn-warning"
+            title="Trim"
+            onClick={() =>
+              setActiveButton(activeButton === "trim" ? null : "trim")
+            }
+          >
+            <FaTachometerAlt />
           </button>
         )}
         {activeButton === "trim" && (
