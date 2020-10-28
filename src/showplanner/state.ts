@@ -4,6 +4,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { cloneDeep } from "lodash";
 import raygun from "raygun4js";
+import { GONE_LIVE } from "../broadcast/actions";
 
 export interface ItemGhost {
   type: "ghost";
@@ -216,6 +217,12 @@ const showplan = createSlice({
       state.auxPlaylists = state.auxPlaylists.concat(action.payload);
     },
   },
+  extraReducers: (builder) =>
+    builder.addCase(GONE_LIVE, (state, action) => {
+      state.plan!.forEach((x) => {
+        x.played = true;
+      });
+    }),
 });
 
 export default showplan.reducer;
