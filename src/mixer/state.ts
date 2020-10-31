@@ -499,16 +499,11 @@ export const load = (
             .showplan.plan!.filter((x) => x.channel === item.channel)
             .sort((x, y) => x.weight - y.weight);
           // Sadly, we can't just do .indexOf() item directly,
-          // since the player's idea of an item may be changed over it's lifecycle (setting intro/cue/outro etc.)
+          // since the player's idea of an item may be changed over it's lifecycle (setting played,intro/cue/outro etc.)
           // Therefore we'll find the updated item from the plan and match that.
-          const itsChannelItem = itsChannel.filter(
+          const itsIndex = itsChannel.findIndex(
             (x) => itemId(x) === itemId(item)
           );
-          if (itsChannelItem.length !== 1) {
-            // Somehow we've got 0 or multiple identical timeslotitems (or ghosts), bail out!
-            return;
-          }
-          const itsIndex = itsChannel.indexOf(itsChannelItem[0]);
           if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
             dispatch(load(player, itsChannel[itsIndex + 1]));
           }
