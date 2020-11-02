@@ -198,9 +198,17 @@ function TimingButtons({ id }: { id: number }) {
 }
 
 export function Player({ id }: { id: number }) {
+  // Define time remaining (secs) when the play icon should flash.
+  const SECS_REMAINING_WARNING = 20;
+
+  // We want to force update the selector when we pass the SECS_REMAINING_WARNING barrier.
   const playerState = useSelector(
     (state: RootState) => state.mixer.players[id],
     (a, b) =>
+      !(
+        a.timeRemaining <= SECS_REMAINING_WARNING &&
+        b.timeRemaining > SECS_REMAINING_WARNING
+      ) &&
       shallowEqual(
         omit(a, "timeCurrent", "timeRemaining"),
         omit(b, "timeCurrent", "timeRemaining")
@@ -336,7 +344,7 @@ export function Player({ id }: { id: number }) {
               onClick={() => dispatch(MixerState.play(id))}
               className={
                 playerState.state === "playing"
-                  ? playerState.timeRemaining <= 15
+                  ? playerState.timeRemaining <= SECS_REMAINING_WARNING
                     ? "sp-state-playing sp-ending-soon"
                     : "sp-state-playing"
                   : ""
