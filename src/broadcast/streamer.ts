@@ -4,7 +4,6 @@ export type ConnectionStateEnum =
   | "CONNECTED"
   | "CONNECTION_LOST"
   | "CONNECTION_LOST_RECONNECTING"
-  | "GOING_LIVE"
   | "LIVE";
 export type ConnectionStateListener = (val: ConnectionStateEnum) => any;
 

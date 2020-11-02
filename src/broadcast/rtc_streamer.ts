@@ -120,9 +120,6 @@ export class WebRTCStreamer extends Streamer {
         this.state = "ANSWER";
         break;
       case "ACTIVATED":
-        if (!this.isActive) {
-          this.onStateChange("GOING_LIVE"); // Starting show.
-        }
         this.isActive = true;
         this.onStateChange("LIVE");
         this.dispatch(BroadcastState.setTracklisting(true));
