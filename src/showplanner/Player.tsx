@@ -394,12 +394,11 @@ export function Player({ id }: { id: number }) {
 
       {settings.proMode && settings.channelVUs && (
         <div className="channel-vu">
-          {customOutput && (
+          {customOutput ? (
             <span className="text-muted">
               Custom audio output disables VU meters.
             </span>
-          )}
-          {!customOutput && (
+          ) : (
             <VUMeter
               width={300}
               height={40}
