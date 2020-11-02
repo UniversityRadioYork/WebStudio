@@ -7,7 +7,6 @@ import * as NavbarState from "../navbar/state";
 import { ConnectionStateEnum } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 import { audioEngine } from "../mixer/audio";
-import { setItemPlayed } from "../showplanner/state";
 
 export let streamer: WebRTCStreamer | null = null;
 
