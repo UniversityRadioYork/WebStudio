@@ -236,7 +236,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       try {
         instance.setOutputDevice(outputId);
       } catch (e) {
-        console.error("Failed to set channel " + player + " output." + e);
+        console.error("Failed to set channel " + player + " output. " + e);
       }
     } else {
       (wavesurfer as any).backend.gainNode.disconnect();
