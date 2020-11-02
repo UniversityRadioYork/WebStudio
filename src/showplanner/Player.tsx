@@ -67,6 +67,8 @@ const setTrackIntro = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTrackIntro(track.trackid, secs);
@@ -84,6 +86,8 @@ const setTrackOutro = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTrackOutro(track.trackid, secs);
@@ -101,6 +105,8 @@ const setTrackCue = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemCue(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTimeslotItemCue(item.timeslotitemid, secs);
