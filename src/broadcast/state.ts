@@ -316,7 +316,7 @@ export const goOnAir = (): AppThunk => async (dispatch, getState) => {
     } else if (state === "CONNECTED") {
       // okay, we've connected
       dispatch(registerForShow());
-    } else if (state === "LIVE") {
+    } else if (state === "GOING_LIVE") {
       dispatch(setItemPlayed({ itemId: "all", played: false }));
     }
   });

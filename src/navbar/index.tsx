@@ -40,6 +40,7 @@ function nicifyConnectionState(state: ConnectionStateEnum): string {
     case "NOT_CONNECTED":
       return "Not Connected";
     case "LIVE":
+    case "GOING_LIVE":
       return "Live!";
     default:
       console.warn("unhandled", state);

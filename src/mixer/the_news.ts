@@ -52,8 +52,7 @@ const considerDoingTheNews = (getState: () => RootState) => async () => {
     await actuallyDoTheNews();
   } else if (state.settings.doTheNews === "while_live") {
     if (
-      state.broadcast.connectionState === "CONNECTED" ||
-      state.broadcast.connectionState === "LIVE"
+      state.broadcast.connectionState in ["CONNECTED", "GOING_LIVE", "LIVE"]
     ) {
       const transition = await broadcastApiRequest<{
         autoNews: boolean;
