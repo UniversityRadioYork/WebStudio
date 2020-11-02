@@ -67,6 +67,8 @@ const setTrackIntro = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTrackIntro(track.trackid, secs);
@@ -84,6 +86,8 @@ const setTrackOutro = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTrackOutro(track.trackid, secs);
@@ -101,6 +105,8 @@ const setTrackCue = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemCue(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTimeslotItemCue(item.timeslotitemid, secs);
@@ -192,9 +198,17 @@ function TimingButtons({ id }: { id: number }) {
 }
 
 export function Player({ id }: { id: number }) {
+  // Define time remaining (secs) when the play icon should flash.
+  const SECS_REMAINING_WARNING = 20;
+
+  // We want to force update the selector when we pass the SECS_REMAINING_WARNING barrier.
   const playerState = useSelector(
     (state: RootState) => state.mixer.players[id],
     (a, b) =>
+      !(
+        a.timeRemaining <= SECS_REMAINING_WARNING &&
+        b.timeRemaining > SECS_REMAINING_WARNING
+      ) &&
       shallowEqual(
         omit(a, "timeCurrent", "timeRemaining"),
         omit(b, "timeCurrent", "timeRemaining")
@@ -222,11 +236,15 @@ export function Player({ id }: { id: number }) {
     }
   };
 
-  var duration: number = 0;
+  let channelDuration = 0;
+  let channelUnplayed = 0;
   const plan = useSelector((state: RootState) => state.showplan.plan);
   plan?.forEach((pItem) => {
     if (pItem.channel === id) {
-      duration += HHMMTosec(pItem.length);
+      channelDuration += HHMMTosec(pItem.length);
+      if (!pItem.played) {
+        channelUnplayed += HHMMTosec(pItem.length);
+      }
     }
   });
 
@@ -239,6 +257,14 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
+        <div className="d-inline mx-1">
+          <span className="float-left">
+            Total: {secToHHMM(channelDuration)}
+          </span>
+          <span className="float-right">
+            Unplayed: {secToHHMM(channelUnplayed)}
+          </span>
+        </div>
         <div className="row m-0 p-1 card-header channelButtons hover-menu">
           <span className="hover-label">Channel Controls</span>
           <button
@@ -278,7 +304,6 @@ export function Player({ id }: { id: number }) {
             <FaRedo />
             &nbsp; Repeat {playerState.repeat}
           </button>
-          <div>Total Time: {secToHHMM(duration)}</div>
         </div>
         {proMode && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
@@ -319,7 +344,7 @@ export function Player({ id }: { id: number }) {
               onClick={() => dispatch(MixerState.play(id))}
               className={
                 playerState.state === "playing"
-                  ? playerState.timeRemaining <= 15
+                  ? playerState.timeRemaining <= SECS_REMAINING_WARNING
                     ? "sp-state-playing sp-ending-soon"
                     : "sp-state-playing"
                   : ""

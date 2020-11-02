@@ -509,7 +509,12 @@ export const load = (
           const itsChannel = getState()
             .showplan.plan!.filter((x) => x.channel === item.channel)
             .sort((x, y) => x.weight - y.weight);
-          const itsIndex = itsChannel.indexOf(item);
+          // Sadly, we can't just do .indexOf() item directly,
+          // since the player's idea of an item may be changed over it's lifecycle (setting played,intro/cue/outro etc.)
+          // Therefore we'll find the updated item from the plan and match that.
+          const itsIndex = itsChannel.findIndex(
+            (x) => itemId(x) === itemId(item)
+          );
           if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
             dispatch(load(player, itsChannel[itsIndex + 1]));
           }
@@ -596,14 +601,12 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 
   let cueTime = 0;
 
-  console.log(Math.round(playerInstance.currentTime));
   if (
     state.loadedItem &&
     "cue" in state.loadedItem &&
     Math.round(playerInstance.currentTime) !== Math.round(state.loadedItem.cue)
   ) {
     cueTime = state.loadedItem.cue;
-    console.log(cueTime);
   }
 
   playerInstance.stop();
@@ -677,7 +680,14 @@ export const setVolume = (
   const state = getState().mixer.players[player];
 
   const currentLevel = state.volume;
-  const currentGain = state.gain;
+  let currentGain = state.gain;
+
+  // If we can, use the engine's 'real' volume gain.
+  // This helps when we've interupted a previous fade, so the state gain won't be correct.
+  if (typeof audioEngine.players[player] !== "undefined") {
+    currentGain = audioEngine.players[player]!.getVolume();
+  }
+
   const volumeTween = new Between(currentLevel, uiLevel)
     .time(FADE_TIME_SECONDS * 1000)
     .on("update", (val: number) => {

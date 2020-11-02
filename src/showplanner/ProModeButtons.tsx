@@ -20,8 +20,14 @@ export default function ProModeButtons({ channel }: { channel: number }) {
     <>
       <div className="row m-0 p-1 card-header channelButtons proMode hover-menu">
         <span className="hover-label">Pro Mode&trade;</span>
-        <button className="mr-1 btn btn-warning" title="Trim">
-          <FaTachometerAlt onClick={() => setActiveButton("trim")} />
+        <button
+          className="mr-1 btn btn-warning"
+          title="Trim"
+          onClick={() =>
+            setActiveButton(activeButton === "trim" ? null : "trim")
+          }
+        >
+          <FaTachometerAlt />
         </button>
         <button
           className={
@@ -46,9 +52,10 @@ export default function ProModeButtons({ channel }: { channel: number }) {
               max={12}
               step={0.2}
               value={trimVal.toFixed(1)}
-              onChange={(e) =>
-                dispatch(setChannelTrim(channel, parseFloat(e.target.value)))
-              }
+              onChange={(e) => {
+                dispatch(setChannelTrim(channel, parseFloat(e.target.value)));
+                e.target.blur(); // Stop dragging from disabling the keyboard triggers.
+              }}
             />
             <strong className="mt-2">{trimVal} dB</strong>
           </>

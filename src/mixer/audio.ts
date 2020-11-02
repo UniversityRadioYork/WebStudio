@@ -125,6 +125,10 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     }
   }
 
+  getVolume() {
+    return this.volume;
+  }
+
   setVolume(val: number) {
     this.volume = val;
     this._applyVolume();
