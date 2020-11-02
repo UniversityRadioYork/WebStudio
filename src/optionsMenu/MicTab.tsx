@@ -156,7 +156,7 @@ export function MicTab() {
             height={40}
             source="mic-precomp"
             range={[-70, 0]}
-            greenRange={state.processing ? [-14, -10] : [-10, -5]}
+            greenRange={state.processing ? [-16, -6] : [-32, -5]}
             stereo={true}
           />
         </div>

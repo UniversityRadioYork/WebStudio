@@ -248,7 +248,7 @@ function MicControl() {
                 height={40}
                 source="mic-final"
                 range={[-40, 3]}
-                greenRange={[-10, -5]}
+                greenRange={[-16, -6]}
                 stereo={proMode}
               />
             </div>
