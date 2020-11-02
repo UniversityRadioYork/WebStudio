@@ -12,7 +12,7 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import { audioEngine } from "./audio";
+import { audioEngine, ChannelMapping } from "./audio";
 import * as TheNews from "./the_news";
 
 const playerGainTweens: Array<{
@@ -53,6 +53,7 @@ interface MicState {
   volume: 1 | 0;
   baseGain: number;
   id: string | null;
+  processing: boolean;
 }
 
 interface MixerState {
@@ -88,6 +89,7 @@ const mixerState = createSlice({
       baseGain: 0,
       openError: null,
       id: "None",
+      processing: true,
     },
   } as MixerState,
   reducers: {
@@ -96,6 +98,7 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         item: PlanItem | Track | AuxItem | null;
+        customOutput: boolean;
         resetTrim?: boolean;
       }>
     ) {
@@ -111,7 +114,10 @@ const mixerState = createSlice({
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
-      if (action.payload.resetTrim) {
+
+      if (action.payload.customOutput) {
+        state.players[action.payload.player].trim = 0;
+      } else if (action.payload.resetTrim) {
         state.players[action.payload.player].trim = defaultTrimDB;
       }
     },
@@ -209,6 +215,9 @@ const mixerState = createSlice({
     },
     setMicBaseGain(state, action: PayloadAction<number>) {
       state.mic.baseGain = action.payload;
+    },
+    setMicProcessingEnabled(state, action: PayloadAction<boolean>) {
+      state.mic.processing = action.payload;
     },
     setTimeCurrent(
       state,
@@ -348,9 +357,16 @@ export const load = (
   loadAbortControllers[player] = new AbortController();
 
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
+  const customOutput =
+    getState().settings.channelOutputIds[player] !== "internal";
 
   dispatch(
-    mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
+    mixerState.actions.loadItem({
+      player,
+      item,
+      customOutput,
+      resetTrim: shouldResetTrim,
+    })
   );
 
   let url;
@@ -406,7 +422,13 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const playerInstance = await audioEngine.createPlayer(player, objectUrl);
+    const channelOutputId = getState().settings.channelOutputIds[player];
+
+    const playerInstance = await audioEngine.createPlayer(
+      player,
+      channelOutputId,
+      objectUrl
+    );
 
     // Clear the last one out from memory
     if (typeof lastObjectURLs[player] === "string") {
@@ -708,15 +730,10 @@ export const setChannelTrim = (player: number, val: number): AppThunk => async (
   audioEngine.players[player]?.setTrim(val);
 };
 
-export const openMicrophone = (micID: string): AppThunk => async (
-  dispatch,
-  getState
-) => {
-  // TODO: not sure why this is here, and I have a hunch it may break shit, so disabling
-  // File a ticket if it breaks stuff. -Marks
-  // if (getState().mixer.mic.open) {
-  // 	micSource?.disconnect();
-  // }
+export const openMicrophone = (
+  micID: string,
+  micMapping: ChannelMapping
+): AppThunk => async (dispatch, getState) => {
   if (audioEngine.audioContext.state !== "running") {
     console.log("Resuming AudioContext because Chrome bad");
     await audioEngine.audioContext.resume();
@@ -728,7 +745,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
     return;
   }
   try {
-    await audioEngine.openMic(micID);
+    await audioEngine.openMic(micID, micMapping);
   } catch (e) {
     if (e instanceof DOMException) {
       switch (e.message) {
@@ -747,8 +764,16 @@ export const openMicrophone = (micID: string): AppThunk => async (
   const state = getState().mixer.mic;
   audioEngine.setMicCalibrationGain(state.baseGain);
   audioEngine.setMicVolume(state.volume);
-
+  // Now to patch in the Mic to the Compressor, or Bypass it.
+  audioEngine.setMicProcessingEnabled(state.processing);
   dispatch(mixerState.actions.micOpen(micID));
+};
+
+export const setMicProcessingEnabled = (enabled: boolean): AppThunk => async (
+  dispatch
+) => {
+  dispatch(mixerState.actions.setMicProcessingEnabled(enabled));
+  audioEngine.setMicProcessingEnabled(enabled);
 };
 
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (

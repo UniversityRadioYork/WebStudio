@@ -28,7 +28,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
-    private readonly waveform: HTMLElement
+    private readonly waveform: HTMLElement,
+    private readonly customOutput: boolean
   ) {
     super();
   }
@@ -139,19 +140,44 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this._applyVolume();
   }
 
+  setOutputDevice(sinkId: string) {
+    if (!this.customOutput) {
+      throw Error(
+        "Can't set sinkId when player is not in customOutput mode. Please reinit player."
+      );
+    }
+    try {
+      (this.wavesurfer as any).setSinkId(sinkId);
+    } catch (e) {
+      throw Error("Tried to setSinkId " + sinkId + ", failed due to: " + e);
+    }
+  }
+
   _applyVolume() {
     const level = this.volume + this.trim;
     const linear = Math.pow(10, level / 20);
     if (linear < 1) {
       this.wavesurfer.setVolume(linear);
-      (this.wavesurfer as any).backend.gainNode.gain.value = 1;
+      if (!this.customOutput) {
+        (this.wavesurfer as any).backend.gainNode.gain.value = 1;
+      }
     } else {
       this.wavesurfer.setVolume(1);
-      (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+      if (!this.customOutput) {
+        (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+      }
     }
   }
 
-  public static create(engine: AudioEngine, player: number, url: string) {
+  public static create(
+    engine: AudioEngine,
+    player: number,
+    outputId: string,
+    url: string
+  ) {
+    // If we want to output to a custom audio device, we're gonna need to do things differently.
+    const customOutput = outputId !== "internal";
+
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
       throw new Error();
@@ -165,7 +191,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       waveColor: "#CCCCFF",
       backgroundColor: "#FFFFFF",
       progressColor: "#9999FF",
-      backend: "MediaElementWebAudio",
+      backend: customOutput ? "MediaElement" : "MediaElementWebAudio",
       barWidth: 2,
       responsive: true,
       xhr: {
@@ -186,7 +212,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       ],
     });
 
-    const instance = new this(engine, wavesurfer, waveform);
+    const instance = new this(engine, wavesurfer, waveform, customOutput);
 
     wavesurfer.on("ready", () => {
       console.log("ready");
@@ -208,13 +234,21 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       instance.emit("timeChange", wavesurfer.getCurrentTime());
     });
 
-    (wavesurfer as any).backend.gainNode.disconnect();
-    (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
-    (wavesurfer as any).backend.gainNode.connect(
-      engine.playerAnalysers[player]
-    );
-
     wavesurfer.load(url);
+
+    if (customOutput) {
+      try {
+        instance.setOutputDevice(outputId);
+      } catch (e) {
+        console.error("Failed to set channel " + player + " output. " + e);
+      }
+    } else {
+      (wavesurfer as any).backend.gainNode.disconnect();
+      (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+      (wavesurfer as any).backend.gainNode.connect(
+        engine.playerAnalysers[player]
+      );
+    }
 
     return instance;
   }
@@ -237,6 +271,13 @@ export type LevelsSource =
   | "player-1"
   | "player-2";
 
+export type ChannelMapping =
+  | "stereo-normal"
+  | "stereo-flipped"
+  | "mono-left"
+  | "mono-right"
+  | "mono-both";
+
 // Setting this directly affects the performance of .getFloatTimeDomainData()
 // Must be a power of 2.
 const ANALYSIS_FFT_SIZE = 2048;
@@ -253,8 +294,12 @@ const EngineEmitter: StrictEmitter<
 export class AudioEngine extends ((EngineEmitter as unknown) as {
   new (): EventEmitter;
 }) {
+  // Multipurpose Bits
   public audioContext: AudioContext;
-  public players: (Player | undefined)[] = [];
+  analysisBuffer: Float32Array;
+  analysisBuffer2: Float32Array;
+
+  // Mic Input
 
   micMedia: MediaStream | null = null;
   micSource: MediaStreamAudioSourceNode | null = null;
@@ -264,64 +309,43 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   micMixGain: GainNode;
   micFinalAnalyser: typeof StereoAnalyserNode;
 
-  finalCompressor: DynamicsCompressorNode;
-  streamingDestination: MediaStreamAudioDestinationNode;
-
+  // Player Inputs
+  public players: (Player | undefined)[] = [];
   playerAnalysers: typeof StereoAnalyserNode[];
 
-  streamingAnalyser: typeof StereoAnalyserNode;
+  // Final Processing
+  finalCompressor: DynamicsCompressorNode;
 
+  // Streaming / Recording
+  streamingAnalyser: typeof StereoAnalyserNode;
+  streamingDestination: MediaStreamAudioDestinationNode;
+
+  // News In/Out Reminders
   newsStartCountdownEl: HTMLAudioElement;
   newsStartCountdownNode: MediaElementAudioSourceNode;
 
   newsEndCountdownEl: HTMLAudioElement;
   newsEndCountdownNode: MediaElementAudioSourceNode;
-  analysisBuffer: Float32Array;
-  analysisBuffer2: Float32Array;
 
   constructor() {
     super();
+
+    // Multipurpose Bits
     this.audioContext = new AudioContext({
       sampleRate: 44100,
       latencyHint: "interactive",
     });
 
-    this.finalCompressor = this.audioContext.createDynamicsCompressor();
-    this.finalCompressor.ratio.value = 20; //brickwall destination comressor
-    this.finalCompressor.threshold.value = -0.5;
-    this.finalCompressor.attack.value = 0;
-    this.finalCompressor.release.value = 0.2;
-    this.finalCompressor.knee.value = 0;
+    this.analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
+    this.analysisBuffer2 = new Float32Array(ANALYSIS_FFT_SIZE);
 
-    this.playerAnalysers = [];
-    for (let i = 0; i < 3; i++) {
-      let analyser = new StereoAnalyserNode(this.audioContext);
-      analyser.fftSize = ANALYSIS_FFT_SIZE;
-      this.playerAnalysers.push(analyser);
-    }
-
-    this.streamingAnalyser = new StereoAnalyserNode(this.audioContext);
-    this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
-
-    // this.streamingAnalyser.maxDecibels = 0;
-
-    this.streamingDestination = this.audioContext.createMediaStreamDestination();
-
-    this.finalCompressor.connect(this.audioContext.destination);
-
-    this.finalCompressor
-      .connect(this.streamingAnalyser)
-      .connect(this.streamingDestination);
+    // Mic Input
 
     this.micCalibrationGain = this.audioContext.createGain();
 
     this.micPrecompAnalyser = new StereoAnalyserNode(this.audioContext);
     this.micPrecompAnalyser.fftSize = ANALYSIS_FFT_SIZE;
     this.micPrecompAnalyser.maxDecibels = 0;
-
-    this.micFinalAnalyser = new StereoAnalyserNode(this.audioContext);
-    this.micFinalAnalyser.fftSize = ANALYSIS_FFT_SIZE;
-    this.micFinalAnalyser.maxDecibels = 0;
 
     this.micCompressor = this.audioContext.createDynamicsCompressor();
     this.micCompressor.ratio.value = 3; // mic compressor - fairly gentle, can be upped
@@ -333,13 +357,36 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
 
-    this.micCalibrationGain.connect(this.micPrecompAnalyser);
-    this.micCalibrationGain
-      .connect(this.micCompressor)
-      .connect(this.micMixGain)
-      .connect(this.micFinalAnalyser)
-      // we don't run the mic into masterAnalyser to ensure it doesn't go to audioContext.destination
-      .connect(this.streamingAnalyser);
+    this.micFinalAnalyser = new StereoAnalyserNode(this.audioContext);
+    this.micFinalAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+    this.micFinalAnalyser.maxDecibels = 0;
+
+    // Player Input
+
+    this.playerAnalysers = [];
+    for (let i = 0; i < 3; i++) {
+      let analyser = new StereoAnalyserNode(this.audioContext);
+      analyser.fftSize = ANALYSIS_FFT_SIZE;
+      this.playerAnalysers.push(analyser);
+    }
+
+    // Final Processing
+
+    this.finalCompressor = this.audioContext.createDynamicsCompressor();
+    this.finalCompressor.ratio.value = 20; //brickwall destination comressor
+    this.finalCompressor.threshold.value = -0.5;
+    this.finalCompressor.attack.value = 0;
+    this.finalCompressor.release.value = 0.2;
+    this.finalCompressor.knee.value = 0;
+
+    // Streaming/Recording
+
+    this.streamingAnalyser = new StereoAnalyserNode(this.audioContext);
+    this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+
+    this.streamingDestination = this.audioContext.createMediaStreamDestination();
+
+    // News In/Out Reminders
 
     this.newsEndCountdownEl = new Audio(NewsEndCountdown);
     this.newsEndCountdownEl.preload = "auto";
@@ -347,7 +394,6 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.newsEndCountdownNode = this.audioContext.createMediaElementSource(
       this.newsEndCountdownEl
     );
-    this.newsEndCountdownNode.connect(this.audioContext.destination);
 
     this.newsStartCountdownEl = new Audio(NewsIntro);
     this.newsStartCountdownEl.preload = "auto";
@@ -355,14 +401,36 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.newsStartCountdownNode = this.audioContext.createMediaElementSource(
       this.newsStartCountdownEl
     );
-    this.newsStartCountdownNode.connect(this.audioContext.destination);
 
-    this.analysisBuffer = new Float32Array(ANALYSIS_FFT_SIZE);
-    this.analysisBuffer2 = new Float32Array(ANALYSIS_FFT_SIZE);
+    // Routing the above bits together
+
+    // Mic Source gets routed to micCompressor or micMixGain.
+    // We run setMicProcessingEnabled() later to either patch to the compressor, or bypass it to the mixGain node.
+    this.micCompressor.connect(this.micMixGain);
+
+    // Send the final mic feed to the VU meter and Stream.
+    // We bypass the finalCompressor to ensure it doesn't go to audioContext.destination
+    // since this will cause delayed mic monitoring. Speech jam central!
+    this.micMixGain
+      .connect(this.micFinalAnalyser)
+      .connect(this.streamingAnalyser);
+
+    // Send the final compressor (all players and guests) to the headphones.
+    this.finalCompressor.connect(this.audioContext.destination);
+
+    // Also send the final compressor to the streaming analyser on to the stream.
+    this.finalCompressor.connect(this.streamingAnalyser);
+
+    // Send the streaming analyser to the Streamer!
+    this.streamingAnalyser.connect(this.streamingDestination);
+
+    // Feed the news in/out reminders to the headphones too.
+    this.newsStartCountdownNode.connect(this.audioContext.destination);
+    this.newsEndCountdownNode.connect(this.audioContext.destination);
   }
 
-  public createPlayer(number: number, url: string) {
-    const player = Player.create(this, number, url);
+  public createPlayer(number: number, outputId: string, url: string) {
+    const player = Player.create(this, number, outputId, url);
     this.players[number] = player;
     return player;
   }
@@ -384,7 +452,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.players[number] = undefined;
   }
 
-  async openMic(deviceId: string) {
+  async openMic(deviceId: string, channelMapping: ChannelMapping) {
     if (this.micSource !== null && this.micMedia !== null) {
       this.micMedia.getAudioTracks()[0].stop();
       this.micSource.disconnect();
@@ -404,8 +472,36 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
     this.micSource = this.audioContext.createMediaStreamSource(this.micMedia);
 
-    this.micSource.connect(this.micCalibrationGain);
+    // Handle stereo mic sources.
+    const splitterNode = this.audioContext.createChannelSplitter(2);
+    const mergerNode = this.audioContext.createChannelMerger(2);
+    this.micSource.connect(splitterNode);
+    switch (channelMapping) {
+      case "stereo-normal":
+        splitterNode.connect(mergerNode, 0, 0);
+        splitterNode.connect(mergerNode, 1, 1);
+        break;
+      case "stereo-flipped":
+        splitterNode.connect(mergerNode, 1, 0);
+        splitterNode.connect(mergerNode, 0, 1);
+        break;
+      case "mono-left":
+        splitterNode.connect(mergerNode, 0, 0);
+        splitterNode.connect(mergerNode, 0, 1);
+        break;
+      case "mono-right":
+        splitterNode.connect(mergerNode, 1, 0);
+        splitterNode.connect(mergerNode, 1, 1);
+        break;
+      case "mono-both":
+      default:
+        splitterNode.connect(mergerNode, 0, 0);
+        splitterNode.connect(mergerNode, 1, 0);
+        splitterNode.connect(mergerNode, 0, 1);
+        splitterNode.connect(mergerNode, 1, 1);
+    }
 
+    mergerNode.connect(this.micCalibrationGain);
     this.emit("micOpen");
   }
 
@@ -416,6 +512,24 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   setMicVolume(value: number) {
     this.micMixGain.gain.value = value;
+  }
+
+  setMicProcessingEnabled(value: boolean) {
+    /*
+     * Disconnect whatever was connected before.
+     * It's either connected to micCompressor or micMixGain
+     * (depending on if we're going from enabled to disabled or vice - versa).
+     * Also connected is the micPrecompAnalyser), but you can't disconnect only one node,
+     * so you have to disconnect all anyway.
+     */
+    this.micCalibrationGain.disconnect();
+    this.micCalibrationGain.connect(this.micPrecompAnalyser);
+    console.log("Setting mic processing to: ", value);
+    if (value) {
+      this.micCalibrationGain.connect(this.micCompressor);
+    } else {
+      this.micCalibrationGain.connect(this.micMixGain);
+    }
   }
 
   getLevels(source: LevelsSource, stereo: boolean): [number, number] {
