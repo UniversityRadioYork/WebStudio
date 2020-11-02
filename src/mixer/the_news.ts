@@ -51,19 +51,17 @@ const considerDoingTheNews = (getState: () => RootState) => async () => {
   if (state.settings.doTheNews === "always") {
     await actuallyDoTheNews();
   } else if (state.settings.doTheNews === "while_live") {
-    switch (state.broadcast.connectionState) {
-      case "CONNECTED":
-      case "GOING_LIVE":
-      case "LIVE":
-        const transition = await broadcastApiRequest<{
-          autoNews: boolean;
-          selSource: number;
-          switchAudioAtMin: number;
-        }>("/nextTransition", "GET", {});
-        if (transition.autoNews) {
-          await actuallyDoTheNews();
-        }
-        break;
+    if (
+      state.broadcast.connectionState in ["CONNECTED", "GOING_LIVE", "LIVE"]
+    ) {
+      const transition = await broadcastApiRequest<{
+        autoNews: boolean;
+        selSource: number;
+        switchAudioAtMin: number;
+      }>("/nextTransition", "GET", {});
+      if (transition.autoNews) {
+        await actuallyDoTheNews();
+      }
     }
   }
 };
