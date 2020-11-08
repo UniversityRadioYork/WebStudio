@@ -28,7 +28,9 @@ export const Item = memo(function Item({
   const loadedItem = useSelector(
     (state: RootState) =>
       column > -1 ? state.mixer.players[column]?.loadedItem : null,
-    (a, b) => a === null || b === null || itemId(a) === itemId(b)
+    (a, b) =>
+      (a === null && b === null) ||
+      (a !== null && b !== null && itemId(a) === itemId(b))
   );
 
   const isLoaded = loadedItem !== null ? itemId(loadedItem) === id : false;
