@@ -1,15 +1,16 @@
 import React, { memo } from "react";
-import { PlanItem, itemId } from "./state";
+import { PlanItem, itemId, isTrack, isAux } from "./state";
 import { Track, AuxItem } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
 
 import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
-import { ContextMenuTrigger } from "react-contextmenu";
+import { contextMenu } from "react-contexify";
 import "./item.scss";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
+export const TS_ITEM_AUX_ID = "AuxMenu";
 
 export const Item = memo(function Item({
   item: x,
@@ -22,7 +23,6 @@ export const Item = memo(function Item({
 }) {
   const dispatch = useDispatch();
   const id = itemId(x);
-  const isReal = "timeslotitemid" in x;
   const isGhost = "ghostid" in x;
 
   const playerState = useSelector((state: RootState) =>
@@ -41,6 +41,30 @@ export const Item = memo(function Item({
   function triggerClick() {
     if (column > -1) {
       dispatch(MixerState.load(column, x));
+    }
+  }
+
+  function openContextMenu(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    e.preventDefault();
+    if (isTrack(x)) {
+      contextMenu.show({
+        id: TS_ITEM_MENU_ID,
+        event: e,
+        props: {
+          id,
+          title: x.title,
+          artist: x.artist,
+        },
+      });
+    } else if (isAux(x)) {
+      contextMenu.show({
+        id: TS_ITEM_MENU_ID,
+        event: e,
+        props: {
+          id,
+          title: x.title,
+        },
+      });
     }
   }
 
@@ -69,31 +93,27 @@ export const Item = memo(function Item({
             }`
           }
           onClick={triggerClick}
+          onContextMenu={openContextMenu}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
         >
-          <ContextMenuTrigger
-            id={isReal ? TS_ITEM_MENU_ID : ""}
-            collect={() => ({ id })}
+          <span className={"icon " + x.type} />
+          &nbsp;
+          {x.title.toString()}
+          {"artist" in x && x.artist !== "" && " - " + x.artist}
+          <small
+            className={
+              "border rounded border-danger text-danger p-1 m-1" +
+              ("clean" in x && x.clean === false ? "" : " d-none")
+            }
           >
-            <span className={"icon " + x.type} />
-            &nbsp;
-            {x.title.toString()}
-            {"artist" in x && x.artist !== "" && " - " + x.artist}
-            <small
-              className={
-                "border rounded border-danger text-danger p-1 m-1" +
-                ("clean" in x && x.clean === false ? "" : " d-none")
-              }
-            >
-              Explicit
-            </small>
-            {showDebug && (
-              <code>
-                {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
-              </code>
-            )}
-          </ContextMenuTrigger>
+            Explicit
+          </small>
+          {showDebug && (
+            <code>
+              {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
+            </code>
+          )}
         </div>
       )}
     </Draggable>

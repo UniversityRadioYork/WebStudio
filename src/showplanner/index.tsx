@@ -1,5 +1,6 @@
 import React, { useState, useReducer, useEffect } from "react";
-import { ContextMenu, MenuItem } from "react-contextmenu";
+import { Menu, Item as CtxMenuItem } from "react-contexify";
+import "react-contexify/dist/ReactContexify.min.css";
 import { useBeforeunload } from "react-beforeunload";
 import {
   FaBookOpen,
@@ -379,13 +380,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }
   }
 
-  async function onCtxRemoveClick(e: any, data: { id: string }) {
-    dispatch(removeItem(timeslotId, data.id));
-  }
-  async function onCtxUnPlayedClick(e: any, data: { id: string }) {
-    dispatch(setItemPlayed({ itemId: data.id, played: false }));
-  }
-
   // Add support for reloading the show plan from the iFrames.
   // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
   useEffect(() => {
@@ -440,14 +434,24 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           </div>
         </DragDropContext>
       </div>
-      <ContextMenu id={TS_ITEM_MENU_ID}>
-        <MenuItem onClick={onCtxRemoveClick}>
+      <Menu id={TS_ITEM_MENU_ID}>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(removeItem(timeslotId, (args.props as any).id))
+          }
+        >
           <FaTrash /> Remove
-        </MenuItem>
-        <MenuItem onClick={onCtxUnPlayedClick}>
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(
+              setItemPlayed({ itemId: (args.props as any).id, played: false })
+            )
+          }
+        >
           <FaCircleNotch /> Mark Unplayed
-        </MenuItem>
-      </ContextMenu>
+        </CtxMenuItem>
+      </Menu>
       <OptionsMenu />
       <WelcomeModal
         isOpen={showWelcomeModal}

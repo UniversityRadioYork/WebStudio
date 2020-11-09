@@ -77,7 +77,7 @@ interface Album {
   // TODO
 }
 
-interface TimeslotItemBase {
+export interface TimeslotItemBase {
   timeslotitemid: string;
   channel: number;
   weight: number;
@@ -88,7 +88,7 @@ interface TimeslotItemBase {
   cue: number;
 }
 
-interface TimeslotItemCentral {
+export interface TimeslotItemCentral {
   type: "central";
   artist: string;
   intro: number;

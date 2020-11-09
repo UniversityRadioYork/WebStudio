@@ -47,6 +47,16 @@ export function itemId(
   throw new Error("Can't get id of unknown item.");
 }
 
+export function isTrack(
+  item: PlanItem | Track | AuxItem
+): item is (api.TimeslotItemBase & api.TimeslotItemCentral) | Track {
+  return "trackid" in item;
+}
+
+export function isAux(item: PlanItem | Track | AuxItem): item is AuxItem {
+  return "auxid" in item;
+}
+
 interface ShowplanState {
   planLoading: boolean;
   planLoadError: string | null;
