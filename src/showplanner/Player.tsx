@@ -197,6 +197,46 @@ function TimingButtons({ id }: { id: number }) {
   );
 }
 
+function LoadedTrackInfo({ id }: { id: number }) {
+  const dispatch = useDispatch();
+  const loadedItem = useSelector(
+    (state: RootState) => state.mixer.players[id].loadedItem
+  );
+  const loading = useSelector(
+    (state: RootState) => state.mixer.players[id].loading
+  );
+  const loadError = useSelector(
+    (state: RootState) => state.mixer.players[id].loadError
+  );
+
+  return (
+    <span className="card-title">
+      <strong>
+        {loadedItem !== null && loading === -1
+          ? loadedItem.title
+          : loading !== -1
+          ? `LOADING`
+          : loadError
+          ? "LOAD FAILED"
+          : "No Media Selected"}
+      </strong>
+      <small
+        className={
+          "border rounded border-danger text-danger p-1 m-1" +
+          (loadedItem !== null &&
+          loading === -1 &&
+          "clean" in loadedItem &&
+          !loadedItem.clean
+            ? ""
+            : " d-none")
+        }
+      >
+        Explicit
+      </small>
+    </span>
+  );
+}
+
 export function Player({ id }: { id: number }) {
   // Define time remaining (secs) when the play icon should flash.
   const SECS_REMAINING_WARNING = 20;
@@ -307,30 +347,7 @@ export function Player({ id }: { id: number }) {
         </div>
         {proMode && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
-          <span className="card-title">
-            <strong>
-              {playerState.loadedItem !== null && playerState.loading === -1
-                ? playerState.loadedItem.title
-                : playerState.loading !== -1
-                ? `LOADING`
-                : playerState.loadError
-                ? "LOAD FAILED"
-                : "No Media Selected"}
-            </strong>
-            <small
-              className={
-                "border rounded border-danger text-danger p-1 m-1" +
-                (playerState.loadedItem !== null &&
-                playerState.loading === -1 &&
-                "clean" in playerState.loadedItem &&
-                !playerState.loadedItem.clean
-                  ? ""
-                  : " d-none")
-              }
-            >
-              Explicit
-            </small>
-          </span>
+          <LoadedTrackInfo id={id} />
           <br />
           <span className="text-muted">
             {playerState.loadedItem !== null && playerState.loading === -1
