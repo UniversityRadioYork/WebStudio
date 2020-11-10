@@ -25,14 +25,15 @@ export const Item = memo(function Item({
   const isReal = "timeslotitemid" in x;
   const isGhost = "ghostid" in x;
 
-  const playerState = useSelector((state: RootState) =>
-    column > -1 ? state.mixer.players[column] : undefined
+  const loadedItem = useSelector(
+    (state: RootState) =>
+      column > -1 ? state.mixer.players[column]?.loadedItem : null,
+    (a, b) =>
+      (a === null && b === null) ||
+      (a !== null && b !== null && itemId(a) === itemId(b))
   );
 
-  const isLoaded =
-    playerState &&
-    playerState.loadedItem !== null &&
-    itemId(playerState.loadedItem) === id;
+  const isLoaded = loadedItem !== null ? itemId(loadedItem) === id : false;
 
   const showDebug = useSelector(
     (state: RootState) => state.settings.showDebugInfo
@@ -59,14 +60,7 @@ export const Item = memo(function Item({
             "item " +
             ("played" in x ? (x.played ? "played " : "") : "") +
             x.type +
-            `${
-              column >= 0 &&
-              playerState &&
-              playerState.loadedItem !== null &&
-              itemId(playerState.loadedItem) === id
-                ? " active"
-                : ""
-            }`
+            `${column >= 0 && isLoaded ? " active" : ""}`
           }
           onClick={triggerClick}
           {...provided.draggableProps}
