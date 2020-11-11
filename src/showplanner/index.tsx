@@ -8,6 +8,7 @@ import {
   FaMicrophone,
   FaTrash,
   FaUpload,
+  FaCircleNotch,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import Stopwatch from "react-stopwatch";
@@ -31,7 +32,9 @@ import {
   moveItem,
   addItem,
   removeItem,
+  setItemPlayed,
   getPlaylists,
+  PlanItemBase,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
@@ -194,6 +197,9 @@ function LibraryColumn() {
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
   const proMode = useSelector((state: RootState) => state.settings.proMode);
+  const stereo = useSelector(
+    (state: RootState) => state.settings.channelVUsStereo
+  );
   const dispatch = useDispatch();
 
   return (
@@ -248,8 +254,8 @@ function MicControl() {
                 height={40}
                 source="mic-final"
                 range={[-40, 3]}
-                greenRange={[-10, -5]}
-                stereo={proMode}
+                greenRange={[-16, -6]}
+                stereo={proMode && stereo}
               />
             </div>
             <div className={`mixer-buttons ${!state.open && "disabled"}`}>
@@ -333,10 +339,11 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is a track from the CML
       // TODO: this is ugly, should be in redux
       const data = CML_CACHE[result.draggableId];
-      const newItem: TimeslotItem = {
+      const newItem: TimeslotItem & PlanItemBase = {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
+        played: false,
         cue: 0,
         ...data,
       };
@@ -346,11 +353,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is an aux resource
       // TODO: this is ugly, should be in redux
       const data = AUX_CACHE[result.draggableId];
-      const newItem: TimeslotItem = {
+      const newItem: TimeslotItem & PlanItemBase = {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
+        played: false,
         cue: 0,
         ...data,
       } as any;
@@ -365,29 +373,41 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         ])
       );
     }
+    // If we're dragging from a pseudo-column, and a search field is focused, defocus it.
+    if (result.source.droppableId[0] === "$") {
+      const focus = document.activeElement;
+      if (focus && focus instanceof HTMLInputElement && focus.type === "text") {
+        focus.blur();
+      }
+    }
   }
 
   async function onCtxRemoveClick(e: any, data: { id: string }) {
     dispatch(removeItem(timeslotId, data.id));
   }
+  async function onCtxUnPlayedClick(e: any, data: { id: string }) {
+    dispatch(setItemPlayed({ itemId: data.id, played: false }));
+  }
 
   // Add support for reloading the show plan from the iFrames.
   // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
   useEffect(() => {
-    window.addEventListener(
-      "message",
-      (event) => {
-        if (!event.origin.includes("ury.org.uk")) {
-          return;
-        }
-        if (event.data === "reload_showplan") {
-          session.currentTimeslot !== null &&
-            dispatch(getShowplan(session.currentTimeslot.timeslot_id));
-        }
-      },
-      false
-    );
-  });
+    function reloadListener(event: MessageEvent) {
+      if (!event.origin.includes("ury.org.uk")) {
+        return;
+      }
+      if (event.data === "reload_showplan") {
+        session.currentTimeslot !== null &&
+          dispatch(getShowplan(session.currentTimeslot.timeslot_id));
+      }
+    }
+
+    window.addEventListener("message", reloadListener);
+    return () => {
+      window.removeEventListener("message", reloadListener);
+    };
+  }, [dispatch, session.currentTimeslot]);
+
   if (showplan === null) {
     return (
       <LoadingDialogue
@@ -426,6 +446,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <ContextMenu id={TS_ITEM_MENU_ID}>
         <MenuItem onClick={onCtxRemoveClick}>
           <FaTrash /> Remove
+        </MenuItem>
+        <MenuItem onClick={onCtxUnPlayedClick}>
+          <FaCircleNotch /> Mark Unplayed
         </MenuItem>
       </ContextMenu>
       <OptionsMenu />

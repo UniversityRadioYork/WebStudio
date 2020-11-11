@@ -8,6 +8,7 @@ interface Settings {
   proMode: boolean;
   channelVUs: boolean;
   channelVUsStereo: boolean;
+  channelOutputIds: string[];
   resetTrimOnLoad: boolean;
   saveShowPlanChanges: boolean;
 }
@@ -22,6 +23,7 @@ const settingsState = createSlice({
     proMode: false,
     channelVUs: true,
     channelVUsStereo: true,
+    channelOutputIds: ["internal", "internal", "internal"],
     resetTrimOnLoad: true,
     saveShowPlanChanges: false,
   } as Settings,

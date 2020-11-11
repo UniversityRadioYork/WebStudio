@@ -13,7 +13,7 @@ import { omit } from "lodash";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import * as ShowPlanState from "../showplanner/state";
-import { secToHHMM, timestampToHHMM } from "../lib/utils";
+import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import * as api from "../api";
@@ -67,6 +67,8 @@ const setTrackIntro = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTrackIntro(track.trackid, secs);
@@ -84,6 +86,8 @@ const setTrackOutro = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTrackOutro(track.trackid, secs);
@@ -101,6 +105,8 @@ const setTrackCue = (
   player: number
 ): AppThunk => async (dispatch, getState) => {
   try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemCue(player, secs));
     if (getState().settings.saveShowPlanChanges) {
       await api.setTimeslotItemCue(item.timeslotitemid, secs);
@@ -192,21 +198,24 @@ function TimingButtons({ id }: { id: number }) {
 }
 
 export function Player({ id }: { id: number }) {
+  // Define time remaining (secs) when the play icon should flash.
+  const SECS_REMAINING_WARNING = 20;
+
+  // We want to force update the selector when we pass the SECS_REMAINING_WARNING barrier.
   const playerState = useSelector(
     (state: RootState) => state.mixer.players[id],
     (a, b) =>
+      !(
+        a.timeRemaining <= SECS_REMAINING_WARNING &&
+        b.timeRemaining > SECS_REMAINING_WARNING
+      ) &&
       shallowEqual(
         omit(a, "timeCurrent", "timeRemaining"),
         omit(b, "timeCurrent", "timeRemaining")
       )
   );
-  const proMode = useSelector((state: RootState) => state.settings.proMode);
-  const vuEnabled = useSelector(
-    (state: RootState) => state.settings.channelVUs
-  );
-  const vuStereo = useSelector(
-    (state: RootState) => state.settings.channelVUsStereo
-  );
+  const settings = useSelector((state: RootState) => state.settings);
+  const customOutput = settings.channelOutputIds[id] !== "internal";
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {
@@ -221,6 +230,19 @@ export function Player({ id }: { id: number }) {
         throw new Error("Unknown Player VUMeter source: " + id);
     }
   };
+
+  let channelDuration = 0;
+  let channelUnplayed = 0;
+  const plan = useSelector((state: RootState) => state.showplan.plan);
+  plan?.forEach((pItem) => {
+    if (pItem.channel === id) {
+      channelDuration += HHMMTosec(pItem.length);
+      if (!pItem.played) {
+        channelUnplayed += HHMMTosec(pItem.length);
+      }
+    }
+  });
+
   return (
     <div
       className={
@@ -230,6 +252,14 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
+        <div className="d-inline mx-1">
+          <span className="float-left">
+            Total: {secToHHMM(channelDuration)}
+          </span>
+          <span className="float-right">
+            Unplayed: {secToHHMM(channelUnplayed)}
+          </span>
+        </div>
         <div className="row m-0 p-1 card-header channelButtons hover-menu">
           <span className="hover-label">Channel Controls</span>
           <button
@@ -270,7 +300,7 @@ export function Player({ id }: { id: number }) {
             &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
-        {proMode && <ProModeButtons channel={id} />}
+        {settings.proMode && !customOutput && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
           <span className="card-title">
             <strong>
@@ -309,7 +339,7 @@ export function Player({ id }: { id: number }) {
               onClick={() => dispatch(MixerState.play(id))}
               className={
                 playerState.state === "playing"
-                  ? playerState.timeRemaining <= 15
+                  ? playerState.timeRemaining <= SECS_REMAINING_WARNING
                     ? "sp-state-playing sp-ending-soon"
                     : "sp-state-playing"
                   : ""
@@ -397,15 +427,21 @@ export function Player({ id }: { id: number }) {
         </button>
       </div>
 
-      {proMode && vuEnabled && (
+      {settings.proMode && settings.channelVUs && (
         <div className="channel-vu">
-          <VUMeter
-            width={300}
-            height={40}
-            source={VUsource(id)}
-            range={[-40, 0]}
-            stereo={vuStereo}
-          />
+          {customOutput ? (
+            <span className="text-muted">
+              Custom audio output disables VU meters.
+            </span>
+          ) : (
+            <VUMeter
+              width={300}
+              height={40}
+              source={VUsource(id)}
+              range={[-40, 0]}
+              stereo={settings.channelVUsStereo}
+            />
+          )}
         </div>
       )}
     </div>
