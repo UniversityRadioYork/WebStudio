@@ -1,17 +1,7 @@
 import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
-import {
-  FaBookOpen,
-  FaFileImport,
-  FaBars,
-  FaMicrophone,
-  FaTrash,
-  FaUpload,
-  FaCircleNotch,
-} from "react-icons/fa";
-import { VUMeter } from "../optionsMenu/helpers/VUMeter";
-import Stopwatch from "react-stopwatch";
+import { FaBookOpen, FaBars, FaTrash, FaCircleNotch } from "react-icons/fa";
 
 import { TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
@@ -38,7 +28,6 @@ import {
 } from "./state";
 
 import * as MixerState from "../mixer/state";
-import * as OptionsMenuState from "../optionsMenu/state";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
 import {
   CentralMusicLibrary,
@@ -50,11 +39,6 @@ import {
 import { Player } from "./Player";
 
 import { CombinedNavAlertBar } from "../navbar";
-import { OptionsMenu } from "../optionsMenu";
-import { WelcomeModal } from "./WelcomeModal";
-import { PisModal } from "./PISModal";
-import { LibraryUploadModal } from "./LibraryUploadModal";
-import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
 import Modal from "react-modal";
 import { Button } from "reactstrap";
@@ -91,49 +75,18 @@ function LibraryColumn() {
     (state: RootState) => state.showplan
   );
 
-  const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
-  const [showImporterModal, setShowImporterModal] = useState(false);
-
   useEffect(() => {
     dispatch(getPlaylists());
   }, [dispatch]);
 
   return (
     <>
-      <LibraryUploadModal
-        isOpen={showLibraryUploadModal}
-        close={() => setShowLibraryModal(false)}
-      />
-      <ImporterModal
-        close={() => setShowImporterModal(false)}
-        isOpen={showImporterModal}
-      />
       <div className="library-column">
         <div className="mx-2 mb-2">
           <h2>
             <FaBookOpen className="mx-2" size={28} />
             Libraries
           </h2>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Import From Showplan"
-            size="sm"
-            outline={true}
-            onClick={() => setShowImporterModal(true)}
-          >
-            <FaFileImport /> Import
-          </Button>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Upload to Library"
-            size="sm"
-            outline={true}
-            onClick={() => setShowLibraryModal(true)}
-          >
-            <FaUpload /> Upload
-          </Button>
         </div>
         <div className="px-2">
           <select
@@ -147,13 +100,13 @@ function LibraryColumn() {
             </option>
             <option value={"CentralMusicLibrary"}>Central Music Library</option>
             <option disabled>Personal Resources</option>
-            {userPlaylists.map((playlist) => (
+            {userPlaylists.map((playlist: any) => (
               <option key={playlist.managedid} value={playlist.managedid}>
                 {playlist.title}
               </option>
             ))}
             <option disabled>Shared Resources</option>
-            {auxPlaylists.map((playlist) => (
+            {auxPlaylists.map((playlist: any) => (
               <option
                 key={"aux-" + playlist.managedid}
                 value={"aux-" + playlist.managedid}
@@ -162,7 +115,7 @@ function LibraryColumn() {
               </option>
             ))}
             <option disabled>Playlists</option>
-            {managedPlaylists.map((playlist) => (
+            {managedPlaylists.map((playlist: any) => (
               <option
                 key={"managed-" + playlist.playlistid}
                 value={"managed-" + playlist.playlistid}
@@ -192,99 +145,6 @@ function LibraryColumn() {
       </div>
     </>
   );
-}
-
-function MicControl() {
-  const state = useSelector((state: RootState) => state.mixer.mic);
-  const proMode = useSelector((state: RootState) => state.settings.proMode);
-  const stereo = useSelector(
-    (state: RootState) => state.settings.channelVUsStereo
-  );
-  const dispatch = useDispatch();
-
-  return (
-    <div className="mic-control">
-      <div data-toggle="collapse" data-target="#mic-control-menu">
-        <h2>
-          <FaMicrophone className="mx-1" size={28} />
-          Microphone
-        </h2>
-        <FaBars
-          className="toggle mx-0 mt-2 text-muted"
-          title="Toggle Microphone Menu"
-          size={20}
-        />
-      </div>
-      <div id="mic-control-menu" className="collapse show">
-        {!state.open && (
-          <p className="alert-info p-2 mb-0">
-            The microphone has not been setup. Go to{" "}
-            <button
-              className="btn btn-link m-0 mb-1 p-0"
-              onClick={() => dispatch(OptionsMenuState.open())}
-            >
-              {" "}
-              options
-            </button>
-            .
-          </p>
-        )}
-        {state.open && proMode && (
-          <span id="micLiveTimer" className={state.volume > 0 ? "live" : ""}>
-            <span className="text">Mic Live: </span>
-            {state.volume > 0 ? (
-              <Stopwatch
-                seconds={0}
-                minutes={0}
-                hours={0}
-                render={({ formatted }) => {
-                  return <span>{formatted}</span>;
-                }}
-              />
-            ) : (
-              "00:00:00"
-            )}
-          </span>
-        )}
-        {state.open && (
-          <>
-            <div id="micMeter">
-              <VUMeter
-                width={250}
-                height={40}
-                source="mic-final"
-                range={[-40, 3]}
-                greenRange={[-16, -6]}
-                stereo={proMode && stereo}
-              />
-            </div>
-            <div className={`mixer-buttons ${!state.open && "disabled"}`}>
-              <div
-                className="mixer-buttons-backdrop"
-                style={{
-                  width: state.volume * 100 + "%",
-                }}
-              ></div>
-              <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
-                Off
-              </button>
-              <button onClick={() => dispatch(MixerState.setMicVolume("full"))}>
-                Full
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MicLiveIndicator() {
-  const micState = useSelector((state: RootState) => state.mixer.mic);
-  if (micState.open && micState.volume > 0) {
-    return <div className="sp-mic-live" />;
-  }
-  return null;
 }
 
 function incrReducer(state: number, action: any) {
@@ -320,9 +180,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     if (element) {
       element.classList.toggle("hidden");
     }
-    setTimeout(function() {
-      dispatch(MixerState.redrawWavesurfers());
-    }, 500);
   }
 
   const [insertIndex, increment] = useReducer(incrReducer, 0);
@@ -439,7 +296,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <div id="sidebar">
             <LibraryColumn />
             <div className="border-top"></div>
-            <MicControl />
           </div>
         </DragDropContext>
       </div>
@@ -451,13 +307,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <FaCircleNotch /> Mark Unplayed
         </MenuItem>
       </ContextMenu>
-      <OptionsMenu />
-      <WelcomeModal
-        isOpen={showWelcomeModal}
-        close={() => setShowWelcomeModal(false)}
-      />
-      <PisModal close={() => setShowPisModal(false)} isOpen={showPisModal} />
-      <MicLiveIndicator />
     </div>
   );
 };

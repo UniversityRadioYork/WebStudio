@@ -7,13 +7,11 @@ import {
 import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
 import { itemId, PlanItem, setItemPlayed } from "../showplanner/state";
-import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import { audioEngine, ChannelMapping } from "./audio";
-import * as TheNews from "./the_news";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -25,8 +23,6 @@ const lastObjectURLs: string[] = [];
 type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
-type MicVolumePresetEnum = "off" | "full";
-export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
 const defaultTrimDB = -6; // The default trim applied to channel players.
 
@@ -47,18 +43,8 @@ interface PlayerState {
   tracklistItemID: number;
 }
 
-interface MicState {
-  open: boolean;
-  openError: null | MicErrorEnum;
-  volume: 1 | 0;
-  baseGain: number;
-  id: string | null;
-  processing: boolean;
-}
-
 interface MixerState {
   players: PlayerState[];
-  mic: MicState;
 }
 
 const BasePlayerState: PlayerState = {
@@ -82,15 +68,6 @@ const mixerState = createSlice({
   name: "Player",
   initialState: {
     players: [BasePlayerState, BasePlayerState, BasePlayerState],
-    mic: {
-      open: false,
-      volume: 1,
-      gain: 1,
-      baseGain: 0,
-      openError: null,
-      id: "None",
-      processing: true,
-    },
   } as MixerState,
   reducers: {
     loadItem(
@@ -98,8 +75,6 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         item: PlanItem | Track | AuxItem | null;
-        customOutput: boolean;
-        resetTrim?: boolean;
       }>
     ) {
       state.players[action.payload.player].loadedItem = action.payload.item;
@@ -114,12 +89,6 @@ const mixerState = createSlice({
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
-
-      if (action.payload.customOutput) {
-        state.players[action.payload.player].trim = 0;
-      } else if (action.payload.resetTrim) {
-        state.players[action.payload.player].trim = defaultTrimDB;
-      }
     },
     itemLoadPercentage(
       state,
@@ -203,22 +172,6 @@ const mixerState = createSlice({
         loadedItem.outro = action.payload.secs;
       }
     },
-    setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
-      state.mic.openError = action.payload;
-    },
-    micOpen(state, action) {
-      state.mic.open = true;
-      state.mic.id = action.payload;
-    },
-    setMicLevels(state, action: PayloadAction<{ volume: 1 | 0 }>) {
-      state.mic.volume = action.payload.volume;
-    },
-    setMicBaseGain(state, action: PayloadAction<number>) {
-      state.mic.baseGain = action.payload;
-    },
-    setMicProcessingEnabled(state, action: PayloadAction<boolean>) {
-      state.mic.processing = action.payload;
-    },
     setTimeCurrent(
       state,
       action: PayloadAction<{
@@ -294,8 +247,6 @@ const mixerState = createSlice({
 
 export default mixerState.reducer;
 
-export const { setMicBaseGain } = mixerState.actions;
-
 export const setLoadedItemIntro = (
   player: number,
   secs: number
@@ -356,16 +307,10 @@ export const load = (
   }
   loadAbortControllers[player] = new AbortController();
 
-  const shouldResetTrim = getState().settings.resetTrimOnLoad;
-  const customOutput =
-    getState().settings.channelOutputIds[player] !== "internal";
-
   dispatch(
     mixerState.actions.loadItem({
       player,
       item,
-      customOutput,
-      resetTrim: shouldResetTrim,
     })
   );
 
@@ -422,13 +367,7 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const channelOutputId = getState().settings.channelOutputIds[player];
-
-    const playerInstance = await audioEngine.createPlayer(
-      player,
-      channelOutputId,
-      objectUrl
-    );
+    const playerInstance = await audioEngine.createPlayer(player, objectUrl);
 
     // Clear the last one out from memory
     if (typeof lastObjectURLs[player] === "string") {
@@ -499,7 +438,7 @@ export const load = (
       dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
       const state = getState().mixer.players[player];
       if (state.tracklistItemID !== -1) {
-        dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
+        // dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
       }
       if (state.repeat === "one") {
         playerInstance.play();
@@ -575,7 +514,7 @@ export const play = (player: number): AppThunk => async (
     //track
     console.log("potentially tracklisting", state.loadedItem);
     if (getState().mixer.players[player].tracklistItemID === -1) {
-      dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
+      // dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
     } else {
       console.log("not tracklisting because already tracklisted");
     }
@@ -629,7 +568,7 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
   dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
 
   if (state.tracklistItemID !== -1) {
-    dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
+    // dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
   }
 };
 
@@ -648,45 +587,8 @@ export const redrawWavesurfers = (): AppThunk => () => {
 export const { setTracklistItemID } = mixerState.actions;
 
 const FADE_TIME_SECONDS = 1;
-export const setVolume = (
-  player: number,
-  level: VolumePresetEnum
-): AppThunk => (dispatch, getState) => {
-  let volume: number;
-  let uiLevel: number;
-  switch (level) {
-    case "off":
-      volume = -40;
-      uiLevel = 0;
-      break;
-    case "bed":
-      volume = -13;
-      uiLevel = 0.5;
-      break;
-    case "full":
-      volume = 0;
-      uiLevel = 1;
-      break;
-  }
-
-  // Right, okay, big fun is happen.
-  // To make the fade sound natural, we need to ramp it exponentially.
-  // To make the UI look sensible, we need to ramp it linearly.
-  // Time for cheating!
-
-  if (typeof playerGainTweens[player] !== "undefined") {
-    // We've interrupted a previous fade.
-    // If we've just hit the button/key to go to the same value as that fade,
-    // stop it and immediately cut to the target value.
-    // Otherwise, stop id and start a new fade.
-    playerGainTweens[player].tweens.forEach((tween) => tween.pause());
-    if (playerGainTweens[player].target === level) {
-      delete playerGainTweens[player];
-      dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
-      dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
-      return;
-    }
-  }
+export const setVolume = (player: number): AppThunk => (dispatch, getState) => {
+  var volume = 0;
 
   const state = getState().mixer.players[player];
 
@@ -699,11 +601,6 @@ export const setVolume = (
     currentGain = audioEngine.players[player]!.getVolume();
   }
 
-  const volumeTween = new Between(currentLevel, uiLevel)
-    .time(FADE_TIME_SECONDS * 1000)
-    .on("update", (val: number) => {
-      dispatch(mixerState.actions.setPlayerVolume({ player, volume: val }));
-    });
   const gainTween = new Between(currentGain, volume)
     .time(FADE_TIME_SECONDS * 1000)
     .on("update", (val: number) => {
@@ -718,8 +615,8 @@ export const setVolume = (
     });
 
   playerGainTweens[player] = {
-    target: level,
-    tweens: [volumeTween, gainTween],
+    target: "full",
+    tweens: [gainTween, gainTween],
   };
 };
 
@@ -728,73 +625,6 @@ export const setChannelTrim = (player: number, val: number): AppThunk => async (
 ) => {
   dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
   audioEngine.players[player]?.setTrim(val);
-};
-
-export const openMicrophone = (
-  micID: string,
-  micMapping: ChannelMapping
-): AppThunk => async (dispatch, getState) => {
-  if (audioEngine.audioContext.state !== "running") {
-    console.log("Resuming AudioContext because Chrome bad");
-    await audioEngine.audioContext.resume();
-  }
-  dispatch(mixerState.actions.setMicError(null));
-  if (!("mediaDevices" in navigator)) {
-    // mediaDevices is not there - we're probably not in a secure context
-    dispatch(mixerState.actions.setMicError("NOT_SECURE_CONTEXT"));
-    return;
-  }
-  try {
-    await audioEngine.openMic(micID, micMapping);
-  } catch (e) {
-    if (e instanceof DOMException) {
-      switch (e.message) {
-        case "Permission denied":
-          dispatch(mixerState.actions.setMicError("NO_PERMISSION"));
-          break;
-        default:
-          dispatch(mixerState.actions.setMicError("UNKNOWN"));
-      }
-    } else {
-      dispatch(mixerState.actions.setMicError("UNKNOWN"));
-    }
-    return;
-  }
-
-  const state = getState().mixer.mic;
-  audioEngine.setMicCalibrationGain(state.baseGain);
-  audioEngine.setMicVolume(state.volume);
-  // Now to patch in the Mic to the Compressor, or Bypass it.
-  audioEngine.setMicProcessingEnabled(state.processing);
-  dispatch(mixerState.actions.micOpen(micID));
-};
-
-export const setMicProcessingEnabled = (enabled: boolean): AppThunk => async (
-  dispatch
-) => {
-  dispatch(mixerState.actions.setMicProcessingEnabled(enabled));
-  audioEngine.setMicProcessingEnabled(enabled);
-};
-
-export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
-  dispatch
-) => {
-  // no tween fuckery here, just cut the level
-  const levelVal = level === "full" ? 1 : 0;
-  // actually, that's a lie - if we're turning it off we delay it a little to compensate for
-  // processing latency
-  if (levelVal !== 0) {
-    dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
-  } else {
-    window.setTimeout(() => {
-      dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
-      // latency, plus a little buffer
-    }, audioEngine.audioContext.baseLatency * 1000 + 150);
-  }
-};
-
-export const startNewsTimer = (): AppThunk => (_, getState) => {
-  TheNews.butNowItsTimeFor(getState);
 };
 
 export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
@@ -810,12 +640,6 @@ export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
     }
   });
 
-  if (newState.mic.baseGain !== oldState.mic.baseGain) {
-    audioEngine.setMicCalibrationGain(newState.mic.baseGain);
-  }
-  if (newState.mic.volume !== oldState.mic.volume) {
-    audioEngine.setMicVolume(newState.mic.volume);
-  }
   return result;
 };
 
@@ -850,39 +674,6 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   });
   Keys("o", () => {
     store.dispatch(stop(2));
-  });
-
-  Keys("a", () => {
-    store.dispatch(setVolume(0, "off"));
-  });
-  Keys("s", () => {
-    store.dispatch(setVolume(0, "bed"));
-  });
-  Keys("d", () => {
-    store.dispatch(setVolume(0, "full"));
-  });
-  Keys("f", () => {
-    store.dispatch(setVolume(1, "off"));
-  });
-  Keys("g", () => {
-    store.dispatch(setVolume(1, "bed"));
-  });
-  Keys("h", () => {
-    store.dispatch(setVolume(1, "full"));
-  });
-  Keys("j", () => {
-    store.dispatch(setVolume(2, "off"));
-  });
-  Keys("k", () => {
-    store.dispatch(setVolume(2, "bed"));
-  });
-  Keys("l", () => {
-    store.dispatch(setVolume(2, "full"));
-  });
-
-  Keys("x", () => {
-    const state = store.getState().mixer.mic;
-    store.dispatch(setMicVolume(state.volume === 1 ? "off" : "full"));
   });
 
   return (next) => (action) => next(action);

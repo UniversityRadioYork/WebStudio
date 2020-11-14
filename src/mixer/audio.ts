@@ -169,14 +169,9 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     }
   }
 
-  public static create(
-    engine: AudioEngine,
-    player: number,
-    outputId: string,
-    url: string
-  ) {
+  public static create(engine: AudioEngine, player: number, url: string) {
     // If we want to output to a custom audio device, we're gonna need to do things differently.
-    const customOutput = outputId !== "internal";
+    const customOutput = "internal" !== "internal";
 
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
@@ -236,19 +231,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
     wavesurfer.load(url);
 
-    if (customOutput) {
-      try {
-        instance.setOutputDevice(outputId);
-      } catch (e) {
-        console.error("Failed to set channel " + player + " output. " + e);
-      }
-    } else {
-      (wavesurfer as any).backend.gainNode.disconnect();
-      (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
-      (wavesurfer as any).backend.gainNode.connect(
-        engine.playerAnalysers[player]
-      );
-    }
+    (wavesurfer as any).backend.gainNode.disconnect();
+    (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+    (wavesurfer as any).backend.gainNode.connect(
+      engine.playerAnalysers[player]
+    );
 
     return instance;
   }
@@ -429,8 +416,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.newsEndCountdownNode.connect(this.audioContext.destination);
   }
 
-  public createPlayer(number: number, outputId: string, url: string) {
-    const player = Player.create(this, number, outputId, url);
+  public createPlayer(number: number, url: string) {
+    const player = Player.create(this, number, url);
     this.players[number] = player;
     return player;
   }

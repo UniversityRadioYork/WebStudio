@@ -14,8 +14,6 @@ import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
 import * as ShowPlanState from "../showplanner/state";
 import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
-import ProModeButtons from "./ProModeButtons";
-import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import * as api from "../api";
 import { AppThunk } from "../store";
 
@@ -70,9 +68,6 @@ const setTrackIntro = (
     // Api only deals with whole seconds.
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
-    if (getState().settings.saveShowPlanChanges) {
-      await api.setTrackIntro(track.trackid, secs);
-    }
     dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
@@ -89,9 +84,6 @@ const setTrackOutro = (
     // Api only deals with whole seconds.
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
-    if (getState().settings.saveShowPlanChanges) {
-      await api.setTrackOutro(track.trackid, secs);
-    }
     dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
@@ -108,9 +100,6 @@ const setTrackCue = (
     // Api only deals with whole seconds.
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemCue(player, secs));
-    if (getState().settings.saveShowPlanChanges) {
-      await api.setTimeslotItemCue(item.timeslotitemid, secs);
-    }
     dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
@@ -214,8 +203,6 @@ export function Player({ id }: { id: number }) {
         omit(b, "timeCurrent", "timeRemaining")
       )
   );
-  const settings = useSelector((state: RootState) => state.settings);
-  const customOutput = settings.channelOutputIds[id] !== "internal";
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {
@@ -300,7 +287,6 @@ export function Player({ id }: { id: number }) {
             &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
-        {settings.proMode && !customOutput && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
           <span className="card-title">
             <strong>
@@ -416,34 +402,7 @@ export function Player({ id }: { id: number }) {
               "%",
           }}
         ></div>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
-          Off
-        </button>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
-          Bed
-        </button>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
-          Full
-        </button>
       </div>
-
-      {settings.proMode && settings.channelVUs && (
-        <div className="channel-vu">
-          {customOutput ? (
-            <span className="text-muted">
-              Custom audio output disables VU meters.
-            </span>
-          ) : (
-            <VUMeter
-              width={300}
-              height={40}
-              source={VUsource(id)}
-              range={[-40, 0]}
-              stereo={settings.channelVUsStereo}
-            />
-          )}
-        </div>
-      )}
     </div>
   );
 }

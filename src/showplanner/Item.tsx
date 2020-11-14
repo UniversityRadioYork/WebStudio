@@ -35,10 +35,6 @@ export const Item = memo(function Item({
 
   const isLoaded = loadedItem !== null ? itemId(loadedItem) === id : false;
 
-  const showDebug = useSelector(
-    (state: RootState) => state.settings.showDebugInfo
-  );
-
   function triggerClick() {
     if (column > -1) {
       dispatch(MixerState.load(column, x));
@@ -82,11 +78,6 @@ export const Item = memo(function Item({
             >
               Explicit
             </small>
-            {showDebug && (
-              <code>
-                {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
-              </code>
-            )}
           </ContextMenuTrigger>
         </div>
       )}
