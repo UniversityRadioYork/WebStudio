@@ -17,11 +17,14 @@ import { RootState } from "../rootReducer";
 import "./navbar.scss";
 import { closeAlert } from "./state";
 import { getShowplan, setItemPlayed } from "../showplanner/state";
+import { BAPSicleConnection } from "../bapsicle";
+import { BAPSicleModal } from "./BAPSicleModal";
 
 export function NavBarMain() {
   const dispatch = useDispatch();
 
   const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
+  const [showBAPSicleModal, setShowBAPSicleModal] = useState(false);
 
   const { planSaveError, planSaving } = useSelector(
     (state: RootState) => state.showplan
@@ -61,13 +64,24 @@ export function NavBarMain() {
         )}
       </ul>
 
-      <ul className="nav navbar-nav navbar-right mr-0 pr-0">
-        <li className="nav-item" style={{ color: "white" }}>
-          <div className="nav-link">
-            <b>Connection Text</b>
-          </div>
-        </li>
-      </ul>
+      <div>
+        <BAPSicleModal
+          close={() => setShowBAPSicleModal(false)}
+          isOpen={showBAPSicleModal}
+        />
+        <ul className="nav navbar-nav navbar-right mr-0 pr-0">
+          <li className="nav-item" style={{ color: "white" }}>
+            <div
+              className="nav-link"
+              onContextMenu={() => {
+                setShowBAPSicleModal(true);
+              }}
+            >
+              <b>{BAPSicleConnection}</b>
+            </div>
+          </li>
+        </ul>
+      </div>
     </>
   );
 }

@@ -12,6 +12,7 @@ import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 import { audioEngine, ChannelMapping } from "./audio";
+import { sendBAPSicleChannel } from "../bapsicle";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -434,6 +435,11 @@ export const load = (
         );
       }
     });
+    playerInstance.on("timeChangeSeek", (time) => {
+      if (Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5) {
+        sendBAPSicleChannel({ channel: player, command: "SEEK", time: time });
+      }
+    });
     playerInstance.on("finish", () => {
       dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
       const state = getState().mixer.players[player];
@@ -572,6 +578,26 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
   }
 };
 
+export const seek = (player: number, time: number): AppThunk => async (
+  dispatch,
+  getState
+) => {
+  if (typeof audioEngine.players[player] === "undefined") {
+    console.log("nothing loaded");
+    return;
+  }
+  if (audioEngine.audioContext.state !== "running") {
+    console.log("Resuming AudioContext because Chrome bad");
+    await audioEngine.audioContext.resume();
+  }
+  const state = getState().mixer.players[player];
+  if (state.loading !== -1) {
+    console.log("not ready");
+    return;
+  }
+  audioEngine.players[player]?.setCurrentTime(time);
+};
+
 export const {
   toggleAutoAdvance,
   togglePlayOnLoad,
@@ -649,31 +675,31 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   Dispatch<any>
 > = (store) => {
   Keys("q", () => {
-    store.dispatch(play(0));
+    sendBAPSicleChannel({ channel: 0, command: "PLAY" });
   });
   Keys("w", () => {
-    store.dispatch(pause(0));
+    sendBAPSicleChannel({ channel: 0, command: "PAUSE" });
   });
   Keys("e", () => {
-    store.dispatch(stop(0));
+    sendBAPSicleChannel({ channel: 0, command: "STOP" });
   });
   Keys("r", () => {
-    store.dispatch(play(1));
+    sendBAPSicleChannel({ channel: 1, command: "PLAY" });
   });
   Keys("t", () => {
-    store.dispatch(pause(1));
+    sendBAPSicleChannel({ channel: 1, command: "PAUSE" });
   });
   Keys("y", () => {
-    store.dispatch(stop(1));
+    sendBAPSicleChannel({ channel: 1, command: "STOP" });
   });
   Keys("u", () => {
-    store.dispatch(play(2));
+    sendBAPSicleChannel({ channel: 2, command: "PLAY" });
   });
   Keys("i", () => {
-    store.dispatch(pause(2));
+    sendBAPSicleChannel({ channel: 2, command: "PAUSE" });
   });
   Keys("o", () => {
-    store.dispatch(stop(2));
+    sendBAPSicleChannel({ channel: 2, command: "STOP" });
   });
 
   return (next) => (action) => next(action);

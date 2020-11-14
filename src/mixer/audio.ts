@@ -220,6 +220,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       instance.emit("pause");
     });
     wavesurfer.on("seek", () => {
+      instance.emit("timeChangeSeek", wavesurfer.getCurrentTime());
       instance.emit("timeChange", wavesurfer.getCurrentTime());
     });
     wavesurfer.on("finish", () => {

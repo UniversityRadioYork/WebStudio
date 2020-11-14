@@ -16,6 +16,7 @@ import * as ShowPlanState from "../showplanner/state";
 import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
 import * as api from "../api";
 import { AppThunk } from "../store";
+import { sendBAPSicleChannel } from "../bapsicle";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -322,7 +323,10 @@ export function Player({ id }: { id: number }) {
           </span>
           <div className="mediaButtons">
             <button
-              onClick={() => dispatch(MixerState.play(id))}
+              // onClick={() => dispatch(MixerState.play(id))}
+              onClick={() =>
+                sendBAPSicleChannel({ channel: id, command: "PLAY" })
+              }
               className={
                 playerState.state === "playing"
                   ? playerState.timeRemaining <= SECS_REMAINING_WARNING
@@ -334,7 +338,10 @@ export function Player({ id }: { id: number }) {
               <FaPlay />
             </button>
             <button
-              onClick={() => dispatch(MixerState.pause(id))}
+              // onClick={() => dispatch(MixerState.pause(id))}
+              onClick={() =>
+                sendBAPSicleChannel({ channel: id, command: "PAUSE" })
+              }
               className={
                 playerState.state === "paused" ? "sp-state-paused" : ""
               }
@@ -342,7 +349,10 @@ export function Player({ id }: { id: number }) {
               <FaPause />
             </button>
             <button
-              onClick={() => dispatch(MixerState.stop(id))}
+              // onClick={() => dispatch(MixerState.stop(id))}
+              onClick={() =>
+                sendBAPSicleChannel({ channel: id, command: "STOP" })
+              }
               className={
                 playerState.state === "stopped" ? "sp-state-stopped" : ""
               }

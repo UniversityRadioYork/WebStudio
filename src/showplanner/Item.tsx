@@ -8,6 +8,7 @@ import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { ContextMenuTrigger } from "react-contextmenu";
 import "./item.scss";
+import { sendBAPSicleChannel } from "../bapsicle";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
 
@@ -37,6 +38,11 @@ export const Item = memo(function Item({
 
   function triggerClick() {
     if (column > -1) {
+      sendBAPSicleChannel({
+        channel: column,
+        command: "LOAD",
+        planItem: index,
+      });
       dispatch(MixerState.load(column, x));
     }
   }

@@ -20,6 +20,7 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
+import { bapsicleMiddleware } from "./bapsicle";
 
 const ACTION_HISTORY_MAX_SIZE = 20;
 
@@ -48,6 +49,7 @@ const store = configureStore({
   middleware: [
     mixerMiddleware,
     mixerKeyboardShortcutsMiddleware,
+    bapsicleMiddleware,
     actionHistoryMiddleware,
     ...getDefaultMiddleware({
       serializableCheck: {
