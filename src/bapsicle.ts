@@ -1,22 +1,39 @@
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Dispatch, Middleware } from "redux";
 import { load, pause, play, seek, stop } from "./mixer/state";
 import { RootState } from "./rootReducer";
 import { PlanItem } from "./showplanner/state";
+import { AppThunk } from "./store";
 
-const SECS_REMAINING_WARNING = 20;
+interface Connection {
+  connectionState: string;
+}
 
-export const BAPSicle = process.env.REACT_APP_BAPSICLE_INTERFACE === "true";
-export var BAPSicleConnection = "None";
-var BAPSicleWS: WebSocket | null = null;
+const initialState: Connection = {
+  connectionState: "Not Connected",
+};
+
+const connection = createSlice({
+  name: "connection",
+  initialState: initialState,
+  reducers: {
+    setConnectionState(state, action: PayloadAction<string>): void {
+      console.log("updating" + action.payload);
+      state.connectionState = action.payload;
+    },
+  },
+});
+
+export default connection.reducer;
+
+export var BAPSicleWS: WebSocket | null = null;
 
 export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   store
 ) => (next) => (action) => {
-  console.log("updated");
   if (BAPSicleWS) {
     BAPSicleWS!.onmessage = (event) => {
       var message = JSON.parse(event.data);
-      console.log(message);
       if ("channel" in message) {
         switch (message.command) {
           case "PLAY":
@@ -37,8 +54,8 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             var itemToLoad: PlanItem;
             store.getState().showplan.plan?.forEach((item) => {
               if (
-                item.channel == message.channel &&
-                item.weight == message.planItem
+                item.channel === message.channel &&
+                item.weight === message.planItem
               ) {
                 itemToLoad = item;
               }
@@ -58,10 +75,20 @@ export function sendBAPSicleChannel(message: any): void {
   }
 }
 
-export function connectBAPSicle(path: string): void {
+export const connectBAPSicle = (path: string): AppThunk => async (
+  dispatch,
+  getState
+) => {
   BAPSicleWS = new WebSocket(path);
-  BAPSicleConnection = "Connecting...";
+  dispatch(connection.actions.setConnectionState("Connecting..."));
   BAPSicleWS.onopen = () =>
-    (BAPSicleConnection = "Connected to BAPSicle Server");
-  BAPSicleWS.onclose = () => (BAPSicleConnection = "Disconnected");
-}
+    dispatch(
+      connection.actions.setConnectionState("Connected to BAPSicle Server")
+    );
+  BAPSicleWS.onclose = () =>
+    dispatch(connection.actions.setConnectionState("Disconnected"));
+};
+
+export const disconnectBAPSicle = () => {
+  BAPSicleWS!.close();
+};

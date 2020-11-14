@@ -171,7 +171,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   public static create(engine: AudioEngine, player: number, url: string) {
     // If we want to output to a custom audio device, we're gonna need to do things differently.
-    const customOutput = "internal" !== "internal";
+    const customOutput = false;
 
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {

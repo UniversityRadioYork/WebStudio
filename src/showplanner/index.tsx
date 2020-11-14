@@ -27,7 +27,6 @@ import {
   PlanItemBase,
 } from "./state";
 
-import * as MixerState from "../mixer/state";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
 import {
   CentralMusicLibrary,
@@ -41,7 +40,6 @@ import { Player } from "./Player";
 import { CombinedNavAlertBar } from "../navbar";
 import "./channel.scss";
 import Modal from "react-modal";
-import { Button } from "reactstrap";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -160,12 +158,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   Modal.setAppElement("#root");
 
   const session = useSelector((state: RootState) => state.session);
-
-  const [showWelcomeModal, setShowWelcomeModal] = useState(
-    !session.userCanBroadcast
-  );
-
-  const [showPisModal, setShowPisModal] = useState(session.userCanBroadcast);
 
   const dispatch = useDispatch();
 

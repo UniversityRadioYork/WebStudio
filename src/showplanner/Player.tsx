@@ -206,18 +206,18 @@ export function Player({ id }: { id: number }) {
   );
   const dispatch = useDispatch();
 
-  const VUsource = (id: number) => {
-    switch (id) {
-      case 0:
-        return "player-0";
-      case 1:
-        return "player-1";
-      case 2:
-        return "player-2";
-      default:
-        throw new Error("Unknown Player VUMeter source: " + id);
-    }
-  };
+  // const VUsource = (id: number) => {
+  //   switch (id) {
+  //     case 0:
+  //       return "player-0";
+  //     case 1:
+  //       return "player-1";
+  //     case 2:
+  //       return "player-2";
+  //     default:
+  //       throw new Error("Unknown Player VUMeter source: " + id);
+  //   }
+  // };
 
   let channelDuration = 0;
   let channelUnplayed = 0;

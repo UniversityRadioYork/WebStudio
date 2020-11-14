@@ -3,7 +3,6 @@ import * as api from "../api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { cloneDeep } from "lodash";
-import raygun from "raygun4js";
 
 export interface ItemGhost {
   type: "ghost";

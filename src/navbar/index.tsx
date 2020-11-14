@@ -2,28 +2,16 @@ import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
 
-import {
-  FaCircle,
-  FaRegClock,
-  FaRegUser,
-  FaBroadcastTower,
-  FaSpinner,
-  FaExclamationTriangle,
-  FaCog,
-} from "react-icons/fa";
+import { FaSpinner, FaExclamationTriangle } from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
 
 import "./navbar.scss";
 import { closeAlert } from "./state";
-import { getShowplan, setItemPlayed } from "../showplanner/state";
-import { BAPSicleConnection } from "../bapsicle";
 import { BAPSicleModal } from "./BAPSicleModal";
 
 export function NavBarMain() {
-  const dispatch = useDispatch();
-
-  const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
+  const connectionState = useSelector((state: RootState) => state.connection);
   const [showBAPSicleModal, setShowBAPSicleModal] = useState(false);
 
   const { planSaveError, planSaving } = useSelector(
@@ -77,7 +65,7 @@ export function NavBarMain() {
                 setShowBAPSicleModal(true);
               }}
             >
-              <b>{BAPSicleConnection}</b>
+              <b>{connectionState.connectionState}</b>
             </div>
           </li>
         </ul>
