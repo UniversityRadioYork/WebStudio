@@ -70,8 +70,11 @@ export function BAPSicleModal(props: BAPSicleModalProps) {
             sendBAPSicleChannel({
               channel: item.channel,
               command: "ADD",
-              weight: item.weight,
-              title: item.title,
+              newItem: {
+                weight: item.weight,
+                title: item.title,
+                artist: "URY",
+              },
             });
           }
         }}

@@ -3,7 +3,7 @@ import { Dispatch, Middleware } from "redux";
 import { TimeslotItem } from "./api";
 import { load, pause, play, seek, stop } from "./mixer/state";
 import { RootState } from "./rootReducer";
-import { PlanItem, removeItem } from "./showplanner/state";
+import { addItem, PlanItem, removeItem } from "./showplanner/state";
 import { AppThunk } from "./store";
 
 interface Connection {
@@ -33,6 +33,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   store
 ) => (next) => (action) => {
   if (BAPSicleWS) {
+    const timeslotId = store.getState().session.currentTimeslot!.timeslot_id;
     BAPSicleWS!.onmessage = (event) => {
       var message = JSON.parse(event.data);
       if ("channel" in message) {
@@ -78,11 +79,13 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             });
             store.dispatch(
               removeItem(
-                store.getState().session.currentTimeslot!.timeslot_id,
+                timeslotId,
                 (itemToRemove! as TimeslotItem).timeslotitemid
               )
             );
             break;
+          case "ADD":
+            store.dispatch(addItem(timeslotId, message.newItem));
         }
       } else if ("message" in message) {
         if (message.message === "Hello") {

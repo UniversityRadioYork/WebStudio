@@ -197,7 +197,11 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         cue: 0,
         ...data,
       };
-      dispatch(addItem(timeslotId, newItem));
+      sendBAPSicleChannel({
+        channel: newItem.channel,
+        command: "ADD",
+        newItem: newItem,
+      });
       increment(null);
     } else if (result.draggableId[0] === "A") {
       // this is an aux resource
@@ -212,7 +216,11 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         cue: 0,
         ...data,
       } as any;
-      dispatch(addItem(timeslotId, newItem));
+      sendBAPSicleChannel({
+        channel: newItem.channel,
+        command: "ADD",
+        newItem: newItem,
+      });
       increment(null);
     } else {
       // this is a normal move (ghosts aren't draggable)

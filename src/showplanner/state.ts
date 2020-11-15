@@ -377,6 +377,8 @@ export const addItem = (
   // is there - then, once we get a timeslotitemid, replace it with a proper item
 
   dispatch(showplan.actions.applyOps(ops));
+  dispatch(showplan.actions.addItem(newItemData));
+  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const removeItem = (
