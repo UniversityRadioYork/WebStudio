@@ -241,7 +241,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       command: "REMOVE",
       weight: data.index,
     });
-    dispatch(removeItem(timeslotId, data.id));
   }
   async function onCtxUnPlayedClick(e: any, data: { id: string }) {
     dispatch(setItemPlayed({ itemId: data.id, played: false }));
