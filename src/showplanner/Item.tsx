@@ -70,7 +70,7 @@ export const Item = memo(function Item({
         >
           <ContextMenuTrigger
             id={isReal ? TS_ITEM_MENU_ID : ""}
-            collect={() => ({ id })}
+            collect={() => ({ id, column, index })}
           >
             <span className={"icon " + x.type} />
             &nbsp;

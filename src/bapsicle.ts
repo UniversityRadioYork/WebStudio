@@ -1,8 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Dispatch, Middleware } from "redux";
+import { TimeslotItem } from "./api";
 import { load, pause, play, seek, stop } from "./mixer/state";
 import { RootState } from "./rootReducer";
-import { PlanItem } from "./showplanner/state";
+import { PlanItem, removeItem } from "./showplanner/state";
 import { AppThunk } from "./store";
 
 interface Connection {
@@ -64,6 +65,23 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
               }
             });
             store.dispatch(load(message.channel, itemToLoad!));
+            break;
+          case "REMOVE":
+            var itemToRemove: PlanItem;
+            store.getState().showplan.plan?.forEach((item) => {
+              if (
+                item.channel === message.channel &&
+                item.weight === message.weight
+              ) {
+                itemToRemove = item;
+              }
+            });
+            store.dispatch(
+              removeItem(
+                store.getState().session.currentTimeslot!.timeslot_id,
+                (itemToRemove! as TimeslotItem).timeslotitemid
+              )
+            );
             break;
         }
       } else if ("message" in message) {

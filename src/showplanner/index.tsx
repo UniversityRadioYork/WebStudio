@@ -40,6 +40,7 @@ import { Player } from "./Player";
 import { CombinedNavAlertBar } from "../navbar";
 import "./channel.scss";
 import Modal from "react-modal";
+import { sendBAPSicleChannel } from "../bapsicle";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -231,7 +232,15 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }
   }
 
-  async function onCtxRemoveClick(e: any, data: { id: string }) {
+  async function onCtxRemoveClick(
+    e: any,
+    data: { id: string; column: number; index: number }
+  ) {
+    sendBAPSicleChannel({
+      channel: data.column,
+      command: "REMOVE",
+      weight: data.index,
+    });
     dispatch(removeItem(timeslotId, data.id));
   }
   async function onCtxUnPlayedClick(e: any, data: { id: string }) {
