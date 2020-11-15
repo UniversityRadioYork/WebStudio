@@ -41,7 +41,7 @@ export const Item = memo(function Item({
       sendBAPSicleChannel({
         channel: column,
         command: "LOAD",
-        planItem: index,
+        weight: index,
       });
       dispatch(MixerState.load(column, x));
     }

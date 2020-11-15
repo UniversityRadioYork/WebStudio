@@ -58,7 +58,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             store.getState().showplan.plan?.forEach((item) => {
               if (
                 item.channel === message.channel &&
-                item.weight === message.planItem
+                item.weight === message.weight
               ) {
                 itemToLoad = item;
               }

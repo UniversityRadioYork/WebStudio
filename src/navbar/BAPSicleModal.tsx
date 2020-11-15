@@ -4,7 +4,11 @@ import Modal from "react-modal";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "reactstrap";
 import BAPSicleLogo from "../assets/images/bapsicle.png";
-import { connectBAPSicle, disconnectBAPSicle } from "../bapsicle";
+import {
+  connectBAPSicle,
+  disconnectBAPSicle,
+  sendBAPSicleChannel,
+} from "../bapsicle";
 import { RootState } from "../rootReducer";
 
 interface BAPSicleModalProps {
@@ -17,6 +21,7 @@ export function BAPSicleModal(props: BAPSicleModalProps) {
   const connectionState = useSelector((state: RootState) => state.connection);
   const [connectType, setConnectType] = useState("Connect");
   const dispatch = useDispatch();
+  const showplan = useSelector((state: RootState) => state.showplan);
 
   if (
     connectType !== "Connect" &&
@@ -58,6 +63,21 @@ export function BAPSicleModal(props: BAPSicleModalProps) {
           props.close();
         }}
       />
+      <button
+        onClick={() => {
+          for (var i = 0; i < showplan.plan!.length; i++) {
+            let item = showplan.plan![i];
+            sendBAPSicleChannel({
+              channel: item.channel,
+              command: "ADD",
+              weight: item.weight,
+              title: item.title,
+            });
+          }
+        }}
+      >
+        Load Show Plan
+      </button>
     </Modal>
   );
 }
