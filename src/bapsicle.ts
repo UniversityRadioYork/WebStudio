@@ -43,6 +43,9 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
           case "PAUSE":
             store.dispatch(pause(message.channel));
             break;
+          case "UNPAUSE":
+            store.dispatch(play(message.channel));
+            break;
           case "STOP":
             store.dispatch(stop(message.channel));
             break;
@@ -62,6 +65,12 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             });
             store.dispatch(load(message.channel, itemToLoad!));
             break;
+        }
+      } else if ("message" in message) {
+        if (message.message === "Hello") {
+          store.dispatch(
+            connection.actions.setConnectionState(message.serverName)
+          );
         }
       }
     };

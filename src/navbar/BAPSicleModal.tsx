@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import Modal from "react-modal";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "reactstrap";
 import BAPSicleLogo from "../assets/images/bapsicle.png";
 import { connectBAPSicle, disconnectBAPSicle } from "../bapsicle";
+import { RootState } from "../rootReducer";
 
 interface BAPSicleModalProps {
   isOpen: boolean;
@@ -13,8 +14,17 @@ interface BAPSicleModalProps {
 
 export function BAPSicleModal(props: BAPSicleModalProps) {
   const [BAPSicleServer, setBAPSicleServer] = useState("ws://localhost:13501");
+  const connectionState = useSelector((state: RootState) => state.connection);
   const [connectType, setConnectType] = useState("Connect");
   const dispatch = useDispatch();
+
+  if (
+    connectType !== "Connect" &&
+    connectionState.connectionState === "Disconnected"
+  ) {
+    setConnectType("Connect");
+  }
+
   return (
     <Modal isOpen={props.isOpen} onRequestClose={props.close}>
       <h1 className="d-inline">BAPSicle Server Configuration</h1>

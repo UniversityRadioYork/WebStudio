@@ -339,9 +339,13 @@ export function Player({ id }: { id: number }) {
             </button>
             <button
               // onClick={() => dispatch(MixerState.pause(id))}
-              onClick={() =>
-                sendBAPSicleChannel({ channel: id, command: "PAUSE" })
-              }
+              onClick={() => {
+                if (playerState.state === "paused") {
+                  sendBAPSicleChannel({ channel: id, command: "UNPAUSE" });
+                } else {
+                  sendBAPSicleChannel({ channel: id, command: "PAUSE" });
+                }
+              }}
               className={
                 playerState.state === "paused" ? "sp-state-paused" : ""
               }
