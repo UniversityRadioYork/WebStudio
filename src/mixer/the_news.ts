@@ -8,10 +8,11 @@ import { RootState } from "../rootReducer";
 /**
  * But now it's time for the news!
  */
-async function actuallyDoTheNews() {
+async function actuallyDoTheNews(offset: number | null) {
   console.log("actually doing the news");
   // Sanity check
-  const now = new Date();
+  let now = new Date().valueOf();
+  now += offset ? offset : 0;
   const newsInTime = set(now, { minutes: 59, seconds: 45 });
   const newsOutTime = set(add(now, { hours: 1 }), { minutes: 1, seconds: 55 });
   const newsInDelta = newsInTime.valueOf() - now.valueOf();
@@ -49,7 +50,7 @@ const considerDoingTheNews = (getState: () => RootState) => async () => {
   console.log("considering doing the news");
   const state = getState();
   if (state.settings.doTheNews === "always") {
-    await actuallyDoTheNews();
+    await actuallyDoTheNews(state.clock.offset);
   } else if (state.settings.doTheNews === "while_live") {
     if (
       state.broadcast.connectionState === "CONNECTED" ||
@@ -61,7 +62,7 @@ const considerDoingTheNews = (getState: () => RootState) => async () => {
         switchAudioAtMin: number;
       }>("/nextTransition", "GET", {});
       if (transition.autoNews) {
-        await actuallyDoTheNews();
+        await actuallyDoTheNews(state.clock.offset);
       }
     }
   }

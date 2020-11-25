@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Clock from "react-live-clock";
 import Stopwatch from "react-stopwatch";
 
 import {
@@ -22,6 +21,7 @@ import { MYRADIO_NON_API_BASE } from "../api";
 import "./navbar.scss";
 import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
+import { Clock } from "../clock/Clock";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import { getShowplan, setItemPlayed } from "../showplanner/state";
 
@@ -192,11 +192,7 @@ export function NavBarMain() {
             );
           }}
         >
-          <Clock
-            format={"HH:mm:ss"}
-            ticking={true}
-            timezone={"europe/london"}
-          />
+          <Clock />
         </li>
         {planSaving && (
           <li className="btn rounded-0 py-2 nav-item alert-info">

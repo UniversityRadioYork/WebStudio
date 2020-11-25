@@ -12,6 +12,7 @@ import {
   mixerKeyboardShortcutsMiddleware,
   startNewsTimer,
 } from "./mixer/state";
+import { periodicallySynchroniseClock } from "./clock/state";
 import {
   persistStore,
   FLUSH,
@@ -71,5 +72,6 @@ export type AppDispatch = typeof store.dispatch;
 export type AppThunk = ThunkAction<void, RootState, null, Action<string>>;
 
 store.dispatch(startNewsTimer() as any);
+store.dispatch(periodicallySynchroniseClock() as any);
 
 export default store;
