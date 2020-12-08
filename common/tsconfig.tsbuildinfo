@@ -246,9 +246,14 @@
         "signature": "af7fd2870746deed40e130fc0a3966de74e8f52a97ec114d0fbb35876ab05ca9",
         "affectsGlobalScope": false
       },
-      "./src/index.ts": {
-        "version": "9ee8a9dd445e76a632b1df66f1a6e811589a38710636dd6d8fea4575e2c25161",
-        "signature": "7fecc57d5b7b107caa4f813457a98bfcb0f1cf070cf10e8663df133ee107272b",
+      "./src/index.tsx": {
+        "version": "389e08ba2e356d6c44df4a4e6977fbd7e80033fe1a3724259a9e98f69eebb911",
+        "signature": "adc3d141ee613b107653f68bcf7e1239bb341c23ed4b55ea161997cfaa0428d2",
+        "affectsGlobalScope": false
+      },
+      "./node_modules/@types/react-dom/index.d.ts": {
+        "version": "5e7837730e7ef63981cbd8d878388c4b37acc70dc3190881e230a23e3b4f9514",
+        "signature": "5e7837730e7ef63981cbd8d878388c4b37acc70dc3190881e230a23e3b4f9514",
         "affectsGlobalScope": false
       },
       "../node_modules/@types/asap/index.d.ts": {
@@ -711,11 +716,6 @@
         "signature": "1fcd6ab45861daa7ee719d04b273899b6689e7bb503ce5de027e0260acba8849",
         "affectsGlobalScope": false
       },
-      "../node_modules/@types/react-dom/index.d.ts": {
-        "version": "1923cbe22fe3f5005de4192f014b558a88e0fdec16726bb4f94ac76dd1a82c92",
-        "signature": "1923cbe22fe3f5005de4192f014b558a88e0fdec16726bb4f94ac76dd1a82c92",
-        "affectsGlobalScope": false
-      },
       "../node_modules/@types/react-modal/index.d.ts": {
         "version": "3373e51d93de95cff6d0ffd6fa205333f90cd1770f3168606d415d80fc5dccfa",
         "signature": "3373e51d93de95cff6d0ffd6fa205333f90cd1770f3168606d415d80fc5dccfa",
@@ -789,10 +789,16 @@
       "composite": true,
       "declaration": true,
       "moduleResolution": 2,
+      "rootDir": "./src",
+      "outDir": "./dist",
+      "watch": true,
       "configFilePath": "./tsconfig.json"
     },
     "referencedMap": {
-      "./src/index.ts": [
+      "./node_modules/@types/react-dom/index.d.ts": [
+        "../node_modules/@types/react/index.d.ts"
+      ],
+      "./src/index.tsx": [
         "../node_modules/@types/react/jsx-runtime.d.ts"
       ],
       "../node_modules/@babel/parser/typings/babel-parser.d.ts": [
@@ -1195,9 +1201,6 @@
       "../node_modules/@types/react-beforeunload/index.d.ts": [
         "../node_modules/@types/react/index.d.ts"
       ],
-      "../node_modules/@types/react-dom/index.d.ts": [
-        "../node_modules/@types/react/index.d.ts"
-      ],
       "../node_modules/@types/react-modal/index.d.ts": [
         "../node_modules/@types/react/index.d.ts"
       ],
@@ -1228,13 +1231,28 @@
       ]
     },
     "exportedModulesMap": {
+      "./node_modules/@types/react-dom/index.d.ts": [
+        "../node_modules/@types/react/index.d.ts"
+      ],
       "../node_modules/@babel/parser/typings/babel-parser.d.ts": [
         "../node_modules/@babel/types/lib/index-ts3.7.d.ts"
       ],
       "../node_modules/@types/babel__core/index.d.ts": [
+        "../node_modules/@babel/parser/typings/babel-parser.d.ts",
+        "../node_modules/@babel/types/lib/index-ts3.7.d.ts",
         "../node_modules/@types/babel__generator/index.d.ts",
         "../node_modules/@types/babel__template/index.d.ts",
         "../node_modules/@types/babel__traverse/index.d.ts"
+      ],
+      "../node_modules/@types/babel__generator/index.d.ts": [
+        "../node_modules/@babel/types/lib/index-ts3.7.d.ts"
+      ],
+      "../node_modules/@types/babel__template/index.d.ts": [
+        "../node_modules/@babel/parser/typings/babel-parser.d.ts",
+        "../node_modules/@babel/types/lib/index-ts3.7.d.ts"
+      ],
+      "../node_modules/@types/babel__traverse/index.d.ts": [
+        "../node_modules/@babel/types/lib/index-ts3.7.d.ts"
       ],
       "../node_modules/@types/glob/index.d.ts": [
         "../node_modules/@types/minimatch/index.d.ts",
@@ -1616,19 +1634,21 @@
       "../node_modules/@types/react-beforeunload/index.d.ts": [
         "../node_modules/@types/react/index.d.ts"
       ],
-      "../node_modules/@types/react-dom/index.d.ts": [
-        "../node_modules/@types/react/index.d.ts"
-      ],
       "../node_modules/@types/react-modal/index.d.ts": [
         "../node_modules/@types/react/index.d.ts"
       ],
       "../node_modules/@types/react-redux/index.d.ts": [
         "../node_modules/@types/hoist-non-react-statics/index.d.ts",
-        "../node_modules/@types/react/index.d.ts"
+        "../node_modules/@types/react/index.d.ts",
+        "../node_modules/redux/index.d.ts"
       ],
       "../node_modules/@types/react/index.d.ts": [
         "../node_modules/@types/prop-types/index.d.ts",
-        "../node_modules/@types/react/global.d.ts"
+        "../node_modules/@types/react/global.d.ts",
+        "../node_modules/csstype/index.d.ts"
+      ],
+      "../node_modules/@types/react/jsx-runtime.d.ts": [
+        "../node_modules/@types/react/index.d.ts"
       ],
       "../node_modules/@types/resolve/index.d.ts": [
         "../node_modules/@types/node/index.d.ts"
@@ -1688,7 +1708,8 @@
       "../../../.config/yarn/global/node_modules/typescript/lib/lib.esnext.promise.d.ts",
       "../../../.config/yarn/global/node_modules/typescript/lib/lib.esnext.string.d.ts",
       "../../../.config/yarn/global/node_modules/typescript/lib/lib.esnext.weakref.d.ts",
-      "./src/index.ts",
+      "./node_modules/@types/react-dom/index.d.ts",
+      "./src/index.tsx",
       "../node_modules/@babel/parser/typings/babel-parser.d.ts",
       "../node_modules/@babel/types/lib/index-ts3.7.d.ts",
       "../node_modules/@types/asap/index.d.ts",
@@ -1780,7 +1801,6 @@
       "../node_modules/@types/raygun4js/index.d.ts",
       "../node_modules/@types/react-beautiful-dnd/index.d.ts",
       "../node_modules/@types/react-beforeunload/index.d.ts",
-      "../node_modules/@types/react-dom/index.d.ts",
       "../node_modules/@types/react-modal/index.d.ts",
       "../node_modules/@types/react-redux/index.d.ts",
       "../node_modules/@types/react/global.d.ts",

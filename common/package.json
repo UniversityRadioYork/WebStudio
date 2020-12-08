@@ -1,5 +1,15 @@
 {
-    "name": "@ury1350/webstudio-common",
+    "name": "webstudio-common",
     "version": "1.0.0",
-    "main": "./src/index"
+    "main": "./src/index",
+    "private": true,
+    "devDependencies": {
+        "typescript": "4.1"
+    },
+    "dependencies": {
+        "@types/react": "^17.0.0",
+        "@types/react-dom": "^17.0.0",
+        "react": "^17.0.1",
+        "react-dom": "^17.0.1"
+    }
 }

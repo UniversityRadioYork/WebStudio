@@ -6,6 +6,8 @@
         "jsx": "react-jsx",
         "composite": true,
         "declaration": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "rootDir": "src",
+        "outDir": "dist"
     }
 }

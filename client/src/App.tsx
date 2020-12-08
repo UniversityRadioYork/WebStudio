@@ -8,9 +8,9 @@ import { RootState } from "./rootReducer";
 import "./light-theme.scss";
 import "./App.scss";
 
-import {hello} from "@ury1350/webstudio-common/src/index";
+// import {Hello} from "webstudio-common/dist/index";
 
-console.log("hello", hello);
+// console.log("hello", Hello());
 
 const forceReducer = (state: boolean) => !state;
 function useForceUpdate() {
