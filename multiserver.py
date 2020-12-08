@@ -225,11 +225,18 @@ class Peer:
                 await self.ws.send_json(
                     {"kind": "NOPE", "rid": msg.get("rid"), "why": "invalid_code"}
                 )
-            link.use()
+            try:
+                link.use()
+            except NoUses:
+                await self.ws.send_json(
+                    {"kind": "NOPE", "rid": msg.get("rid"), "why": "no_uses_left"}
+                )
+                return
             if self.room is not None:
                 await self.leave_room(tell_ourselves=True)
             self.name = link.name
-            await self.change_security_level(SecurityLevel.GUEST)
+            if self.security_level < SecurityLevel.GUEST:
+                await self.change_security_level(SecurityLevel.GUEST)
             await self.join_room(link.room)
             await self.ws.send_json({"kind": "ACK", "rid": msg.get("rid")})
 
@@ -248,7 +255,8 @@ class Peer:
             room = Room(int(msg["timeslotid"]))
             room.host_id = self.id
             await self.join_room(room)
-            await self.change_security_level(SecurityLevel.MEMBER_HOST)
+            if self.security_level < SecurityLevel.MEMBER_HOST:
+                await self.change_security_level(SecurityLevel.MEMBER_HOST)
             rooms[room.id] = room
             await self.ws.send_json({"kind": "ACK", "rid": msg.get("rid")})
 
