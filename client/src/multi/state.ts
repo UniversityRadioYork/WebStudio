@@ -48,13 +48,12 @@ const initialState: MultiState = {
 };
 
 const extraActions = {
-  connect: createAction(
-    "Multi/Connect()"
-  ),
+  connect: createAction("Multi/Connect()"),
   createInviteLink: createAction<{ name: string; uses?: number }>(
     "Multi/CreateInviteLink()"
   ),
   sendChatMessage: createAction<string>("Multi/SendChatMessage()"),
+  disconnect: createAction("Multi/Disconnect()"),
 };
 
 const multiState = createSlice({
@@ -63,6 +62,12 @@ const multiState = createSlice({
   reducers: {
     connected(state) {
       state.state = MultiConnectionState.CONNECTED;
+    },
+    disconnected(state) {
+      // on a manual disconnect, Disconnect() will fire _before_ disconnected
+      if (state.state !== MultiConnectionState.NONE) {
+        state.state = MultiConnectionState.DISCONNECTED;
+      }
     },
     hello(state, action: PayloadAction<MultiPeer>) {
       state.state = MultiConnectionState.HELLO;
@@ -118,6 +123,9 @@ const multiState = createSlice({
       })
       .addCase(extraActions.createInviteLink, (state) => {
         state.inviteLinkCreateStatus = "pending";
+      })
+      .addCase(extraActions.disconnect, (state) => {
+        state.state = MultiConnectionState.NONE;
       });
   },
 });
@@ -126,7 +134,13 @@ export default multiState.reducer;
 
 export const actions = {
   ...pick(multiState.actions, "clearEphemeralInviteLink"),
-  ...pick(extraActions, "connect", "createInviteLink", "sendChatMessage"),
+  ...pick(
+    extraActions,
+    "connect",
+    "createInviteLink",
+    "sendChatMessage",
+    "disconnect"
+  ),
 };
 
 export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
@@ -156,8 +170,12 @@ export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
         store.dispatch(multiState.actions.connected());
         send({ kind: "HELLO" });
       };
-      connection.onclose = () => {};
-      connection.onerror = (err) => {};
+      connection.onclose = () => {
+        store.dispatch(multiState.actions.disconnected());
+      };
+      connection.onerror = (err) => {
+        console.error("MultiSocket", err);
+      };
       connection.onmessage = async (e) => {
         const data = JSON.parse(e.data);
         if ("rid" in data && data.rid !== null) {
@@ -185,13 +203,16 @@ export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
                 break;
               }
 
-              const ourTimeslotId = store.getState().session.currentTimeslot?.timeslot_id;
+              const ourTimeslotId = store.getState().session.currentTimeslot
+                ?.timeslot_id;
               if (typeof ourTimeslotId !== "number") {
-                throw new Error("Got no timeslot inside multi Connect(); can't happen")
+                throw new Error(
+                  "Got no timeslot inside multi Connect(); can't happen"
+                );
               }
 
               const ourTimeslotsRoom = (response.rooms as MultiRoom[]).find(
-                x => x.timeslotid === ourTimeslotId
+                (x) => x.timeslotid === ourTimeslotId
               );
 
               const joinRid = nextRid();
@@ -199,15 +220,17 @@ export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
               if (ourTimeslotsRoom) {
                 send({
                   kind: "JOIN_ROOM",
-                  room: ourTimeslotsRoom.id
+                  room: ourTimeslotsRoom.id,
+                  rid: joinRid,
                 });
               } else {
                 send({
                   kind: "CREATE_ROOM",
-                  timeslotid: ourTimeslotId
+                  timeslotid: ourTimeslotId,
+                  rid: joinRid,
                 });
               }
-            
+
               const joinResponse = await waitForReply(joinRid);
               if (joinResponse.kind !== "ACK") {
                 console.warn(joinResponse);
@@ -292,8 +315,11 @@ export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
           msg: action.payload,
         },
       });
-    } else {
-      return next(action);
+    } else if (extraActions.disconnect.match(action)) {
+      if (connection && connection.readyState === WebSocket.OPEN) {
+        connection.close();
+      }
     }
+    return next(action);
   };
 };

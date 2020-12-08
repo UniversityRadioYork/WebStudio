@@ -152,7 +152,9 @@ export function GuestsSidebarTab() {
           >
             Create Invite Link
           </Button>
-          <Button color="danger">Disconnect</Button>
+          <Button color="danger" onClick={() => dispatch(actions.disconnect())}>
+            Disconnect
+          </Button>
         </div>
       </div>
       <Modal
