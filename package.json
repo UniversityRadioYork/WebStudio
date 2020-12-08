@@ -3,5 +3,20 @@
     "workspaces": [
         "common",
         "client"
-    ]
+    ],
+    "devDependencies": {
+        "@ury1350/prettier-config": "^1.0.1",
+        "husky": "^4.3.5",
+        "lint-staged": "^10.5.3",
+        "prettier": "^2.2.1"
+    },
+    "prettier": "@ury1350/prettier-config",
+    "husky": {
+        "hooks": {
+            "pre-commit": "lint-staged"
+        }
+    },
+    "lint-staged": {
+        "*.{js,jsx,ts,tsx,css,scss}": "prettier --write"
+    }
 }
