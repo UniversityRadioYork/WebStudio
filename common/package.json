@@ -1,0 +1,5 @@
+{
+    "name": "@ury1350/webstudio-common",
+    "version": "1.0.0",
+    "main": "./src/index"
+}

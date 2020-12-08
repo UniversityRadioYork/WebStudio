@@ -48,8 +48,8 @@ const initialState: MultiState = {
 };
 
 const extraActions = {
-  connectAsGuest: createAction<{ inviteCode: string }>(
-    "Multi/ConnectAsGuest()"
+  connect: createAction(
+    "Multi/Connect()"
   ),
   createInviteLink: createAction<{ name: string; uses?: number }>(
     "Multi/CreateInviteLink()"
@@ -113,7 +113,7 @@ const multiState = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(extraActions.connectAsGuest, (state) => {
+      .addCase(extraActions.connect, (state) => {
         state.state = MultiConnectionState.CONNECTING;
       })
       .addCase(extraActions.createInviteLink, (state) => {
@@ -142,7 +142,7 @@ export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
   const nextRid = () => {
     return (lastRid++).toString(16);
   };
-  const awaitMsg = (rid: string) => {
+  const waitForReply = (rid: string) => {
     const promise = new Promise((resolve) => {
       requestResolvers[rid] = resolve;
     });
@@ -150,7 +150,7 @@ export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
   };
 
   return (next) => async (action) => {
-    if (extraActions.connectAsGuest.match(action)) {
+    if (extraActions.connect.match(action)) {
       connection = new WebSocket(process.env.REACT_APP_MULTISERVER_URL!);
       connection.onopen = () => {
         store.dispatch(multiState.actions.connected());
@@ -174,17 +174,45 @@ export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
                 multiState.actions.hello(omit(data, "kind", "room") as any)
               );
 
-              const joinRid = nextRid();
+              const listRoomsRid = nextRid();
 
               send({
-                kind: "JOIN_ROOM_BY_INVITE_LINK",
-                rid: joinRid,
-                code: action.payload.inviteCode,
+                kind: "LIST_ROOMS",
+                rid: listRoomsRid,
               });
-              const response = await awaitMsg(joinRid);
-              if (response.kind !== "ACK") {
-                console.warn(response);
+              const response = await waitForReply(listRoomsRid);
+              if (response.kind !== "LIST_ROOMS") {
+                break;
               }
+
+              const ourTimeslotId = store.getState().session.currentTimeslot?.timeslot_id;
+              if (typeof ourTimeslotId !== "number") {
+                throw new Error("Got no timeslot inside multi Connect(); can't happen")
+              }
+
+              const ourTimeslotsRoom = (response.rooms as MultiRoom[]).find(
+                x => x.timeslotid === ourTimeslotId
+              );
+
+              const joinRid = nextRid();
+
+              if (ourTimeslotsRoom) {
+                send({
+                  kind: "JOIN_ROOM",
+                  room: ourTimeslotsRoom.id
+                });
+              } else {
+                send({
+                  kind: "CREATE_ROOM",
+                  timeslotid: ourTimeslotId
+                });
+              }
+            
+              const joinResponse = await waitForReply(joinRid);
+              if (joinResponse.kind !== "ACK") {
+                console.warn(joinResponse);
+              }
+
               break;
 
             case "JOINED_ROOM":
@@ -251,7 +279,7 @@ export const multiServerMiddleware: Middleware<{}, RootState> = (store) => {
         guest_name: action.payload.name,
         uses: action.payload.uses || -1,
       });
-      const response = await awaitMsg(inviteLinkRid);
+      const response = await waitForReply(inviteLinkRid);
       if (response.kind !== "INVITE_LINK") {
         console.warn(response);
       }

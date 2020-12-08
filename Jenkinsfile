@@ -10,8 +10,10 @@ pipeline {
    parallel {
     stage('JavaScript') {
       steps {
-      sh 'CI=true npm_config_python=/usr/local/bin/python2.7 yarn --no-progress --non-interactive --skip-integrity-check --frozen-lockfile install'
-     }
+        dir('client') {
+          sh 'CI=true npm_config_python=/usr/local/bin/python2.7 yarn --no-progress --non-interactive --skip-integrity-check --frozen-lockfile install'
+        }
+      }
     }
     stage('Python') {
       steps {
@@ -26,7 +28,9 @@ pipeline {
     parallel {
       stage('TypeScript') {
         steps {
-          sh 'node_modules/.bin/tsc -p tsconfig.json --noEmit --extendedDiagnostics'
+          dir('client') {
+            sh 'node_modules/.bin/tsc -p tsconfig.json --noEmit --extendedDiagnostics'
+          }
         }
       }
       stage('MyPy (stateserver)') {
@@ -50,10 +54,12 @@ pipeline {
     }
    }
    steps {
-    sh 'sed -i -e \'s/ury.org.uk\\/webstudio/ury.org.uk\\/webstudio-dev/\' package.json'
-    sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
-    sshagent(credentials: ['ury']) {
-     sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio-dev'
+     dir('client') {
+      sh 'sed -i -e \'s/ury.org.uk\\/webstudio/ury.org.uk\\/webstudio-dev/\' package.json'
+      sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
+      sshagent(credentials: ['ury']) {
+        sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio-dev'
+      }
     }
    }
   }
@@ -70,10 +76,12 @@ pipeline {
           REACT_APP_WS_URL = 'wss://ury.org.uk/webstudio/api/stream'
         }
         steps {
-          sh 'sed -i -e \'s/ury.org.uk\\/webstudio-dev/ury.org.uk\\/webstudio/\' package.json'
-          sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_PRODUCTION=true yarn build'
-          sshagent(credentials: ['ury']) {
-           sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio'
+          dir('client') {
+            sh 'sed -i -e \'s/ury.org.uk\\/webstudio-dev/ury.org.uk\\/webstudio/\' package.json'
+            sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_PRODUCTION=true yarn build'
+            sshagent(credentials: ['ury']) {
+              sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio'
+            }
           }
         }
       }
