@@ -12,6 +12,7 @@ import {
   mixerKeyboardShortcutsMiddleware,
   startNewsTimer,
 } from "./mixer/state";
+import { multiServerMiddleware } from "./multi/state";
 import {
   persistStore,
   FLUSH,
@@ -49,6 +50,7 @@ const store = configureStore({
   middleware: [
     mixerMiddleware,
     mixerKeyboardShortcutsMiddleware,
+    multiServerMiddleware,
     actionHistoryMiddleware,
     ...getDefaultMiddleware({
       serializableCheck: {

@@ -7,11 +7,24 @@ import {
   AuxItem,
   loadPlaylistLibrary,
 } from "../api";
-import { itemId } from "./state";
+import { getPlaylists, itemId } from "./state";
 import { Droppable } from "react-beautiful-dnd";
-import { FaCog, FaSearch, FaTimesCircle } from "react-icons/fa";
+import {
+  FaBookOpen,
+  FaFileImport,
+  FaUpload,
+  FaCog,
+  FaSearch,
+  FaTimesCircle,
+} from "react-icons/fa";
 import { Item } from "./Item";
 import "./libraries.scss";
+import { Button } from "reactstrap";
+import { RootState } from "../rootReducer";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { pick } from "lodash";
+import { LibraryUploadModal } from "./LibraryUploadModal";
+import { ImporterModal } from "./ImporterModal";
 
 export const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
@@ -74,7 +87,7 @@ export function CentralMusicLibrary() {
       <div className="border-top mt-2"></div>
       <ResultsPlaceholder state={state} />
       <Droppable droppableId="$CML">
-        {(provided, snapshot) => (
+        {(provided) => (
           <div
             className="library-item-list"
             ref={provided.innerRef}
@@ -141,7 +154,7 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
       <div className="border-top mt-2"></div>
       <ResultsPlaceholder state={state} />
       <Droppable droppableId="$CML">
-        {(provided, snapshot) => (
+        {(provided) => (
           <div
             className="library-item-list"
             ref={provided.innerRef}
@@ -221,7 +234,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
       <div className="border-top mt-2"></div>
       <ResultsPlaceholder state={state} />
       <Droppable droppableId="$AUX">
-        {(provided, snapshot) => (
+        {(provided) => (
           <div
             className="library-item-list"
             ref={provided.innerRef}
@@ -268,5 +281,114 @@ export function ResultsPlaceholder({ state }: { state: string }) {
         ? "No results."
         : ""}
     </span>
+  );
+}
+
+export function LibraryColumn() {
+  const [sauce, setSauce] = useState("None");
+  const dispatch = useDispatch();
+  const { auxPlaylists, managedPlaylists, userPlaylists } = useSelector(
+    (state: RootState) =>
+      pick(state.showplan, "auxPlaylists", "managedPlaylists", "userPlaylists"),
+    shallowEqual
+  );
+  console.log(managedPlaylists);
+
+  const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
+  const [showImporterModal, setShowImporterModal] = useState(false);
+
+  useEffect(() => {
+    dispatch(getPlaylists());
+  }, [dispatch]);
+
+  return (
+    <>
+      <LibraryUploadModal
+        isOpen={showLibraryUploadModal}
+        close={() => setShowLibraryModal(false)}
+      />
+      <ImporterModal
+        close={() => setShowImporterModal(false)}
+        isOpen={showImporterModal}
+      />
+      <div className="library-column">
+        <div className="mx-2 mb-2">
+          <Button
+            className="mr-1"
+            color="primary"
+            title="Import From Showplan"
+            size="sm"
+            outline={true}
+            onClick={() => setShowImporterModal(true)}
+          >
+            <FaFileImport /> Import
+          </Button>
+          <Button
+            className="mr-1"
+            color="primary"
+            title="Upload to Library"
+            size="sm"
+            outline={true}
+            onClick={() => setShowLibraryModal(true)}
+          >
+            <FaUpload /> Upload
+          </Button>
+        </div>
+        <div className="px-2">
+          <select
+            className="form-control form-control-sm"
+            style={{ flex: "none" }}
+            value={sauce}
+            onChange={(e) => setSauce(e.target.value)}
+          >
+            <option value={"None"} disabled>
+              Choose a library
+            </option>
+            <option value={"CentralMusicLibrary"}>Central Music Library</option>
+            <option disabled>Personal Resources</option>
+            {userPlaylists.map((playlist) => (
+              <option key={playlist.managedid} value={playlist.managedid}>
+                {playlist.title}
+              </option>
+            ))}
+            <option disabled>Shared Resources</option>
+            {auxPlaylists.map((playlist) => (
+              <option
+                key={"aux-" + playlist.managedid}
+                value={"aux-" + playlist.managedid}
+              >
+                {playlist.title}
+              </option>
+            ))}
+            <option disabled>Playlists</option>
+            {managedPlaylists.map((playlist) => (
+              <option
+                key={"managed-" + playlist.playlistid}
+                value={"managed-" + playlist.playlistid}
+              >
+                {playlist.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="border-top my-2"></div>
+        {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
+        {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
+          <AuxLibrary libraryId={sauce} />
+        )}
+        {sauce.startsWith("managed-") && (
+          <ManagedPlaylistLibrary libraryId={sauce.substr(8)} />
+        )}
+        <span
+          className={
+            sauce === "None" ? "mt-5 text-center text-muted" : "d-none"
+          }
+        >
+          <FaBookOpen size={56} />
+          <br />
+          Select a library to search.
+        </span>
+      </div>
+    </>
   );
 }

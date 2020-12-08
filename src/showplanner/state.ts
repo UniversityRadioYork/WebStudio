@@ -207,13 +207,22 @@ const showplan = createSlice({
       state.plan![idx] = action.payload.newItemData;
     },
     addUserPlaylists(state, action: PayloadAction<api.NipswebPlaylist[]>) {
-      state.userPlaylists = state.userPlaylists.concat(action.payload);
+      const existing = new Set(state.userPlaylists.map((x) => x.managedid));
+      state.userPlaylists = state.userPlaylists.concat(
+        action.payload.filter((x) => !existing.has(x.managedid))
+      );
     },
     addManagedPlaylists(state, action: PayloadAction<api.ManagedPlaylist[]>) {
-      state.managedPlaylists = state.managedPlaylists.concat(action.payload);
+      const existing = new Set(state.managedPlaylists.map((x) => x.playlistid));
+      state.managedPlaylists = state.managedPlaylists.concat(
+        action.payload.filter((x) => !existing.has(x.playlistid))
+      );
     },
     addAuxPlaylists(state, action: PayloadAction<api.NipswebPlaylist[]>) {
-      state.auxPlaylists = state.auxPlaylists.concat(action.payload);
+      const existing = new Set(state.auxPlaylists.map((x) => x.managedid));
+      state.auxPlaylists = state.auxPlaylists.concat(
+        action.payload.filter((x) => !existing.has(x.managedid))
+      );
     },
   },
 });

@@ -1,0 +1,4 @@
+{
+    "python.formatting.provider": "black",
+    "typescript.tsdk": "node_modules/typescript/lib"
+}

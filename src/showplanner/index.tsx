@@ -2,13 +2,12 @@ import React, { useState, useReducer, useEffect } from "react";
 import { ContextMenu, MenuItem } from "react-contextmenu";
 import { useBeforeunload } from "react-beforeunload";
 import {
-  FaBookOpen,
-  FaFileImport,
   FaBars,
   FaMicrophone,
   FaTrash,
-  FaUpload,
   FaCircleNotch,
+  FaBookOpen,
+  FaSatelliteDish,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import Stopwatch from "react-stopwatch";
@@ -33,37 +32,29 @@ import {
   addItem,
   removeItem,
   setItemPlayed,
-  getPlaylists,
   PlanItemBase,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
 import * as OptionsMenuState from "../optionsMenu/state";
 import { Item, TS_ITEM_MENU_ID } from "./Item";
-import {
-  CentralMusicLibrary,
-  CML_CACHE,
-  AuxLibrary,
-  AUX_CACHE,
-  ManagedPlaylistLibrary,
-} from "./libraries";
+import { CML_CACHE, AUX_CACHE, LibraryColumn } from "./libraries";
 import { Player } from "./Player";
 
 import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
-import { LibraryUploadModal } from "./LibraryUploadModal";
-import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
 import Modal from "react-modal";
-import { Button } from "reactstrap";
+import { Nav, NavItem, NavLink } from "reactstrap";
+import { GuestsSidebarTab } from "../multi";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
     <div className="channel" id={"channel-" + id}>
       <Droppable droppableId={id.toString(10)}>
-        {(provided, snapshot) => (
+        {(provided) => (
           <div
             className="channel-item-list"
             ref={provided.innerRef}
@@ -81,116 +72,6 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
       </Droppable>
       <Player id={id} />
     </div>
-  );
-}
-
-function LibraryColumn() {
-  const [sauce, setSauce] = useState("None");
-  const dispatch = useDispatch();
-  const { auxPlaylists, managedPlaylists, userPlaylists } = useSelector(
-    (state: RootState) => state.showplan
-  );
-
-  const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
-  const [showImporterModal, setShowImporterModal] = useState(false);
-
-  useEffect(() => {
-    dispatch(getPlaylists());
-  }, [dispatch]);
-
-  return (
-    <>
-      <LibraryUploadModal
-        isOpen={showLibraryUploadModal}
-        close={() => setShowLibraryModal(false)}
-      />
-      <ImporterModal
-        close={() => setShowImporterModal(false)}
-        isOpen={showImporterModal}
-      />
-      <div className="library-column">
-        <div className="mx-2 mb-2">
-          <h2>
-            <FaBookOpen className="mx-2" size={28} />
-            Libraries
-          </h2>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Import From Showplan"
-            size="sm"
-            outline={true}
-            onClick={() => setShowImporterModal(true)}
-          >
-            <FaFileImport /> Import
-          </Button>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Upload to Library"
-            size="sm"
-            outline={true}
-            onClick={() => setShowLibraryModal(true)}
-          >
-            <FaUpload /> Upload
-          </Button>
-        </div>
-        <div className="px-2">
-          <select
-            className="form-control form-control-sm"
-            style={{ flex: "none" }}
-            value={sauce}
-            onChange={(e) => setSauce(e.target.value)}
-          >
-            <option value={"None"} disabled>
-              Choose a library
-            </option>
-            <option value={"CentralMusicLibrary"}>Central Music Library</option>
-            <option disabled>Personal Resources</option>
-            {userPlaylists.map((playlist) => (
-              <option key={playlist.managedid} value={playlist.managedid}>
-                {playlist.title}
-              </option>
-            ))}
-            <option disabled>Shared Resources</option>
-            {auxPlaylists.map((playlist) => (
-              <option
-                key={"aux-" + playlist.managedid}
-                value={"aux-" + playlist.managedid}
-              >
-                {playlist.title}
-              </option>
-            ))}
-            <option disabled>Playlists</option>
-            {managedPlaylists.map((playlist) => (
-              <option
-                key={"managed-" + playlist.playlistid}
-                value={"managed-" + playlist.playlistid}
-              >
-                {playlist.title}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="border-top my-2"></div>
-        {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
-        {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
-          <AuxLibrary libraryId={sauce} />
-        )}
-        {sauce.startsWith("managed-") && (
-          <ManagedPlaylistLibrary libraryId={sauce.substr(8)} />
-        )}
-        <span
-          className={
-            sauce === "None" ? "mt-5 text-center text-muted" : "d-none"
-          }
-        >
-          <FaBookOpen size={56} />
-          <br />
-          Select a library to search.
-        </span>
-      </div>
-    </>
   );
 }
 
@@ -287,7 +168,7 @@ function MicLiveIndicator() {
   return null;
 }
 
-function incrReducer(state: number, action: any) {
+function incrReducer(state: number) {
   return state + 1;
 }
 
@@ -325,9 +206,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }, 500);
   }
 
+  const [activeSidebarCol, setActiveSidebarCol] = useState<
+    "library" | "guests"
+  >("library");
+
   const [insertIndex, increment] = useReducer(incrReducer, 0);
 
-  async function onDragEnd(result: DropResult, provider: ResponderProvided) {
+  async function onDragEnd(result: DropResult) {
     if (!result.destination) {
       return;
     }
@@ -382,10 +267,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }
   }
 
-  async function onCtxRemoveClick(e: any, data: { id: string }) {
+  async function onCtxRemoveClick(data: { id: string }) {
     dispatch(removeItem(timeslotId, data.id));
   }
-  async function onCtxUnPlayedClick(e: any, data: { id: string }) {
+  async function onCtxUnPlayedClick(data: { id: string }) {
     dispatch(setItemPlayed({ itemId: data.id, played: false }));
   }
 
@@ -437,7 +322,28 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
             &nbsp; Toggle Sidebar
           </span>
           <div id="sidebar">
-            <LibraryColumn />
+            <Nav tabs>
+              <NavItem>
+                <NavLink
+                  className={activeSidebarCol === "library" ? "active" : ""}
+                  onClick={() => setActiveSidebarCol("library")}
+                >
+                  <FaBookOpen className="mx-2" size={4} />
+                  Libraries
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink
+                  className={activeSidebarCol === "guests" ? "active" : ""}
+                  onClick={() => setActiveSidebarCol("guests")}
+                >
+                  <FaSatelliteDish className="mx-2" size={14} />
+                  Guests
+                </NavLink>
+              </NavItem>
+            </Nav>
+            {activeSidebarCol === "library" && <LibraryColumn />}
+            {activeSidebarCol === "guests" && <GuestsSidebarTab />}
             <div className="border-top"></div>
             <MicControl />
           </div>

@@ -16,7 +16,7 @@ import configparser
 config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
 
-api_key = config.get("stateserver", "myradio_key")
+api_key = config.get("myradio", "key")
 app = Flask(__name__)
 CORS(app)  # Enable Cors access-all
 

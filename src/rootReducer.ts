@@ -11,6 +11,7 @@ import sessionReducer from "./session/state";
 import NavbarReducer from "./navbar/state";
 import OptionsMenuReducer from "./optionsMenu/state";
 import SettingsState from "./optionsMenu/settingsState";
+import MultiReducer from "./multi/state";
 
 const rootReducer = combineReducers({
   showplan: ShowplanReducer,
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
   navbar: NavbarReducer,
   optionsMenu: OptionsMenuReducer,
   settings: SettingsState,
+  multi: MultiReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
