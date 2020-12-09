@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Alert,
   Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  CardLink,
+  CardTitle,
   Form,
   Input,
   InputGroup,
@@ -15,16 +21,18 @@ import Modal from "react-modal";
 import { actions } from "./state";
 import { FaPaperPlane } from "react-icons/fa";
 
-function CreateInviteLinkModalContents(props: { close: () => any }) {
+function InviteLinkModalContents(props: { close: () => any }) {
   const [name, setName] = useState("");
   const [uses, setUses] = useState<number | undefined>();
   const dispatch = useDispatch();
-  const ephLink = useSelector(
-    (state: RootState) => state.multi.ephemeralInviteLink
-  );
+  const links = useSelector((state: RootState) => state.multi.inviteLinks);
   const linkCreateState = useSelector(
     (state: RootState) => state.multi.inviteLinkCreateStatus
   );
+
+  useEffect(() => {
+    dispatch(actions.refreshInviteLinks());
+  }, []);
 
   function create() {
     dispatch(
@@ -37,6 +45,24 @@ function CreateInviteLinkModalContents(props: { close: () => any }) {
 
   return (
     <>
+      <h3>Invite Links for this rom</h3>
+      <div>
+        {links.map((link) => (
+          <Card key={link.code}>
+            <CardTitle>
+              {link.name}
+            </CardTitle>
+            <CardBody>
+              <Input disabled value={link.url} />
+            </CardBody>
+            <CardFooter>
+              Uses: {link.uses}
+              {link.max_uses > -1 && " / " + link.max_uses}
+            </CardFooter>
+            <CardLink color="danger">Revoke</CardLink>
+          </Card>
+        ))}
+      </div>
       <h3>Create Invite Link</h3>
       <Form>
         <InputGroup>
@@ -75,12 +101,6 @@ function CreateInviteLinkModalContents(props: { close: () => any }) {
         <Button color="danger" onClick={props.close}>
           Close
         </Button>
-        {ephLink !== null && (
-          <div>
-            <div>Copy the invite link below. You will never see it again!</div>
-            <Input type="text" disabled value={ephLink} />
-          </div>
-        )}
         {linkCreateState === "error" && (
           <Alert color="danger">Oh no, something exploded!</Alert>
         )}
@@ -161,7 +181,7 @@ export function GuestsSidebarTab() {
         isOpen={isCreateLinkModalOpen}
         onRequestClose={() => setIsCreateLinkModalOpen(false)}
       >
-        <CreateInviteLinkModalContents
+        <InviteLinkModalContents
           close={() => setIsCreateLinkModalOpen(false)}
         />
       </Modal>

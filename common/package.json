@@ -1,15 +1,17 @@
 {
     "name": "webstudio-common",
     "version": "1.0.0",
-    "main": "./src/index",
+    "main": "./dist",
     "private": true,
     "devDependencies": {
         "typescript": "4.1"
     },
     "dependencies": {
+        "@reduxjs/toolkit": "^1.5.0",
         "@types/react": "^17.0.0",
         "@types/react-dom": "^17.0.0",
         "react": "^17.0.1",
-        "react-dom": "^17.0.1"
+        "react-dom": "^17.0.1",
+        "react-redux": "^7.2.2"
     }
 }

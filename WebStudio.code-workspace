@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": ".",
+			"settings": {
+				"files.exclude": {
+					"client": true,
+					"common": true,
+					"multistudio": true
+				}
+			}
+		},
+		{
+			"path": "client"
+		},
+		{
+			"path": "common"
+		},
+		{
+			"path": "multistudio"
+		}
+	],
+	"settings": {
+		"typescript.tsdk": "node_modules/typescript/lib"
+	}
+}

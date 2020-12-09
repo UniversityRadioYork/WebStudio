@@ -1,0 +1,53 @@
+body {
+  background-color: #212121;
+  color: #fafafa;
+}
+
+a {
+  color: #5eb4db;
+  &:visited {
+    color: #c3a8dd;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+.app-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media all and (prefers-reduced-motion: no-preference) {
+  @keyframes logo-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale3d(1, 1, 1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale3d(0.9, 0.9, 1);
+    }
+  }
+}
+
+.logo {
+  max-width: 25vw;
+  height: auto;
+}
+
+.logo-loading {
+  animation: logo-pulse 4s ease-in-out infinite;
+}
+
+.failure-reason {
+  font-size: 1.3em;
+}

@@ -45,7 +45,7 @@ def genPayload(payload: Any) -> Any:
 
 
 def myradioApiRequest(url: str) -> Any:
-    res = requests.get('https://ury.org.uk/api/v2/' + url + '?api_key=' + api_key)
+    res = requests.get(config.get('myradio', 'api_base') + url + '?api_key=' + api_key)
     if res.ok:
         return res.json()["payload"]
     else:
