@@ -72,8 +72,15 @@ export function BAPSicleModal(props: BAPSicleModalProps) {
               command: "ADD",
               newItem: {
                 weight: item.weight,
+                timeslotItemId:
+                  "timeslotitemid" in item ? item.timeslotitemid : null,
+                trackId:
+                  "trackid" in item && item.type == "central"
+                    ? item.trackid
+                    : null,
+                managedId: "auxid" in item ? item.auxid : null,
                 title: item.title,
-                artist: "URY",
+                artist: "artist" in item ? item.artist : null,
               },
             });
           }

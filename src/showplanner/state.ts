@@ -43,6 +43,7 @@ export function itemId(
       ? item.trackid.toString()
       : "T" + item.album.recordid + "-" + item.trackid;
   }
+  console.log(item);
   throw new Error("Can't get id of unknown item.");
 }
 
@@ -79,6 +80,20 @@ const showplan = createSlice({
     getShowplanSuccess(state, action: PayloadAction<PlanItem[]>) {
       state.plan = action.payload;
       state.planLoading = false;
+    },
+    getShowplanSuccessChannel(
+      state,
+      action: PayloadAction<{ channel: Number; planItems: PlanItem[] }>
+    ) {
+      var newItems = state.plan?.filter(
+        (item) => item.channel != action.payload.channel
+      );
+      if (newItems) {
+        newItems = newItems.concat(action.payload.planItems);
+        state.plan = newItems;
+      } else {
+        state.plan = null;
+      }
     },
     getShowplanError(state, action: PayloadAction<string>) {
       state.planLoading = false;
@@ -223,6 +238,7 @@ export const {
   setItemTimings,
   setItemPlayed,
   planSaveError,
+  getShowplanSuccessChannel,
 } = showplan.actions;
 
 export const moveItem = (

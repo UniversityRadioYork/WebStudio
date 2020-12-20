@@ -319,12 +319,7 @@ export const load = (
 
   if (item.type === "central") {
     // track
-    url =
-      MYRADIO_NON_API_BASE +
-      "/NIPSWeb/secure_play?recordid=" +
-      item.album.recordid +
-      "&trackid=" +
-      item.trackid;
+    url = MYRADIO_NON_API_BASE + "/NIPSWeb/secure_play?trackid=" + item.trackid;
   } else if ("managedid" in item) {
     url =
       MYRADIO_NON_API_BASE +

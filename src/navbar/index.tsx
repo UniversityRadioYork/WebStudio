@@ -61,7 +61,7 @@ export function NavBarMain() {
           <li className="nav-item" style={{ color: "white" }}>
             <div
               className="nav-link"
-              onContextMenu={() => {
+              onClick={() => {
                 setShowBAPSicleModal(true);
               }}
             >

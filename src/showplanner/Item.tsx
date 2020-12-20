@@ -43,6 +43,7 @@ export const Item = memo(function Item({
         command: "LOAD",
         weight: index,
       });
+      console.log("Clicking to load:", x);
       dispatch(MixerState.load(column, x));
     }
   }
@@ -84,6 +85,7 @@ export const Item = memo(function Item({
             >
               Explicit
             </small>
+            <code>{x.type.toString()}</code>
           </ContextMenuTrigger>
         </div>
       )}

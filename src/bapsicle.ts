@@ -1,9 +1,15 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { any } from "prop-types";
 import { Dispatch, Middleware } from "redux";
-import { TimeslotItem } from "./api";
+import { TimeslotItem, Track } from "./api";
 import { load, pause, play, seek, stop } from "./mixer/state";
 import { RootState } from "./rootReducer";
-import { addItem, PlanItem, removeItem } from "./showplanner/state";
+import {
+  addItem,
+  PlanItem,
+  removeItem,
+  getShowplanSuccessChannel,
+} from "./showplanner/state";
 import { AppThunk } from "./store";
 
 interface Connection {
@@ -36,6 +42,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
     const timeslotId = store.getState().session.currentTimeslot!.timeslot_id;
     BAPSicleWS!.onmessage = (event) => {
       var message = JSON.parse(event.data);
+      //console.log(message)
       if ("channel" in message) {
         switch (message.command) {
           case "PLAY":
@@ -55,7 +62,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             store.dispatch(seek(message.channel, message.time));
             break;
           case "LOAD":
-            console.log(store.getState().showplan);
+            //console.log(store.getState().showplan);
             var itemToLoad: PlanItem;
             store.getState().showplan.plan?.forEach((item) => {
               if (
@@ -65,7 +72,8 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                 itemToLoad = item;
               }
             });
-            store.dispatch(load(message.channel, itemToLoad!));
+            //console.log(itemToLoad!);
+            //store.dispatch(load(message.channel, itemToLoad!));
             break;
           case "REMOVE":
             var itemToRemove: PlanItem;
@@ -86,6 +94,33 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             break;
           case "ADD":
             store.dispatch(addItem(timeslotId, message.newItem));
+          case "STATUS":
+            // Bapsicle is telling us it's full state on this channel. Let's update the UI.
+            console.log("STATUS");
+            console.log(message.data);
+            var raw_planitems: [any] = message.data.show_plan;
+            var planItems: Array<PlanItem> = [];
+            raw_planitems.forEach((raw_planitem) => {
+              var planItem: PlanItem = {
+                timeslotitemid: String(raw_planitem.timeslotItemId),
+                channel: message.channel,
+                played: false,
+                type: raw_planitem.trackId ? "central" : "aux",
+                trackid: raw_planitem.trackId,
+                managedid: raw_planitem.managedId,
+                ...raw_planitem,
+              };
+              //planItem.draggableId = planItem.timeslotitemid.toString()
+              planItem = planItem as PlanItem;
+              console.log(planItem);
+              planItems.push(planItem);
+            });
+            store.dispatch(
+              getShowplanSuccessChannel({
+                channel: message.channel,
+                planItems: planItems,
+              })
+            );
         }
       } else if ("message" in message) {
         if (message.message === "Hello") {
