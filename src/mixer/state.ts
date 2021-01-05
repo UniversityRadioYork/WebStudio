@@ -663,7 +663,8 @@ export const { setTracklistItemID } = mixerState.actions;
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
   player: number,
-  level: VolumePresetEnum
+  level: VolumePresetEnum,
+  fade: boolean = true
 ): AppThunk => (dispatch, getState) => {
   let volume: number;
   let uiLevel: number;
@@ -699,6 +700,18 @@ export const setVolume = (
       dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
       return;
     }
+  }
+
+  // If we're fading up the volume, disable the PFL.
+  if (level !== "off") {
+    dispatch(setChannelPFL(player, false));
+  }
+
+  // If not fading, just do it.
+  if (!fade) {
+    dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+    dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
+    return;
   }
 
   const state = getState().mixer.players[player];
@@ -747,6 +760,12 @@ export const setChannelPFL = (
   player: number,
   enabled: boolean
 ): AppThunk => async (dispatch) => {
+  if (typeof audioEngine.players[player] !== "undefined") {
+    if (!audioEngine.players[player]?.isPlaying) {
+      dispatch(setVolume(player, "off", false));
+      dispatch(play(player));
+    }
+  }
   dispatch(mixerState.actions.setPlayerPFL({ player, enabled }));
   audioEngine.setPFL(player, enabled);
 };
