@@ -760,11 +760,13 @@ export const setChannelPFL = (
   player: number,
   enabled: boolean
 ): AppThunk => async (dispatch) => {
-  if (typeof audioEngine.players[player] !== "undefined") {
-    if (!audioEngine.players[player]?.isPlaying) {
-      dispatch(setVolume(player, "off", false));
-      dispatch(play(player));
-    }
+  if (
+    enabled &&
+    typeof audioEngine.players[player] !== "undefined" &&
+    !audioEngine.players[player]?.isPlaying
+  ) {
+    dispatch(setVolume(player, "off", false));
+    dispatch(play(player));
   }
   dispatch(mixerState.actions.setPlayerPFL({ player, enabled }));
   audioEngine.setPFL(player, enabled);
