@@ -147,6 +147,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   setPFL(enabled: boolean) {
     this.pfl = enabled;
+    this._connectPFL();
   }
 
   setOutputDevice(sinkId: string) {
@@ -165,15 +166,30 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   _applyVolume() {
     const level = this.volume + this.trim;
     const linear = Math.pow(10, level / 20);
-    if (linear < 1) {
-      this.wavesurfer.setVolume(linear);
-      if (!this.customOutput) {
-        (this.wavesurfer as any).backend.gainNode.gain.value = 1;
-      }
+
+    // Actually adjust the wavesurfer gain node gain instead, so we can tap off analyser for PFL.
+    this.wavesurfer.setVolume(1);
+    if (!this.customOutput) {
+      (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+    }
+  }
+
+  _connectPFL() {
+    if (this.pfl) {
+      console.log("Connecting PFL");
+
+      // In this case, we just want to route the player output to the headphones direct.
+      // Tap it from analyser to avoid the player volume.
+      (this.wavesurfer as any).backend.analyser.connect(
+        this.engine.headphonesNode
+      );
     } else {
-      this.wavesurfer.setVolume(1);
-      if (!this.customOutput) {
-        (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+      try {
+        (this.wavesurfer as any).backend.analyser.disconnect(
+          this.engine.headphonesNode
+        );
+      } catch (e) {
+        console.log("Didn't disconnect.");
       }
     }
   }
@@ -182,6 +198,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     engine: AudioEngine,
     player: number,
     outputId: string,
+    pfl: boolean,
     url: string
   ) {
     // If we want to output to a custom audio device, we're gonna need to do things differently.
@@ -257,6 +274,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       (wavesurfer as any).backend.gainNode.connect(
         engine.playerAnalysers[player]
       );
+      instance.setPFL(pfl);
     }
 
     return instance;
@@ -430,11 +448,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       .connect(this.micFinalAnalyser)
       .connect(this.streamingAnalyser);
 
-    // Send the final compressor (all players and guests) to the headphones.
-    this.finalCompressor.connect(this.headphonesNode);
-
-    // Also send the final compressor to the streaming analyser on to the stream.
-    this.finalCompressor.connect(this.streamingAnalyser);
+    this._connectFinalCompressor(true);
 
     // Send the streaming analyser to the Streamer!
     this.streamingAnalyser.connect(this.streamingDestination);
@@ -444,11 +458,30 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.newsEndCountdownNode.connect(this.audioContext.destination);
 
     // Send the headphones feed to the headphones.
+    const db = -12; // DB gain on headphones (-6 to match default trim)
+    this.headphonesNode.gain.value = Math.pow(10, db / 20);
     this.headphonesNode.connect(this.audioContext.destination);
   }
 
-  public createPlayer(number: number, outputId: string, url: string) {
-    const player = Player.create(this, number, outputId, url);
+  _connectFinalCompressor(headphones: boolean) {
+    this.finalCompressor.disconnect();
+
+    if (headphones) {
+      // Send the final compressor (all players and guests) to the headphones.
+      this.finalCompressor.connect(this.headphonesNode);
+    }
+
+    // Also send the final compressor to the streaming analyser on to the stream.
+    this.finalCompressor.connect(this.streamingAnalyser);
+  }
+
+  public createPlayer(
+    number: number,
+    outputId: string,
+    pfl: boolean,
+    url: string
+  ) {
+    const player = Player.create(this, number, outputId, pfl, url);
     this.players[number] = player;
     return player;
   }
@@ -490,6 +523,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       }
     }
     console.log("Routing main out?", routeMainOut);
+
+    this._connectFinalCompressor(routeMainOut);
   }
 
   async openMic(deviceId: string, channelMapping: ChannelMapping) {

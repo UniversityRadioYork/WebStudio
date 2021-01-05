@@ -370,6 +370,7 @@ export const load = (
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
   const customOutput =
     getState().settings.channelOutputIds[player] !== "internal";
+  const isPFL = getState().mixer.players[player].pfl;
 
   dispatch(
     mixerState.actions.loadItem({
@@ -438,6 +439,7 @@ export const load = (
     const playerInstance = await audioEngine.createPlayer(
       player,
       channelOutputId,
+      isPFL,
       objectUrl
     );
 
