@@ -25,6 +25,7 @@ const PlayerEmitter: StrictEmitter<
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   private volume = 0;
   private trim = 0;
+  private pfl = false;
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
@@ -140,6 +141,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this._applyVolume();
   }
 
+  setPFL(enabled: boolean) {
+    this.pfl = enabled;
+    this._applyPFL();
+  }
+
   setOutputDevice(sinkId: string) {
     if (!this.customOutput) {
       throw Error(
@@ -167,6 +173,10 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
         (this.wavesurfer as any).backend.gainNode.gain.value = linear;
       }
     }
+  }
+
+  _applyPFL() {
+    console.log("Do something");
   }
 
   public static create(

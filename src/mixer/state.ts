@@ -38,6 +38,7 @@ interface PlayerState {
   volume: number;
   gain: number;
   trim: number;
+  pfl: boolean;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -68,6 +69,7 @@ const BasePlayerState: PlayerState = {
   volume: 1,
   gain: 0,
   trim: defaultTrimDB,
+  pfl: false,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -166,6 +168,15 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].trim = action.payload.trim;
+    },
+    setPlayerPFL(
+      state,
+      action: PayloadAction<{
+        player: number;
+        enabled: boolean;
+      }>
+    ) {
+      state.players[action.payload.player].pfl = action.payload.enabled;
     },
     setLoadedItemIntro(
       state,
@@ -728,6 +739,14 @@ export const setChannelTrim = (player: number, val: number): AppThunk => async (
 ) => {
   dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
   audioEngine.players[player]?.setTrim(val);
+};
+
+export const setChannelPFL = (
+  player: number,
+  enabled: boolean
+): AppThunk => async (dispatch) => {
+  dispatch(mixerState.actions.setPlayerPFL({ player, enabled: enabled }));
+  audioEngine.players[player]?.setPFL(enabled);
 };
 
 export const openMicrophone = (
