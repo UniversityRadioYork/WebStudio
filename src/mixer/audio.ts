@@ -131,6 +131,10 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     return this.volume;
   }
 
+  getPFL() {
+    return this.pfl;
+  }
+
   setVolume(val: number) {
     this.volume = val;
     this._applyVolume();
@@ -143,7 +147,6 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   setPFL(enabled: boolean) {
     this.pfl = enabled;
-    this._applyPFL();
   }
 
   setOutputDevice(sinkId: string) {
@@ -173,10 +176,6 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
         (this.wavesurfer as any).backend.gainNode.gain.value = linear;
       }
     }
-  }
-
-  _applyPFL() {
-    console.log("Do something");
   }
 
   public static create(
@@ -337,6 +336,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   newsEndCountdownEl: HTMLAudioElement;
   newsEndCountdownNode: MediaElementAudioSourceNode;
 
+  // Headphones
+  headphonesNode: GainNode;
+
   constructor() {
     super();
 
@@ -412,6 +414,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       this.newsStartCountdownEl
     );
 
+    // Headphones (for PFL / Monitoring)
+    this.headphonesNode = this.audioContext.createGain();
+
     // Routing the above bits together
 
     // Mic Source gets routed to micCompressor or micMixGain.
@@ -426,7 +431,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       .connect(this.streamingAnalyser);
 
     // Send the final compressor (all players and guests) to the headphones.
-    this.finalCompressor.connect(this.audioContext.destination);
+    this.finalCompressor.connect(this.headphonesNode);
 
     // Also send the final compressor to the streaming analyser on to the stream.
     this.finalCompressor.connect(this.streamingAnalyser);
@@ -437,6 +442,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     // Feed the news in/out reminders to the headphones too.
     this.newsStartCountdownNode.connect(this.audioContext.destination);
     this.newsEndCountdownNode.connect(this.audioContext.destination);
+
+    // Send the headphones feed to the headphones.
+    this.headphonesNode.connect(this.audioContext.destination);
   }
 
   public createPlayer(number: number, outputId: string, url: string) {
@@ -460,6 +468,28 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       existingPlayer.cleanup();
     }
     this.players[number] = undefined;
+  }
+
+  public setPFL(number: number, enabled: boolean) {
+    var routeMainOut = true;
+    var player = this.getPlayer(number);
+
+    if (player) {
+      player.setPFL(enabled);
+    }
+
+    var i;
+    for (i = 0; i < this.players.length; i++) {
+      player = this.getPlayer(i);
+      if (player?.getPFL()) {
+        // PFL is enabled on this channel, so we're not routing the regular output to H/Ps.
+        routeMainOut = false;
+        console.log("Player", i, "is PFL'd.");
+      } else {
+        console.log("Player", i, "isn't PFL'd.");
+      }
+    }
+    console.log("Routing main out?", routeMainOut);
   }
 
   async openMic(deviceId: string, channelMapping: ChannelMapping) {

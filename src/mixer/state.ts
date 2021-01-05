@@ -745,8 +745,8 @@ export const setChannelPFL = (
   player: number,
   enabled: boolean
 ): AppThunk => async (dispatch) => {
-  dispatch(mixerState.actions.setPlayerPFL({ player, enabled: enabled }));
-  audioEngine.players[player]?.setPFL(enabled);
+  dispatch(mixerState.actions.setPlayerPFL({ player, enabled }));
+  audioEngine.setPFL(player, enabled);
 };
 
 export const openMicrophone = (
