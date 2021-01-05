@@ -584,10 +584,21 @@ export const play = (player: number): AppThunk => async (
   }
   audioEngine.players[player]?.play();
 
+  // If we're starting off audible, try and tracklist.
+  if (state.volume > 0) {
+    dispatch(attemptTracklist(player));
+  }
+};
+
+const attemptTracklist = (player: number): AppThunk => async (
+  dispatch,
+  getState
+) => {
+  const state = getState().mixer.players[player];
   if (state.loadedItem && "album" in state.loadedItem) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
-    if (getState().mixer.players[player].tracklistItemID === -1) {
+    if (state.tracklistItemID === -1) {
       dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
     } else {
       console.log("not tracklisting because already tracklisted");
@@ -702,9 +713,11 @@ export const setVolume = (
     }
   }
 
-  // If we're fading up the volume, disable the PFL.
   if (level !== "off") {
+    // If we're fading up the volume, disable the PFL.
     dispatch(setChannelPFL(player, false));
+    // Also catch a tracklist if we started with the channel off.
+    dispatch(attemptTracklist(player));
   }
 
   // If not fading, just do it.
