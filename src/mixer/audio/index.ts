@@ -1,25 +1,35 @@
 import EventEmitter from "eventemitter3";
 import StrictEmitter from "strict-event-emitter-types";
+import { Action, Dispatch, Middleware } from "@reduxjs/toolkit";
 
 import WaveSurfer from "wavesurfer.js";
 import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
-import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
-import NewsIntro from "../assets/audio/NewsIntro.wav";
 
 import StereoAnalyserNode from "stereo-analyser-node";
-import { RootState } from "../rootReducer";
-import { Middleware } from "@reduxjs/toolkit";
+import { RootState } from "../../rootReducer";
+import * as AudioActions from "./actions";
 
-type PlayerStateEnum = "playing" | "paused" | "stopped";
+import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
+import NewsIntro from "../assets/audio/NewsIntro.wav";
+import { MicErrorEnum as MicOpenErrorEnum, PlayerStateEnum } from "./types";
+
+// I'd really quite like to do this, and TypeScript understands it,
+// but Prettier doesn't! Argh!
+// export * as actions from "./actions";
+// export * as types from "./types";
 
 interface PlayerState {
-  loadedUrl: string;
+  /**
+   * This should only be null when the player hasn't had anything loaded into it.
+   * If you set this null *after* initialising a Player, bad things will happen!
+   */
+  loadedUrl: string | null;
   state: PlayerStateEnum;
   volume: number;
   trim: number;
   timeCurrent: number;
-  /*
+  /**
    * If we only had timeCurrent, the player would seek every time
    * its position changed. Instead, it only seeks when this flag is set.
    */
@@ -30,30 +40,17 @@ interface PlayerState {
   sinkID: string | null;
 }
 
-interface PlayerEvents {
-  loadComplete: (duration: number) => void;
-  timeChange: (time: number) => void;
-  play: () => void;
-  pause: () => void;
-  finish: () => void;
-}
-
-const PlayerEmitter: StrictEmitter<
-  EventEmitter,
-  PlayerEvents
-> = EventEmitter as any;
-
-class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
+class Player {
   private volume = 0;
   private trim = 0;
+  loadedUrl!: string;
   private constructor(
     private readonly engine: AudioEngine,
+    private readonly idx: number,
     private wavesurfer: WaveSurfer,
     private readonly waveform: HTMLElement,
     private readonly customOutput: boolean
-  ) {
-    super();
-  }
+  ) {}
 
   get isPlaying() {
     return this.wavesurfer.isPlaying();
@@ -181,6 +178,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   public onStateChange(state: PlayerState) {
+    if (state.loadedUrl !== this.loadedUrl) {
+      throw new Error(
+        "PlayerState.loadedUrl changed. This can't be done via onStateChanged, please recreate the player!"
+      );
+    }
     switch (state.state) {
       case "stopped":
         if (this.isPlaying) {
@@ -229,6 +231,12 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     player: number,
     state: PlayerState
   ) {
+    if (state.loadedUrl === null) {
+      throw new Error(
+        "Tried to create a player with PlayerState.loadedUrl null"
+      );
+    }
+
     // If we want to output to a custom audio device, we're gonna need to do things differently.
     const customOutput = state.sinkID !== null && state.sinkID !== "internal";
 
@@ -266,26 +274,42 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       ],
     });
 
-    const instance = new this(engine, wavesurfer, waveform, customOutput);
+    const instance = new this(
+      engine,
+      player,
+      wavesurfer,
+      waveform,
+      customOutput
+    );
+    instance.loadedUrl = state.loadedUrl;
 
     wavesurfer.on("ready", () => {
       console.log("ready");
-      instance.emit("loadComplete", wavesurfer.getDuration());
-    });
-    wavesurfer.on("play", () => {
-      instance.emit("play");
-    });
-    wavesurfer.on("pause", () => {
-      instance.emit("pause");
+      engine.dispatch(
+        AudioActions.itemLoadComplete({
+          player,
+          duration: wavesurfer.getDuration(),
+        })
+      );
     });
     wavesurfer.on("seek", () => {
-      instance.emit("timeChange", wavesurfer.getCurrentTime());
+      engine.dispatch(
+        AudioActions.timeChange({
+          player,
+          currentTime: wavesurfer.getCurrentTime(),
+        })
+      );
     });
     wavesurfer.on("finish", () => {
-      instance.emit("finish");
+      engine.dispatch(AudioActions.finished({ player }));
     });
     wavesurfer.on("audioprocess", () => {
-      instance.emit("timeChange", wavesurfer.getCurrentTime());
+      engine.dispatch(
+        AudioActions.timeChange({
+          player,
+          currentTime: wavesurfer.getCurrentTime(),
+        })
+      );
     });
 
     wavesurfer.load(state.loadedUrl);
@@ -352,18 +376,35 @@ function rootStateToAudioEngineState(state: RootState): AudioEngineState {
     micCalibrationGain: state.mixer.mic.baseGain,
     micVolume: state.mixer.mic.volume,
     micProcessingEnabled: state.mixer.mic.processing,
-    players: state.mixer.players.map<PlayerState>((p) => ({
-      loadedUrl: "", // TODO
-      state: p.state,
-      timeCurrent: p.timeCurrent,
-      timeCurrentSeek: false, // TODO
-      volume: p.volume,
-      trim: p.trim,
-      sinkID: "internal", // TODO
-      intro: undefined, // TODO
-      cue: undefined, // TODO
-      outro: undefined, // TODO
-    })),
+    players: state.mixer.players.map<PlayerState>((p, idx) => {
+      const result: PlayerState = {
+        loadedUrl: p.loadedItemUrl, // TODO
+        state: p.state,
+        timeCurrent: p.timeCurrent,
+        timeCurrentSeek: false, // TODO
+        volume: p.volume,
+        trim: p.trim,
+        sinkID: state.settings.channelOutputIds[idx],
+        intro: undefined,
+        cue: undefined,
+        outro: undefined,
+      };
+
+      const loadedItem = p.loadedItem;
+      if (loadedItem) {
+        if ("intro" in loadedItem) {
+          result.intro = loadedItem.intro;
+        }
+        if ("outro" in loadedItem) {
+          result.outro = loadedItem.outro;
+        }
+        if ("cue" in loadedItem) {
+          result.cue = loadedItem.cue;
+        }
+      }
+
+      return result;
+    }),
   };
 }
 
@@ -379,6 +420,11 @@ const EngineEmitter: StrictEmitter<
 export class AudioEngine extends ((EngineEmitter as unknown) as {
   new (): EventEmitter;
 }) {
+  // The ! is to avoid a chicken-and-egg problem - the middleware needs the engine, while the engine
+  // needs dispatch from the middleware.
+  // Don't mess with this.
+  dispatch!: Dispatch;
+
   // Multipurpose Bits
   public audioContext: AudioContext;
   analysisBuffer: Float32Array;
@@ -556,18 +602,48 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       this.micSource = null;
       this.micMedia = null;
     }
+    if (this.audioContext.state !== "running") {
+      console.log("Resuming AudioContext because Chrome bad");
+      await this.audioContext.resume();
+    }
     console.log("opening mic", deviceId, channelMapping);
     this.micDeviceId = deviceId;
     this.micChannelMapping = channelMapping;
-    this.micMedia = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        deviceId: { exact: deviceId },
-        echoCancellation: false,
-        autoGainControl: false,
-        noiseSuppression: false,
-        latency: 0.01,
-      },
-    });
+
+    if (!("mediaDevices" in navigator)) {
+      // mediaDevices is not there - we're probably not in a secure context
+      this.dispatch(AudioActions.micOpenError({ code: "NOT_SECURE_CONTEXT" }));
+      return;
+    }
+
+    try {
+      this.micMedia = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: { exact: deviceId },
+          echoCancellation: false,
+          autoGainControl: false,
+          noiseSuppression: false,
+          latency: 0.01,
+        },
+      });
+    } catch (e) {
+      let error: MicOpenErrorEnum;
+      if (e instanceof DOMException) {
+        switch (e.message) {
+          case "Permission denied":
+            error = "NO_PERMISSION";
+            break;
+          default:
+            error = "UNKNOWN";
+        }
+      } else {
+        error = "UNKNOWN";
+      }
+      this.dispatch(AudioActions.micOpenError({ code: error }));
+      return;
+    }
+
+    this.dispatch(AudioActions.micOpenError({ code: null }));
 
     this.micSource = this.audioContext.createMediaStreamSource(this.micMedia);
 
@@ -655,9 +731,25 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       this.setMicProcessingEnabled(state.micProcessingEnabled);
     }
 
-    state.players.forEach((playerState, idx) =>
-      this.players[idx]?.onStateChange(playerState)
-    );
+    state.players.forEach((playerState, idx) => {
+      const player = this.players[idx];
+      if (!player) {
+        console.warn(
+          `Got a state update for player ${idx} that doesn't exist!`
+        );
+        return;
+      }
+      // If we've loaded in a different item, recreate the player
+      if (player.loadedUrl != playerState.loadedUrl) {
+        this.destroyPlayerIfExists(idx);
+        if (playerState.loadedUrl !== null) {
+          this.createPlayer(idx, playerState);
+        }
+      } else {
+        // If it's the same thing, updating its state will suffice.
+        player.onStateChange(playerState);
+      }
+    });
   }
 
   getLevels(source: LevelsSource, stereo: boolean): [number, number] {
@@ -733,6 +825,7 @@ function createAudioEngineMiddleware(
   engine: AudioEngine
 ): Middleware<{}, RootState> {
   return (store) => {
+    engine.dispatch = store.dispatch;
     return (next) => (action) => {
       const nextState = next(action);
       const aeState = rootStateToAudioEngineState(nextState);
@@ -744,3 +837,4 @@ function createAudioEngineMiddleware(
 
 export const audioEngine = new AudioEngine();
 (window as any).AE = audioEngine;
+export const audioEngineMiddleware = createAudioEngineMiddleware(audioEngine);

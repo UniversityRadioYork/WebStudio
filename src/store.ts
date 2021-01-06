@@ -8,10 +8,10 @@ import {
 import rootReducer, { RootState } from "./rootReducer";
 import { ThunkAction } from "redux-thunk";
 import {
-  mixerMiddleware,
   mixerKeyboardShortcutsMiddleware,
   startNewsTimer,
 } from "./mixer/state";
+import { audioEngineMiddleware } from "./mixer/audio";
 import {
   persistStore,
   FLUSH,
@@ -47,7 +47,7 @@ export function getActionHistory() {
 const store = configureStore({
   reducer: rootReducer,
   middleware: [
-    mixerMiddleware,
+    audioEngineMiddleware,
     mixerKeyboardShortcutsMiddleware,
     actionHistoryMiddleware,
     ...getDefaultMiddleware({
