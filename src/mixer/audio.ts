@@ -8,6 +8,27 @@ import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 
 import StereoAnalyserNode from "stereo-analyser-node";
+import { RootState } from "../rootReducer";
+import { Middleware } from "@reduxjs/toolkit";
+
+type PlayerStateEnum = "playing" | "paused" | "stopped";
+
+interface PlayerState {
+  loadedUrl: string;
+  state: PlayerStateEnum;
+  volume: number;
+  trim: number;
+  timeCurrent: number;
+  /*
+   * If we only had timeCurrent, the player would seek every time
+   * its position changed. Instead, it only seeks when this flag is set.
+   */
+  timeCurrentSeek: boolean;
+  intro?: number;
+  cue?: number;
+  outro?: number;
+  sinkID: string | null;
+}
 
 interface PlayerEvents {
   loadComplete: (duration: number) => void;
@@ -42,15 +63,15 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     return this.wavesurfer.getCurrentTime();
   }
 
-  play() {
+  private play() {
     return this.wavesurfer.play();
   }
 
-  pause() {
+  private pause() {
     return this.wavesurfer.pause();
   }
 
-  stop() {
+  private stop() {
     return this.wavesurfer.stop();
   }
 
@@ -58,11 +79,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     this.wavesurfer.drawBuffer();
   }
 
-  setCurrentTime(secs: number) {
+  private setCurrentTime(secs: number) {
     this.wavesurfer.setCurrentTime(secs);
   }
 
-  setIntro(duration: number) {
+  private setIntro(duration: number) {
     if ("intro" in this.wavesurfer.regions.list) {
       this.wavesurfer.regions.list.intro.end = duration;
       this.redraw();
@@ -79,7 +100,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     });
   }
 
-  setCue(startTime: number) {
+  private setCue(startTime: number) {
     const duration = this.wavesurfer.getDuration();
     const cueWidth = 0.01 * duration; // Cue region marker to be 1% of track length
     if ("cue" in this.wavesurfer.regions.list) {
@@ -99,7 +120,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     });
   }
 
-  setOutro(startTime: number) {
+  private setOutro(startTime: number) {
     if ("outro" in this.wavesurfer.regions.list) {
       // If the outro is set to 0, we assume that's no outro.
       if (startTime === 0) {
@@ -130,30 +151,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     return this.volume;
   }
 
-  setVolume(val: number) {
-    this.volume = val;
-    this._applyVolume();
-  }
-
-  setTrim(val: number) {
-    this.trim = val;
-    this._applyVolume();
-  }
-
-  setOutputDevice(sinkId: string) {
-    if (!this.customOutput) {
-      throw Error(
-        "Can't set sinkId when player is not in customOutput mode. Please reinit player."
-      );
-    }
-    try {
-      (this.wavesurfer as any).setSinkId(sinkId);
-    } catch (e) {
-      throw Error("Tried to setSinkId " + sinkId + ", failed due to: " + e);
-    }
-  }
-
-  _applyVolume() {
+  private _applyVolume() {
     const level = this.volume + this.trim;
     const linear = Math.pow(10, level / 20);
     if (linear < 1) {
@@ -169,14 +167,70 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     }
   }
 
+  private setOutputDevice(sinkId: string) {
+    if (!this.customOutput) {
+      throw Error(
+        "Can't set sinkId when player is not in customOutput mode. Please reinit player."
+      );
+    }
+    try {
+      (this.wavesurfer as any).setSinkId(sinkId);
+    } catch (e) {
+      throw Error("Tried to setSinkId " + sinkId + ", failed due to: " + e);
+    }
+  }
+
+  public onStateChange(state: PlayerState) {
+    switch (state.state) {
+      case "stopped":
+        if (this.isPlaying) {
+          this.stop();
+        }
+        break;
+      case "paused":
+        if (this.isPlaying) {
+          this.pause();
+        }
+        break;
+      case "playing":
+        if (!this.isPlaying) {
+          this.play();
+        }
+        break;
+    }
+
+    this.volume = state.volume;
+    this.trim = state.trim;
+    this._applyVolume();
+
+    if (state.timeCurrentSeek) {
+      this.setCurrentTime(state.timeCurrent);
+    }
+
+    if (state.intro) {
+      this.setIntro(state.intro);
+    }
+
+    if (state.cue) {
+      this.setCue(state.cue);
+    }
+
+    if (state.outro) {
+      this.setOutro(state.outro);
+    }
+
+    if (state.sinkID) {
+      this.setOutputDevice(state.sinkID);
+    }
+  }
+
   public static create(
     engine: AudioEngine,
     player: number,
-    outputId: string,
-    url: string
+    state: PlayerState
   ) {
     // If we want to output to a custom audio device, we're gonna need to do things differently.
-    const customOutput = outputId !== "internal";
+    const customOutput = state.sinkID !== null && state.sinkID !== "internal";
 
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
@@ -234,11 +288,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       instance.emit("timeChange", wavesurfer.getCurrentTime());
     });
 
-    wavesurfer.load(url);
+    wavesurfer.load(state.loadedUrl);
 
     if (customOutput) {
       try {
-        instance.setOutputDevice(outputId);
+        instance.setOutputDevice(state.sinkID!);
       } catch (e) {
         console.error("Failed to set channel " + player + " output. " + e);
       }
@@ -282,6 +336,37 @@ export type ChannelMapping =
 // Must be a power of 2.
 const ANALYSIS_FFT_SIZE = 2048;
 
+interface AudioEngineState {
+  micDeviceId: string | null;
+  micChannelMapping: ChannelMapping;
+  micCalibrationGain: number;
+  micVolume: number;
+  micProcessingEnabled: boolean;
+  players: PlayerState[];
+}
+
+function rootStateToAudioEngineState(state: RootState): AudioEngineState {
+  return {
+    micDeviceId: state.mixer.mic.id,
+    micChannelMapping: "mono-both", // TODO
+    micCalibrationGain: state.mixer.mic.baseGain,
+    micVolume: state.mixer.mic.volume,
+    micProcessingEnabled: state.mixer.mic.processing,
+    players: state.mixer.players.map<PlayerState>((p) => ({
+      loadedUrl: "", // TODO
+      state: p.state,
+      timeCurrent: p.timeCurrent,
+      timeCurrentSeek: false, // TODO
+      volume: p.volume,
+      trim: p.trim,
+      sinkID: "internal", // TODO
+      intro: undefined, // TODO
+      cue: undefined, // TODO
+      outro: undefined, // TODO
+    })),
+  };
+}
+
 interface EngineEvents {
   micOpen: () => void;
 }
@@ -301,12 +386,22 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   // Mic Input
 
+  micDeviceId: string | null = null;
+  micChannelMapping: ChannelMapping | null = null;
+
   micMedia: MediaStream | null = null;
   micSource: MediaStreamAudioSourceNode | null = null;
+
+  micCalibrationGainValDb: number;
   micCalibrationGain: GainNode;
+
+  micProcessingEnabled: boolean = true;
   micPrecompAnalyser: typeof StereoAnalyserNode;
   micCompressor: DynamicsCompressorNode;
+
+  micMixGainValLinear: number;
   micMixGain: GainNode;
+
   micFinalAnalyser: typeof StereoAnalyserNode;
 
   // Player Inputs
@@ -342,6 +437,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     // Mic Input
 
     this.micCalibrationGain = this.audioContext.createGain();
+    this.micCalibrationGainValDb = 0;
 
     this.micPrecompAnalyser = new StereoAnalyserNode(this.audioContext);
     this.micPrecompAnalyser.fftSize = ANALYSIS_FFT_SIZE;
@@ -356,6 +452,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
     this.micMixGain = this.audioContext.createGain();
     this.micMixGain.gain.value = 1;
+    this.micMixGainValLinear = 1;
 
     this.micFinalAnalyser = new StereoAnalyserNode(this.audioContext);
     this.micFinalAnalyser.fftSize = ANALYSIS_FFT_SIZE;
@@ -429,8 +526,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.newsEndCountdownNode.connect(this.audioContext.destination);
   }
 
-  public createPlayer(number: number, outputId: string, url: string) {
-    const player = Player.create(this, number, outputId, url);
+  private createPlayer(number: number, state: PlayerState) {
+    const player = Player.create(this, number, state);
     this.players[number] = player;
     return player;
   }
@@ -443,7 +540,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
   }
 
   // Wavesurfer needs cleanup to remove the old audio mediaelements. Memory leak!
-  public destroyPlayerIfExists(number: number) {
+  private destroyPlayerIfExists(number: number) {
     const existingPlayer = this.players[number];
     if (existingPlayer !== undefined) {
       // already a player setup. Clean it.
@@ -452,14 +549,16 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.players[number] = undefined;
   }
 
-  async openMic(deviceId: string, channelMapping: ChannelMapping) {
+  private async openMic(deviceId: string, channelMapping: ChannelMapping) {
     if (this.micSource !== null && this.micMedia !== null) {
       this.micMedia.getAudioTracks()[0].stop();
       this.micSource.disconnect();
       this.micSource = null;
       this.micMedia = null;
     }
-    console.log("opening mic", deviceId);
+    console.log("opening mic", deviceId, channelMapping);
+    this.micDeviceId = deviceId;
+    this.micChannelMapping = channelMapping;
     this.micMedia = await navigator.mediaDevices.getUserMedia({
       audio: {
         deviceId: { exact: deviceId },
@@ -505,16 +604,18 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.emit("micOpen");
   }
 
-  setMicCalibrationGain(value: number) {
+  private setMicCalibrationGain(value: number) {
     this.micCalibrationGain.gain.value =
       value === 0 ? 1 : Math.pow(10, value / 20);
+    this.micCalibrationGainValDb = value;
   }
 
-  setMicVolume(value: number) {
+  private setMicVolume(value: number) {
     this.micMixGain.gain.value = value;
+    this.micMixGainValLinear = value;
   }
 
-  setMicProcessingEnabled(value: boolean) {
+  private setMicProcessingEnabled(value: boolean) {
     /*
      * Disconnect whatever was connected before.
      * It's either connected to micCompressor or micMixGain
@@ -530,6 +631,33 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     } else {
       this.micCalibrationGain.connect(this.micMixGain);
     }
+  }
+
+  onStateChange(state: AudioEngineState) {
+    if (state.micCalibrationGain !== this.micCalibrationGainValDb) {
+      this.setMicCalibrationGain(state.micCalibrationGain);
+    }
+
+    if (state.micVolume != this.micMixGainValLinear) {
+      this.setMicVolume(state.micVolume);
+    }
+
+    if (
+      state.micDeviceId != this.micDeviceId ||
+      state.micChannelMapping != this.micChannelMapping
+    ) {
+      if (state.micDeviceId !== null) {
+        this.openMic(state.micDeviceId, state.micChannelMapping);
+      }
+    }
+
+    if (state.micProcessingEnabled != this.micProcessingEnabled) {
+      this.setMicProcessingEnabled(state.micProcessingEnabled);
+    }
+
+    state.players.forEach((playerState, idx) =>
+      this.players[idx]?.onStateChange(playerState)
+    );
   }
 
   getLevels(source: LevelsSource, stereo: boolean): [number, number] {
@@ -599,6 +727,19 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.newsStartCountdownEl.currentTime = 0;
     await this.newsStartCountdownEl.play();
   }
+}
+
+function createAudioEngineMiddleware(
+  engine: AudioEngine
+): Middleware<{}, RootState> {
+  return (store) => {
+    return (next) => (action) => {
+      const nextState = next(action);
+      const aeState = rootStateToAudioEngineState(nextState);
+      engine.onStateChange(aeState);
+      return nextState;
+    };
+  };
 }
 
 export const audioEngine = new AudioEngine();
