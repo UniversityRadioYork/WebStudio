@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, Middleware, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { myradioApiRequest, broadcastApiRequest, ApiException } from "../api";
 import { WebRTCStreamer } from "./rtc_streamer";
@@ -7,6 +7,8 @@ import * as NavbarState from "../navbar/state";
 import { ConnectionStateEnum } from "./streamer";
 import { RecordingStreamer } from "./recording_streamer";
 import { audioEngine } from "../mixer/audio";
+import * as audioActions from "../mixer/audio/actions";
+import { RootState } from "../rootReducer";
 
 export let streamer: WebRTCStreamer | null = null;
 
@@ -24,6 +26,7 @@ interface BroadcastState {
   autoNewsMiddle: boolean;
   autoNewsEnd: boolean;
   liveForThePurposesOfTracklisting: boolean;
+  tracklistItemId: number;
   connectionState: ConnectionStateEnum;
   recordingState: ConnectionStateEnum;
 }
@@ -45,6 +48,7 @@ const broadcastState = createSlice({
     autoNewsMiddle: true,
     autoNewsEnd: true,
     liveForThePurposesOfTracklisting: false,
+    tracklistItemId: -1,
     connectionState: "NOT_CONNECTED",
     recordingState: "NOT_CONNECTED",
   } as BroadcastState,
@@ -345,4 +349,83 @@ export const stopRecording = (): AppThunk => async (dispatch) => {
   } else {
     console.warn("stopRecording called with no recorder!");
   }
+};
+
+const tracklistMiddleware: Middleware<{}, RootState> = (store) => {
+  let lastTracklistedTrackId = -1;
+  let lastAudioLogId = -1;
+  function considerTracklisting(playerIdx: number) {
+    /*
+        Checks before tracklisting something:
+         * we're actually playing
+         * it's a song
+         * it's faded up
+         * it's not the last thing we tracklisted
+      */
+    const playerState = store.getState().mixer.players[playerIdx];
+    const loadedItem = playerState.loadedItem;
+    if (playerState.state === "playing") {
+      if (loadedItem) {
+        if ("recordid" in loadedItem) {
+          if (playerState.volume > 0) {
+            if (loadedItem.trackid !== lastTracklistedTrackId) {
+              lastTracklistedTrackId = loadedItem.trackid;
+              sendTracklistStart(loadedItem.trackid)
+                .then((item) => {
+                  lastAudioLogId = item.audiologid;
+                  // Check if the item was stopped in the meantime, and immediately end the tracklist if so.
+                  const newPlayerState = store.getState().mixer.players[
+                    playerIdx
+                  ];
+                  if (newPlayerState.state === "stopped") {
+                    return myradioApiRequest(
+                      "/tracklistItem/" + lastAudioLogId + "/endtime",
+                      "PUT",
+                      {}
+                    ).then(() => {
+                      lastAudioLogId = -1;
+                      lastTracklistedTrackId = -1;
+                    });
+                  }
+                })
+                .catch(console.error);
+            }
+          }
+        }
+      }
+    }
+  }
+  function considerEndingTracklist(playerIdx: number) {
+    const playerState = store.getState().mixer.players[playerIdx];
+    const loadedItem = playerState.loadedItem;
+    if (loadedItem && "recordid" in loadedItem) {
+      if (lastTracklistedTrackId === loadedItem.trackid) {
+        if (lastAudioLogId > -1) {
+          // race condition handled above
+          myradioApiRequest(
+            "/tracklistItem/" + lastAudioLogId + "/endtime",
+            "PUT",
+            {}
+          )
+            .then(() => {
+              lastAudioLogId = -1;
+              lastTracklistedTrackId = -1;
+            })
+            .catch(console.error);
+        }
+      }
+    }
+  }
+  return (next) => (action) => {
+    if (
+      MixerState.play.match(action) ||
+      MixerState.setPlayerVolume.match(action)
+    ) {
+      considerTracklisting(action.payload.player);
+    }
+    if (MixerState.stop.match(action) || audioActions.finished.match(action)) {
+      considerEndingTracklist(action.payload.player);
+    }
+    return next(action);
+  };
 };

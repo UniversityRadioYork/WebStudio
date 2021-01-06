@@ -454,6 +454,10 @@ export const {
   togglePlayOnLoad,
   toggleRepeat,
   setMicProcessingEnabled,
+  play,
+  pause,
+  stop,
+  setPlayerVolume,
 } = mixerState.actions;
 
 export const load = (
