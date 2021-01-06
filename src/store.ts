@@ -21,6 +21,7 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
+import { tracklistMiddleware } from "./broadcast/state";
 
 const ACTION_HISTORY_MAX_SIZE = 20;
 
@@ -47,6 +48,7 @@ export function getActionHistory() {
 const store = configureStore({
   reducer: rootReducer,
   middleware: [
+    tracklistMiddleware,
     audioEngineMiddleware,
     mixerKeyboardShortcutsMiddleware,
     actionHistoryMiddleware,

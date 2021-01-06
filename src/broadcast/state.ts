@@ -351,7 +351,7 @@ export const stopRecording = (): AppThunk => async (dispatch) => {
   }
 };
 
-const tracklistMiddleware: Middleware<{}, RootState> = (store) => {
+export const tracklistMiddleware: Middleware<{}, RootState> = (store) => {
   let lastTracklistedTrackId = -1;
   let lastAudioLogId = -1;
   function considerTracklisting(playerIdx: number) {

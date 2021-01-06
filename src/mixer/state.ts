@@ -165,19 +165,6 @@ const mixerState = createSlice({
         setItemPlayed({ itemId: itemId(state.loadedItem), played: true })
       );
       */
-      // TODO: this needs to move to broadcastState as an extraAction
-      /*
-      dispatch(mixerState.actions.play({ player }));
-        if (state.loadedItem && "album" in state.loadedItem) {
-        //track
-        console.log("potentially tracklisting", state.loadedItem);
-        if (getState().mixer.players[player].tracklistItemID === -1) {
-          dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
-        } else {
-          console.log("not tracklisting because already tracklisted");
-        }
-      }
-      */
     },
     pause(state, action: PayloadAction<{ player: number }>) {
       const playerState = state.players[action.payload.player];
@@ -206,14 +193,6 @@ const mixerState = createSlice({
       }
 
       state.players[player].state = "stopped";
-
-      // TODO: this needs to move to BroadcastState as an extraAction
-      /*
-      const state = getState().mixer.players[player];
-      if (state.tracklistItemID !== -1) {
-        dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
-      }
-      */
 
       let cueTime = 0;
 

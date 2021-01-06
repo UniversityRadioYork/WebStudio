@@ -378,10 +378,10 @@ function rootStateToAudioEngineState(state: RootState): AudioEngineState {
     micProcessingEnabled: state.mixer.mic.processing,
     players: state.mixer.players.map<PlayerState>((p, idx) => {
       const result: PlayerState = {
-        loadedUrl: p.loadedItemUrl, // TODO
+        loadedUrl: p.loadedItemUrl,
         state: p.state,
         timeCurrent: p.timeCurrent,
-        timeCurrentSeek: false, // TODO
+        timeCurrentSeek: p.shouldSeekOnTimeCurrentChange,
         volume: p.volume,
         trim: p.trim,
         sinkID: state.settings.channelOutputIds[idx],
