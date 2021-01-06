@@ -8,10 +8,10 @@ import {
 import rootReducer, { RootState } from "./rootReducer";
 import { ThunkAction } from "redux-thunk";
 import {
-  mixerMiddleware,
   mixerKeyboardShortcutsMiddleware,
   startNewsTimer,
 } from "./mixer/state";
+import { audioEngineMiddleware } from "./mixer/audio";
 import {
   persistStore,
   FLUSH,
@@ -21,6 +21,7 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
+import { tracklistMiddleware } from "./broadcast/state";
 
 const ACTION_HISTORY_MAX_SIZE = 20;
 
@@ -47,7 +48,8 @@ export function getActionHistory() {
 const store = configureStore({
   reducer: rootReducer,
   middleware: [
-    mixerMiddleware,
+    tracklistMiddleware,
+    audioEngineMiddleware,
     mixerKeyboardShortcutsMiddleware,
     actionHistoryMiddleware,
     ...getDefaultMiddleware({
