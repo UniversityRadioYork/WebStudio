@@ -11,6 +11,7 @@ import {
   FaSpinner,
   FaExclamationTriangle,
   FaCog,
+  FaHeadphonesAlt,
 } from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
@@ -26,6 +27,7 @@ import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import { getShowplan, setItemPlayed } from "../showplanner/state";
 
 import * as OptionsMenuState from "../optionsMenu/state";
+import { setChannelPFL } from "../mixer/state";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -288,6 +290,14 @@ export function NavBarMain() {
         >
           <FaCog size={17} /> Options
         </li>
+        {settings.proMode && (
+          <li
+            className="btn btn-danger rounded-0 pt-2 pb-1 nav-item nav-link"
+            onClick={() => dispatch(setChannelPFL(-1, false))}
+          >
+            <FaHeadphonesAlt size={17} /> Clear PFL
+          </li>
+        )}
 
         <li className="nav-item px-2 nav-vu">
           <VUMeter

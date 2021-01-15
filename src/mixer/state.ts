@@ -781,8 +781,16 @@ export const setChannelPFL = (
     dispatch(setVolume(player, "off", false));
     dispatch(play(player));
   }
-  dispatch(mixerState.actions.setPlayerPFL({ player, enabled }));
-  audioEngine.setPFL(player, enabled);
+  // If the player number is -1, do all channels.
+  if (player === -1) {
+    for (let i = 0; i < audioEngine.players.length; i++) {
+      dispatch(mixerState.actions.setPlayerPFL({ player: i, enabled: false }));
+      audioEngine.setPFL(i, false);
+    }
+  } else {
+    dispatch(mixerState.actions.setPlayerPFL({ player, enabled }));
+    audioEngine.setPFL(player, enabled);
+  }
 };
 
 export const openMicrophone = (
