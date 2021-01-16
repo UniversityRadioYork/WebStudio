@@ -176,8 +176,6 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   _connectPFL() {
     if (this.pfl) {
-      console.log("Connecting PFL");
-
       // In this case, we just want to route the player output to the headphones direct.
       // Tap it from analyser to avoid the player volume.
       (this.wavesurfer as any).backend.analyser.connect(
@@ -189,7 +187,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
           this.engine.headphonesNode
         );
       } catch (e) {
-        console.log("Didn't disconnect.");
+        // This connection wasn't connected anyway, ignore.
       }
     }
   }
@@ -469,10 +467,11 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.headphonesNode.connect(this.pflAnalyser);
   }
 
-  _connectFinalCompressor(headphones: boolean) {
+  // Routes the final compressor (all players) to the stream, and optionally headphones.
+  _connectFinalCompressor(masterToHeadphones: boolean) {
     this.finalCompressor.disconnect();
 
-    if (headphones) {
+    if (masterToHeadphones) {
       // Send the final compressor (all players and guests) to the headphones.
       this.finalCompressor.connect(this.headphonesNode);
     }
