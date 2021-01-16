@@ -294,6 +294,7 @@ export type LevelsSource =
   | "mic-precomp"
   | "mic-final"
   | "master"
+  | "pfl"
   | "player-0"
   | "player-1"
   | "player-2";
@@ -356,6 +357,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   // Headphones
   headphonesNode: GainNode;
+  pflAnalyser: typeof StereoAnalyserNode;
 
   constructor() {
     super();
@@ -434,6 +436,9 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
     // Headphones (for PFL / Monitoring)
     this.headphonesNode = this.audioContext.createGain();
+    this.pflAnalyser = new StereoAnalyserNode(this.audioContext);
+    this.pflAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+    this.pflAnalyser.maxDecibels = 0;
 
     // Routing the above bits together
 
@@ -461,6 +466,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     const db = -12; // DB gain on headphones (-6 to match default trim)
     this.headphonesNode.gain.value = Math.pow(10, db / 20);
     this.headphonesNode.connect(this.audioContext.destination);
+    this.headphonesNode.connect(this.pflAnalyser);
   }
 
   _connectFinalCompressor(headphones: boolean) {
@@ -623,6 +629,12 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
         break;
       case "master":
         this.streamingAnalyser.getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
+      case "pfl":
+        this.pflAnalyser.getFloatTimeDomainData(
           this.analysisBuffer,
           this.analysisBuffer2
         );

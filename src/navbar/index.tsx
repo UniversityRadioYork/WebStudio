@@ -164,6 +164,13 @@ export function NavBarMain() {
   const dispatch = useDispatch();
   const broadcastState = useSelector((state: RootState) => state.broadcast);
   const settings = useSelector((state: RootState) => state.settings);
+  const playerState = useSelector((state: RootState) => state.mixer.players);
+
+  let playerPFLs: boolean[] = [];
+  playerState.forEach((player) => {
+    playerPFLs.push(player.pfl);
+  });
+  const isPFL = useSelector((state) => playerPFLs).some((x) => x === true);
 
   const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
 
@@ -290,20 +297,20 @@ export function NavBarMain() {
         >
           <FaCog size={17} /> Options
         </li>
-        {settings.proMode && (
+        {settings.proMode && isPFL && (
           <li
-            className="btn btn-danger rounded-0 pt-2 pb-1 nav-item nav-link"
+            className="btn btn-danger rounded-0 pt-2 pb-1 nav-item nav-link clear-pfl"
             onClick={() => dispatch(setChannelPFL(-1, false))}
           >
             <FaHeadphonesAlt size={17} /> Clear PFL
           </li>
         )}
 
-        <li className="nav-item px-2 nav-vu">
+        <li className={"nav-item px-2 nav-vu" + (isPFL ? " pfl-live" : "")}>
           <VUMeter
             width={235}
-            height={40}
-            source="master"
+            height={isPFL ? 32 : 40}
+            source={isPFL ? "pfl" : "master"}
             range={[-40, 3]}
             stereo={true}
           />
