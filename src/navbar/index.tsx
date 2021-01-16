@@ -309,7 +309,7 @@ export function NavBarMain() {
         <li className={"nav-item px-2 nav-vu" + (isPFL ? " pfl-live" : "")}>
           <VUMeter
             width={235}
-            height={isPFL ? 32 : 40}
+            height={isPFL ? 34 : 40}
             source={isPFL ? "pfl" : "master"}
             range={[-40, 3]}
             stereo={true}
