@@ -516,8 +516,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       player.setPFL(enabled);
     }
 
-    var i;
-    for (i = 0; i < this.players.length; i++) {
+    for (let i = 0; i < this.players.length; i++) {
       player = this.getPlayer(i);
       if (player?.getPFL()) {
         // PFL is enabled on this channel, so we're not routing the regular output to H/Ps.
