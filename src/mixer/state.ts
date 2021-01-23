@@ -595,7 +595,11 @@ const attemptTracklist = (player: number): AppThunk => async (
   getState
 ) => {
   const state = getState().mixer.players[player];
-  if (state.loadedItem && "album" in state.loadedItem) {
+  if (
+    state.loadedItem &&
+    "album" in state.loadedItem &&
+    audioEngine.players[player]?.isPlaying
+  ) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
     if (state.tracklistItemID === -1) {
