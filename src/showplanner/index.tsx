@@ -22,6 +22,7 @@ import {
   DropResult,
   ResponderProvided,
 } from "react-beautiful-dnd";
+import ReactTooltip from "react-tooltip";
 
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { RootState } from "../rootReducer";
@@ -441,6 +442,29 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <FaCircleNotch /> Mark Unplayed
         </MenuItem>
       </ContextMenu>
+      <ReactTooltip
+        id="track-hover-tooltip"
+        // Sadly dataTip has to be a string, so let's format this the best we can. Split by something unusual to see in the data.
+        getContent={(dataTip) => (
+          <>
+            {dataTip && (
+              <>
+                {dataTip
+                  .split("¬")
+                  .map((t) => t.split(/:(.+)/))
+                  .map((t) => (
+                    <>
+                      <strong>{t[0]}:</strong> {t[1]}
+                      <hr />
+                    </>
+                  ))}
+              </>
+            )}
+          </>
+        )}
+        delayShow={300}
+        place="bottom"
+      />
       <OptionsMenu />
       <WelcomeModal
         isOpen={showWelcomeModal}
