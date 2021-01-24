@@ -198,7 +198,6 @@ function TimingButtons({ id }: { id: number }) {
 }
 
 function LoadedTrackInfo({ id }: { id: number }) {
-  const dispatch = useDispatch();
   const loadedItem = useSelector(
     (state: RootState) => state.mixer.players[id].loadedItem
   );
