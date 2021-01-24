@@ -1,16 +1,29 @@
 import React, { useState } from "react";
-import { FaHeadphonesAlt, FaTachometerAlt } from "react-icons/fa";
+import {
+  FaHeadphonesAlt,
+  FaMicrophoneAlt,
+  FaTachometerAlt,
+} from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
-import { setChannelTrim, setChannelPFL } from "../mixer/state";
+import {
+  setChannelPFL,
+  setChannelTrim,
+  setPlayerMicAutoDuck,
+} from "../mixer/state";
 
-type ButtonIds = "trim" | "pfl";
+type ButtonIds = "trim" | "pfl" | "autoDuck";
 
 export default function ProModeButtons({ channel }: { channel: number }) {
   const [activeButton, setActiveButton] = useState<ButtonIds | null>(null);
   const trimVal = useSelector(
     (state: RootState) => state.mixer.players[channel]?.trim
   );
+
+  const micAutoDuck = useSelector(
+    (state: RootState) => state.mixer.players[channel]?.micAutoDuck
+  );
+
   const pflState = useSelector(
     (state: RootState) => state.mixer.players[channel]?.pfl
   );
@@ -41,6 +54,20 @@ export default function ProModeButtons({ channel }: { channel: number }) {
         >
           <FaHeadphonesAlt />
         </button>
+        <button
+          className={
+            "mr-1 btn " + (micAutoDuck ? "btn-info" : "btn-outline-dark")
+          }
+          title="Auto Duck on Mic Live"
+          onClick={() => {
+            dispatch(
+              setPlayerMicAutoDuck({ player: channel, enabled: !micAutoDuck })
+            );
+            setActiveButton("autoDuck");
+          }}
+        >
+          <FaMicrophoneAlt />
+        </button>
         {activeButton === "trim" && (
           <>
             <input
@@ -61,6 +88,11 @@ export default function ProModeButtons({ channel }: { channel: number }) {
         {activeButton === "pfl" && (
           <span className="mt-2 ml-2">
             Pre Fader Listen:&nbsp;<strong>{pflState ? "Yes" : "No"}</strong>
+          </span>
+        )}
+        {activeButton === "autoDuck" && (
+          <span className="mt-2 ml-2">
+            Duck on Mic:&nbsp;<strong>{micAutoDuck ? "Yes" : "No"}</strong>
           </span>
         )}
       </div>

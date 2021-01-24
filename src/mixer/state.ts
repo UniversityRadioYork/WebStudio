@@ -36,8 +36,10 @@ interface PlayerState {
   loadError: boolean;
   state: PlayerStateEnum;
   volume: number;
+  volumeEnum: VolumePresetEnum;
   gain: number;
   trim: number;
+  micAutoDuck: boolean;
   pfl: boolean;
   timeCurrent: number;
   timeRemaining: number;
@@ -67,7 +69,9 @@ const BasePlayerState: PlayerState = {
   loading: -1,
   state: "stopped",
   volume: 1,
+  volumeEnum: "full",
   gain: 0,
+  micAutoDuck: false,
   trim: defaultTrimDB,
   pfl: false,
   timeCurrent: 0,
@@ -87,6 +91,7 @@ const mixerState = createSlice({
     mic: {
       open: false,
       volume: 1,
+      volumeEnum: "full",
       gain: 1,
       baseGain: 0,
       openError: null,
@@ -147,9 +152,12 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         volume: number;
+        volumeEnum: VolumePresetEnum;
       }>
     ) {
       state.players[action.payload.player].volume = action.payload.volume;
+      state.players[action.payload.player].volumeEnum =
+        action.payload.volumeEnum;
     },
     setPlayerGain(
       state,
@@ -168,6 +176,15 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].trim = action.payload.trim;
+    },
+    setPlayerMicAutoDuck(
+      state,
+      action: PayloadAction<{
+        player: number;
+        enabled: boolean;
+      }>
+    ) {
+      state.players[action.payload.player].micAutoDuck = action.payload.enabled;
     },
     setPlayerPFL(
       state,
@@ -665,6 +682,8 @@ export const {
   toggleAutoAdvance,
   togglePlayOnLoad,
   toggleRepeat,
+  setTracklistItemID,
+  setPlayerMicAutoDuck,
 } = mixerState.actions;
 
 export const redrawWavesurfers = (): AppThunk => () => {
@@ -672,8 +691,6 @@ export const redrawWavesurfers = (): AppThunk => () => {
     item?.redraw();
   });
 };
-
-export const { setTracklistItemID } = mixerState.actions;
 
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
@@ -711,7 +728,13 @@ export const setVolume = (
     playerGainTweens[player].tweens.forEach((tween) => tween.pause());
     if (playerGainTweens[player].target === level) {
       delete playerGainTweens[player];
-      dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+      dispatch(
+        mixerState.actions.setPlayerVolume({
+          player,
+          volume: uiLevel,
+          volumeEnum: level,
+        })
+      );
       dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
       return;
     }
@@ -726,7 +749,13 @@ export const setVolume = (
 
   // If not fading, just do it.
   if (!fade) {
-    dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+    dispatch(
+      mixerState.actions.setPlayerVolume({
+        player,
+        volume: uiLevel,
+        volumeEnum: level,
+      })
+    );
     dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
     return;
   }
@@ -745,7 +774,13 @@ export const setVolume = (
   const volumeTween = new Between(currentLevel, uiLevel)
     .time(FADE_TIME_SECONDS * 1000)
     .on("update", (val: number) => {
-      dispatch(mixerState.actions.setPlayerVolume({ player, volume: val }));
+      dispatch(
+        mixerState.actions.setPlayerVolume({
+          player,
+          volume: val,
+          volumeEnum: level,
+        })
+      );
     });
   const gainTween = new Between(currentGain, volume)
     .time(FADE_TIME_SECONDS * 1000)
@@ -844,15 +879,34 @@ export const setMicProcessingEnabled = (enabled: boolean): AppThunk => async (
 };
 
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
-  dispatch
+  dispatch,
+  getState
 ) => {
+  const players = getState().mixer.players;
+
   // no tween fuckery here, just cut the level
   const levelVal = level === "full" ? 1 : 0;
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for
   // processing latency
+
   if (levelVal !== 0) {
     dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
+    for (let player = 0; player < players.length; player++) {
+      // If we have auto duck enabled on this channel player, tell it to fade down.
+      if (
+        players[player].micAutoDuck &&
+        players[player].volumeEnum === "full"
+      ) {
+        dispatch(setVolume(player, "bed"));
+      }
+    }
   } else {
+    for (let player = 0; player < players.length; player++) {
+      // If we have auto duck enabled on this channel player, tell it to fade back up.
+      if (players[player].micAutoDuck && players[player].volumeEnum === "bed") {
+        dispatch(setVolume(player, "full"));
+      }
+    }
     window.setTimeout(() => {
       dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
       // latency, plus a little buffer
