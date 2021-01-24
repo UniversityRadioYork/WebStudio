@@ -36,6 +36,7 @@ interface PlayerState {
   loadError: boolean;
   state: PlayerStateEnum;
   volume: number;
+  volumeEnum: VolumePresetEnum;
   gain: number;
   trim: number;
   micAutoDuck: boolean;
@@ -68,6 +69,7 @@ const BasePlayerState: PlayerState = {
   loading: -1,
   state: "stopped",
   volume: 1,
+  volumeEnum: "full",
   gain: 0,
   micAutoDuck: false,
   trim: defaultTrimDB,
@@ -89,6 +91,7 @@ const mixerState = createSlice({
     mic: {
       open: false,
       volume: 1,
+      volumeEnum: "full",
       gain: 1,
       baseGain: 0,
       openError: null,
@@ -149,9 +152,12 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         volume: number;
+        volumeEnum: VolumePresetEnum;
       }>
     ) {
       state.players[action.payload.player].volume = action.payload.volume;
+      state.players[action.payload.player].volumeEnum =
+        action.payload.volumeEnum;
     },
     setPlayerGain(
       state,
@@ -722,7 +728,13 @@ export const setVolume = (
     playerGainTweens[player].tweens.forEach((tween) => tween.pause());
     if (playerGainTweens[player].target === level) {
       delete playerGainTweens[player];
-      dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+      dispatch(
+        mixerState.actions.setPlayerVolume({
+          player,
+          volume: uiLevel,
+          volumeEnum: level,
+        })
+      );
       dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
       return;
     }
@@ -737,7 +749,13 @@ export const setVolume = (
 
   // If not fading, just do it.
   if (!fade) {
-    dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+    dispatch(
+      mixerState.actions.setPlayerVolume({
+        player,
+        volume: uiLevel,
+        volumeEnum: level,
+      })
+    );
     dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
     return;
   }
@@ -756,7 +774,13 @@ export const setVolume = (
   const volumeTween = new Between(currentLevel, uiLevel)
     .time(FADE_TIME_SECONDS * 1000)
     .on("update", (val: number) => {
-      dispatch(mixerState.actions.setPlayerVolume({ player, volume: val }));
+      dispatch(
+        mixerState.actions.setPlayerVolume({
+          player,
+          volume: val,
+          volumeEnum: level,
+        })
+      );
     });
   const gainTween = new Between(currentGain, volume)
     .time(FADE_TIME_SECONDS * 1000)
@@ -869,14 +893,17 @@ export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
     dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
     for (let player = 0; player < players.length; player++) {
       // If we have auto duck enabled on this channel player, tell it to fade down.
-      if (players[player].micAutoDuck) {
+      if (
+        players[player].micAutoDuck &&
+        players[player].volumeEnum === "full"
+      ) {
         dispatch(setVolume(player, "bed"));
       }
     }
   } else {
     for (let player = 0; player < players.length; player++) {
       // If we have auto duck enabled on this channel player, tell it to fade back up.
-      if (players[player].micAutoDuck) {
+      if (players[player].micAutoDuck && players[player].volumeEnum === "bed") {
         dispatch(setVolume(player, "full"));
       }
     }
