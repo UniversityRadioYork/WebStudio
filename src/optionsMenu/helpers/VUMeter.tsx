@@ -27,6 +27,8 @@ export function VUMeter(props: VUMeterProps) {
 
   const isMic = props.source.substr(0, 3) === "mic";
 
+  const FPS = 30; // Limit the FPS so that lower spec machines have a better time juggling CPU.
+
   useEffect(() => {
     const animate = () => {
       if (!isMic || isMicOpen) {
@@ -38,7 +40,9 @@ export function VUMeter(props: VUMeterProps) {
         if (props.stereo) {
           setPeakR(result[1]);
         }
-        rafRef.current = requestAnimationFrame(animate);
+        setTimeout((current = rafRef.current, a = animate) => {
+          current = requestAnimationFrame(a);
+        }, 1000 / FPS);
       }
     };
     if (!isMic || isMicOpen) {
