@@ -78,7 +78,7 @@ const SessionHandler: React.FC = function() {
     );
   }
 
-  return <p></p>;
+  return <></>;
 };
 
 export default SessionHandler;
