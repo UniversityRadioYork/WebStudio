@@ -25,6 +25,7 @@ const PlayerEmitter: StrictEmitter<
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   private volume = 0;
   private trim = 0;
+  private pfl = false;
   private constructor(
     private readonly engine: AudioEngine,
     private wavesurfer: WaveSurfer,
@@ -130,6 +131,10 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     return this.volume;
   }
 
+  getPFL() {
+    return this.pfl;
+  }
+
   setVolume(val: number) {
     this.volume = val;
     this._applyVolume();
@@ -138,6 +143,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   setTrim(val: number) {
     this.trim = val;
     this._applyVolume();
+  }
+
+  setPFL(enabled: boolean) {
+    this.pfl = enabled;
+    this._connectPFL();
   }
 
   setOutputDevice(sinkId: string) {
@@ -156,15 +166,28 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   _applyVolume() {
     const level = this.volume + this.trim;
     const linear = Math.pow(10, level / 20);
-    if (linear < 1) {
-      this.wavesurfer.setVolume(linear);
-      if (!this.customOutput) {
-        (this.wavesurfer as any).backend.gainNode.gain.value = 1;
-      }
+
+    // Actually adjust the wavesurfer gain node gain instead, so we can tap off analyser for PFL.
+    this.wavesurfer.setVolume(1);
+    if (!this.customOutput) {
+      (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+    }
+  }
+
+  _connectPFL() {
+    if (this.pfl) {
+      // In this case, we just want to route the player output to the headphones direct.
+      // Tap it from analyser to avoid the player volume.
+      (this.wavesurfer as any).backend.analyser.connect(
+        this.engine.headphonesNode
+      );
     } else {
-      this.wavesurfer.setVolume(1);
-      if (!this.customOutput) {
-        (this.wavesurfer as any).backend.gainNode.gain.value = linear;
+      try {
+        (this.wavesurfer as any).backend.analyser.disconnect(
+          this.engine.headphonesNode
+        );
+      } catch (e) {
+        // This connection wasn't connected anyway, ignore.
       }
     }
   }
@@ -173,6 +196,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     engine: AudioEngine,
     player: number,
     outputId: string,
+    pfl: boolean,
     url: string
   ) {
     // If we want to output to a custom audio device, we're gonna need to do things differently.
@@ -248,6 +272,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       (wavesurfer as any).backend.gainNode.connect(
         engine.playerAnalysers[player]
       );
+      instance.setPFL(pfl);
     }
 
     return instance;
@@ -267,6 +292,7 @@ export type LevelsSource =
   | "mic-precomp"
   | "mic-final"
   | "master"
+  | "pfl"
   | "player-0"
   | "player-1"
   | "player-2";
@@ -326,6 +352,10 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   newsEndCountdownEl: HTMLAudioElement;
   newsEndCountdownNode: MediaElementAudioSourceNode;
+
+  // Headphones
+  headphonesNode: GainNode;
+  pflAnalyser: typeof StereoAnalyserNode;
 
   constructor() {
     super();
@@ -402,6 +432,12 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       this.newsStartCountdownEl
     );
 
+    // Headphones (for PFL / Monitoring)
+    this.headphonesNode = this.audioContext.createGain();
+    this.pflAnalyser = new StereoAnalyserNode(this.audioContext);
+    this.pflAnalyser.fftSize = ANALYSIS_FFT_SIZE;
+    this.pflAnalyser.maxDecibels = 0;
+
     // Routing the above bits together
 
     // Mic Source gets routed to micCompressor or micMixGain.
@@ -415,11 +451,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       .connect(this.micFinalAnalyser)
       .connect(this.streamingAnalyser);
 
-    // Send the final compressor (all players and guests) to the headphones.
-    this.finalCompressor.connect(this.audioContext.destination);
-
-    // Also send the final compressor to the streaming analyser on to the stream.
-    this.finalCompressor.connect(this.streamingAnalyser);
+    this._connectFinalCompressor(true);
 
     // Send the streaming analyser to the Streamer!
     this.streamingAnalyser.connect(this.streamingDestination);
@@ -427,10 +459,34 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     // Feed the news in/out reminders to the headphones too.
     this.newsStartCountdownNode.connect(this.audioContext.destination);
     this.newsEndCountdownNode.connect(this.audioContext.destination);
+
+    // Send the headphones feed to the headphones.
+    const db = -12; // DB gain on headphones (-6 to match default trim)
+    this.headphonesNode.gain.value = Math.pow(10, db / 20);
+    this.headphonesNode.connect(this.audioContext.destination);
+    this.headphonesNode.connect(this.pflAnalyser);
   }
 
-  public createPlayer(number: number, outputId: string, url: string) {
-    const player = Player.create(this, number, outputId, url);
+  // Routes the final compressor (all players) to the stream, and optionally headphones.
+  _connectFinalCompressor(masterToHeadphones: boolean) {
+    this.finalCompressor.disconnect();
+
+    if (masterToHeadphones) {
+      // Send the final compressor (all players and guests) to the headphones.
+      this.finalCompressor.connect(this.headphonesNode);
+    }
+
+    // Also send the final compressor to the streaming analyser on to the stream.
+    this.finalCompressor.connect(this.streamingAnalyser);
+  }
+
+  public createPlayer(
+    number: number,
+    outputId: string,
+    pfl: boolean,
+    url: string
+  ) {
+    const player = Player.create(this, number, outputId, pfl, url);
     this.players[number] = player;
     return player;
   }
@@ -450,6 +506,29 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
       existingPlayer.cleanup();
     }
     this.players[number] = undefined;
+  }
+
+  public setPFL(number: number, enabled: boolean) {
+    var routeMainOut = true;
+    var player = this.getPlayer(number);
+
+    if (player) {
+      player.setPFL(enabled);
+    }
+
+    for (let i = 0; i < this.players.length; i++) {
+      player = this.getPlayer(i);
+      if (player?.getPFL()) {
+        // PFL is enabled on this channel, so we're not routing the regular output to H/Ps.
+        routeMainOut = false;
+        console.log("Player", i, "is PFL'd.");
+      } else {
+        console.log("Player", i, "isn't PFL'd.");
+      }
+    }
+    console.log("Routing main out?", routeMainOut);
+
+    this._connectFinalCompressor(routeMainOut);
   }
 
   async openMic(deviceId: string, channelMapping: ChannelMapping) {
@@ -548,6 +627,12 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
         break;
       case "master":
         this.streamingAnalyser.getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
+      case "pfl":
+        this.pflAnalyser.getFloatTimeDomainData(
           this.analysisBuffer,
           this.analysisBuffer2
         );
