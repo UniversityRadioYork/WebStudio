@@ -1,18 +1,31 @@
 import React, { useState } from "react";
-import { FaMicrophoneAlt, FaTachometerAlt } from "react-icons/fa";
+import {
+  FaHeadphonesAlt,
+  FaMicrophoneAlt,
+  FaTachometerAlt,
+} from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
-import { setChannelTrim, setPlayerMicAutoDuck } from "../mixer/state";
+import {
+  setChannelPFL,
+  setChannelTrim,
+  setPlayerMicAutoDuck,
+} from "../mixer/state";
 
-type ButtonIds = "trim" | "autoDuck";
+type ButtonIds = "trim" | "pfl" | "autoDuck";
 
 export default function ProModeButtons({ channel }: { channel: number }) {
   const [activeButton, setActiveButton] = useState<ButtonIds | null>(null);
   const trimVal = useSelector(
     (state: RootState) => state.mixer.players[channel]?.trim
   );
+
   const micAutoDuck = useSelector(
     (state: RootState) => state.mixer.players[channel]?.micAutoDuck
+  );
+
+  const pflState = useSelector(
+    (state: RootState) => state.mixer.players[channel]?.pfl
   );
   const dispatch = useDispatch();
 
@@ -28,6 +41,18 @@ export default function ProModeButtons({ channel }: { channel: number }) {
           }
         >
           <FaTachometerAlt />
+        </button>
+        <button
+          className={
+            "mr-1 btn " + (pflState ? "btn-danger" : "btn-outline-dark")
+          }
+          title="PFL Channel"
+          onClick={() => {
+            dispatch(setChannelPFL(channel, !pflState));
+            setActiveButton("pfl");
+          }}
+        >
+          <FaHeadphonesAlt />
         </button>
         <button
           className={
@@ -59,6 +84,11 @@ export default function ProModeButtons({ channel }: { channel: number }) {
             />
             <strong className="mt-2">{trimVal} dB</strong>
           </>
+        )}
+        {activeButton === "pfl" && (
+          <span className="mt-2 ml-2">
+            Pre Fader Listen:&nbsp;<strong>{pflState ? "Yes" : "No"}</strong>
+          </span>
         )}
         {activeButton === "autoDuck" && (
           <span className="mt-2 ml-2">

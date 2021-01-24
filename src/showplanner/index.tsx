@@ -197,6 +197,9 @@ function LibraryColumn() {
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
   const proMode = useSelector((state: RootState) => state.settings.proMode);
+  const stereo = useSelector(
+    (state: RootState) => state.settings.channelVUsStereo
+  );
   const dispatch = useDispatch();
 
   return (
@@ -251,8 +254,8 @@ function MicControl() {
                 height={40}
                 source="mic-final"
                 range={[-40, 3]}
-                greenRange={[-10, -5]}
-                stereo={proMode}
+                greenRange={[-16, -6]}
+                stereo={proMode && stereo}
               />
             </div>
             <div className={`mixer-buttons ${!state.open && "disabled"}`}>

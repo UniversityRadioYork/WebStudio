@@ -12,7 +12,7 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import { audioEngine } from "./audio";
+import { audioEngine, ChannelMapping } from "./audio";
 import * as TheNews from "./the_news";
 
 const playerGainTweens: Array<{
@@ -39,6 +39,7 @@ interface PlayerState {
   gain: number;
   trim: number;
   micAutoDuck: boolean;
+  pfl: boolean;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -54,6 +55,7 @@ interface MicState {
   volume: 1 | 0;
   baseGain: number;
   id: string | null;
+  processing: boolean;
 }
 
 interface MixerState {
@@ -69,6 +71,7 @@ const BasePlayerState: PlayerState = {
   gain: 0,
   micAutoDuck: false,
   trim: defaultTrimDB,
+  pfl: false,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -90,6 +93,7 @@ const mixerState = createSlice({
       baseGain: 0,
       openError: null,
       id: "None",
+      processing: true,
     },
   } as MixerState,
   reducers: {
@@ -98,6 +102,7 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         item: PlanItem | Track | AuxItem | null;
+        customOutput: boolean;
         resetTrim?: boolean;
       }>
     ) {
@@ -113,7 +118,10 @@ const mixerState = createSlice({
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
-      if (action.payload.resetTrim) {
+
+      if (action.payload.customOutput) {
+        state.players[action.payload.player].trim = 0;
+      } else if (action.payload.resetTrim) {
         state.players[action.payload.player].trim = defaultTrimDB;
       }
     },
@@ -172,6 +180,15 @@ const mixerState = createSlice({
     ) {
       state.players[action.payload.player].micAutoDuck = action.payload.enabled;
     },
+    setPlayerPFL(
+      state,
+      action: PayloadAction<{
+        player: number;
+        enabled: boolean;
+      }>
+    ) {
+      state.players[action.payload.player].pfl = action.payload.enabled;
+    },
     setLoadedItemIntro(
       state,
       action: PayloadAction<{
@@ -220,6 +237,9 @@ const mixerState = createSlice({
     },
     setMicBaseGain(state, action: PayloadAction<number>) {
       state.mic.baseGain = action.payload;
+    },
+    setMicProcessingEnabled(state, action: PayloadAction<boolean>) {
+      state.mic.processing = action.payload;
     },
     setTimeCurrent(
       state,
@@ -359,9 +379,17 @@ export const load = (
   loadAbortControllers[player] = new AbortController();
 
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
+  const customOutput =
+    getState().settings.channelOutputIds[player] !== "internal";
+  const isPFL = getState().mixer.players[player].pfl;
 
   dispatch(
-    mixerState.actions.loadItem({ player, item, resetTrim: shouldResetTrim })
+    mixerState.actions.loadItem({
+      player,
+      item,
+      customOutput,
+      resetTrim: shouldResetTrim,
+    })
   );
 
   let url;
@@ -417,7 +445,14 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const playerInstance = await audioEngine.createPlayer(player, objectUrl);
+    const channelOutputId = getState().settings.channelOutputIds[player];
+
+    const playerInstance = await audioEngine.createPlayer(
+      player,
+      channelOutputId,
+      isPFL,
+      objectUrl
+    );
 
     // Clear the last one out from memory
     if (typeof lastObjectURLs[player] === "string") {
@@ -560,10 +595,25 @@ export const play = (player: number): AppThunk => async (
   }
   audioEngine.players[player]?.play();
 
-  if (state.loadedItem && "album" in state.loadedItem) {
+  // If we're starting off audible, try and tracklist.
+  if (state.volume > 0) {
+    dispatch(attemptTracklist(player));
+  }
+};
+
+const attemptTracklist = (player: number): AppThunk => async (
+  dispatch,
+  getState
+) => {
+  const state = getState().mixer.players[player];
+  if (
+    state.loadedItem &&
+    "album" in state.loadedItem &&
+    audioEngine.players[player]?.isPlaying
+  ) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
-    if (getState().mixer.players[player].tracklistItemID === -1) {
+    if (state.tracklistItemID === -1) {
       dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
     } else {
       console.log("not tracklisting because already tracklisted");
@@ -639,7 +689,8 @@ export const redrawWavesurfers = (): AppThunk => () => {
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
   player: number,
-  level: VolumePresetEnum
+  level: VolumePresetEnum,
+  fade: boolean = true
 ): AppThunk => (dispatch, getState) => {
   let volume: number;
   let uiLevel: number;
@@ -675,6 +726,20 @@ export const setVolume = (
       dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
       return;
     }
+  }
+
+  if (level !== "off") {
+    // If we're fading up the volume, disable the PFL.
+    dispatch(setChannelPFL(player, false));
+    // Also catch a tracklist if we started with the channel off.
+    dispatch(attemptTracklist(player));
+  }
+
+  // If not fading, just do it.
+  if (!fade) {
+    dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+    dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
+    return;
   }
 
   const state = getState().mixer.players[player];
@@ -719,15 +784,34 @@ export const setChannelTrim = (player: number, val: number): AppThunk => async (
   audioEngine.players[player]?.setTrim(val);
 };
 
-export const openMicrophone = (micID: string): AppThunk => async (
-  dispatch,
-  getState
-) => {
-  // TODO: not sure why this is here, and I have a hunch it may break shit, so disabling
-  // File a ticket if it breaks stuff. -Marks
-  // if (getState().mixer.mic.open) {
-  // 	micSource?.disconnect();
-  // }
+export const setChannelPFL = (
+  player: number,
+  enabled: boolean
+): AppThunk => async (dispatch) => {
+  if (
+    enabled &&
+    typeof audioEngine.players[player] !== "undefined" &&
+    !audioEngine.players[player]?.isPlaying
+  ) {
+    dispatch(setVolume(player, "off", false));
+    dispatch(play(player));
+  }
+  // If the player number is -1, do all channels.
+  if (player === -1) {
+    for (let i = 0; i < audioEngine.players.length; i++) {
+      dispatch(mixerState.actions.setPlayerPFL({ player: i, enabled: false }));
+      audioEngine.setPFL(i, false);
+    }
+  } else {
+    dispatch(mixerState.actions.setPlayerPFL({ player, enabled }));
+    audioEngine.setPFL(player, enabled);
+  }
+};
+
+export const openMicrophone = (
+  micID: string,
+  micMapping: ChannelMapping
+): AppThunk => async (dispatch, getState) => {
   if (audioEngine.audioContext.state !== "running") {
     console.log("Resuming AudioContext because Chrome bad");
     await audioEngine.audioContext.resume();
@@ -739,7 +823,7 @@ export const openMicrophone = (micID: string): AppThunk => async (
     return;
   }
   try {
-    await audioEngine.openMic(micID);
+    await audioEngine.openMic(micID, micMapping);
   } catch (e) {
     if (e instanceof DOMException) {
       switch (e.message) {
@@ -758,8 +842,16 @@ export const openMicrophone = (micID: string): AppThunk => async (
   const state = getState().mixer.mic;
   audioEngine.setMicCalibrationGain(state.baseGain);
   audioEngine.setMicVolume(state.volume);
-
+  // Now to patch in the Mic to the Compressor, or Bypass it.
+  audioEngine.setMicProcessingEnabled(state.processing);
   dispatch(mixerState.actions.micOpen(micID));
+};
+
+export const setMicProcessingEnabled = (enabled: boolean): AppThunk => async (
+  dispatch
+) => {
+  dispatch(mixerState.actions.setMicProcessingEnabled(enabled));
+  audioEngine.setMicProcessingEnabled(enabled);
 };
 
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
