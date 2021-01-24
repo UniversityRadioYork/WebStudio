@@ -38,6 +38,7 @@ interface PlayerState {
   volume: number;
   gain: number;
   trim: number;
+  pfl: boolean;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -68,6 +69,7 @@ const BasePlayerState: PlayerState = {
   volume: 1,
   gain: 0,
   trim: defaultTrimDB,
+  pfl: false,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -166,6 +168,15 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].trim = action.payload.trim;
+    },
+    setPlayerPFL(
+      state,
+      action: PayloadAction<{
+        player: number;
+        enabled: boolean;
+      }>
+    ) {
+      state.players[action.payload.player].pfl = action.payload.enabled;
     },
     setLoadedItemIntro(
       state,
@@ -359,6 +370,7 @@ export const load = (
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
   const customOutput =
     getState().settings.channelOutputIds[player] !== "internal";
+  const isPFL = getState().mixer.players[player].pfl;
 
   dispatch(
     mixerState.actions.loadItem({
@@ -427,6 +439,7 @@ export const load = (
     const playerInstance = await audioEngine.createPlayer(
       player,
       channelOutputId,
+      isPFL,
       objectUrl
     );
 
@@ -571,10 +584,25 @@ export const play = (player: number): AppThunk => async (
   }
   audioEngine.players[player]?.play();
 
-  if (state.loadedItem && "album" in state.loadedItem) {
+  // If we're starting off audible, try and tracklist.
+  if (state.volume > 0) {
+    dispatch(attemptTracklist(player));
+  }
+};
+
+const attemptTracklist = (player: number): AppThunk => async (
+  dispatch,
+  getState
+) => {
+  const state = getState().mixer.players[player];
+  if (
+    state.loadedItem &&
+    "album" in state.loadedItem &&
+    audioEngine.players[player]?.isPlaying
+  ) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
-    if (getState().mixer.players[player].tracklistItemID === -1) {
+    if (state.tracklistItemID === -1) {
       dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
     } else {
       console.log("not tracklisting because already tracklisted");
@@ -650,7 +678,8 @@ export const { setTracklistItemID } = mixerState.actions;
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
   player: number,
-  level: VolumePresetEnum
+  level: VolumePresetEnum,
+  fade: boolean = true
 ): AppThunk => (dispatch, getState) => {
   let volume: number;
   let uiLevel: number;
@@ -686,6 +715,20 @@ export const setVolume = (
       dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
       return;
     }
+  }
+
+  if (level !== "off") {
+    // If we're fading up the volume, disable the PFL.
+    dispatch(setChannelPFL(player, false));
+    // Also catch a tracklist if we started with the channel off.
+    dispatch(attemptTracklist(player));
+  }
+
+  // If not fading, just do it.
+  if (!fade) {
+    dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+    dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
+    return;
   }
 
   const state = getState().mixer.players[player];
@@ -728,6 +771,30 @@ export const setChannelTrim = (player: number, val: number): AppThunk => async (
 ) => {
   dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
   audioEngine.players[player]?.setTrim(val);
+};
+
+export const setChannelPFL = (
+  player: number,
+  enabled: boolean
+): AppThunk => async (dispatch) => {
+  if (
+    enabled &&
+    typeof audioEngine.players[player] !== "undefined" &&
+    !audioEngine.players[player]?.isPlaying
+  ) {
+    dispatch(setVolume(player, "off", false));
+    dispatch(play(player));
+  }
+  // If the player number is -1, do all channels.
+  if (player === -1) {
+    for (let i = 0; i < audioEngine.players.length; i++) {
+      dispatch(mixerState.actions.setPlayerPFL({ player: i, enabled: false }));
+      audioEngine.setPFL(i, false);
+    }
+  } else {
+    dispatch(mixerState.actions.setPlayerPFL({ player, enabled }));
+    audioEngine.setPFL(player, enabled);
+  }
 };
 
 export const openMicrophone = (

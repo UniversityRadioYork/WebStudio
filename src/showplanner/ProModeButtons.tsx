@@ -1,15 +1,18 @@
 import React, { useState } from "react";
-import { FaTachometerAlt } from "react-icons/fa";
+import { FaHeadphonesAlt, FaTachometerAlt } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
-import { setChannelTrim } from "../mixer/state";
+import { setChannelTrim, setChannelPFL } from "../mixer/state";
 
-type ButtonIds = "trim";
+type ButtonIds = "trim" | "pfl";
 
 export default function ProModeButtons({ channel }: { channel: number }) {
   const [activeButton, setActiveButton] = useState<ButtonIds | null>(null);
   const trimVal = useSelector(
     (state: RootState) => state.mixer.players[channel]?.trim
+  );
+  const pflState = useSelector(
+    (state: RootState) => state.mixer.players[channel]?.pfl
   );
   const dispatch = useDispatch();
 
@@ -17,17 +20,27 @@ export default function ProModeButtons({ channel }: { channel: number }) {
     <>
       <div className="row m-0 p-1 card-header channelButtons proMode hover-menu">
         <span className="hover-label">Pro Mode&trade;</span>
-        {(activeButton === null || activeButton === "trim") && (
-          <button
-            className="btn btn-warning"
-            title="Trim"
-            onClick={() =>
-              setActiveButton(activeButton === "trim" ? null : "trim")
-            }
-          >
-            <FaTachometerAlt />
-          </button>
-        )}
+        <button
+          className="mr-1 btn btn-warning"
+          title="Trim"
+          onClick={() =>
+            setActiveButton(activeButton === "trim" ? null : "trim")
+          }
+        >
+          <FaTachometerAlt />
+        </button>
+        <button
+          className={
+            "mr-1 btn " + (pflState ? "btn-danger" : "btn-outline-dark")
+          }
+          title="PFL Channel"
+          onClick={() => {
+            dispatch(setChannelPFL(channel, !pflState));
+            setActiveButton("pfl");
+          }}
+        >
+          <FaHeadphonesAlt />
+        </button>
         {activeButton === "trim" && (
           <>
             <input
@@ -42,8 +55,13 @@ export default function ProModeButtons({ channel }: { channel: number }) {
                 e.target.blur(); // Stop dragging from disabling the keyboard triggers.
               }}
             />
-            <b>{trimVal} dB</b>
+            <strong className="mt-2">{trimVal} dB</strong>
           </>
+        )}
+        {activeButton === "pfl" && (
+          <span className="mt-2 ml-2">
+            Pre Fader Listen:&nbsp;<strong>{pflState ? "Yes" : "No"}</strong>
+          </span>
         )}
       </div>
     </>
