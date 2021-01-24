@@ -28,8 +28,11 @@ type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
-const defaultTrimDB = -6; // The default trim applied to channel players.
+export const DEFAULT_TRIM_DB = -6; // The default trim applied to channel players.
 
+export const OFF_LEVEL_DB = -40;
+export const BED_LEVEL_DB = -13;
+export const FULL_LEVEL_DB = 0;
 interface PlayerState {
   loadedItem: PlanItem | Track | AuxItem | null;
   loading: number;
@@ -72,7 +75,7 @@ const BasePlayerState: PlayerState = {
   volumeEnum: "full",
   gain: 0,
   micAutoDuck: false,
-  trim: defaultTrimDB,
+  trim: DEFAULT_TRIM_DB,
   pfl: false,
   timeCurrent: 0,
   timeRemaining: 0,
@@ -125,7 +128,7 @@ const mixerState = createSlice({
       if (action.payload.customOutput) {
         state.players[action.payload.player].trim = 0;
       } else if (action.payload.resetTrim) {
-        state.players[action.payload.player].trim = defaultTrimDB;
+        state.players[action.payload.player].trim = DEFAULT_TRIM_DB;
       }
     },
     itemLoadPercentage(
@@ -702,15 +705,15 @@ export const setVolume = (
   let uiLevel: number;
   switch (level) {
     case "off":
-      volume = -40;
+      volume = OFF_LEVEL_DB; // The sweet spot for getting below the silence rounding in audio.ts -> _applyVolume()
       uiLevel = 0;
       break;
     case "bed":
-      volume = -13;
+      volume = BED_LEVEL_DB;
       uiLevel = 0.5;
       break;
     case "full":
-      volume = 0;
+      volume = FULL_LEVEL_DB;
       uiLevel = 1;
       break;
   }
