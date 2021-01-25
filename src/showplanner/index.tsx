@@ -1,5 +1,6 @@
 import React, { useState, useReducer, useEffect } from "react";
-import { ContextMenu, MenuItem } from "react-contextmenu";
+import { Menu, Item as CtxMenuItem } from "react-contexify";
+import "react-contexify/dist/ReactContexify.min.css";
 import { useBeforeunload } from "react-beforeunload";
 import {
   FaBookOpen,
@@ -9,11 +10,13 @@ import {
   FaTrash,
   FaUpload,
   FaPlayCircle,
+  FaCircleNotch,
+  FaPencilAlt,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import Stopwatch from "react-stopwatch";
 
-import { TimeslotItem } from "../api";
+import { MYRADIO_NON_API_BASE, TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
 
 import {
@@ -23,7 +26,7 @@ import {
   ResponderProvided,
 } from "react-beautiful-dnd";
 
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { RootState } from "../rootReducer";
 import {
   PlanItem,
@@ -32,7 +35,9 @@ import {
   moveItem,
   addItem,
   removeItem,
+  setItemPlayed,
   getPlaylists,
+  PlanItemBase,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
@@ -211,6 +216,9 @@ function LibraryColumn() {
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
   const proMode = useSelector((state: RootState) => state.settings.proMode);
+  const stereo = useSelector(
+    (state: RootState) => state.settings.channelVUsStereo
+  );
   const dispatch = useDispatch();
 
   return (
@@ -265,8 +273,8 @@ function MicControl() {
                 height={40}
                 source="mic-final"
                 range={[-40, 3]}
-                greenRange={[-10, -5]}
-                stereo={proMode}
+                greenRange={[-16, -6]}
+                stereo={proMode && stereo}
               />
             </div>
             <div className={`mixer-buttons ${!state.open && "disabled"}`}>
@@ -303,8 +311,9 @@ function incrReducer(state: number, action: any) {
 }
 
 const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
-  const { plan: showplan, planLoadError, planLoading } = useSelector(
-    (state: RootState) => state.showplan
+  const isShowplan = useSelector(
+    (state: RootState) => state.showplan.plan !== null,
+    shallowEqual
   );
 
   // Tell Modals that #root is the main page content, for accessability reasons.
@@ -350,10 +359,11 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is a track from the CML
       // TODO: this is ugly, should be in redux
       const data = CML_CACHE[result.draggableId];
-      const newItem: TimeslotItem = {
+      const newItem: TimeslotItem & PlanItemBase = {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
+        played: false,
         cue: 0,
         ...data,
       };
@@ -363,11 +373,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       // this is an aux resource
       // TODO: this is ugly, should be in redux
       const data = AUX_CACHE[result.draggableId];
-      const newItem: TimeslotItem = {
+      const newItem: TimeslotItem & PlanItemBase = {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
         clean: true,
+        played: false,
         cue: 0,
         ...data,
       } as any;
@@ -382,49 +393,43 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         ])
       );
     }
-  }
-
-  async function onCtxRemoveClick(e: any, data: { id: string }) {
-    dispatch(removeItem(timeslotId, data.id));
+    // If we're dragging from a pseudo-column, and a search field is focused, defocus it.
+    if (result.source.droppableId[0] === "$") {
+      const focus = document.activeElement;
+      if (focus && focus instanceof HTMLInputElement && focus.type === "text") {
+        focus.blur();
+      }
+    }
   }
 
   // Add support for reloading the show plan from the iFrames.
   // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
   useEffect(() => {
-    window.addEventListener(
-      "message",
-      (event) => {
-        if (!event.origin.includes("ury.org.uk")) {
-          return;
-        }
-        if (event.data === "reload_showplan") {
-          session.currentTimeslot !== null &&
-            dispatch(getShowplan(session.currentTimeslot.timeslot_id));
-        }
-      },
-      false
-    );
-  });
-  if (showplan === null) {
-    return (
-      <LoadingDialogue
-        title="Getting Show Plan..."
-        subtitle={planLoading ? "Hang on a sec..." : ""}
-        error={planLoadError}
-        percent={100}
-      />
-    );
+    function reloadListener(event: MessageEvent) {
+      if (!event.origin.includes("ury.org.uk")) {
+        return;
+      }
+      if (event.data === "reload_showplan") {
+        session.currentTimeslot !== null &&
+          dispatch(getShowplan(session.currentTimeslot.timeslot_id));
+      }
+    }
+
+    window.addEventListener("message", reloadListener);
+    return () => {
+      window.removeEventListener("message", reloadListener);
+    };
+  }, [dispatch, session.currentTimeslot]);
+
+  if (!isShowplan) {
+    return <GettingShowPlanScreen />;
   }
   return (
     <div className="sp-container m-0">
       <CombinedNavAlertBar />
       <div className="sp">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="channels">
-            <Channel id={0} data={showplan} />
-            <Channel id={1} data={showplan} />
-            <Channel id={2} data={showplan} />
-          </div>
+          <ChannelStrips />
           <span
             id="sidebar-toggle"
             className="btn btn-outline-dark btn-sm mb-0"
@@ -440,11 +445,39 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           </div>
         </DragDropContext>
       </div>
-      <ContextMenu id={TS_ITEM_MENU_ID}>
-        <MenuItem onClick={onCtxRemoveClick}>
+      <Menu id={TS_ITEM_MENU_ID}>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(removeItem(timeslotId, (args.props as any).id))
+          }
+        >
           <FaTrash /> Remove
-        </MenuItem>
-      </ContextMenu>
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(
+              setItemPlayed({ itemId: (args.props as any).id, played: false })
+            )
+          }
+        >
+          <FaCircleNotch /> Mark Unplayed
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) => {
+            if ("trackid" in (args.props as any)) {
+              window.open(
+                MYRADIO_NON_API_BASE +
+                  "/Library/editTrack?trackid=" +
+                  (args.props as any).trackid
+              );
+            } else {
+              alert("Sorry, editing tracks is only possible right now.");
+            }
+          }}
+        >
+          <FaPencilAlt /> Edit Item
+        </CtxMenuItem>
+      </Menu>
       <OptionsMenu />
       <WelcomeModal
         isOpen={showWelcomeModal}
@@ -455,6 +488,20 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     </div>
   );
 };
+
+function GettingShowPlanScreen() {
+  const { planLoading, planLoadError } = useSelector(
+    (state: RootState) => state.showplan
+  );
+  return (
+    <LoadingDialogue
+      title="Getting Show Plan..."
+      subtitle={planLoading ? "Hang on a sec..." : ""}
+      error={planLoadError}
+      percent={100}
+    />
+  );
+}
 
 export function LoadingDialogue({
   title,
@@ -499,6 +546,18 @@ export function LoadingDialogue({
           </>
         )}
       </span>
+    </div>
+  );
+}
+
+function ChannelStrips() {
+  const showplan = useSelector((state: RootState) => state.showplan.plan!);
+
+  return (
+    <div className="channels">
+      <Channel id={0} data={showplan} />
+      <Channel id={1} data={showplan} />
+      <Channel id={2} data={showplan} />
     </div>
   );
 }
