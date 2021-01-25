@@ -197,6 +197,46 @@ function TimingButtons({ id }: { id: number }) {
   );
 }
 
+function LoadedTrackInfo({ id }: { id: number }) {
+  const dispatch = useDispatch();
+  const loadedItem = useSelector(
+    (state: RootState) => state.mixer.players[id].loadedItem
+  );
+  const loading = useSelector(
+    (state: RootState) => state.mixer.players[id].loading
+  );
+  const loadError = useSelector(
+    (state: RootState) => state.mixer.players[id].loadError
+  );
+
+  return (
+    <span className="card-title">
+      <strong>
+        {loadedItem !== null && loading === -1
+          ? loadedItem.title
+          : loading !== -1
+          ? `LOADING`
+          : loadError
+          ? "LOAD FAILED"
+          : "No Media Selected"}
+      </strong>
+      <small
+        className={
+          "border rounded border-danger text-danger p-1 m-1" +
+          (loadedItem !== null &&
+          loading === -1 &&
+          "clean" in loadedItem &&
+          !loadedItem.clean
+            ? ""
+            : " d-none")
+        }
+      >
+        Explicit
+      </small>
+    </span>
+  );
+}
+
 export function Player({ id }: { id: number }) {
   // Define time remaining (secs) when the play icon should flash.
   const SECS_REMAINING_WARNING = 20;
@@ -214,13 +254,8 @@ export function Player({ id }: { id: number }) {
         omit(b, "timeCurrent", "timeRemaining")
       )
   );
-  const proMode = useSelector((state: RootState) => state.settings.proMode);
-  const vuEnabled = useSelector(
-    (state: RootState) => state.settings.channelVUs
-  );
-  const vuStereo = useSelector(
-    (state: RootState) => state.settings.channelVUsStereo
-  );
+  const settings = useSelector((state: RootState) => state.settings);
+  const customOutput = settings.channelOutputIds[id] !== "internal";
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {
@@ -305,32 +340,9 @@ export function Player({ id }: { id: number }) {
             &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
-        {proMode && <ProModeButtons channel={id} />}
+        {settings.proMode && !customOutput && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
-          <span className="card-title">
-            <strong>
-              {playerState.loadedItem !== null && playerState.loading === -1
-                ? playerState.loadedItem.title
-                : playerState.loading !== -1
-                ? `LOADING`
-                : playerState.loadError
-                ? "LOAD FAILED"
-                : "No Media Selected"}
-            </strong>
-            <small
-              className={
-                "border rounded border-danger text-danger p-1 m-1" +
-                (playerState.loadedItem !== null &&
-                playerState.loading === -1 &&
-                "clean" in playerState.loadedItem &&
-                !playerState.loadedItem.clean
-                  ? ""
-                  : " d-none")
-              }
-            >
-              Explicit
-            </small>
-          </span>
+          <LoadedTrackInfo id={id} />
           <br />
           <span className="text-muted">
             {playerState.loadedItem !== null && playerState.loading === -1
@@ -432,15 +444,21 @@ export function Player({ id }: { id: number }) {
         </button>
       </div>
 
-      {proMode && vuEnabled && (
+      {settings.proMode && settings.channelVUs && (
         <div className="channel-vu">
-          <VUMeter
-            width={300}
-            height={40}
-            source={VUsource(id)}
-            range={[-40, 0]}
-            stereo={vuStereo}
-          />
+          {customOutput ? (
+            <span className="text-muted">
+              Custom audio output disables VU meters.
+            </span>
+          ) : (
+            <VUMeter
+              width={300}
+              height={40}
+              source={VUsource(id)}
+              range={[-40, 0]}
+              stereo={settings.channelVUsStereo}
+            />
+          )}
         </div>
       )}
     </div>

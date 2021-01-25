@@ -25,7 +25,7 @@ import {
   ResponderProvided,
 } from "react-beautiful-dnd";
 
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { RootState } from "../rootReducer";
 import {
   PlanItem,
@@ -199,6 +199,9 @@ function LibraryColumn() {
 function MicControl() {
   const state = useSelector((state: RootState) => state.mixer.mic);
   const proMode = useSelector((state: RootState) => state.settings.proMode);
+  const stereo = useSelector(
+    (state: RootState) => state.settings.channelVUsStereo
+  );
   const dispatch = useDispatch();
 
   return (
@@ -253,8 +256,8 @@ function MicControl() {
                 height={40}
                 source="mic-final"
                 range={[-40, 3]}
-                greenRange={[-10, -5]}
-                stereo={proMode}
+                greenRange={[-16, -6]}
+                stereo={proMode && stereo}
               />
             </div>
             <div className={`mixer-buttons ${!state.open && "disabled"}`}>
@@ -291,8 +294,9 @@ function incrReducer(state: number, action: any) {
 }
 
 const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
-  const { plan: showplan, planLoadError, planLoading } = useSelector(
-    (state: RootState) => state.showplan
+  const isShowplan = useSelector(
+    (state: RootState) => state.showplan.plan !== null,
+    shallowEqual
   );
 
   // Tell Modals that #root is the main page content, for accessability reasons.
@@ -400,26 +404,15 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     };
   }, [dispatch, session.currentTimeslot]);
 
-  if (showplan === null) {
-    return (
-      <LoadingDialogue
-        title="Getting Show Plan..."
-        subtitle={planLoading ? "Hang on a sec..." : ""}
-        error={planLoadError}
-        percent={100}
-      />
-    );
+  if (!isShowplan) {
+    return <GettingShowPlanScreen />;
   }
   return (
     <div className="sp-container m-0">
       <CombinedNavAlertBar />
       <div className="sp">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="channels">
-            <Channel id={0} data={showplan} />
-            <Channel id={1} data={showplan} />
-            <Channel id={2} data={showplan} />
-          </div>
+          <ChannelStrips />
           <span
             id="sidebar-toggle"
             className="btn btn-outline-dark btn-sm mb-0"
@@ -479,6 +472,20 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   );
 };
 
+function GettingShowPlanScreen() {
+  const { planLoading, planLoadError } = useSelector(
+    (state: RootState) => state.showplan
+  );
+  return (
+    <LoadingDialogue
+      title="Getting Show Plan..."
+      subtitle={planLoading ? "Hang on a sec..." : ""}
+      error={planLoadError}
+      percent={100}
+    />
+  );
+}
+
 export function LoadingDialogue({
   title,
   subtitle,
@@ -522,6 +529,18 @@ export function LoadingDialogue({
           </>
         )}
       </span>
+    </div>
+  );
+}
+
+function ChannelStrips() {
+  const showplan = useSelector((state: RootState) => state.showplan.plan!);
+
+  return (
+    <div className="channels">
+      <Channel id={0} data={showplan} />
+      <Channel id={1} data={showplan} />
+      <Channel id={2} data={showplan} />
     </div>
   );
 }

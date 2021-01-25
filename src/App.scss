@@ -72,8 +72,12 @@ $number-of-channels: 3;
     padding: 10px;
 
     .channel-vu {
+      height: 40px;
       text-align: center;
       background: black;
+      span {
+        font-size: 0.7em;
+      }
       canvas {
         max-width: 100%;
         border-left: 1px solid gray;
