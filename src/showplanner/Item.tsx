@@ -52,6 +52,7 @@ export const Item = memo(function Item({
         event: e,
         props: {
           id,
+          trackid: x.trackid,
           title: x.title,
           artist: x.artist,
         },

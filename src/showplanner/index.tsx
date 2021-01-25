@@ -10,11 +10,12 @@ import {
   FaTrash,
   FaUpload,
   FaCircleNotch,
+  FaPencilAlt,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import Stopwatch from "react-stopwatch";
 
-import { TimeslotItem } from "../api";
+import { MYRADIO_NON_API_BASE, TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
 
 import {
@@ -450,6 +451,21 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           }
         >
           <FaCircleNotch /> Mark Unplayed
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) => {
+            if ("trackid" in (args.props as any)) {
+              window.open(
+                MYRADIO_NON_API_BASE +
+                  "/Library/editTrack?trackid=" +
+                  (args.props as any).trackid
+              );
+            } else {
+              alert("Sorry, editing tracks is only possible right now.");
+            }
+          }}
+        >
+          <FaPencilAlt /> Edit Item
         </CtxMenuItem>
       </Menu>
       <OptionsMenu />
