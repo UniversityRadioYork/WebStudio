@@ -9,6 +9,7 @@ import {
   FaMicrophone,
   FaTrash,
   FaUpload,
+  FaPlayCircle,
   FaCircleNotch,
   FaPencilAlt,
 } from "react-icons/fa";
@@ -55,6 +56,7 @@ import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
+import { AutoPlayoutModal } from "./AutoPlayoutModal";
 import { LibraryUploadModal } from "./LibraryUploadModal";
 import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
@@ -93,6 +95,7 @@ function LibraryColumn() {
     (state: RootState) => state.showplan
   );
 
+  const [autoPlayoutModal, setAutoPlayoutModal] = useState(false);
   const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
   const [showImporterModal, setShowImporterModal] = useState(false);
 
@@ -102,6 +105,10 @@ function LibraryColumn() {
 
   return (
     <>
+      <AutoPlayoutModal
+        isOpen={autoPlayoutModal}
+        close={() => setAutoPlayoutModal(false)}
+      />
       <LibraryUploadModal
         isOpen={showLibraryUploadModal}
         close={() => setShowLibraryModal(false)}
@@ -116,6 +123,16 @@ function LibraryColumn() {
             <FaBookOpen className="mx-2" size={28} />
             Libraries
           </h2>
+          <Button
+            className="mr-1"
+            color="primary"
+            title="Auto Playout"
+            size="sm"
+            outline={true}
+            onClick={() => setAutoPlayoutModal(true)}
+          >
+            <FaPlayCircle /> Auto Playout
+          </Button>
           <Button
             className="mr-1"
             color="primary"
