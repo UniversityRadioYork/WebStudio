@@ -614,7 +614,7 @@ const attemptTracklist = (player: number): AppThunk => async (
   const state = getState().mixer.players[player];
   if (
     state.loadedItem &&
-    "album" in state.loadedItem &&
+    state.loadedItem.type === "central" &&
     audioEngine.players[player]?.isPlaying
   ) {
     //track
