@@ -549,7 +549,7 @@ export const play = (player: number): AppThunk => async (
   }
   audioEngine.players[player]?.play();
 
-  if (state.loadedItem && "album" in state.loadedItem) {
+  if (state.loadedItem && state.loadedItem.type === "central") {
     //track
     console.log("potentially tracklisting", state.loadedItem);
     if (getState().mixer.players[player].tracklistItemID === -1) {

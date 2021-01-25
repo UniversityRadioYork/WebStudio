@@ -50,7 +50,7 @@ export function itemId(
 export function isTrack(
   item: PlanItem | Track | AuxItem
 ): item is (api.TimeslotItemBase & api.TimeslotItemCentral) | Track {
-  return "trackid" in item;
+  return item.type === "central";
 }
 
 export function isAux(item: PlanItem | Track | AuxItem): item is AuxItem {
@@ -424,7 +424,11 @@ export const addItem = (
     const idForServer =
       newItemData.type === "central"
         ? `${newItemData.album.recordid}-${newItemData.trackid}`
-        : `ManagedDB-${newItemData.managedid}`;
+        : "managedid" in newItemData
+        ? `ManagedDB-${newItemData.managedid}`
+        : null;
+
+    if (!idForServer) return; // Something went very wrong
 
     dispatch(showplan.actions.insertGhost(ghost));
     ops.push({
