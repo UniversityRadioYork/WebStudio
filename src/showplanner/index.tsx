@@ -1,5 +1,6 @@
 import React, { useState, useReducer, useEffect } from "react";
-import { ContextMenu, MenuItem } from "react-contextmenu";
+import { Menu, Item as CtxMenuItem } from "react-contexify";
+import "react-contexify/dist/ReactContexify.min.css";
 import { useBeforeunload } from "react-beforeunload";
 import {
   FaBookOpen,
@@ -8,12 +9,14 @@ import {
   FaMicrophone,
   FaTrash,
   FaUpload,
+  FaPlayCircle,
   FaCircleNotch,
+  FaPencilAlt,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import Stopwatch from "react-stopwatch";
 
-import { TimeslotItem } from "../api";
+import { MYRADIO_NON_API_BASE, TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
 
 import {
@@ -54,6 +57,7 @@ import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
+import { AutoPlayoutModal } from "./AutoPlayoutModal";
 import { LibraryUploadModal } from "./LibraryUploadModal";
 import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
@@ -92,6 +96,7 @@ function LibraryColumn() {
     (state: RootState) => state.showplan
   );
 
+  const [autoPlayoutModal, setAutoPlayoutModal] = useState(false);
   const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
   const [showImporterModal, setShowImporterModal] = useState(false);
 
@@ -101,6 +106,10 @@ function LibraryColumn() {
 
   return (
     <>
+      <AutoPlayoutModal
+        isOpen={autoPlayoutModal}
+        close={() => setAutoPlayoutModal(false)}
+      />
       <LibraryUploadModal
         isOpen={showLibraryUploadModal}
         close={() => setShowLibraryModal(false)}
@@ -115,6 +124,16 @@ function LibraryColumn() {
             <FaBookOpen className="mx-2" size={28} />
             Libraries
           </h2>
+          <Button
+            className="mr-1"
+            color="primary"
+            title="Auto Playout"
+            size="sm"
+            outline={true}
+            onClick={() => setAutoPlayoutModal(true)}
+          >
+            <FaPlayCircle /> Auto Playout
+          </Button>
           <Button
             className="mr-1"
             color="primary"
@@ -384,13 +403,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }
   }
 
-  async function onCtxRemoveClick(e: any, data: { id: string }) {
-    dispatch(removeItem(timeslotId, data.id));
-  }
-  async function onCtxUnPlayedClick(e: any, data: { id: string }) {
-    dispatch(setItemPlayed({ itemId: data.id, played: false }));
-  }
-
   // Add support for reloading the show plan from the iFrames.
   // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
   useEffect(() => {
@@ -434,14 +446,39 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           </div>
         </DragDropContext>
       </div>
-      <ContextMenu id={TS_ITEM_MENU_ID}>
-        <MenuItem onClick={onCtxRemoveClick}>
+      <Menu id={TS_ITEM_MENU_ID}>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(removeItem(timeslotId, (args.props as any).id))
+          }
+        >
           <FaTrash /> Remove
-        </MenuItem>
-        <MenuItem onClick={onCtxUnPlayedClick}>
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(
+              setItemPlayed({ itemId: (args.props as any).id, played: false })
+            )
+          }
+        >
           <FaCircleNotch /> Mark Unplayed
-        </MenuItem>
-      </ContextMenu>
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) => {
+            if ("trackid" in (args.props as any)) {
+              window.open(
+                MYRADIO_NON_API_BASE +
+                  "/Library/editTrack?trackid=" +
+                  (args.props as any).trackid
+              );
+            } else {
+              alert("Sorry, editing tracks is only possible right now.");
+            }
+          }}
+        >
+          <FaPencilAlt /> Edit Item
+        </CtxMenuItem>
+      </Menu>
       <ReactTooltip
         id="track-hover-tooltip"
         // Sadly dataTip has to be a string, so let's format this the best we can. Split by something unusual to see in the data.

@@ -47,6 +47,16 @@ export function itemId(
   throw new Error("Can't get id of unknown item.");
 }
 
+export function isTrack(
+  item: PlanItem | Track | AuxItem
+): item is (api.TimeslotItemBase & api.TimeslotItemCentral) | Track {
+  return item.type === "central";
+}
+
+export function isAux(item: PlanItem | Track | AuxItem): item is AuxItem {
+  return "auxid" in item;
+}
+
 interface ShowplanState {
   planLoading: boolean;
   planLoadError: string | null;
@@ -418,7 +428,11 @@ export const addItem = (
     const idForServer =
       newItemData.type === "central"
         ? `${newItemData.album.recordid}-${newItemData.trackid}`
-        : `ManagedDB-${newItemData.managedid}`;
+        : "managedid" in newItemData
+        ? `ManagedDB-${newItemData.managedid}`
+        : null;
+
+    if (!idForServer) return; // Something went very wrong
 
     dispatch(showplan.actions.insertGhost(ghost));
     ops.push({
