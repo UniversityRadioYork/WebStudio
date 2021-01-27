@@ -14,7 +14,6 @@ import {
   FaPencilAlt,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
-import Stopwatch from "react-stopwatch";
 
 import { MYRADIO_NON_API_BASE, TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
@@ -63,6 +62,7 @@ import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
 import Modal from "react-modal";
 import { Button } from "reactstrap";
+import { secToHHMM, useInterval } from "../lib/utils";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -222,6 +222,17 @@ function MicControl() {
   );
   const dispatch = useDispatch();
 
+  const [count, setCount] = useState(0);
+
+  // Make a persistant mic counter.
+  useInterval(() => {
+    if (state.volume === 0 || !state.open) {
+      setCount(0);
+    } else {
+      setCount(count + 1);
+    }
+  }, 1000);
+
   return (
     <div className="mic-control">
       <div data-toggle="collapse" data-target="#mic-control-menu">
@@ -252,18 +263,7 @@ function MicControl() {
         {state.open && proMode && (
           <span id="micLiveTimer" className={state.volume > 0 ? "live" : ""}>
             <span className="text">Mic Live: </span>
-            {state.volume > 0 ? (
-              <Stopwatch
-                seconds={0}
-                minutes={0}
-                hours={0}
-                render={({ formatted }) => {
-                  return <span>{formatted}</span>;
-                }}
-              />
-            ) : (
-              "00:00:00"
-            )}
+            {state.volume > 0 ? secToHHMM(count) : "00:00:00"}
           </span>
         )}
         {state.open && (
