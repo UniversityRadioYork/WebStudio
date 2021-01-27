@@ -490,10 +490,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
                   .split("¬")
                   .map((t) => t.split(/:(.+)/))
                   .map((t) => (
-                    <>
+                    <div key={t[0]}>
                       <strong>{t[0]}:</strong> {t[1]}
-                      <hr />
-                    </>
+                    </div>
                   ))}
               </>
             )}

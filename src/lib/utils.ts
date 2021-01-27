@@ -69,6 +69,7 @@ export function timestampToDateTime(timestamp: number) {
   return str;
 }
 
+// Cheers :) https://overreacted.io/making-setinterval-declarative-with-react-hooks/
 export function useInterval(callback: Function, delay: number) {
   const savedCallback = useRef<Function>();
 
