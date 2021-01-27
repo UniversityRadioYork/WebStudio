@@ -14,7 +14,6 @@ import {
   FaPencilAlt,
 } from "react-icons/fa";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
-import Stopwatch from "react-stopwatch";
 
 import { MYRADIO_NON_API_BASE, TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
@@ -25,6 +24,7 @@ import {
   DropResult,
   ResponderProvided,
 } from "react-beautiful-dnd";
+import ReactTooltip from "react-tooltip";
 
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { RootState } from "../rootReducer";
@@ -62,6 +62,7 @@ import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
 import Modal from "react-modal";
 import { Button } from "reactstrap";
+import { secToHHMM, useInterval } from "../lib/utils";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -221,6 +222,17 @@ function MicControl() {
   );
   const dispatch = useDispatch();
 
+  const [count, setCount] = useState(0);
+
+  // Make a persistant mic counter.
+  useInterval(() => {
+    if (state.volume === 0 || !state.open) {
+      setCount(0);
+    } else {
+      setCount((c) => c + 1);
+    }
+  }, 1000);
+
   return (
     <div className="mic-control">
       <div data-toggle="collapse" data-target="#mic-control-menu">
@@ -251,18 +263,7 @@ function MicControl() {
         {state.open && proMode && (
           <span id="micLiveTimer" className={state.volume > 0 ? "live" : ""}>
             <span className="text">Mic Live: </span>
-            {state.volume > 0 ? (
-              <Stopwatch
-                seconds={0}
-                minutes={0}
-                hours={0}
-                render={({ formatted }) => {
-                  return <span>{formatted}</span>;
-                }}
-              />
-            ) : (
-              "00:00:00"
-            )}
+            {state.volume > 0 ? secToHHMM(count) : "00:00:00"}
           </span>
         )}
         {state.open && (
@@ -478,6 +479,28 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <FaPencilAlt /> Edit Item
         </CtxMenuItem>
       </Menu>
+      <ReactTooltip
+        id="track-hover-tooltip"
+        // Sadly dataTip has to be a string, so let's format this the best we can. Split by something unusual to see in the data.
+        getContent={(dataTip) => (
+          <>
+            {dataTip && (
+              <>
+                {dataTip
+                  .split("¬")
+                  .map((t) => t.split(/:(.+)/))
+                  .map((t) => (
+                    <div key={t[0]}>
+                      <strong>{t[0]}:</strong> {t[1]}
+                    </div>
+                  ))}
+              </>
+            )}
+          </>
+        )}
+        delayShow={300}
+        place="bottom"
+      />
       <OptionsMenu />
       <WelcomeModal
         isOpen={showWelcomeModal}

@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
-import Stopwatch from "react-stopwatch";
 
 import {
   FaCircle,
@@ -28,6 +27,7 @@ import { getShowplan, setItemPlayed } from "../showplanner/state";
 
 import * as OptionsMenuState from "../optionsMenu/state";
 import { setChannelPFL } from "../mixer/state";
+import { secToHHMM, useInterval } from "../lib/utils";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -270,6 +270,15 @@ function RecordingButton() {
   const enableRecording = useSelector(
     (state: RootState) => state.settings.enableRecording
   );
+  const [count, setCount] = useState(0);
+  // Make a persistant recording counter.
+  useInterval(() => {
+    if (recordingState !== "CONNECTED") {
+      setCount(0);
+    } else {
+      setCount((c) => c + 1);
+    }
+  }, 1000);
   const dispatch = useDispatch();
   return (
     <>
@@ -295,18 +304,7 @@ function RecordingButton() {
               recordingState === "CONNECTED" ? "rec-blink" : "rec-stop"
             }
           />{" "}
-          {recordingState === "CONNECTED" ? (
-            <Stopwatch
-              seconds={0}
-              minutes={0}
-              hours={0}
-              render={({ formatted }) => {
-                return <span>{formatted}</span>;
-              }}
-            />
-          ) : (
-            "Record"
-          )}
+          {recordingState === "CONNECTED" ? secToHHMM(count) : "Record"}
         </li>
       )}
     </>

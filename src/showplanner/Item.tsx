@@ -70,6 +70,21 @@ export const Item = memo(function Item({
     }
   }
 
+  function generateTooltipData() {
+    let data = ["Title: " + x.title.toString()];
+
+    if ("artist" in x && x.artist !== "") data.push("Artist: " + x.artist);
+    if ("album" in x && x.album.title !== "")
+      data.push("Album: " + x.album.title);
+    data.push("Length: " + x.length.toString());
+    if ("intro" in x) data.push("Intro: " + x.intro + " secs");
+    if ("cue" in x) data.push("Cue: " + x.cue + " secs");
+    if ("outro" in x) data.push("Outro: " + x.outro + " secs");
+    data.push("Played: " + ("played" in x ? (x.played ? "Yes" : "No") : "No"));
+
+    return data.join("¬"); // Something obscure to split against.
+  }
+
   return (
     <Draggable
       draggableId={id}
@@ -91,6 +106,8 @@ export const Item = memo(function Item({
           onContextMenu={openContextMenu}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
+          data-tip={generateTooltipData()}
+          data-for="track-hover-tooltip"
         >
           <span className={"icon " + x.type} />
           &nbsp;

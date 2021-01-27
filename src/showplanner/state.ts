@@ -202,7 +202,11 @@ const showplan = createSlice({
       const idx = state.plan!.findIndex(
         (x) => itemId(x) === action.payload.itemId
       );
-      state.plan![idx].played = action.payload.played;
+
+      if (idx > -1) {
+        state.plan![idx].played = action.payload.played;
+      }
+      // If we don't find an index, it's because the item has been deleted, just ignore.
     },
     replaceGhost(
       state,
