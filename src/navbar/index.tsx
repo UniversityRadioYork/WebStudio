@@ -276,7 +276,7 @@ function RecordingButton() {
     if (recordingState !== "CONNECTED") {
       setCount(0);
     } else {
-      setCount(count + 1);
+      setCount((c) => c + 1);
     }
   }, 1000);
   const dispatch = useDispatch();

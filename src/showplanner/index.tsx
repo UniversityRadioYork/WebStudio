@@ -229,7 +229,7 @@ function MicControl() {
     if (state.volume === 0 || !state.open) {
       setCount(0);
     } else {
-      setCount(count + 1);
+      setCount((c) => c + 1);
     }
   }, 1000);
 
