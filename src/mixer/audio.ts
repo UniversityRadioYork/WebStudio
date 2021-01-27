@@ -8,6 +8,7 @@ import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 
 import StereoAnalyserNode from "stereo-analyser-node";
+import { DEFAULT_TRIM_DB, OFF_LEVEL_DB } from "./state";
 
 interface PlayerEvents {
   loadComplete: (duration: number) => void;
@@ -164,8 +165,10 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   _applyVolume() {
-    const level = this.volume + this.trim;
-    const linear = Math.pow(10, level / 20);
+    const log = this.volume + this.trim;
+
+    // If we're down at the "off level", pure mute it, else, do the linear conversion.
+    let linear = this.volume === OFF_LEVEL_DB ? 0 : Math.pow(10, log / 20);
 
     // Actually adjust the wavesurfer gain node gain instead, so we can tap off analyser for PFL.
     this.wavesurfer.setVolume(1);
@@ -461,7 +464,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.newsEndCountdownNode.connect(this.audioContext.destination);
 
     // Send the headphones feed to the headphones.
-    const db = -12; // DB gain on headphones (-6 to match default trim)
+    const db = DEFAULT_TRIM_DB; // DB gain on headphones (match default trim)
     this.headphonesNode.gain.value = Math.pow(10, db / 20);
     this.headphonesNode.connect(this.audioContext.destination);
     this.headphonesNode.connect(this.pflAnalyser);
