@@ -16,7 +16,15 @@
     font-variant-numeric: tabular-nums; // Make the text monospace so it stops jumping.
   }
 
-  .source {
+  .silence {
+    font-weight: bold;
+    font-size: 1.1em;
+    -webkit-animation: red-text-flash steps(1) 1s infinite;
+    animation: red-text-flash steps(1) 1s infinite;
+  }
+
+  .source,
+  .silence {
     margin-left: 1em;
     border-left: 2px solid gray;
     padding-left: 1em;

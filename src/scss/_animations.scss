@@ -27,3 +27,18 @@
     background-color: rgb(199, 255, 199);
   }
 }
+
+@-webkit-keyframes red-text-flash {
+  0% {
+  }
+  50% {
+    color: rgb(255, 0, 0);
+  }
+}
+@keyframes red-text-flash {
+  0% {
+  }
+  50% {
+    color: rgb(255, 0, 0);
+  }
+}

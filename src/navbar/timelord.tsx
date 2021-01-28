@@ -20,17 +20,28 @@ export function Timelord() {
     ];
 
     let sourceName = "Unknown";
-    if (sourceNames[studio - 1]) {
+    if (studio > 0 && studio < sourceNames.length) {
       sourceName = sourceNames[studio - 1];
     }
 
     return { id: studio, name: sourceName };
   }
 
+  async function getSilence() {
+    let silence = await myradioApiRequest("/selector/issilence", "GET", null);
+
+    return silence;
+  }
+
   const [source, setSource] = useState({ id: 0, name: "Unknown" });
+  const [isSilence, setSilence] = useState(false);
 
   useInterval(async () => {
     setSource(await getSource());
+  }, 3000);
+
+  useInterval(async () => {
+    setSilence(await getSilence());
   }, 3000);
 
   return (
@@ -51,10 +62,14 @@ export function Timelord() {
         ticking={true}
         timezone={"europe/london"}
       />
-      <span className="source">
-        <span className={"studio studio" + source.id}>{source.name}</span> is On
-        Air
-      </span>
+      {isSilence ? (
+        <span className="silence">SILENCE DETECTED</span>
+      ) : (
+        <span className="source">
+          <span className={"studio studio" + source.id}>{source.name}</span>
+          &nbsp;is On Air
+        </span>
+      )}
     </li>
   );
 }
