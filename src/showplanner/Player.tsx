@@ -18,6 +18,7 @@ import ProModeButtons from "./ProModeButtons";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import * as api from "../api";
 import { AppThunk } from "../store";
+import { INTERNAL_OUTPUT_ID } from "../mixer/audio";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -254,7 +255,7 @@ export function Player({ id }: { id: number }) {
       )
   );
   const settings = useSelector((state: RootState) => state.settings);
-  const customOutput = settings.channelOutputIds[id] !== "internal";
+  const customOutput = settings.channelOutputIds[id] !== INTERNAL_OUTPUT_ID;
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {

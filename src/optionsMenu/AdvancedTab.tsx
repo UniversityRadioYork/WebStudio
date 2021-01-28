@@ -3,6 +3,7 @@ import { RootState } from "../rootReducer";
 import { useSelector, useDispatch } from "react-redux";
 import { changeSetting } from "./settingsState";
 import { changeBroadcastSetting } from "../broadcast/state";
+import { INTERNAL_OUTPUT_ID } from "../mixer/audio";
 
 type ErrorEnum =
   | "NO_PERMISSION"
@@ -51,13 +52,15 @@ function ChannelOutputSelect({
           );
         }}
       >
-        {outputId !== "internal" &&
+        {outputId !== INTERNAL_OUTPUT_ID &&
           !outputList?.some((id) => id.deviceId === outputId) && (
             <option value={outputId} disabled>
               Missing Device ({outputId})
             </option>
           )}
-        <option value="internal">Internal (Direct to Stream/Headphones)</option>
+        <option value={INTERNAL_OUTPUT_ID}>
+          Internal (Direct to Stream/Headphones)
+        </option>
         {(outputList || []).map(function(e, i) {
           return (
             <option value={e.deviceId} key={i}>

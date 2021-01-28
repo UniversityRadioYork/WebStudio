@@ -13,7 +13,12 @@ import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
 
-import { audioEngine, ChannelMapping } from "./audio";
+import {
+  audioEngine,
+  ChannelMapping,
+  INTERNAL_OUTPUT_ID,
+  PLAYER_COUNT,
+} from "./audio";
 import * as TheNews from "./the_news";
 
 import {
@@ -92,7 +97,8 @@ const BasePlayerState: PlayerState = {
 const mixerState = createSlice({
   name: "Player",
   initialState: {
-    players: [BasePlayerState, BasePlayerState, BasePlayerState],
+    // Player 0 is PFL, player 1-3 are channels
+    players: Array(PLAYER_COUNT).fill(BasePlayerState),
     mic: {
       open: false,
       volume: 1,
@@ -391,7 +397,7 @@ export const load = (
 
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
   const customOutput =
-    getState().settings.channelOutputIds[player] !== "internal";
+    getState().settings.channelOutputIds[player] !== INTERNAL_OUTPUT_ID;
   const isPFL = getState().mixer.players[player].pfl;
 
   dispatch(

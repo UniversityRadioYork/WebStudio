@@ -15,6 +15,10 @@ export const OFF_LEVEL_DB = -40;
 export const BED_LEVEL_DB = -13;
 export const FULL_LEVEL_DB = 0;
 
+export const PLAYER_COUNT = 4; // (3 channels + PFL)
+
+export const INTERNAL_OUTPUT_ID = "internal";
+
 interface PlayerEvents {
   loadComplete: (duration: number) => void;
   timeChange: (time: number) => void;
@@ -208,7 +212,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     url: string
   ) {
     // If we want to output to a custom audio device, we're gonna need to do things differently.
-    const customOutput = outputId !== "internal";
+    const customOutput = outputId !== INTERNAL_OUTPUT_ID;
 
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
@@ -345,7 +349,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   // Player Inputs
   public players: (Player | undefined)[] = [];
-  playerAnalysers: typeof StereoAnalyserNode[];
+  playerAnalysers: typeof StereoAnalyserNode[] = Array(PLAYER_COUNT);
 
   // Final Processing
   finalCompressor: DynamicsCompressorNode;
@@ -402,10 +406,10 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     // Player Input
 
     this.playerAnalysers = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i <= PLAYER_COUNT; i++) {
       let analyser = new StereoAnalyserNode(this.audioContext);
       analyser.fftSize = ANALYSIS_FFT_SIZE;
-      this.playerAnalysers.push(analyser);
+      this.playerAnalysers[i] = analyser;
     }
 
     // Final Processing
