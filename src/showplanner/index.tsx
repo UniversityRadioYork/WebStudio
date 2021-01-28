@@ -62,7 +62,7 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
           </div>
         )}
       </Droppable>
-      <Player id={id} />
+      <Player id={id} pfl={false} />
     </div>
   );
 }
@@ -340,11 +340,12 @@ export function LoadingDialogue({
 function ChannelStrips() {
   const showplan = useSelector((state: RootState) => state.showplan.plan!);
 
+  // Channel 0 is PFL player.
   return (
     <div className="channels">
-      <Channel id={0} data={showplan} />
       <Channel id={1} data={showplan} />
       <Channel id={2} data={showplan} />
+      <Channel id={3} data={showplan} />
     </div>
   );
 }

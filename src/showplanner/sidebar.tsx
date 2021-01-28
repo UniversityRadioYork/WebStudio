@@ -8,7 +8,7 @@ import { LibraryColumn } from "./libraries";
 
 import * as OptionsMenuState from "../optionsMenu/state";
 import * as MixerState from "../mixer/state";
-import { PflPlayer } from "../pflPlayer";
+import { PflPlayer } from "./Player";
 
 export function Sidebar() {
   return (

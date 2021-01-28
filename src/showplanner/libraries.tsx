@@ -220,7 +220,7 @@ export function CentralMusicLibrary() {
             {...provided.droppableProps}
           >
             {items.map((item, index) => (
-              <Item key={itemId(item)} item={item} index={index} column={-1} />
+              <Item key={itemId(item)} item={item} index={index} column={0} />
             ))}
             {provided.placeholder}
           </div>
@@ -302,12 +302,7 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
                     .indexOf(debouncedArtist.toLowerCase()) > -1
               )
               .map((item, index) => (
-                <Item
-                  key={itemId(item)}
-                  item={item}
-                  index={index}
-                  column={-1}
-                />
+                <Item key={itemId(item)} item={item} index={index} column={0} />
               ))}
             {provided.placeholder}
           </div>
@@ -375,12 +370,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
                     .indexOf(debouncedQuery.toLowerCase()) > -1
               )
               .map((item, index) => (
-                <Item
-                  key={itemId(item)}
-                  item={item}
-                  index={index}
-                  column={-1}
-                />
+                <Item key={itemId(item)} item={item} index={index} column={0} />
               ))}
             {provided.placeholder}
           </div>

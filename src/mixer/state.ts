@@ -21,6 +21,7 @@ import {
 } from "./audio";
 import * as TheNews from "./the_news";
 
+import { changeSetting } from "../optionsMenu/settingsState";
 import {
   DEFAULT_TRIM_DB,
   OFF_LEVEL_DB,
@@ -462,7 +463,18 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const channelOutputId = getState().settings.channelOutputIds[player];
+    let channelOutputId = getState().settings.channelOutputIds[player];
+    // If the player setting doesn't exist, reset the settings. (Happens after player count is increased)
+    if (!channelOutputId) {
+      channelOutputId = INTERNAL_OUTPUT_ID;
+      dispatch(
+        changeSetting({
+          key: "channelOutputIds",
+          // @ts-ignore
+          val: Array(PLAYER_COUNT).fill(channelOutputId),
+        })
+      );
+    }
 
     const playerInstance = await audioEngine.createPlayer(
       player,

@@ -22,7 +22,7 @@ import { INTERNAL_OUTPUT_ID } from "../mixer/audio";
 
 export const USE_REAL_GAIN_VALUE = false;
 
-function PlayerNumbers({ id }: { id: number }) {
+function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
   const store = useStore<RootState, any>();
   const [
     [timeCurrent, timeLength, timeRemaining, endTime],
@@ -55,9 +55,11 @@ function PlayerNumbers({ id }: { id: number }) {
       <span id={"remaining-" + id} className="remaining bypass-click">
         {secToHHMM(timeRemaining)}
       </span>
-      <span id={"ends-" + id} className="outro bypass-click">
-        End - {timestampToHHMM(endTime)}
-      </span>
+      {!pfl && (
+        <span id={"ends-" + id} className="outro bypass-click">
+          End - {timestampToHHMM(endTime)}
+        </span>
+      )}
     </>
   );
 }
@@ -237,7 +239,7 @@ function LoadedTrackInfo({ id }: { id: number }) {
   );
 }
 
-export function Player({ id }: { id: number }) {
+export function Player({ id, pfl }: { id: number; pfl: boolean }) {
   // Define time remaining (secs) when the play icon should flash.
   const SECS_REMAINING_WARNING = 20;
 
@@ -260,12 +262,12 @@ export function Player({ id }: { id: number }) {
 
   const VUsource = (id: number) => {
     switch (id) {
-      case 0:
-        return "player-0";
       case 1:
         return "player-1";
       case 2:
         return "player-2";
+      case 3:
+        return "player-3";
       default:
         throw new Error("Unknown Player VUMeter source: " + id);
     }
@@ -292,65 +294,81 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
-        <div className="d-inline mx-1">
-          <span className="float-left">
-            Total: {secToHHMM(channelDuration)}
-          </span>
-          <span className="float-right">
-            Unplayed: {secToHHMM(channelUnplayed)}
-          </span>
-        </div>
-        <div className="row m-0 p-1 card-header channelButtons hover-menu">
-          <span className="hover-label">Channel Controls</span>
-          <button
-            className={
-              (playerState.autoAdvance
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() =>
-              dispatch(MixerState.toggleAutoAdvance({ player: id }))
-            }
-          >
-            <FaLevelDownAlt />
-            &nbsp; Auto Advance
-          </button>
-          <button
-            className={
-              (playerState.playOnLoad
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() =>
-              dispatch(MixerState.togglePlayOnLoad({ player: id }))
-            }
-          >
-            <FaPlayCircle />
-            &nbsp; Play on Load
-          </button>
-          <button
-            className={
-              (playerState.repeat !== "none"
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() => dispatch(MixerState.toggleRepeat({ player: id }))}
-          >
-            <FaRedo />
-            &nbsp; Repeat {playerState.repeat}
-          </button>
-        </div>
-        {settings.proMode && !customOutput && <ProModeButtons channel={id} />}
+        {!pfl && (
+          <>
+            <div className="d-inline mx-1">
+              <span className="float-left">
+                Total: {secToHHMM(channelDuration)}
+              </span>
+              <span className="float-right">
+                Unplayed: {secToHHMM(channelUnplayed)}
+              </span>
+            </div>
+
+            <div className="row m-0 p-1 card-header channelButtons hover-menu">
+              <span className="hover-label">Channel Controls</span>
+              <button
+                className={
+                  (playerState.autoAdvance
+                    ? "btn-primary"
+                    : "btn-outline-secondary") +
+                  " btn btn-sm col-4 sp-play-on-load"
+                }
+                onClick={() =>
+                  dispatch(MixerState.toggleAutoAdvance({ player: id }))
+                }
+              >
+                <FaLevelDownAlt />
+                &nbsp; Auto Advance
+              </button>
+              <button
+                className={
+                  (playerState.playOnLoad
+                    ? "btn-primary"
+                    : "btn-outline-secondary") +
+                  " btn btn-sm col-4 sp-play-on-load"
+                }
+                onClick={() =>
+                  dispatch(MixerState.togglePlayOnLoad({ player: id }))
+                }
+              >
+                <FaPlayCircle />
+                &nbsp; Play on Load
+              </button>
+              <button
+                className={
+                  (playerState.repeat !== "none"
+                    ? "btn-primary"
+                    : "btn-outline-secondary") +
+                  " btn btn-sm col-4 sp-play-on-load"
+                }
+                onClick={() =>
+                  dispatch(MixerState.toggleRepeat({ player: id }))
+                }
+              >
+                <FaRedo />
+                &nbsp; Repeat {playerState.repeat}
+              </button>
+            </div>
+          </>
+        )}
+        {!pfl && settings.proMode && !customOutput && (
+          <ProModeButtons channel={id} />
+        )}
         <div className="card-body p-0">
-          <LoadedTrackInfo id={id} />
-          <br />
-          <span className="text-muted">
-            {playerState.loadedItem !== null && playerState.loading === -1
-              ? "artist" in playerState.loadedItem &&
-                playerState.loadedItem.artist
-              : ""}
-            &nbsp;
-          </span>
+          {!pfl && (
+            <>
+              <LoadedTrackInfo id={id} />
+              <br />
+              <span className="text-muted">
+                {playerState.loadedItem !== null && playerState.loading === -1
+                  ? "artist" in playerState.loadedItem &&
+                    playerState.loadedItem.artist
+                  : ""}
+                &nbsp;
+              </span>
+            </>
+          )}
           <div className="mediaButtons">
             <button
               onClick={() => dispatch(MixerState.play(id))}
@@ -384,10 +402,11 @@ export function Player({ id }: { id: number }) {
         </div>
 
         <div className="p-0 card-footer">
-          <TimingButtons id={id} />
+          {!pfl && <TimingButtons id={id} />}
           <div className="waveform">
-            <PlayerNumbers id={id} />
-            {playerState.loadedItem !== null &&
+            <PlayerNumbers id={id} pfl={pfl} />
+            {!pfl &&
+              playerState.loadedItem !== null &&
               "intro" in playerState.loadedItem && (
                 <span className="m-0 intro bypass-click">
                   {playerState.loadedItem !== null
@@ -416,35 +435,36 @@ export function Player({ id }: { id: number }) {
           </div>
         </div>
       </div>
-      <div
-        className={
-          "mixer-buttons " +
-          (playerState.state === "playing" && playerState.volume === 0
-            ? "error-animation"
-            : "")
-        }
-      >
+      {!pfl && (
         <div
-          className="mixer-buttons-backdrop"
-          style={{
-            width:
-              (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
-                100 +
-              "%",
-          }}
-        ></div>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
-          Off
-        </button>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
-          Bed
-        </button>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
-          Full
-        </button>
-      </div>
-
-      {settings.proMode && settings.channelVUs && (
+          className={
+            "mixer-buttons " +
+            (playerState.state === "playing" && playerState.volume === 0
+              ? "error-animation"
+              : "")
+          }
+        >
+          <div
+            className="mixer-buttons-backdrop"
+            style={{
+              width:
+                (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
+                  100 +
+                "%",
+            }}
+          ></div>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
+            Off
+          </button>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
+            Bed
+          </button>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
+            Full
+          </button>
+        </div>
+      )}
+      {!pfl && settings.proMode && settings.channelVUs && (
         <div className="channel-vu">
           {customOutput ? (
             <span className="text-muted">
@@ -461,6 +481,16 @@ export function Player({ id }: { id: number }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+export function PflPlayer() {
+  const playerId = 0;
+
+  return (
+    <div id="pfl-player">
+      <Player id={playerId} pfl={true} />
     </div>
   );
 }

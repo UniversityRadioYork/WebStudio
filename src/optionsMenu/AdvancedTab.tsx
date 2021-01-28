@@ -199,6 +199,7 @@ export function AdvancedTab() {
       <ChannelOutputSelect outputList={outputList} channel={0} />
       <ChannelOutputSelect outputList={outputList} channel={1} />
       <ChannelOutputSelect outputList={outputList} channel={2} />
+      <ChannelOutputSelect outputList={outputList} channel={3} />
 
       <hr />
       <h2>Misc</h2>
