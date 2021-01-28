@@ -281,7 +281,12 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       }
     } else {
       (wavesurfer as any).backend.gainNode.disconnect();
-      (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+
+      // Don't let the PFL player reach on air.
+      if (player !== PLAYER_PFL_ID) {
+        (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+      }
+
       (wavesurfer as any).backend.gainNode.connect(
         engine.playerAnalysers[player]
       );
