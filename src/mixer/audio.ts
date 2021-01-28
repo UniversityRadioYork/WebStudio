@@ -188,19 +188,22 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   _connectPFL() {
-    if (this.pfl) {
-      // In this case, we just want to route the player output to the headphones direct.
-      // Tap it from analyser to avoid the player volume.
-      (this.wavesurfer as any).backend.analyser.connect(
-        this.engine.headphonesNode
-      );
-    } else {
-      try {
-        (this.wavesurfer as any).backend.analyser.disconnect(
+    // We check the existence of the analyser here, because if we're using a custom output, this won't exist.
+    if ((this.wavesurfer as any).backend.analyser) {
+      if (this.pfl) {
+        // In this case, we just want to route the player output to the headphones direct.
+        // Tap it from analyser to avoid the player volume.
+        (this.wavesurfer as any).backend.analyser.connect(
           this.engine.headphonesNode
         );
-      } catch (e) {
-        // This connection wasn't connected anyway, ignore.
+      } else {
+        try {
+          (this.wavesurfer as any).backend.analyser.disconnect(
+            this.engine.headphonesNode
+          );
+        } catch (e) {
+          // This connection wasn't connected anyway, ignore.
+        }
       }
     }
   }
