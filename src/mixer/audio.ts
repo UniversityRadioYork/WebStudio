@@ -8,7 +8,12 @@ import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 
 import StereoAnalyserNode from "stereo-analyser-node";
-import { DEFAULT_TRIM_DB, OFF_LEVEL_DB } from "./state";
+
+export const DEFAULT_TRIM_DB = -6; // The default trim applied to channel players.
+
+export const OFF_LEVEL_DB = -40;
+export const BED_LEVEL_DB = -13;
+export const FULL_LEVEL_DB = 0;
 
 interface PlayerEvents {
   loadComplete: (duration: number) => void;

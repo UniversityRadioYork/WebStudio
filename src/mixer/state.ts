@@ -12,8 +12,16 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
+
 import { audioEngine, ChannelMapping } from "./audio";
 import * as TheNews from "./the_news";
+
+import {
+  DEFAULT_TRIM_DB,
+  OFF_LEVEL_DB,
+  BED_LEVEL_DB,
+  FULL_LEVEL_DB,
+} from "./audio";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -27,12 +35,6 @@ type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
-
-export const DEFAULT_TRIM_DB = -6; // The default trim applied to channel players.
-
-export const OFF_LEVEL_DB = -40;
-export const BED_LEVEL_DB = -13;
-export const FULL_LEVEL_DB = 0;
 interface PlayerState {
   loadedItem: PlanItem | Track | AuxItem | null;
   loading: number;
