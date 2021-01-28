@@ -22,6 +22,8 @@ import { INTERNAL_OUTPUT_ID } from "../mixer/audio";
 
 export const USE_REAL_GAIN_VALUE = false;
 
+export const PLAYER_COUNTER_UPDATE_PERIOD_MS = 200;
+
 function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
   const store = useStore<RootState, any>();
   const [
@@ -40,7 +42,7 @@ function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
         state.timeRemaining,
         now.valueOf() / 1000 + state.timeRemaining,
       ]);
-    }, 1000);
+    }, PLAYER_COUNTER_UPDATE_PERIOD_MS);
     return () => window.clearInterval(tickerRef.current);
   });
 

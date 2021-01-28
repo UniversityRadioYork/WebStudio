@@ -28,6 +28,7 @@ import {
   BED_LEVEL_DB,
   FULL_LEVEL_DB,
 } from "./audio";
+import { PLAYER_COUNTER_UPDATE_PERIOD_MS } from "../showplanner/Player";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -539,7 +540,10 @@ export const load = (
       );
     });
     playerInstance.on("timeChange", (time) => {
-      if (Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5) {
+      if (
+        Math.abs(time - getState().mixer.players[player].timeCurrent) >
+        PLAYER_COUNTER_UPDATE_PERIOD_MS / 1000
+      ) {
         dispatch(
           mixerState.actions.setTimeCurrent({
             player,
