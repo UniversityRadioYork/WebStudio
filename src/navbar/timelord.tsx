@@ -66,9 +66,7 @@ export function Timelord() {
         timezone={"europe/london"}
       />
       {broadcastState.stage === "REGISTERED" &&
-      !(
-        broadcastState.connectionState in ["LIVE", "CONNECTED", "NOT_CONNECTED"]
-      ) ? (
+      ["LIVE", "CONNECTED"].indexOf(broadcastState.connectionState) === -1 ? (
         <span className="error">Streaming Error!</span>
       ) : isSilence ? (
         <span className="error">SILENCE DETECTED</span>
