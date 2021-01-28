@@ -2,15 +2,52 @@
   background: black;
   border: red 1px solid;
   color: white;
-  min-width: 85px;
-}
+  padding: 0 1em;
+  font-size: 1.1em;
 
-#timelord a {
-  text-decoration: none;
-  color: white;
-}
+  a {
+    text-decoration: none;
+    color: white;
+  }
 
-#timelord time {
-  font-weight: bold;
-  font-size: 1.2em;
+  time {
+    font-weight: bold;
+    font-size: 1.1em;
+    font-variant-numeric: tabular-nums; // Make the text monospace so it stops jumping.
+  }
+
+  .source {
+    margin-left: 1em;
+    border-left: 2px solid gray;
+    padding-left: 1em;
+  }
+
+  .studio {
+    color: #2cdfff;
+    font-weight: bold;
+
+    &.studio1 {
+      color: red;
+    }
+
+    &.studio2 {
+      color: #246ee6;
+    }
+
+    &.studio3 {
+      color: #0f0;
+    }
+
+    &.studio4 {
+      color: #bb00dc;
+    }
+
+    &.studio5 {
+      color: #b5009b;
+    }
+
+    &.studio8 {
+      color: orange;
+    }
+  }
 }
