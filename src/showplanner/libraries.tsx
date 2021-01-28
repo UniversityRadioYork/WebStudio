@@ -39,8 +39,14 @@ type searchingStateEnum =
 export function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   const dispatch = useDispatch();
-  const { auxPlaylists, managedPlaylists, userPlaylists } = useSelector(
-    (state: RootState) => state.showplan
+  const auxPlaylists = useSelector(
+    (state: RootState) => state.showplan.auxPlaylists
+  );
+  const managedPlaylists = useSelector(
+    (state: RootState) => state.showplan.managedPlaylists
+  );
+  const userPlaylists = useSelector(
+    (state: RootState) => state.showplan.userPlaylists
   );
 
   const [autoPlayoutModal, setAutoPlayoutModal] = useState(false);
