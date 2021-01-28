@@ -69,9 +69,9 @@ export function Timelord() {
       !(
         broadcastState.connectionState in ["LIVE", "CONNECTED", "NOT_CONNECTED"]
       ) ? (
-        <span className="silence">Streaming Error!</span>
-      ) : isSilence ? (
-        <span className="silence">SILENCE DETECTED</span>
+        <span className="error">Streaming Error!</span>
+      ) : !isSilence ? (
+        <span className="error">SILENCE DETECTED</span>
       ) : (
         <span className="source">
           <span className={"studio studio" + source.id}>{source.name}</span>
