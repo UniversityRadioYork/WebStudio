@@ -56,6 +56,7 @@ export const Item = memo(function Item({
           trackid: x.trackid,
           title: x.title,
           artist: x.artist,
+          item: x,
         },
       });
     } else if (isAux(x)) {
@@ -65,6 +66,7 @@ export const Item = memo(function Item({
         props: {
           id,
           title: x.title,
+          item: x,
         },
       });
     }

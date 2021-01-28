@@ -18,7 +18,12 @@ import ProModeButtons from "./ProModeButtons";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import * as api from "../api";
 import { AppThunk } from "../store";
-import { INTERNAL_OUTPUT_ID } from "../mixer/audio";
+import {
+  INTERNAL_OUTPUT_ID,
+  LevelsSource,
+  PLAYER_COUNT,
+  PLAYER_PFL_ID,
+} from "../mixer/audio";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -263,16 +268,10 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {
-    switch (id) {
-      case 1:
-        return "player-1";
-      case 2:
-        return "player-2";
-      case 3:
-        return "player-3";
-      default:
-        throw new Error("Unknown Player VUMeter source: " + id);
+    if (id < PLAYER_COUNT) {
+      return ("player-" + id) as LevelsSource;
     }
+    throw new Error("Unknown Player VUMeter source: " + id);
   };
 
   let channelDuration = 0;
@@ -488,11 +487,9 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
 }
 
 export function PflPlayer() {
-  const playerId = 0;
-
   return (
     <div id="pfl-player">
-      <Player id={playerId} pfl={true} />
+      <Player id={PLAYER_PFL_ID} pfl={true} />
     </div>
   );
 }

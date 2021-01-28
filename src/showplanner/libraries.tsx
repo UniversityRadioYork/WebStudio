@@ -26,6 +26,7 @@ import "./libraries.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
 import { Button } from "reactstrap";
+import { PLAYER_PFL_ID } from "../mixer/audio";
 
 export const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
@@ -220,7 +221,12 @@ export function CentralMusicLibrary() {
             {...provided.droppableProps}
           >
             {items.map((item, index) => (
-              <Item key={itemId(item)} item={item} index={index} column={0} />
+              <Item
+                key={itemId(item)}
+                item={item}
+                index={index}
+                column={PLAYER_PFL_ID}
+              />
             ))}
             {provided.placeholder}
           </div>
@@ -302,7 +308,12 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
                     .indexOf(debouncedArtist.toLowerCase()) > -1
               )
               .map((item, index) => (
-                <Item key={itemId(item)} item={item} index={index} column={0} />
+                <Item
+                  key={itemId(item)}
+                  item={item}
+                  index={index}
+                  column={PLAYER_PFL_ID}
+                />
               ))}
             {provided.placeholder}
           </div>
@@ -370,7 +381,12 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
                     .indexOf(debouncedQuery.toLowerCase()) > -1
               )
               .map((item, index) => (
-                <Item key={itemId(item)} item={item} index={index} column={0} />
+                <Item
+                  key={itemId(item)}
+                  item={item}
+                  index={index}
+                  column={PLAYER_PFL_ID}
+                />
               ))}
             {provided.placeholder}
           </div>

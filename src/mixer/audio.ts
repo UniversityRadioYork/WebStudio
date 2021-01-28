@@ -16,6 +16,7 @@ export const BED_LEVEL_DB = -13;
 export const FULL_LEVEL_DB = 0;
 
 export const PLAYER_COUNT = 4; // (3 channels + PFL)
+export const PLAYER_PFL_ID = 3; // Player 3 (zero index) is the PFL Player
 
 export const INTERNAL_OUTPUT_ID = "internal";
 
@@ -305,9 +306,9 @@ export type LevelsSource =
   | "mic-final"
   | "master"
   | "pfl"
+  | "player-0"
   | "player-1"
-  | "player-2"
-  | "player-3";
+  | "player-2";
 
 export type ChannelMapping =
   | "stereo-normal"
@@ -649,6 +650,12 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
           this.analysisBuffer2
         );
         break;
+      case "player-0":
+        this.playerAnalysers[0].getFloatTimeDomainData(
+          this.analysisBuffer,
+          this.analysisBuffer2
+        );
+        break;
       case "player-1":
         this.playerAnalysers[1].getFloatTimeDomainData(
           this.analysisBuffer,
@@ -657,12 +664,6 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
         break;
       case "player-2":
         this.playerAnalysers[2].getFloatTimeDomainData(
-          this.analysisBuffer,
-          this.analysisBuffer2
-        );
-        break;
-      case "player-3":
-        this.playerAnalysers[3].getFloatTimeDomainData(
           this.analysisBuffer,
           this.analysisBuffer2
         );

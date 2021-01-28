@@ -18,6 +18,7 @@ import {
   ChannelMapping,
   INTERNAL_OUTPUT_ID,
   PLAYER_COUNT,
+  PLAYER_PFL_ID,
 } from "./audio";
 import * as TheNews from "./the_news";
 
@@ -554,7 +555,7 @@ export const load = (
     });
     playerInstance.on("finish", () => {
       // PFL on PFL Player
-      if (player === 0) {
+      if (player === PLAYER_PFL_ID) {
         dispatch(setChannelPFL(player, false));
       }
       dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
@@ -632,7 +633,7 @@ export const play = (player: number): AppThunk => async (
   }
 
   // PFL on PFL Player
-  if (player === 0) {
+  if (player === PLAYER_PFL_ID) {
     dispatch(setChannelPFL(player, true));
   }
   audioEngine.players[player]?.play();
@@ -676,7 +677,7 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
     audioEngine.players[player]?.pause();
   } else {
     // PFL on PFL Player
-    if (player === 0) {
+    if (player === PLAYER_PFL_ID) {
       dispatch(setChannelPFL(player, true));
     }
     audioEngine.players[player]?.play();
@@ -707,7 +708,7 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 
   playerInstance.stop();
   // PFL on PFL Player
-  if (player === 0) {
+  if (player === PLAYER_PFL_ID) {
     dispatch(setChannelPFL(player, false));
   }
 
@@ -860,13 +861,16 @@ export const setChannelPFL = (
     enabled &&
     typeof audioEngine.players[player] !== "undefined" &&
     !audioEngine.players[player]?.isPlaying &&
-    player !== 0 // The PFL player is setting PFL itself when it plays.
+    player !== PLAYER_PFL_ID // The PFL player is setting PFL itself when it plays.
   ) {
     dispatch(setVolume(player, "off", false));
     dispatch(play(player));
   }
   // If the player number is -1, do all channels.
   if (player === -1) {
+    if (!enabled) {
+      dispatch(stop(PLAYER_PFL_ID)); // Stop the PFL player!
+    }
     for (let i = 0; i < audioEngine.players.length; i++) {
       dispatch(mixerState.actions.setPlayerPFL({ player: i, enabled: false }));
       audioEngine.setPFL(i, false);
@@ -991,59 +995,59 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   Dispatch<any>
 > = (store) => {
   Keys("q", () => {
-    store.dispatch(play(1));
+    store.dispatch(play(0));
   });
   Keys("w", () => {
-    store.dispatch(pause(1));
+    store.dispatch(pause(0));
   });
   Keys("e", () => {
-    store.dispatch(stop(1));
+    store.dispatch(stop(0));
   });
   Keys("r", () => {
-    store.dispatch(play(2));
+    store.dispatch(play(1));
   });
   Keys("t", () => {
-    store.dispatch(pause(2));
+    store.dispatch(pause(1));
   });
   Keys("y", () => {
-    store.dispatch(stop(2));
+    store.dispatch(stop(1));
   });
   Keys("u", () => {
-    store.dispatch(play(3));
+    store.dispatch(play(2));
   });
   Keys("i", () => {
-    store.dispatch(pause(3));
+    store.dispatch(pause(2));
   });
   Keys("o", () => {
-    store.dispatch(stop(3));
+    store.dispatch(stop(2));
   });
 
   Keys("a", () => {
-    store.dispatch(setVolume(1, "off"));
+    store.dispatch(setVolume(0, "off"));
   });
   Keys("s", () => {
-    store.dispatch(setVolume(1, "bed"));
+    store.dispatch(setVolume(0, "bed"));
   });
   Keys("d", () => {
-    store.dispatch(setVolume(1, "full"));
+    store.dispatch(setVolume(0, "full"));
   });
   Keys("f", () => {
-    store.dispatch(setVolume(2, "off"));
+    store.dispatch(setVolume(1, "off"));
   });
   Keys("g", () => {
-    store.dispatch(setVolume(2, "bed"));
+    store.dispatch(setVolume(1, "bed"));
   });
   Keys("h", () => {
-    store.dispatch(setVolume(2, "full"));
+    store.dispatch(setVolume(1, "full"));
   });
   Keys("j", () => {
-    store.dispatch(setVolume(3, "off"));
+    store.dispatch(setVolume(2, "off"));
   });
   Keys("k", () => {
-    store.dispatch(setVolume(3, "bed"));
+    store.dispatch(setVolume(2, "bed"));
   });
   Keys("l", () => {
-    store.dispatch(setVolume(3, "full"));
+    store.dispatch(setVolume(2, "full"));
   });
 
   Keys("x", () => {

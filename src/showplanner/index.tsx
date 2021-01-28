@@ -2,7 +2,13 @@ import React, { useState, useReducer, useEffect } from "react";
 import { Menu, Item as CtxMenuItem } from "react-contexify";
 import "react-contexify/dist/ReactContexify.min.css";
 import { useBeforeunload } from "react-beforeunload";
-import { FaBars, FaTrash, FaCircleNotch, FaPencilAlt } from "react-icons/fa";
+import {
+  FaBars,
+  FaTrash,
+  FaCircleNotch,
+  FaPencilAlt,
+  FaHeadphonesAlt,
+} from "react-icons/fa";
 
 import { MYRADIO_NON_API_BASE, TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
@@ -41,6 +47,7 @@ import { PisModal } from "./PISModal";
 import "./channel.scss";
 import Modal from "react-modal";
 import { Sidebar } from "./sidebar";
+import { PLAYER_PFL_ID } from "../mixer/audio";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -229,6 +236,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         </CtxMenuItem>
         <CtxMenuItem
           onClick={(args) => {
+            dispatch(MixerState.load(PLAYER_PFL_ID, (args.props as any).item));
+          }}
+        >
+          <FaHeadphonesAlt /> Preview in PFL
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) => {
             if ("trackid" in (args.props as any)) {
               window.open(
                 MYRADIO_NON_API_BASE +
@@ -343,9 +357,9 @@ function ChannelStrips() {
   // Channel 0 is PFL player.
   return (
     <div className="channels">
+      <Channel id={0} data={showplan} />
       <Channel id={1} data={showplan} />
       <Channel id={2} data={showplan} />
-      <Channel id={3} data={showplan} />
     </div>
   );
 }
