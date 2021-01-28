@@ -506,7 +506,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         isOpen={showWelcomeModal}
         close={() => setShowWelcomeModal(false)}
       />
-
+      <PisModal close={() => setShowPisModal(false)} isOpen={showPisModal} />
       <MicLiveIndicator />
     </div>
   );
