@@ -553,6 +553,10 @@ export const load = (
       }
     });
     playerInstance.on("finish", () => {
+      // PFL on PFL Player
+      if (player === 0) {
+        dispatch(setChannelPFL(player, false));
+      }
       dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
       const state = getState().mixer.players[player];
       if (state.tracklistItemID !== -1) {
@@ -626,6 +630,11 @@ export const play = (player: number): AppThunk => async (
     console.log("not ready");
     return;
   }
+
+  // PFL on PFL Player
+  if (player === 0) {
+    dispatch(setChannelPFL(player, true));
+  }
   audioEngine.players[player]?.play();
 
   // If we're starting off audible, try and tracklist.
@@ -666,6 +675,10 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
   if (audioEngine.players[player]?.isPlaying) {
     audioEngine.players[player]?.pause();
   } else {
+    // PFL on PFL Player
+    if (player === 0) {
+      dispatch(setChannelPFL(player, true));
+    }
     audioEngine.players[player]?.play();
   }
 };
@@ -693,6 +706,10 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
   }
 
   playerInstance.stop();
+  // PFL on PFL Player
+  if (player === 0) {
+    dispatch(setChannelPFL(player, false));
+  }
 
   dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime }));
   playerInstance.setCurrentTime(cueTime);
@@ -842,7 +859,8 @@ export const setChannelPFL = (
   if (
     enabled &&
     typeof audioEngine.players[player] !== "undefined" &&
-    !audioEngine.players[player]?.isPlaying
+    !audioEngine.players[player]?.isPlaying &&
+    player !== 0 // The PFL player is setting PFL itself when it plays.
   ) {
     dispatch(setVolume(player, "off", false));
     dispatch(play(player));
