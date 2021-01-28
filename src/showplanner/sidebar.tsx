@@ -8,11 +8,14 @@ import { LibraryColumn } from "./libraries";
 
 import * as OptionsMenuState from "../optionsMenu/state";
 import * as MixerState from "../mixer/state";
+import { PflPlayer } from "../pflPlayer";
 
 export function Sidebar() {
   return (
     <div id="sidebar">
       <LibraryColumn />
+      <div className="border-top"></div>
+      <PflPlayer />
       <div className="border-top"></div>
       <MicControl />
     </div>
