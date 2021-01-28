@@ -526,7 +526,8 @@ export const load = (
       dispatch(mixerState.actions.setPlayerState({ player, state: "playing" }));
 
       const state = getState().mixer.players[player];
-      if (state.loadedItem != null) {
+      // Don't set played on PFL Channel
+      if (state.loadedItem != null && player !== PLAYER_PFL_ID) {
         dispatch(
           setItemPlayed({ itemId: itemId(state.loadedItem), played: true })
         );
