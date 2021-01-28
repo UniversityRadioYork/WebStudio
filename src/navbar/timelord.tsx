@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import LiveClock from "react-live-clock";
+import { useSelector } from "react-redux";
 import { myradioApiRequest } from "../api";
 import { useInterval } from "../lib/utils";
+import { RootState } from "../rootReducer";
 import "./timelord.scss";
 
 export function Timelord() {
@@ -33,6 +35,7 @@ export function Timelord() {
     return silence;
   }
 
+  const broadcastState = useSelector((state: RootState) => state.broadcast);
   const [source, setSource] = useState({ id: 0, name: "Unknown" });
   const [isSilence, setSilence] = useState(false);
 
@@ -62,7 +65,12 @@ export function Timelord() {
         ticking={true}
         timezone={"europe/london"}
       />
-      {isSilence ? (
+      {broadcastState.stage === "REGISTERED" &&
+      !(
+        broadcastState.connectionState in ["LIVE", "CONNECTED", "NOT_CONNECTED"]
+      ) ? (
+        <span className="silence">Streaming Error!</span>
+      ) : isSilence ? (
         <span className="silence">SILENCE DETECTED</span>
       ) : (
         <span className="source">
