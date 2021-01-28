@@ -3,7 +3,11 @@ import { RootState } from "../rootReducer";
 import { useSelector, useDispatch } from "react-redux";
 import { changeSetting } from "./settingsState";
 import { changeBroadcastSetting } from "../broadcast/state";
-import { INTERNAL_OUTPUT_ID } from "../mixer/audio";
+import {
+  INTERNAL_OUTPUT_ID,
+  PLAYER_COUNT,
+  PLAYER_PFL_ID,
+} from "../mixer/audio";
 
 type ErrorEnum =
   | "NO_PERMISSION"
@@ -35,7 +39,9 @@ function ChannelOutputSelect({
   const dispatch = useDispatch();
   return (
     <div className="form-group">
-      <label>Channel {channel + 1}</label>
+      <label>
+        {channel === PLAYER_PFL_ID ? "PFL Channel" : "Channel " + (channel + 1)}
+      </label>
       <select
         className="form-control"
         id="broadcastSourceSelect"
@@ -196,10 +202,12 @@ export function AdvancedTab() {
             : "An error occurred when opening the output devices. Please try again."}
         </div>
       )}
-      <ChannelOutputSelect outputList={outputList} channel={0} />
-      <ChannelOutputSelect outputList={outputList} channel={1} />
-      <ChannelOutputSelect outputList={outputList} channel={2} />
-      <ChannelOutputSelect outputList={outputList} channel={3} />
+
+      {[...Array(PLAYER_COUNT)].map(function(object, i) {
+        return (
+          <ChannelOutputSelect key={i} outputList={outputList} channel={i} />
+        );
+      })}
 
       <hr />
       <h2>Misc</h2>
