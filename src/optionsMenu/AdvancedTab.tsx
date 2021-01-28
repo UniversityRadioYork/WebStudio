@@ -52,7 +52,6 @@ function ChannelOutputSelect({
           dispatch(
             changeSetting({
               key: "channelOutputIds",
-              // @ts-ignore
               val: channelOutputIds,
             })
           );
@@ -120,7 +119,6 @@ export function AdvancedTab() {
     fetchOutputNames();
   }, []);
 
-  // @ts-ignore
   return (
     <>
       <h2>Selector Options</h2>

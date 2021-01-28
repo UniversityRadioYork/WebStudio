@@ -472,7 +472,6 @@ export const load = (
       dispatch(
         changeSetting({
           key: "channelOutputIds",
-          // @ts-ignore
           val: Array(PLAYER_COUNT).fill(channelOutputId),
         })
       );
@@ -555,7 +554,7 @@ export const load = (
       }
     });
     playerInstance.on("finish", () => {
-      // PFL on PFL Player
+      // If the PFL Player finishes playing, turn of PFL.
       if (player === PLAYER_PFL_ID) {
         dispatch(setChannelPFL(player, false));
       }
@@ -633,7 +632,7 @@ export const play = (player: number): AppThunk => async (
     return;
   }
 
-  // PFL on PFL Player
+  // If it's the PFL player starting, turn on PFL automatically.
   if (player === PLAYER_PFL_ID) {
     dispatch(setChannelPFL(player, true));
   }
@@ -678,7 +677,7 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
   if (audioEngine.players[player]?.isPlaying) {
     audioEngine.players[player]?.pause();
   } else {
-    // PFL on PFL Player
+    // If it's the PFL player starting, turn on PFL automatically.
     if (player === PLAYER_PFL_ID) {
       dispatch(setChannelPFL(player, true));
     }
@@ -709,7 +708,8 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
   }
 
   playerInstance.stop();
-  // PFL on PFL Player
+
+  // If we're stoping the PFL player, turn off PFL in the UI.
   if (player === PLAYER_PFL_ID) {
     dispatch(setChannelPFL(player, false));
   }

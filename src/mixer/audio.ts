@@ -415,7 +415,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     // Player Input
 
     this.playerAnalysers = [];
-    for (let i = 0; i <= PLAYER_COUNT; i++) {
+    for (let i = 0; i < PLAYER_COUNT; i++) {
       let analyser = new StereoAnalyserNode(this.audioContext);
       analyser.fftSize = ANALYSIS_FFT_SIZE;
       this.playerAnalysers[i] = analyser;
