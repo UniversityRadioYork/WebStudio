@@ -16,7 +16,7 @@
     font-variant-numeric: tabular-nums; // Make the text monospace so it stops jumping.
   }
 
-  .silence {
+  .error {
     font-weight: bold;
     font-size: 1.1em;
     -webkit-animation: red-text-flash steps(1) 1s infinite;
