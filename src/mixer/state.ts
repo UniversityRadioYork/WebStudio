@@ -554,7 +554,7 @@ export const load = (
       }
     });
     playerInstance.on("finish", () => {
-      // If the PFL Player finishes playing, turn of PFL.
+      // If the PFL Player finishes playing, turn off PFL in the UI.
       if (player === PLAYER_PFL_ID) {
         dispatch(setChannelPFL(player, false));
       }
