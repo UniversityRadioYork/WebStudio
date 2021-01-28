@@ -324,7 +324,6 @@ function OptionsButton() {
 
 function MeterBridge() {
   const dispatch = useDispatch();
-  const proMode = useSelector((state: RootState) => state.settings.proMode);
   const playerPFLs = useSelector(
     (state: RootState) => state.mixer.players.map((x) => x.pfl),
     shallowEqual
@@ -333,7 +332,7 @@ function MeterBridge() {
 
   return (
     <>
-      {proMode && isPFL && (
+      {isPFL && (
         <li
           className="btn btn-danger rounded-0 pt-2 pb-1 nav-item nav-link clear-pfl"
           onClick={() => dispatch(setChannelPFL(-1, false))}
