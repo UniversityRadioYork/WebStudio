@@ -653,7 +653,8 @@ const attemptTracklist = (player: number): AppThunk => async (
   if (
     state.loadedItem &&
     state.loadedItem.type === "central" &&
-    audioEngine.players[player]?.isPlaying
+    audioEngine.players[player]?.isPlaying &&
+    player !== PLAYER_PFL_ID
   ) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
