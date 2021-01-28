@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import Clock from "react-live-clock";
 
 import {
   FaCircle,
@@ -28,6 +27,7 @@ import { getShowplan, setItemPlayed } from "../showplanner/state";
 import * as OptionsMenuState from "../optionsMenu/state";
 import { setChannelPFL } from "../mixer/state";
 import { secToHHMM, useInterval } from "../lib/utils";
+import { Timelord } from "./timelord";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -164,24 +164,7 @@ export function NavBarMain() {
   return (
     <>
       <ul className="nav navbar-nav navbar-left">
-        <li
-          className="btn rounded-0 py-2 nav-link nav-item"
-          id="timelord"
-          onClick={(e) => {
-            e.preventDefault();
-            window.open(
-              "http://ury.org.uk/timelord/",
-              "URY - Timelord",
-              "resizable,status"
-            );
-          }}
-        >
-          <Clock
-            format={"HH:mm:ss"}
-            ticking={true}
-            timezone={"europe/london"}
-          />
-        </li>
+        <Timelord />
         <SavingAlert />
       </ul>
       <ul className="nav navbar-nav navbar-right mr-0 pr-0">
