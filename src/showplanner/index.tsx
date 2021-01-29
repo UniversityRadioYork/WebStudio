@@ -47,7 +47,7 @@ import { PisModal } from "./PISModal";
 import "./channel.scss";
 import Modal from "react-modal";
 import { Sidebar } from "./sidebar";
-import { PLAYER_PFL_ID } from "../mixer/audio";
+import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -236,10 +236,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         </CtxMenuItem>
         <CtxMenuItem
           onClick={(args) => {
-            dispatch(MixerState.load(PLAYER_PFL_ID, (args.props as any).item));
+            dispatch(
+              MixerState.load(PLAYER_ID_PREVIEW, (args.props as any).item)
+            );
           }}
         >
-          <FaHeadphonesAlt /> Preview in PFL
+          <FaHeadphonesAlt /> Preview with PFL
         </CtxMenuItem>
         <CtxMenuItem
           onClick={(args) => {
@@ -354,7 +356,6 @@ export function LoadingDialogue({
 function ChannelStrips() {
   const showplan = useSelector((state: RootState) => state.showplan.plan!);
 
-  // Channel 0 is PFL player.
   return (
     <div className="channels">
       <Channel id={0} data={showplan} />

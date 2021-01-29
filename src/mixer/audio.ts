@@ -15,8 +15,8 @@ export const OFF_LEVEL_DB = -40;
 export const BED_LEVEL_DB = -13;
 export const FULL_LEVEL_DB = 0;
 
-export const PLAYER_COUNT = 4; // (3 channels + PFL)
-export const PLAYER_PFL_ID = 3; // Player 3 (zero index) is the PFL Player
+export const PLAYER_COUNT = 4; // (3 channels + PFL Preview)
+export const PLAYER_ID_PREVIEW = 3; // Player 3 (zero index) is the Preview Player
 
 export const INTERNAL_OUTPUT_ID = "internal";
 
@@ -286,7 +286,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       (wavesurfer as any).backend.gainNode.disconnect();
 
       // Don't let the PFL player reach on air.
-      if (player !== PLAYER_PFL_ID) {
+      if (player !== PLAYER_ID_PREVIEW) {
         (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
       }
 

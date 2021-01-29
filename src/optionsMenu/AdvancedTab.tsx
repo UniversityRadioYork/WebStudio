@@ -6,7 +6,7 @@ import { changeBroadcastSetting } from "../broadcast/state";
 import {
   INTERNAL_OUTPUT_ID,
   PLAYER_COUNT,
-  PLAYER_PFL_ID,
+  PLAYER_ID_PREVIEW,
 } from "../mixer/audio";
 
 type ErrorEnum =
@@ -40,7 +40,9 @@ function ChannelOutputSelect({
   return (
     <div className="form-group">
       <label>
-        {channel === PLAYER_PFL_ID ? "PFL Channel" : "Channel " + (channel + 1)}
+        {channel === PLAYER_ID_PREVIEW
+          ? "Preview Channel"
+          : "Channel " + (channel + 1)}
       </label>
       <select
         className="form-control"

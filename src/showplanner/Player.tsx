@@ -22,7 +22,7 @@ import {
   INTERNAL_OUTPUT_ID,
   LevelsSource,
   PLAYER_COUNT,
-  PLAYER_PFL_ID,
+  PLAYER_ID_PREVIEW,
 } from "../mixer/audio";
 
 export const USE_REAL_GAIN_VALUE = false;
@@ -489,7 +489,7 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
 export function PflPlayer() {
   return (
     <div id="pfl-player">
-      <Player id={PLAYER_PFL_ID} pfl={true} />
+      <Player id={PLAYER_ID_PREVIEW} pfl={true} />
     </div>
   );
 }

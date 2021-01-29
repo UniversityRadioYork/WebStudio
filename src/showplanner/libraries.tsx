@@ -26,7 +26,7 @@ import "./libraries.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
 import { Button } from "reactstrap";
-import { PLAYER_PFL_ID } from "../mixer/audio";
+import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
 export const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
@@ -231,7 +231,7 @@ export function CentralMusicLibrary() {
                 key={itemId(item)}
                 item={item}
                 index={index}
-                column={PLAYER_PFL_ID}
+                column={PLAYER_ID_PREVIEW}
               />
             ))}
             {provided.placeholder}
@@ -318,7 +318,7 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
                   key={itemId(item)}
                   item={item}
                   index={index}
-                  column={PLAYER_PFL_ID}
+                  column={PLAYER_ID_PREVIEW}
                 />
               ))}
             {provided.placeholder}
@@ -391,7 +391,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
                   key={itemId(item)}
                   item={item}
                   index={index}
-                  column={PLAYER_PFL_ID}
+                  column={PLAYER_ID_PREVIEW}
                 />
               ))}
             {provided.placeholder}

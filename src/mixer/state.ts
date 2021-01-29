@@ -18,7 +18,7 @@ import {
   ChannelMapping,
   INTERNAL_OUTPUT_ID,
   PLAYER_COUNT,
-  PLAYER_PFL_ID,
+  PLAYER_ID_PREVIEW,
 } from "./audio";
 import * as TheNews from "./the_news";
 
@@ -100,7 +100,7 @@ const BasePlayerState: PlayerState = {
 const mixerState = createSlice({
   name: "Player",
   initialState: {
-    // Player 0 is PFL, player 1-3 are channels
+    // Fill the players with channel and preview players.
     players: Array(PLAYER_COUNT).fill(BasePlayerState),
     mic: {
       open: false,
@@ -525,8 +525,8 @@ export const load = (
       dispatch(mixerState.actions.setPlayerState({ player, state: "playing" }));
 
       const state = getState().mixer.players[player];
-      // Don't set played on PFL Channel
-      if (state.loadedItem != null && player !== PLAYER_PFL_ID) {
+      // Don't set played on Preview Channel
+      if (state.loadedItem != null && player !== PLAYER_ID_PREVIEW) {
         dispatch(
           setItemPlayed({ itemId: itemId(state.loadedItem), played: true })
         );
@@ -554,8 +554,8 @@ export const load = (
       }
     });
     playerInstance.on("finish", () => {
-      // If the PFL Player finishes playing, turn off PFL in the UI.
-      if (player === PLAYER_PFL_ID) {
+      // If the Preview Player finishes playing, turn off PFL in the UI.
+      if (player === PLAYER_ID_PREVIEW) {
         dispatch(setChannelPFL(player, false));
       }
       dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
@@ -632,8 +632,8 @@ export const play = (player: number): AppThunk => async (
     return;
   }
 
-  // If it's the PFL player starting, turn on PFL automatically.
-  if (player === PLAYER_PFL_ID) {
+  // If it's the Preview player starting, turn on PFL automatically.
+  if (player === PLAYER_ID_PREVIEW) {
     dispatch(setChannelPFL(player, true));
   }
   audioEngine.players[player]?.play();
@@ -653,7 +653,7 @@ const attemptTracklist = (player: number): AppThunk => async (
     state.loadedItem &&
     state.loadedItem.type === "central" &&
     audioEngine.players[player]?.isPlaying &&
-    player !== PLAYER_PFL_ID
+    player !== PLAYER_ID_PREVIEW
   ) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
@@ -677,8 +677,8 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
   if (audioEngine.players[player]?.isPlaying) {
     audioEngine.players[player]?.pause();
   } else {
-    // If it's the PFL player starting, turn on PFL automatically.
-    if (player === PLAYER_PFL_ID) {
+    // If it's the Preview player starting, turn on PFL automatically.
+    if (player === PLAYER_ID_PREVIEW) {
       dispatch(setChannelPFL(player, true));
     }
     audioEngine.players[player]?.play();
@@ -709,8 +709,8 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 
   playerInstance.stop();
 
-  // If we're stoping the PFL player, turn off PFL in the UI.
-  if (player === PLAYER_PFL_ID) {
+  // If we're stoping the Preview player, turn off PFL in the UI.
+  if (player === PLAYER_ID_PREVIEW) {
     dispatch(setChannelPFL(player, false));
   }
 
@@ -863,15 +863,15 @@ export const setChannelPFL = (
     enabled &&
     typeof audioEngine.players[player] !== "undefined" &&
     !audioEngine.players[player]?.isPlaying &&
-    player !== PLAYER_PFL_ID // The PFL player is setting PFL itself when it plays.
+    player !== PLAYER_ID_PREVIEW // The Preview player is setting PFL itself when it plays.
   ) {
-    dispatch(setVolume(player, "off", false));
+    dispatch(setVolume(player, "off", false)); // This does nothing for Preview player (it's not routed.)
     dispatch(play(player));
   }
   // If the player number is -1, do all channels.
   if (player === -1) {
     if (!enabled) {
-      dispatch(stop(PLAYER_PFL_ID)); // Stop the PFL player!
+      dispatch(stop(PLAYER_ID_PREVIEW)); // Stop the Preview player!
     }
     for (let i = 0; i < audioEngine.players.length; i++) {
       dispatch(mixerState.actions.setPlayerPFL({ player: i, enabled: false }));
