@@ -35,7 +35,12 @@ export function Timelord() {
     return silence;
   }
 
-  const broadcastState = useSelector((state: RootState) => state.broadcast);
+  const broadcastStage = useSelector(
+    (state: RootState) => state.broadcast.stage
+  );
+  const broadcastConnection = useSelector(
+    (state: RootState) => state.broadcast.connectionState
+  );
   const [source, setSource] = useState({ id: -1, name: "Loading" });
   const [isSilence, setSilence] = useState(false);
 
@@ -43,11 +48,11 @@ export function Timelord() {
     async () => {
       setSource(await getSource());
     },
-    broadcastState.stage === "REGISTERED" ? 3000 : 10000
+    broadcastStage === "REGISTERED" ? 3000 : 10000
   );
 
   useInterval(async () => {
-    broadcastState.stage === "REGISTERED"
+    broadcastStage === "REGISTERED"
       ? setSilence(await getSilence())
       : setSilence(false);
   }, 3000);
@@ -70,8 +75,8 @@ export function Timelord() {
         ticking={true}
         timezone={"europe/london"}
       />
-      {broadcastState.stage === "REGISTERED" &&
-      ["LIVE", "CONNECTED"].indexOf(broadcastState.connectionState) === -1 ? (
+      {broadcastStage === "REGISTERED" &&
+      ["LIVE", "CONNECTED"].indexOf(broadcastConnection) === -1 ? (
         <span className="error">Streaming Error!</span>
       ) : isSilence ? (
         <span className="error">SILENCE DETECTED</span>
