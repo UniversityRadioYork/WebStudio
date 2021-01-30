@@ -8,6 +8,7 @@ import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { contextMenu } from "react-contexify";
 import "./item.scss";
+import { HHMMTosec, secToHHMM } from "../lib/utils";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
 export const TS_ITEM_AUX_ID = "AuxMenu";
@@ -76,12 +77,33 @@ export const Item = memo(function Item({
     if ("artist" in x && x.artist !== "") data.push("Artist: " + x.artist);
     if ("album" in x && x.album.title !== "")
       data.push("Album: " + x.album.title);
-    data.push("Length: " + x.length.toString());
-    if ("intro" in x) data.push("Intro: " + x.intro + " secs");
-    if ("cue" in x) data.push("Cue: " + x.cue + " secs");
-    if ("outro" in x) data.push("Outro: " + x.outro + " secs");
+    data.push("Length: " + x.length);
+    if ("intro" in x)
+      data.push(
+        "Intro: " + (x.intro > 60 ? secToHHMM(x.intro) : x.intro + " secs")
+      );
+    if ("cue" in x)
+      data.push("Cue: " + (x.cue > 60 ? secToHHMM(x.cue) : x.cue + " secs"));
+    if ("outro" in x) {
+      // Outro seconds are counted from end of track, except 0 = no outro;
+      const outroSecs = x.outro === 0 ? 0 : HHMMTosec(x.length) - x.outro;
+      data.push(
+        "Outro: " +
+          (outroSecs > 60 ? secToHHMM(outroSecs) : outroSecs + " secs")
+      );
+    }
     data.push("Played: " + ("played" in x ? (x.played ? "Yes" : "No") : "No"));
-
+    data.push(
+      "ID: " + ("trackid" in x ? x.trackid : "managedid" in x && x.managedid)
+    );
+    if (showDebug) {
+      data.push(
+        "Debug: itemId(): " +
+          itemId(x) +
+          " - Channel/weight: " +
+          ("channel" in x && x.channel + "/" + x.weight)
+      );
+    }
     return data.join("¬"); // Something obscure to split against.
   }
 
@@ -121,11 +143,6 @@ export const Item = memo(function Item({
           >
             Explicit
           </small>
-          {showDebug && (
-            <code>
-              {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
-            </code>
-          )}
         </div>
       )}
     </Draggable>
