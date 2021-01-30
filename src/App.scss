@@ -24,8 +24,12 @@ $number-of-channels: 3;
 }
 
 .hover-menu {
-  .hover-label:not(.always-show) {
+  .hover-label {
     display: none;
+
+    &:not(.always-show) {
+      display: block;
+    }
   }
 }
 
@@ -46,8 +50,8 @@ $number-of-channels: 3;
     }
 
     .hover-label {
-      font-size: 10px;
-      margin-top: -2px;
+      font-size: 11px;
+      margin-top: -4px;
       display: block;
       width: 100%;
     }
