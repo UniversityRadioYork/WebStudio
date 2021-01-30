@@ -12,8 +12,24 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import { audioEngine, ChannelMapping } from "./audio";
+
+import {
+  audioEngine,
+  ChannelMapping,
+  INTERNAL_OUTPUT_ID,
+  PLAYER_COUNT,
+  PLAYER_ID_PREVIEW,
+} from "./audio";
 import * as TheNews from "./the_news";
+
+import { changeSetting } from "../optionsMenu/settingsState";
+import {
+  DEFAULT_TRIM_DB,
+  OFF_LEVEL_DB,
+  BED_LEVEL_DB,
+  FULL_LEVEL_DB,
+} from "./audio";
+import { PLAYER_COUNTER_UPDATE_PERIOD_MS } from "../showplanner/Player";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -27,12 +43,6 @@ type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
-
-export const DEFAULT_TRIM_DB = -6; // The default trim applied to channel players.
-
-export const OFF_LEVEL_DB = -40;
-export const BED_LEVEL_DB = -13;
-export const FULL_LEVEL_DB = 0;
 interface PlayerState {
   loadedItem: PlanItem | Track | AuxItem | null;
   loading: number;
@@ -90,7 +100,8 @@ const BasePlayerState: PlayerState = {
 const mixerState = createSlice({
   name: "Player",
   initialState: {
-    players: [BasePlayerState, BasePlayerState, BasePlayerState],
+    // Fill the players with channel and preview players.
+    players: Array(PLAYER_COUNT).fill(BasePlayerState),
     mic: {
       open: false,
       volume: 1,
@@ -389,7 +400,7 @@ export const load = (
 
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
   const customOutput =
-    getState().settings.channelOutputIds[player] !== "internal";
+    getState().settings.channelOutputIds[player] !== INTERNAL_OUTPUT_ID;
   const isPFL = getState().mixer.players[player].pfl;
 
   dispatch(
@@ -454,7 +465,17 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const channelOutputId = getState().settings.channelOutputIds[player];
+    let channelOutputId = getState().settings.channelOutputIds[player];
+    // If the player setting doesn't exist, reset the settings. (Happens after player count is increased)
+    if (!channelOutputId) {
+      channelOutputId = INTERNAL_OUTPUT_ID;
+      dispatch(
+        changeSetting({
+          key: "channelOutputIds",
+          val: Array(PLAYER_COUNT).fill(channelOutputId),
+        })
+      );
+    }
 
     const playerInstance = await audioEngine.createPlayer(
       player,
@@ -504,7 +525,8 @@ export const load = (
       dispatch(mixerState.actions.setPlayerState({ player, state: "playing" }));
 
       const state = getState().mixer.players[player];
-      if (state.loadedItem != null) {
+      // Don't set played on Preview Channel
+      if (state.loadedItem != null && player !== PLAYER_ID_PREVIEW) {
         dispatch(
           setItemPlayed({ itemId: itemId(state.loadedItem), played: true })
         );
@@ -519,7 +541,10 @@ export const load = (
       );
     });
     playerInstance.on("timeChange", (time) => {
-      if (Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5) {
+      if (
+        Math.abs(time - getState().mixer.players[player].timeCurrent) >
+        PLAYER_COUNTER_UPDATE_PERIOD_MS / 1000
+      ) {
         dispatch(
           mixerState.actions.setTimeCurrent({
             player,
@@ -529,6 +554,10 @@ export const load = (
       }
     });
     playerInstance.on("finish", () => {
+      // If the Preview Player finishes playing, turn off PFL in the UI.
+      if (player === PLAYER_ID_PREVIEW) {
+        dispatch(setChannelPFL(player, false));
+      }
       dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
       const state = getState().mixer.players[player];
       if (state.tracklistItemID !== -1) {
@@ -602,6 +631,11 @@ export const play = (player: number): AppThunk => async (
     console.log("not ready");
     return;
   }
+
+  // If it's the Preview player starting, turn on PFL automatically.
+  if (player === PLAYER_ID_PREVIEW) {
+    dispatch(setChannelPFL(player, true));
+  }
   audioEngine.players[player]?.play();
 
   // If we're starting off audible, try and tracklist.
@@ -618,7 +652,8 @@ const attemptTracklist = (player: number): AppThunk => async (
   if (
     state.loadedItem &&
     state.loadedItem.type === "central" &&
-    audioEngine.players[player]?.isPlaying
+    audioEngine.players[player]?.isPlaying &&
+    player !== PLAYER_ID_PREVIEW
   ) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
@@ -642,6 +677,10 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
   if (audioEngine.players[player]?.isPlaying) {
     audioEngine.players[player]?.pause();
   } else {
+    // If it's the Preview player starting, turn on PFL automatically.
+    if (player === PLAYER_ID_PREVIEW) {
+      dispatch(setChannelPFL(player, true));
+    }
     audioEngine.players[player]?.play();
   }
 };
@@ -669,6 +708,11 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
   }
 
   playerInstance.stop();
+
+  // If we're stoping the Preview player, turn off PFL in the UI.
+  if (player === PLAYER_ID_PREVIEW) {
+    dispatch(setChannelPFL(player, false));
+  }
 
   dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime }));
   playerInstance.setCurrentTime(cueTime);
@@ -818,13 +862,17 @@ export const setChannelPFL = (
   if (
     enabled &&
     typeof audioEngine.players[player] !== "undefined" &&
-    !audioEngine.players[player]?.isPlaying
+    !audioEngine.players[player]?.isPlaying &&
+    player !== PLAYER_ID_PREVIEW // The Preview player is setting PFL itself when it plays.
   ) {
-    dispatch(setVolume(player, "off", false));
+    dispatch(setVolume(player, "off", false)); // This does nothing for Preview player (it's not routed.)
     dispatch(play(player));
   }
   // If the player number is -1, do all channels.
   if (player === -1) {
+    if (!enabled) {
+      dispatch(stop(PLAYER_ID_PREVIEW)); // Stop the Preview player!
+    }
     for (let i = 0; i < audioEngine.players.length; i++) {
       dispatch(mixerState.actions.setPlayerPFL({ player: i, enabled: false }));
       audioEngine.setPFL(i, false);

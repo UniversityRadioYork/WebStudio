@@ -8,6 +8,7 @@ import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { contextMenu } from "react-contexify";
 import "./item.scss";
+import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
 export const TS_ITEM_AUX_ID = "AuxMenu";
@@ -47,6 +48,7 @@ export const Item = memo(function Item({
 
   function openContextMenu(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
     e.preventDefault();
+    if (column === PLAYER_ID_PREVIEW) return; // Don't let people right click in the library.
     if (isTrack(x)) {
       contextMenu.show({
         id: TS_ITEM_MENU_ID,
@@ -56,6 +58,7 @@ export const Item = memo(function Item({
           trackid: x.trackid,
           title: x.title,
           artist: x.artist,
+          item: x,
         },
       });
     } else if (isAux(x)) {
@@ -65,6 +68,7 @@ export const Item = memo(function Item({
         props: {
           id,
           title: x.title,
+          item: x,
         },
       });
     }
@@ -86,11 +90,7 @@ export const Item = memo(function Item({
   }
 
   return (
-    <Draggable
-      draggableId={id}
-      index={index}
-      isDragDisabled={isGhost || isLoaded}
-    >
+    <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
