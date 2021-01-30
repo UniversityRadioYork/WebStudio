@@ -143,6 +143,11 @@ export const Item = memo(function Item({
           >
             Explicit
           </small>
+          {showDebug && (
+            <code>
+              {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
+            </code>
+          )}
         </div>
       )}
     </Draggable>
