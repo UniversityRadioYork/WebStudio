@@ -41,6 +41,10 @@
     animation: red-flash steps(1) 0.5s infinite;
   }
 
+  &.pfl {
+    background-color: #dc3545;
+  }
+
   .mixer-buttons-backdrop {
     position: absolute;
     top: 0;

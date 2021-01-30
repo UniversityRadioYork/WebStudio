@@ -246,7 +246,13 @@ function LoadedTrackInfo({ id }: { id: number }) {
   );
 }
 
-export function Player({ id, pfl }: { id: number; pfl: boolean }) {
+export function Player({
+  id,
+  isPreviewChannel,
+}: {
+  id: number;
+  isPreviewChannel: boolean;
+}) {
   // Define time remaining (secs) when the play icon should flash.
   const SECS_REMAINING_WARNING = 20;
 
@@ -295,7 +301,7 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
       }
     >
       <div className="card text-center">
-        {!pfl && (
+        {!isPreviewChannel && (
           <>
             <div className="d-inline mx-1">
               <span className="float-left">
@@ -353,11 +359,11 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
             </div>
           </>
         )}
-        {!pfl && settings.proMode && !customOutput && (
+        {!isPreviewChannel && settings.proMode && !customOutput && (
           <ProModeButtons channel={id} />
         )}
         <div className="card-body p-0">
-          {!pfl && (
+          {!isPreviewChannel && (
             <>
               <LoadedTrackInfo id={id} />
               <br />
@@ -403,10 +409,10 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
         </div>
 
         <div className="p-0 card-footer">
-          {!pfl && <TimingButtons id={id} />}
+          {!isPreviewChannel && <TimingButtons id={id} />}
           <div className="waveform">
-            <PlayerNumbers id={id} pfl={pfl} />
-            {!pfl &&
+            <PlayerNumbers id={id} pfl={isPreviewChannel} />
+            {!isPreviewChannel &&
               playerState.loadedItem !== null &&
               "intro" in playerState.loadedItem && (
                 <span className="m-0 intro bypass-click">
@@ -436,12 +442,14 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
           </div>
         </div>
       </div>
-      {!pfl && (
+      {!isPreviewChannel && !customOutput && (
         <div
           className={
             "mixer-buttons " +
-            (playerState.state === "playing" && playerState.volume === 0
-              ? "error-animation"
+            (playerState.state === "playing"
+              ? playerState.volume === 0 && !playerState.pfl
+                ? "error-animation"
+                : playerState.pfl && "pfl"
               : "")
           }
         >
@@ -465,12 +473,14 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
           </button>
         </div>
       )}
-      {!pfl && settings.proMode && settings.channelVUs && (
+      {!isPreviewChannel && settings.proMode && settings.channelVUs && (
         <div className="channel-vu">
           {customOutput ? (
             <span className="text-muted">
               Custom audio output disables VU meters.
             </span>
+          ) : playerState.pfl ? (
+            <span className="text-muted">This Player is playing in PFL.</span>
           ) : (
             <VUMeter
               width={300}
@@ -492,7 +502,7 @@ export function PflPlayer() {
       <span className="mx-1 hover-label always-show">
         Preview Player (Headphones Only)
       </span>
-      <Player id={PLAYER_ID_PREVIEW} pfl={true} />
+      <Player id={PLAYER_ID_PREVIEW} isPreviewChannel={true} />
     </div>
   );
 }
