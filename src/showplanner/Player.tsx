@@ -418,8 +418,10 @@ export function Player({ id }: { id: number }) {
       <div
         className={
           "mixer-buttons " +
-          (playerState.state === "playing" && playerState.volume === 0
-            ? "error-animation"
+          (playerState.state === "playing"
+            ? playerState.volume === 0 && !playerState.pfl
+              ? "error-animation"
+              : playerState.pfl && "pfl"
             : "")
         }
       >
@@ -449,6 +451,8 @@ export function Player({ id }: { id: number }) {
             <span className="text-muted">
               Custom audio output disables VU meters.
             </span>
+          ) : playerState.pfl ? (
+            <span className="text-muted">This Player is playing in PFL.</span>
           ) : (
             <VUMeter
               width={300}
