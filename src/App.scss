@@ -27,7 +27,7 @@ $number-of-channels: 3;
   .hover-label {
     display: none;
 
-    &:not(.always-show) {
+    &.always-show {
       display: block;
     }
   }
