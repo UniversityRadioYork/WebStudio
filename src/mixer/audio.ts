@@ -8,7 +8,17 @@ import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 
 import StereoAnalyserNode from "stereo-analyser-node";
-import { DEFAULT_TRIM_DB, OFF_LEVEL_DB } from "./state";
+
+export const DEFAULT_TRIM_DB = -6; // The default trim applied to channel players.
+
+export const OFF_LEVEL_DB = -40;
+export const BED_LEVEL_DB = -13;
+export const FULL_LEVEL_DB = 0;
+
+export const PLAYER_COUNT = 4; // (3 channels + PFL Preview)
+export const PLAYER_ID_PREVIEW = 3; // Player 3 (zero index) is the Preview Player
+
+export const INTERNAL_OUTPUT_ID = "internal";
 
 interface PlayerEvents {
   loadComplete: (duration: number) => void;
@@ -178,19 +188,22 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   _connectPFL() {
-    if (this.pfl) {
-      // In this case, we just want to route the player output to the headphones direct.
-      // Tap it from analyser to avoid the player volume.
-      (this.wavesurfer as any).backend.analyser.connect(
-        this.engine.headphonesNode
-      );
-    } else {
-      try {
-        (this.wavesurfer as any).backend.analyser.disconnect(
+    // We check the existence of the analyser here, because if we're using a custom output, this won't exist.
+    if ((this.wavesurfer as any).backend.analyser) {
+      if (this.pfl) {
+        // In this case, we just want to route the player output to the headphones direct.
+        // Tap it from analyser to avoid the player volume.
+        (this.wavesurfer as any).backend.analyser.connect(
           this.engine.headphonesNode
         );
-      } catch (e) {
-        // This connection wasn't connected anyway, ignore.
+      } else {
+        try {
+          (this.wavesurfer as any).backend.analyser.disconnect(
+            this.engine.headphonesNode
+          );
+        } catch (e) {
+          // This connection wasn't connected anyway, ignore.
+        }
       }
     }
   }
@@ -203,7 +216,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     url: string
   ) {
     // If we want to output to a custom audio device, we're gonna need to do things differently.
-    const customOutput = outputId !== "internal";
+    const customOutput = outputId !== INTERNAL_OUTPUT_ID;
 
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
@@ -271,7 +284,12 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       }
     } else {
       (wavesurfer as any).backend.gainNode.disconnect();
-      (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+
+      // Don't let the PFL player reach on air.
+      if (player !== PLAYER_ID_PREVIEW) {
+        (wavesurfer as any).backend.gainNode.connect(engine.finalCompressor);
+      }
+
       (wavesurfer as any).backend.gainNode.connect(
         engine.playerAnalysers[player]
       );
@@ -340,7 +358,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   // Player Inputs
   public players: (Player | undefined)[] = [];
-  playerAnalysers: typeof StereoAnalyserNode[];
+  playerAnalysers: typeof StereoAnalyserNode[] = Array(PLAYER_COUNT);
 
   // Final Processing
   finalCompressor: DynamicsCompressorNode;
@@ -397,10 +415,10 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     // Player Input
 
     this.playerAnalysers = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < PLAYER_COUNT; i++) {
       let analyser = new StereoAnalyserNode(this.audioContext);
       analyser.fftSize = ANALYSIS_FFT_SIZE;
-      this.playerAnalysers.push(analyser);
+      this.playerAnalysers[i] = analyser;
     }
 
     // Final Processing
