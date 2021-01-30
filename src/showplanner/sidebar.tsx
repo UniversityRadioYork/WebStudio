@@ -43,8 +43,8 @@ function MicControl() {
   return (
     <div className="mic-control">
       <div data-toggle="collapse" data-target="#mic-control-menu">
-        <h2>
-          <FaMicrophone className="mx-1" size={28} />
+        <h2 className="h3">
+          <FaMicrophone className="mx-1" size={25} />
           Microphone
         </h2>
         <FaBars

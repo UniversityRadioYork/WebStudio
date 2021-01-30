@@ -73,40 +73,43 @@ export function LibraryColumn() {
       />
       <div className="library-column">
         <div className="mx-2 mb-2">
-          <h2>
-            <FaBookOpen className="mx-2" size={28} />
+          <h2 className="h3 hide-low-height">
+            <FaBookOpen className="mx-2" size={25} />
             Libraries
           </h2>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Auto Playout"
-            size="sm"
-            outline={true}
-            onClick={() => setAutoPlayoutModal(true)}
-          >
-            <FaPlayCircle /> Auto Playout
-          </Button>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Import From Showplan"
-            size="sm"
-            outline={true}
-            onClick={() => setShowImporterModal(true)}
-          >
-            <FaFileImport /> Import
-          </Button>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Upload to Library"
-            size="sm"
-            outline={true}
-            onClick={() => setShowLibraryModal(true)}
-          >
-            <FaUpload /> Upload
-          </Button>
+          <div className="row m-0 p-1 card-header hover-menu">
+            <span className="hover-label">Hover for Import &amp; Tools</span>
+            <Button
+              className="mr-1"
+              color="primary"
+              title="Import From Showplan"
+              size="sm"
+              outline={true}
+              onClick={() => setShowImporterModal(true)}
+            >
+              <FaFileImport /> Import
+            </Button>
+            <Button
+              className="mr-1"
+              color="primary"
+              title="Upload to Library"
+              size="sm"
+              outline={true}
+              onClick={() => setShowLibraryModal(true)}
+            >
+              <FaUpload /> Upload
+            </Button>
+            <Button
+              className="mr-1"
+              color="primary"
+              title="Auto Playout"
+              size="sm"
+              outline={true}
+              onClick={() => setAutoPlayoutModal(true)}
+            >
+              <FaPlayCircle /> Auto Playout
+            </Button>
+          </div>
         </div>
         <div className="px-2">
           <select

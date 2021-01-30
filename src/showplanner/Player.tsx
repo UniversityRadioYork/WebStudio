@@ -488,7 +488,10 @@ export function Player({ id, pfl }: { id: number; pfl: boolean }) {
 
 export function PflPlayer() {
   return (
-    <div id="pfl-player">
+    <div id="pfl-player" className="hover-menu">
+      <span className="mx-1 hover-label always-show">
+        Preview Player (Headphones Only)
+      </span>
       <Player id={PLAYER_ID_PREVIEW} pfl={true} />
     </div>
   );
