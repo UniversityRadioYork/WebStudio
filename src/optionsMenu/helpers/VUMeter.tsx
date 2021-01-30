@@ -42,7 +42,9 @@ export function VUMeter(props: VUMeterProps) {
           setPeakR(result[1]);
         }
         setTimeout((current = rafRef.current, a = animate) => {
-          if (isMounted) current = requestAnimationFrame(a);
+          if (isMounted) {
+            current = requestAnimationFrame(a);
+          }
         }, 1000 / FPS);
       }
     };
