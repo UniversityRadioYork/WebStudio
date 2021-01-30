@@ -28,6 +28,8 @@ import { RootState } from "../rootReducer";
 import { Button } from "reactstrap";
 import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
+import ReactTooltip from "react-tooltip";
+
 export const CML_CACHE: { [recordid_trackid: string]: Track } = {};
 
 type searchingStateEnum =
@@ -173,8 +175,8 @@ export function LibraryColumn() {
 export function CentralMusicLibrary() {
   const [track, setTrack] = useState("");
   const [artist, setArtist] = useState("");
-  const debouncedTrack = useDebounce(track, 600);
-  const debouncedArtist = useDebounce(artist, 600);
+  const debouncedTrack = useDebounce(track, 1000);
+  const debouncedArtist = useDebounce(artist, 1000);
   const [items, setItems] = useState<Track[]>([]);
 
   const [state, setState] = useState<searchingStateEnum>("not-searching");
@@ -188,11 +190,6 @@ export function CentralMusicLibrary() {
     setItems([]);
     setState("searching");
     searchForTracks(artist, track).then((tracks) => {
-      if (tracks.length === 0) {
-        setState("no-results");
-      } else {
-        setState("results");
-      }
       tracks.forEach((track) => {
         const id = itemId(track);
         if (!(id in CML_CACHE)) {
@@ -200,6 +197,12 @@ export function CentralMusicLibrary() {
         }
       });
       setItems(tracks);
+      if (tracks.length === 0) {
+        setState("no-results");
+      } else {
+        setState("results");
+        ReactTooltip.rebuild(); // Update tooltips so they appear.
+      }
     });
   }, [debouncedTrack, debouncedArtist, artist, track]);
   return (
@@ -248,8 +251,8 @@ export function CentralMusicLibrary() {
 export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
   const [track, setTrack] = useState("");
   const [artist, setArtist] = useState("");
-  const debouncedTrack = useDebounce(track, 600);
-  const debouncedArtist = useDebounce(artist, 600);
+  const debouncedTrack = useDebounce(track, 1000);
+  const debouncedArtist = useDebounce(artist, 1000);
   const [items, setItems] = useState<Track[]>([]);
 
   const [state, setState] = useState<searchingStateEnum>("not-searching");
@@ -270,6 +273,7 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
         setState("no-results");
       } else {
         setState("results");
+        ReactTooltip.rebuild(); // Update tooltips so they appear.
       }
     }
     load();
@@ -336,7 +340,7 @@ export const AUX_CACHE: { [auxid: string]: AuxItem } = {};
 
 export function AuxLibrary({ libraryId }: { libraryId: string }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedQuery = useDebounce(searchQuery, 200);
+  const debouncedQuery = useDebounce(searchQuery, 500);
   const [items, setItems] = useState<AuxItem[]>([]);
 
   const [state, setState] = useState<searchingStateEnum>("not-searching");
@@ -353,6 +357,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
         }
       });
       setItems(libItems);
+      ReactTooltip.rebuild(); // Update tooltips so they appear.
       if (libItems.length === 0) {
         setState("no-results");
       } else {

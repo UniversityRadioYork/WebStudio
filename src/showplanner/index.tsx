@@ -356,6 +356,10 @@ export function LoadingDialogue({
 function ChannelStrips() {
   const showplan = useSelector((state: RootState) => state.showplan.plan!);
 
+  useEffect(() => {
+    ReactTooltip.rebuild(); // If the show plan has been re-jiggled, make sure the tooltips are updated.
+  });
+
   return (
     <div className="channels">
       <Channel id={0} data={showplan} />
