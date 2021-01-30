@@ -36,15 +36,20 @@ export function Timelord() {
   }
 
   const broadcastState = useSelector((state: RootState) => state.broadcast);
-  const [source, setSource] = useState({ id: 0, name: "Unknown" });
+  const [source, setSource] = useState({ id: -1, name: "Loading" });
   const [isSilence, setSilence] = useState(false);
 
-  useInterval(async () => {
-    setSource(await getSource());
-  }, 3000);
+  useInterval(
+    async () => {
+      setSource(await getSource());
+    },
+    broadcastState.stage === "REGISTERED" ? 3000 : 10000
+  );
 
   useInterval(async () => {
-    setSilence(await getSilence());
+    broadcastState.stage === "REGISTERED"
+      ? setSilence(await getSilence())
+      : setSilence(false);
   }, 3000);
 
   return (
@@ -71,10 +76,12 @@ export function Timelord() {
       ) : isSilence ? (
         <span className="error">SILENCE DETECTED</span>
       ) : (
-        <span className="source">
-          <span className={"studio studio" + source.id}>{source.name}</span>
-          &nbsp;is On Air
-        </span>
+        source.id > -1 && (
+          <span className="source">
+            <span className={"studio studio" + source.id}>{source.name}</span>
+            &nbsp;is On Air
+          </span>
+        )
       )}
     </li>
   );
