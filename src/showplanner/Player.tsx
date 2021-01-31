@@ -16,6 +16,7 @@ import * as ShowPlanState from "../showplanner/state";
 import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
+import * as BroadcastState from "../broadcast/state";
 import * as api from "../api";
 import { AppThunk } from "../store";
 import {
@@ -24,6 +25,7 @@ import {
   PLAYER_COUNT,
   PLAYER_ID_PREVIEW,
 } from "../mixer/audio";
+import { useBeforeunload } from "react-beforeunload";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -269,6 +271,15 @@ export function Player({
         omit(b, "timeCurrent", "timeRemaining")
       )
   );
+
+  useBeforeunload((event) => {
+    console.log("Checking player " + id + " for un-ended tracklists.");
+    const tracklistItemID = playerState.tracklistItemID;
+    if (tracklistItemID !== -1) {
+      dispatch(BroadcastState.tracklistEnd(tracklistItemID));
+    }
+  });
+
   const settings = useSelector((state: RootState) => state.settings);
   const customOutput = settings.channelOutputIds[id] !== INTERNAL_OUTPUT_ID;
   const dispatch = useDispatch();

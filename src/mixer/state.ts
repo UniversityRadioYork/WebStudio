@@ -382,6 +382,13 @@ export const load = (
     }
   }
 
+  // If somehow we've managed to re-load the channel without ending tracklisting.
+  // This could happen if they paused it at the end, or if Wavesurfer forgot somehow.
+  const tracklistItemID = getState().mixer.players[player].tracklistItemID;
+  if (tracklistItemID !== -1) {
+    dispatch(BroadcastState.tracklistEnd(tracklistItemID));
+  }
+
   // Can't really load a ghost, it'll break setting cues etc. Do nothing.
   if (item.type === "ghost") {
     return;
