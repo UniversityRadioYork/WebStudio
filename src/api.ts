@@ -77,19 +77,19 @@ interface Album {
   // TODO
 }
 
-interface TimeslotItemBase {
+export interface TimeslotItemBase {
   timeslotitemid: string;
   channel: number;
   weight: number;
   title: string;
   length: string;
-  trackid: number;
   clean: boolean;
   cue: number;
 }
 
-interface TimeslotItemCentral {
+export interface TimeslotItemCentral {
   type: "central";
+  trackid: number;
   artist: string;
   intro: number;
   outro: number;
@@ -104,10 +104,8 @@ export interface AuxItem {
   title: string | number;
   managedid: number;
   length: string;
-  trackid: number;
   expirydate: boolean | string;
   expired: boolean;
-  recordid: string;
   auxid: string;
 }
 

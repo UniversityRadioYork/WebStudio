@@ -11,7 +11,6 @@ const DB_CONST = 20.0;
 declare const sampleRate: number;
 
 type StereoModeEnum = "M3" | "M6" | "AB";
-// @ts-ignore
 class DBFSPeakProcessor extends AudioWorkletProcessor {
   process(
     inputs: Float32Array[][],

@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { INTERNAL_OUTPUT_ID, PLAYER_COUNT } from "../mixer/audio";
 
 interface Settings {
   showDebugInfo: boolean;
@@ -23,7 +24,7 @@ const settingsState = createSlice({
     proMode: false,
     channelVUs: true,
     channelVUsStereo: true,
-    channelOutputIds: ["internal", "internal", "internal"],
+    channelOutputIds: Array(PLAYER_COUNT).fill(INTERNAL_OUTPUT_ID),
     resetTrimOnLoad: true,
     saveShowPlanChanges: false,
   } as Settings,

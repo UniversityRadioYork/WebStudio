@@ -1,0 +1,61 @@
+#timelord {
+  background: black;
+  border: red 1px solid;
+  color: white;
+  padding: 0 1em;
+  font-size: 1.1em;
+
+  a {
+    text-decoration: none;
+    color: white;
+  }
+
+  time {
+    font-weight: bold;
+    font-size: 1.1em;
+    font-variant-numeric: tabular-nums; // Make the text monospace so it stops jumping.
+  }
+
+  .error {
+    font-weight: bold;
+    font-size: 1.1em;
+    -webkit-animation: red-text-flash steps(1) 1s infinite;
+    animation: red-text-flash steps(1) 1s infinite;
+  }
+
+  .source,
+  .error {
+    margin-left: 1em;
+    border-left: 2px solid gray;
+    padding-left: 1em;
+  }
+
+  .studio {
+    color: #2cdfff;
+    font-weight: bold;
+
+    &.studio1 {
+      color: red;
+    }
+
+    &.studio2 {
+      color: #246ee6;
+    }
+
+    &.studio3 {
+      color: #0f0;
+    }
+
+    &.studio4 {
+      color: #bb00dc;
+    }
+
+    &.studio5 {
+      color: #b5009b;
+    }
+
+    &.studio8 {
+      color: orange;
+    }
+  }
+}

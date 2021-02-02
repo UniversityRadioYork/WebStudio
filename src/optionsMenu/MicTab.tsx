@@ -146,7 +146,7 @@ export function MicTab() {
       <div style={{ opacity: state.open ? 1 : 0.5 }}>
         <h3>Calibration</h3>
         <p>
-          Speak into the microphone at your <b>nomal presenting volume</b>.
+          Speak into the microphone at your <b>normal presenting volume</b>.
           Adjust the gain slider until the bar below is <b>green</b> when you're
           speaking.
         </p>

@@ -27,24 +27,32 @@ export function VUMeter(props: VUMeterProps) {
 
   const isMic = props.source.substr(0, 3) === "mic";
 
+  const FPS = 30; // Limit the FPS so that lower spec machines have a better time juggling CPU.
+
   useEffect(() => {
+    let isMounted = true; // This VU exists as we're calling useEffect
     const animate = () => {
-      if (!isMic || isMicOpen) {
+      if ((!isMic || isMicOpen) && isMounted) {
         const result = audioEngine.getLevels(
           props.source,
           props.stereo ? props.stereo : false
         );
         setPeakL(result[0]);
-        if (props.stereo) {
+        if (props.stereo && isMounted) {
           setPeakR(result[1]);
         }
-        rafRef.current = requestAnimationFrame(animate);
+        setTimeout((current = rafRef.current, a = animate) => {
+          if (isMounted) {
+            current = requestAnimationFrame(a);
+          }
+        }, 1000 / FPS);
       }
     };
     if (!isMic || isMicOpen) {
       rafRef.current = requestAnimationFrame(animate);
     }
     return () => {
+      isMounted = false; // Tell the async stuff above to not bother if the VU meter has gone away.
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;

@@ -16,12 +16,22 @@ import * as ShowPlanState from "../showplanner/state";
 import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
 import ProModeButtons from "./ProModeButtons";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
+import * as BroadcastState from "../broadcast/state";
 import * as api from "../api";
 import { AppThunk } from "../store";
+import {
+  INTERNAL_OUTPUT_ID,
+  LevelsSource,
+  PLAYER_COUNT,
+  PLAYER_ID_PREVIEW,
+} from "../mixer/audio";
+import { useBeforeunload } from "react-beforeunload";
 
 export const USE_REAL_GAIN_VALUE = false;
 
-function PlayerNumbers({ id }: { id: number }) {
+export const PLAYER_COUNTER_UPDATE_PERIOD_MS = 200;
+
+function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
   const store = useStore<RootState, any>();
   const [
     [timeCurrent, timeLength, timeRemaining, endTime],
@@ -39,7 +49,7 @@ function PlayerNumbers({ id }: { id: number }) {
         state.timeRemaining,
         now.valueOf() / 1000 + state.timeRemaining,
       ]);
-    }, 1000);
+    }, PLAYER_COUNTER_UPDATE_PERIOD_MS);
     return () => window.clearInterval(tickerRef.current);
   });
 
@@ -54,9 +64,11 @@ function PlayerNumbers({ id }: { id: number }) {
       <span id={"remaining-" + id} className="remaining bypass-click">
         {secToHHMM(timeRemaining)}
       </span>
-      <span id={"ends-" + id} className="outro bypass-click">
-        End - {timestampToHHMM(endTime)}
-      </span>
+      {!pfl && (
+        <span id={"ends-" + id} className="outro bypass-click">
+          End - {timestampToHHMM(endTime)}
+        </span>
+      )}
     </>
   );
 }
@@ -197,7 +209,52 @@ function TimingButtons({ id }: { id: number }) {
   );
 }
 
-export function Player({ id }: { id: number }) {
+function LoadedTrackInfo({ id }: { id: number }) {
+  const loadedItem = useSelector(
+    (state: RootState) => state.mixer.players[id].loadedItem
+  );
+  const loading = useSelector(
+    (state: RootState) => state.mixer.players[id].loading
+  );
+  const loadError = useSelector(
+    (state: RootState) => state.mixer.players[id].loadError
+  );
+
+  return (
+    <span className="card-title">
+      <strong>
+        {loadedItem !== null && loading === -1
+          ? loadedItem.title
+          : loading !== -1
+          ? `LOADING`
+          : loadError
+          ? "LOAD FAILED"
+          : "No Media Selected"}
+      </strong>
+      <small
+        className={
+          "border rounded border-danger text-danger p-1 m-1" +
+          (loadedItem !== null &&
+          loading === -1 &&
+          "clean" in loadedItem &&
+          !loadedItem.clean
+            ? ""
+            : " d-none")
+        }
+      >
+        Explicit
+      </small>
+    </span>
+  );
+}
+
+export function Player({
+  id,
+  isPreviewChannel,
+}: {
+  id: number;
+  isPreviewChannel: boolean;
+}) {
   // Define time remaining (secs) when the play icon should flash.
   const SECS_REMAINING_WARNING = 20;
 
@@ -214,21 +271,24 @@ export function Player({ id }: { id: number }) {
         omit(b, "timeCurrent", "timeRemaining")
       )
   );
+
+  useBeforeunload((event) => {
+    console.log("Checking player " + id + " for un-ended tracklists.");
+    const tracklistItemID = playerState.tracklistItemID;
+    if (tracklistItemID !== -1) {
+      dispatch(BroadcastState.tracklistEnd(tracklistItemID));
+    }
+  });
+
   const settings = useSelector((state: RootState) => state.settings);
-  const customOutput = settings.channelOutputIds[id] !== "internal";
+  const customOutput = settings.channelOutputIds[id] !== INTERNAL_OUTPUT_ID;
   const dispatch = useDispatch();
 
   const VUsource = (id: number) => {
-    switch (id) {
-      case 0:
-        return "player-0";
-      case 1:
-        return "player-1";
-      case 2:
-        return "player-2";
-      default:
-        throw new Error("Unknown Player VUMeter source: " + id);
+    if (id < PLAYER_COUNT) {
+      return ("player-" + id) as LevelsSource;
     }
+    throw new Error("Unknown Player VUMeter source: " + id);
   };
 
   let channelDuration = 0;
@@ -252,88 +312,81 @@ export function Player({ id }: { id: number }) {
       }
     >
       <div className="card text-center">
-        <div className="d-inline mx-1">
-          <span className="float-left">
-            Total: {secToHHMM(channelDuration)}
-          </span>
-          <span className="float-right">
-            Unplayed: {secToHHMM(channelUnplayed)}
-          </span>
-        </div>
-        <div className="row m-0 p-1 card-header channelButtons hover-menu">
-          <span className="hover-label">Channel Controls</span>
-          <button
-            className={
-              (playerState.autoAdvance
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() =>
-              dispatch(MixerState.toggleAutoAdvance({ player: id }))
-            }
-          >
-            <FaLevelDownAlt />
-            &nbsp; Auto Advance
-          </button>
-          <button
-            className={
-              (playerState.playOnLoad
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() =>
-              dispatch(MixerState.togglePlayOnLoad({ player: id }))
-            }
-          >
-            <FaPlayCircle />
-            &nbsp; Play on Load
-          </button>
-          <button
-            className={
-              (playerState.repeat !== "none"
-                ? "btn-primary"
-                : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
-            }
-            onClick={() => dispatch(MixerState.toggleRepeat({ player: id }))}
-          >
-            <FaRedo />
-            &nbsp; Repeat {playerState.repeat}
-          </button>
-        </div>
-        {settings.proMode && !customOutput && <ProModeButtons channel={id} />}
+        {!isPreviewChannel && (
+          <>
+            <div className="d-inline mx-1">
+              <span className="float-left">
+                Total: {secToHHMM(channelDuration)}
+              </span>
+              <span className="float-right">
+                Unplayed: {secToHHMM(channelUnplayed)}
+              </span>
+            </div>
+
+            <div className="row m-0 p-1 card-header channelButtons hover-menu">
+              <span className="hover-label">Channel Controls</span>
+              <button
+                className={
+                  (playerState.autoAdvance
+                    ? "btn-primary"
+                    : "btn-outline-secondary") +
+                  " btn btn-sm col-4 sp-play-on-load"
+                }
+                onClick={() =>
+                  dispatch(MixerState.toggleAutoAdvance({ player: id }))
+                }
+              >
+                <FaLevelDownAlt />
+                &nbsp; Auto Advance
+              </button>
+              <button
+                className={
+                  (playerState.playOnLoad
+                    ? "btn-primary"
+                    : "btn-outline-secondary") +
+                  " btn btn-sm col-4 sp-play-on-load"
+                }
+                onClick={() =>
+                  dispatch(MixerState.togglePlayOnLoad({ player: id }))
+                }
+              >
+                <FaPlayCircle />
+                &nbsp; Play on Load
+              </button>
+              <button
+                className={
+                  (playerState.repeat !== "none"
+                    ? "btn-primary"
+                    : "btn-outline-secondary") +
+                  " btn btn-sm col-4 sp-play-on-load"
+                }
+                onClick={() =>
+                  dispatch(MixerState.toggleRepeat({ player: id }))
+                }
+              >
+                <FaRedo />
+                &nbsp; Repeat {playerState.repeat}
+              </button>
+            </div>
+          </>
+        )}
+        {!isPreviewChannel && settings.proMode && !customOutput && (
+          <ProModeButtons channel={id} />
+        )}
         <div className="card-body p-0">
-          <span className="card-title">
-            <strong>
-              {playerState.loadedItem !== null && playerState.loading === -1
-                ? playerState.loadedItem.title
-                : playerState.loading !== -1
-                ? `LOADING`
-                : playerState.loadError
-                ? "LOAD FAILED"
-                : "No Media Selected"}
-            </strong>
-            <small
-              className={
-                "border rounded border-danger text-danger p-1 m-1" +
-                (playerState.loadedItem !== null &&
-                playerState.loading === -1 &&
-                "clean" in playerState.loadedItem &&
-                !playerState.loadedItem.clean
-                  ? ""
-                  : " d-none")
-              }
-            >
-              Explicit
-            </small>
-          </span>
-          <br />
-          <span className="text-muted">
-            {playerState.loadedItem !== null && playerState.loading === -1
-              ? "artist" in playerState.loadedItem &&
-                playerState.loadedItem.artist
-              : ""}
-            &nbsp;
-          </span>
+          {!isPreviewChannel && (
+            <>
+              <LoadedTrackInfo id={id} />
+              <br />
+              <span className="text-muted">
+                {playerState.loadedItem !== null && playerState.loading === -1
+                  ? "artist" in playerState.loadedItem &&
+                    playerState.loadedItem.artist
+                  : ""}
+                &nbsp;
+              </span>
+            </>
+          )}
           <div className="mediaButtons">
             <button
               onClick={() => dispatch(MixerState.play(id))}
@@ -367,10 +420,11 @@ export function Player({ id }: { id: number }) {
         </div>
 
         <div className="p-0 card-footer">
-          <TimingButtons id={id} />
+          {!isPreviewChannel && <TimingButtons id={id} />}
           <div className="waveform">
-            <PlayerNumbers id={id} />
-            {playerState.loadedItem !== null &&
+            <PlayerNumbers id={id} pfl={isPreviewChannel} />
+            {!isPreviewChannel &&
+              playerState.loadedItem !== null &&
               "intro" in playerState.loadedItem && (
                 <span className="m-0 intro bypass-click">
                   {playerState.loadedItem !== null
@@ -399,40 +453,45 @@ export function Player({ id }: { id: number }) {
           </div>
         </div>
       </div>
-      <div
-        className={
-          "mixer-buttons " +
-          (playerState.state === "playing" && playerState.volume === 0
-            ? "error-animation"
-            : "")
-        }
-      >
+      {!isPreviewChannel && !customOutput && (
         <div
-          className="mixer-buttons-backdrop"
-          style={{
-            width:
-              (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
-                100 +
-              "%",
-          }}
-        ></div>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
-          Off
-        </button>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
-          Bed
-        </button>
-        <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
-          Full
-        </button>
-      </div>
-
-      {settings.proMode && settings.channelVUs && (
+          className={
+            "mixer-buttons " +
+            (playerState.state === "playing"
+              ? playerState.volume === 0 && !playerState.pfl
+                ? "error-animation"
+                : playerState.pfl && "pfl"
+              : "")
+          }
+        >
+          <div
+            className="mixer-buttons-backdrop"
+            style={{
+              width:
+                (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
+                  100 +
+                "%",
+            }}
+          ></div>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
+            Off
+          </button>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
+            Bed
+          </button>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
+            Full
+          </button>
+        </div>
+      )}
+      {!isPreviewChannel && settings.proMode && settings.channelVUs && (
         <div className="channel-vu">
           {customOutput ? (
             <span className="text-muted">
               Custom audio output disables VU meters.
             </span>
+          ) : playerState.pfl ? (
+            <span className="text-muted">This Player is playing in PFL.</span>
           ) : (
             <VUMeter
               width={300}
@@ -444,6 +503,17 @@ export function Player({ id }: { id: number }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+export function PflPlayer() {
+  return (
+    <div id="pfl-player" className="hover-menu">
+      <span className="mx-1 hover-label always-show">
+        Preview Player (Headphones Only)
+      </span>
+      <Player id={PLAYER_ID_PREVIEW} isPreviewChannel={true} />
     </div>
   );
 }

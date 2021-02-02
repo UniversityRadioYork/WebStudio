@@ -47,6 +47,16 @@ export function itemId(
   throw new Error("Can't get id of unknown item.");
 }
 
+export function isTrack(
+  item: PlanItem | Track | AuxItem
+): item is (api.TimeslotItemBase & api.TimeslotItemCentral) | Track {
+  return item.type === "central";
+}
+
+export function isAux(item: PlanItem | Track | AuxItem): item is AuxItem {
+  return "auxid" in item;
+}
+
 interface ShowplanState {
   planLoading: boolean;
   planLoadError: string | null;
@@ -192,7 +202,11 @@ const showplan = createSlice({
       const idx = state.plan!.findIndex(
         (x) => itemId(x) === action.payload.itemId
       );
-      state.plan![idx].played = action.payload.played;
+
+      if (idx > -1) {
+        state.plan![idx].played = action.payload.played;
+      }
+      // If we don't find an index, it's because the item has been deleted, just ignore.
     },
     replaceGhost(
       state,
@@ -414,7 +428,11 @@ export const addItem = (
     const idForServer =
       newItemData.type === "central"
         ? `${newItemData.album.recordid}-${newItemData.trackid}`
-        : `ManagedDB-${newItemData.managedid}`;
+        : "managedid" in newItemData
+        ? `ManagedDB-${newItemData.managedid}`
+        : null;
+
+    if (!idForServer) return; // Something went very wrong
 
     dispatch(showplan.actions.insertGhost(ghost));
     ops.push({

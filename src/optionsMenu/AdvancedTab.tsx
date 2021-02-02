@@ -3,6 +3,11 @@ import { RootState } from "../rootReducer";
 import { useSelector, useDispatch } from "react-redux";
 import { changeSetting } from "./settingsState";
 import { changeBroadcastSetting } from "../broadcast/state";
+import {
+  INTERNAL_OUTPUT_ID,
+  PLAYER_COUNT,
+  PLAYER_ID_PREVIEW,
+} from "../mixer/audio";
 
 type ErrorEnum =
   | "NO_PERMISSION"
@@ -34,7 +39,11 @@ function ChannelOutputSelect({
   const dispatch = useDispatch();
   return (
     <div className="form-group">
-      <label>Channel {channel + 1}</label>
+      <label>
+        {channel === PLAYER_ID_PREVIEW
+          ? "Preview Channel"
+          : "Channel " + (channel + 1)}
+      </label>
       <select
         className="form-control"
         id="broadcastSourceSelect"
@@ -45,19 +54,20 @@ function ChannelOutputSelect({
           dispatch(
             changeSetting({
               key: "channelOutputIds",
-              // @ts-ignore
               val: channelOutputIds,
             })
           );
         }}
       >
-        {outputId !== "internal" &&
+        {outputId !== INTERNAL_OUTPUT_ID &&
           !outputList?.some((id) => id.deviceId === outputId) && (
             <option value={outputId} disabled>
               Missing Device ({outputId})
             </option>
           )}
-        <option value="internal">Internal (Direct to Stream/Headphones)</option>
+        <option value={INTERNAL_OUTPUT_ID}>
+          Internal (Direct to Stream/Headphones)
+        </option>
         {(outputList || []).map(function(e, i) {
           return (
             <option value={e.deviceId} key={i}>
@@ -111,7 +121,6 @@ export function AdvancedTab() {
     fetchOutputNames();
   }, []);
 
-  // @ts-ignore
   return (
     <>
       <h2>Selector Options</h2>
@@ -193,9 +202,12 @@ export function AdvancedTab() {
             : "An error occurred when opening the output devices. Please try again."}
         </div>
       )}
-      <ChannelOutputSelect outputList={outputList} channel={0} />
-      <ChannelOutputSelect outputList={outputList} channel={1} />
-      <ChannelOutputSelect outputList={outputList} channel={2} />
+
+      {[...Array(PLAYER_COUNT)].map(function(object, i) {
+        return (
+          <ChannelOutputSelect key={i} outputList={outputList} channel={i} />
+        );
+      })}
 
       <hr />
       <h2>Misc</h2>

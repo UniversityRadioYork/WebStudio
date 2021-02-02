@@ -1,19 +1,16 @@
 import React, { useState, useReducer, useEffect } from "react";
-import { ContextMenu, MenuItem } from "react-contextmenu";
+import { Menu, Item as CtxMenuItem } from "react-contexify";
+import "react-contexify/dist/ReactContexify.min.css";
 import { useBeforeunload } from "react-beforeunload";
 import {
-  FaBookOpen,
-  FaFileImport,
   FaBars,
-  FaMicrophone,
   FaTrash,
-  FaUpload,
   FaCircleNotch,
+  FaPencilAlt,
+  FaHeadphonesAlt,
 } from "react-icons/fa";
-import { VUMeter } from "../optionsMenu/helpers/VUMeter";
-import Stopwatch from "react-stopwatch";
 
-import { TimeslotItem } from "../api";
+import { MYRADIO_NON_API_BASE, TimeslotItem } from "../api";
 import appLogo from "../assets/images/webstudio.svg";
 
 import {
@@ -22,8 +19,9 @@ import {
   DropResult,
   ResponderProvided,
 } from "react-beautiful-dnd";
+import ReactTooltip from "react-tooltip";
 
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { RootState } from "../rootReducer";
 import {
   PlanItem,
@@ -33,31 +31,23 @@ import {
   addItem,
   removeItem,
   setItemPlayed,
-  getPlaylists,
   PlanItemBase,
 } from "./state";
 
 import * as MixerState from "../mixer/state";
-import * as OptionsMenuState from "../optionsMenu/state";
+
 import { Item, TS_ITEM_MENU_ID } from "./Item";
-import {
-  CentralMusicLibrary,
-  CML_CACHE,
-  AuxLibrary,
-  AUX_CACHE,
-  ManagedPlaylistLibrary,
-} from "./libraries";
+import { CML_CACHE, AUX_CACHE } from "./libraries";
 import { Player } from "./Player";
 
 import { CombinedNavAlertBar } from "../navbar";
 import { OptionsMenu } from "../optionsMenu";
 import { WelcomeModal } from "./WelcomeModal";
 import { PisModal } from "./PISModal";
-import { LibraryUploadModal } from "./LibraryUploadModal";
-import { ImporterModal } from "./ImporterModal";
 import "./channel.scss";
 import Modal from "react-modal";
-import { Button } from "reactstrap";
+import { Sidebar } from "./sidebar";
+import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
@@ -79,202 +69,7 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
           </div>
         )}
       </Droppable>
-      <Player id={id} />
-    </div>
-  );
-}
-
-function LibraryColumn() {
-  const [sauce, setSauce] = useState("None");
-  const dispatch = useDispatch();
-  const { auxPlaylists, managedPlaylists, userPlaylists } = useSelector(
-    (state: RootState) => state.showplan
-  );
-
-  const [showLibraryUploadModal, setShowLibraryModal] = useState(false);
-  const [showImporterModal, setShowImporterModal] = useState(false);
-
-  useEffect(() => {
-    dispatch(getPlaylists());
-  }, [dispatch]);
-
-  return (
-    <>
-      <LibraryUploadModal
-        isOpen={showLibraryUploadModal}
-        close={() => setShowLibraryModal(false)}
-      />
-      <ImporterModal
-        close={() => setShowImporterModal(false)}
-        isOpen={showImporterModal}
-      />
-      <div className="library-column">
-        <div className="mx-2 mb-2">
-          <h2>
-            <FaBookOpen className="mx-2" size={28} />
-            Libraries
-          </h2>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Import From Showplan"
-            size="sm"
-            outline={true}
-            onClick={() => setShowImporterModal(true)}
-          >
-            <FaFileImport /> Import
-          </Button>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Upload to Library"
-            size="sm"
-            outline={true}
-            onClick={() => setShowLibraryModal(true)}
-          >
-            <FaUpload /> Upload
-          </Button>
-        </div>
-        <div className="px-2">
-          <select
-            className="form-control form-control-sm"
-            style={{ flex: "none" }}
-            value={sauce}
-            onChange={(e) => setSauce(e.target.value)}
-          >
-            <option value={"None"} disabled>
-              Choose a library
-            </option>
-            <option value={"CentralMusicLibrary"}>Central Music Library</option>
-            <option disabled>Personal Resources</option>
-            {userPlaylists.map((playlist) => (
-              <option key={playlist.managedid} value={playlist.managedid}>
-                {playlist.title}
-              </option>
-            ))}
-            <option disabled>Shared Resources</option>
-            {auxPlaylists.map((playlist) => (
-              <option
-                key={"aux-" + playlist.managedid}
-                value={"aux-" + playlist.managedid}
-              >
-                {playlist.title}
-              </option>
-            ))}
-            <option disabled>Playlists</option>
-            {managedPlaylists.map((playlist) => (
-              <option
-                key={"managed-" + playlist.playlistid}
-                value={"managed-" + playlist.playlistid}
-              >
-                {playlist.title}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="border-top my-2"></div>
-        {sauce === "CentralMusicLibrary" && <CentralMusicLibrary />}
-        {(sauce.startsWith("aux-") || sauce.match(/^\d/)) && (
-          <AuxLibrary libraryId={sauce} />
-        )}
-        {sauce.startsWith("managed-") && (
-          <ManagedPlaylistLibrary libraryId={sauce.substr(8)} />
-        )}
-        <span
-          className={
-            sauce === "None" ? "mt-5 text-center text-muted" : "d-none"
-          }
-        >
-          <FaBookOpen size={56} />
-          <br />
-          Select a library to search.
-        </span>
-      </div>
-    </>
-  );
-}
-
-function MicControl() {
-  const state = useSelector((state: RootState) => state.mixer.mic);
-  const proMode = useSelector((state: RootState) => state.settings.proMode);
-  const stereo = useSelector(
-    (state: RootState) => state.settings.channelVUsStereo
-  );
-  const dispatch = useDispatch();
-
-  return (
-    <div className="mic-control">
-      <div data-toggle="collapse" data-target="#mic-control-menu">
-        <h2>
-          <FaMicrophone className="mx-1" size={28} />
-          Microphone
-        </h2>
-        <FaBars
-          className="toggle mx-0 mt-2 text-muted"
-          title="Toggle Microphone Menu"
-          size={20}
-        />
-      </div>
-      <div id="mic-control-menu" className="collapse show">
-        {!state.open && (
-          <p className="alert-info p-2 mb-0">
-            The microphone has not been setup. Go to{" "}
-            <button
-              className="btn btn-link m-0 mb-1 p-0"
-              onClick={() => dispatch(OptionsMenuState.open())}
-            >
-              {" "}
-              options
-            </button>
-            .
-          </p>
-        )}
-        {state.open && proMode && (
-          <span id="micLiveTimer" className={state.volume > 0 ? "live" : ""}>
-            <span className="text">Mic Live: </span>
-            {state.volume > 0 ? (
-              <Stopwatch
-                seconds={0}
-                minutes={0}
-                hours={0}
-                render={({ formatted }) => {
-                  return <span>{formatted}</span>;
-                }}
-              />
-            ) : (
-              "00:00:00"
-            )}
-          </span>
-        )}
-        {state.open && (
-          <>
-            <div id="micMeter">
-              <VUMeter
-                width={250}
-                height={40}
-                source="mic-final"
-                range={[-40, 3]}
-                greenRange={[-16, -6]}
-                stereo={proMode && stereo}
-              />
-            </div>
-            <div className={`mixer-buttons ${!state.open && "disabled"}`}>
-              <div
-                className="mixer-buttons-backdrop"
-                style={{
-                  width: state.volume * 100 + "%",
-                }}
-              ></div>
-              <button onClick={() => dispatch(MixerState.setMicVolume("off"))}>
-                Off
-              </button>
-              <button onClick={() => dispatch(MixerState.setMicVolume("full"))}>
-                Full
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      <Player id={id} isPreviewChannel={false} />
     </div>
   );
 }
@@ -292,8 +87,9 @@ function incrReducer(state: number, action: any) {
 }
 
 const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
-  const { plan: showplan, planLoadError, planLoading } = useSelector(
-    (state: RootState) => state.showplan
+  const isShowplan = useSelector(
+    (state: RootState) => state.showplan.plan !== null,
+    shallowEqual
   );
 
   // Tell Modals that #root is the main page content, for accessability reasons.
@@ -382,13 +178,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     }
   }
 
-  async function onCtxRemoveClick(e: any, data: { id: string }) {
-    dispatch(removeItem(timeslotId, data.id));
-  }
-  async function onCtxUnPlayedClick(e: any, data: { id: string }) {
-    dispatch(setItemPlayed({ itemId: data.id, played: false }));
-  }
-
   // Add support for reloading the show plan from the iFrames.
   // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
   useEffect(() => {
@@ -408,26 +197,15 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     };
   }, [dispatch, session.currentTimeslot]);
 
-  if (showplan === null) {
-    return (
-      <LoadingDialogue
-        title="Getting Show Plan..."
-        subtitle={planLoading ? "Hang on a sec..." : ""}
-        error={planLoadError}
-        percent={100}
-      />
-    );
+  if (!isShowplan) {
+    return <GettingShowPlanScreen />;
   }
   return (
     <div className="sp-container m-0">
       <CombinedNavAlertBar />
       <div className="sp">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="channels">
-            <Channel id={0} data={showplan} />
-            <Channel id={1} data={showplan} />
-            <Channel id={2} data={showplan} />
-          </div>
+          <ChannelStrips />
           <span
             id="sidebar-toggle"
             className="btn btn-outline-dark btn-sm mb-0"
@@ -436,21 +214,73 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
             <FaBars style={{ verticalAlign: "text-bottom" }} />
             &nbsp; Toggle Sidebar
           </span>
-          <div id="sidebar">
-            <LibraryColumn />
-            <div className="border-top"></div>
-            <MicControl />
-          </div>
+          <Sidebar />
         </DragDropContext>
       </div>
-      <ContextMenu id={TS_ITEM_MENU_ID}>
-        <MenuItem onClick={onCtxRemoveClick}>
+      <Menu id={TS_ITEM_MENU_ID}>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(removeItem(timeslotId, (args.props as any).id))
+          }
+        >
           <FaTrash /> Remove
-        </MenuItem>
-        <MenuItem onClick={onCtxUnPlayedClick}>
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(
+              setItemPlayed({ itemId: (args.props as any).id, played: false })
+            )
+          }
+        >
           <FaCircleNotch /> Mark Unplayed
-        </MenuItem>
-      </ContextMenu>
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) => {
+            dispatch(
+              MixerState.load(PLAYER_ID_PREVIEW, (args.props as any).item)
+            );
+          }}
+        >
+          <FaHeadphonesAlt /> Preview with PFL
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) => {
+            if ("trackid" in (args.props as any)) {
+              window.open(
+                MYRADIO_NON_API_BASE +
+                  "/Library/editTrack?trackid=" +
+                  (args.props as any).trackid
+              );
+            } else {
+              alert("Sorry, editing tracks is only possible right now.");
+            }
+          }}
+        >
+          <FaPencilAlt /> Edit Item
+        </CtxMenuItem>
+      </Menu>
+      <ReactTooltip
+        id="track-hover-tooltip"
+        // Sadly dataTip has to be a string, so let's format this the best we can. Split by something unusual to see in the data.
+        getContent={(dataTip) => (
+          <>
+            {dataTip && (
+              <>
+                {dataTip
+                  .split("¬")
+                  .map((t) => t.split(/:(.+)/))
+                  .map((t) => (
+                    <div key={t[0]}>
+                      <strong>{t[0]}:</strong> {t[1]}
+                    </div>
+                  ))}
+              </>
+            )}
+          </>
+        )}
+        delayShow={300}
+        place="bottom"
+      />
       <OptionsMenu />
       <WelcomeModal
         isOpen={showWelcomeModal}
@@ -461,6 +291,20 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     </div>
   );
 };
+
+function GettingShowPlanScreen() {
+  const { planLoading, planLoadError } = useSelector(
+    (state: RootState) => state.showplan
+  );
+  return (
+    <LoadingDialogue
+      title="Getting Show Plan..."
+      subtitle={planLoading ? "Hang on a sec..." : ""}
+      error={planLoadError}
+      percent={100}
+    />
+  );
+}
 
 export function LoadingDialogue({
   title,
@@ -505,6 +349,22 @@ export function LoadingDialogue({
           </>
         )}
       </span>
+    </div>
+  );
+}
+
+function ChannelStrips() {
+  const showplan = useSelector((state: RootState) => state.showplan.plan!);
+
+  useEffect(() => {
+    ReactTooltip.rebuild(); // If the show plan has been re-jiggled, make sure the tooltips are updated.
+  });
+
+  return (
+    <div className="channels">
+      <Channel id={0} data={showplan} />
+      <Channel id={1} data={showplan} />
+      <Channel id={2} data={showplan} />
     </div>
   );
 }
