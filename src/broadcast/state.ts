@@ -332,7 +332,10 @@ export const stopStreaming = (): AppThunk => async (dispatch) => {
 let recorder: RecordingStreamer;
 
 export const startRecording = (): AppThunk => async (dispatch) => {
-  recorder = new RecordingStreamer(audioEngine.streamingDestination.stream);
+  recorder = new RecordingStreamer(
+    audioEngine.audioContext,
+    audioEngine.streamingAnalyser
+  );
   recorder.addConnectionStateListener((state) => {
     dispatch(broadcastState.actions.setRecordingState(state));
   });

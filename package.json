@@ -137,7 +137,8 @@
     "husky": "^4.3.0",
     "lint-staged": ">=10",
     "node-sass": "^4.13.1",
-    "prettier": "^1.19.1"
+    "prettier": "^1.19.1",
+    "worker-loader": "^3.0.7"
   },
   "jest": {
     "roots": [
