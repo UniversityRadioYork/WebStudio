@@ -8,6 +8,7 @@ import {
   FaCircleNotch,
   FaPencilAlt,
   FaHeadphonesAlt,
+  FaCircle,
 } from "react-icons/fa";
 
 import { MYRADIO_NON_API_BASE, TimeslotItem } from "../api";
@@ -233,6 +234,15 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           }
         >
           <FaCircleNotch /> Mark Unplayed
+        </CtxMenuItem>
+        <CtxMenuItem
+          onClick={(args) =>
+            dispatch(
+              setItemPlayed({ itemId: (args.props as any).id, played: true })
+            )
+          }
+        >
+          <FaCircle /> Mark Played
         </CtxMenuItem>
         <CtxMenuItem
           onClick={(args) => {
