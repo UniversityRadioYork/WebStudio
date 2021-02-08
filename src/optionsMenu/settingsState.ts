@@ -26,7 +26,7 @@ const settingsState = createSlice({
     channelVUsStereo: true,
     channelOutputIds: Array(PLAYER_COUNT).fill(INTERNAL_OUTPUT_ID),
     resetTrimOnLoad: true,
-    saveShowPlanChanges: false,
+    saveShowPlanChanges: true,
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(
