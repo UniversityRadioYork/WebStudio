@@ -6,6 +6,8 @@ import { useInterval } from "../lib/utils";
 import { RootState } from "../rootReducer";
 import "./timelord.scss";
 
+const SILENCE_WARN_SECS = 5;
+
 export function Timelord() {
   async function getSource() {
     let studio = await myradioApiRequest("/selector/studioattime", "GET", null);
@@ -32,7 +34,7 @@ export function Timelord() {
   async function getSilence() {
     let silence = await myradioApiRequest("/selector/issilence", "GET", null);
 
-    return silence;
+    return silence >= SILENCE_WARN_SECS;
   }
 
   const broadcastStage = useSelector(
