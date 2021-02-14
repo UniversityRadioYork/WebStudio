@@ -323,10 +323,7 @@ export function Player({ id }: { id: number }) {
           </span>
           <div className="mediaButtons">
             <button
-              // onClick={() => dispatch(MixerState.play(id))}
-              onClick={() =>
-                sendBAPSicleChannel({ channel: id, command: "PLAY" })
-              }
+              onClick={() => dispatch(MixerState.play(id))}
               className={
                 playerState.state === "playing"
                   ? playerState.timeRemaining <= SECS_REMAINING_WARNING
@@ -338,14 +335,7 @@ export function Player({ id }: { id: number }) {
               <FaPlay />
             </button>
             <button
-              // onClick={() => dispatch(MixerState.pause(id))}
-              onClick={() => {
-                if (playerState.state === "paused") {
-                  sendBAPSicleChannel({ channel: id, command: "UNPAUSE" });
-                } else {
-                  sendBAPSicleChannel({ channel: id, command: "PAUSE" });
-                }
-              }}
+              onClick={() => dispatch(MixerState.pause(id))}
               className={
                 playerState.state === "paused" ? "sp-state-paused" : ""
               }
@@ -353,10 +343,7 @@ export function Player({ id }: { id: number }) {
               <FaPause />
             </button>
             <button
-              // onClick={() => dispatch(MixerState.stop(id))}
-              onClick={() =>
-                sendBAPSicleChannel({ channel: id, command: "STOP" })
-              }
+              onClick={() => dispatch(MixerState.stop(id))}
               className={
                 playerState.state === "stopped" ? "sp-state-stopped" : ""
               }
