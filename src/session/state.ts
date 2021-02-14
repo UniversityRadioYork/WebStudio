@@ -8,8 +8,6 @@ import {
   doesCurrentUserHavePermission,
 } from "../api";
 
-import raygun from "raygun4js";
-
 const BROADCAST_PERMISSION_ID = 340;
 
 interface sessionState {
@@ -84,11 +82,6 @@ export const getUser = (): AppThunk => async (dispatch) => {
       getCurrentApiUser(),
       doesCurrentUserHavePermission(BROADCAST_PERMISSION_ID),
     ]);
-    raygun("setUser", {
-      identifier: user.memberid.toString(10),
-      firstName: user.fname,
-      fullName: user.fname + " " + user.sname,
-    });
     dispatch(sessionState.actions.setCurrentUser({ user, canBroadcast }));
   } catch (e) {
     console.log("failed to get user. " + e.toString());
