@@ -194,45 +194,32 @@ const mixerState = createSlice({
     ) {
       state.players[action.payload.player].timeLength = action.payload.time;
     },
-    toggleAutoAdvance(
+    setAutoAdvance(
       state,
       action: PayloadAction<{
         player: number;
+        enabled: boolean;
       }>
     ) {
-      state.players[action.payload.player].autoAdvance = !state.players[
-        action.payload.player
-      ].autoAdvance;
+      state.players[action.payload.player].autoAdvance = action.payload.enabled;
     },
-    togglePlayOnLoad(
+    setPlayOnLoad(
       state,
       action: PayloadAction<{
         player: number;
+        enabled: boolean;
       }>
     ) {
-      state.players[action.payload.player].playOnLoad = !state.players[
-        action.payload.player
-      ].playOnLoad;
+      state.players[action.payload.player].playOnLoad = action.payload.enabled;
     },
-    toggleRepeat(
+    setRepeat(
       state,
       action: PayloadAction<{
         player: number;
+        mode: PlayerRepeatEnum;
       }>
     ) {
-      var playVal = state.players[action.payload.player].repeat;
-      switch (playVal) {
-        case "none":
-          playVal = "one";
-          break;
-        case "one":
-          playVal = "all";
-          break;
-        case "all":
-          playVal = "none";
-          break;
-      }
-      state.players[action.payload.player].repeat = playVal;
+      state.players[action.payload.player].repeat = action.payload.mode;
     },
     setTracklistItemID(
       state,
@@ -417,59 +404,57 @@ export const {
   setTimeLength,
   setTimeCurrent,
   setPlayerState,
+  setAutoAdvance,
   itemLoadComplete,
-  toggleAutoAdvance,
-  togglePlayOnLoad,
-  toggleRepeat,
+  setPlayOnLoad,
+  setRepeat,
 } = mixerState.actions;
+
+export const toggleAutoAdvance = (player: number): AppThunk => (
+  dispatch,
+  getState
+) => {
+  sendBAPSicleChannel({
+    channel: player,
+    command: "AUTOADVANCE",
+    enabled: !getState().mixer.players[player].autoAdvance,
+  });
+};
+
+export const togglePlayOnLoad = (player: number): AppThunk => (
+  dispatch,
+  getState
+) => {
+  sendBAPSicleChannel({
+    channel: player,
+    command: "PLAYONLOAD",
+    enabled: !getState().mixer.players[player].playOnLoad,
+  });
+};
+
+export const toggleRepeat = (player: number): AppThunk => (
+  dispatch,
+  getState
+) => {
+  var playVal = getState().mixer.players[player].repeat;
+  switch (playVal) {
+    case "none":
+      playVal = "one";
+      break;
+    case "one":
+      playVal = "all";
+      break;
+    case "all":
+      playVal = "none";
+      break;
+  }
+  sendBAPSicleChannel({ channel: player, command: "REPEAT", mode: playVal });
+};
 
 export const redrawWavesurfers = (): AppThunk => () => {
   audioEngine.players.forEach(function(item) {
     item?.redraw();
   });
-};
-
-export const { setTracklistItemID } = mixerState.actions;
-
-const FADE_TIME_SECONDS = 1;
-export const setVolume = (player: number): AppThunk => (dispatch, getState) => {
-  var volume = 0;
-
-  const state = getState().mixer.players[player];
-
-  const currentLevel = state.volume;
-  let currentGain = state.gain;
-
-  // If we can, use the engine's 'real' volume gain.
-  // This helps when we've interupted a previous fade, so the state gain won't be correct.
-  if (typeof audioEngine.players[player] !== "undefined") {
-    currentGain = audioEngine.players[player]!.getVolume();
-  }
-
-  const gainTween = new Between(currentGain, volume)
-    .time(FADE_TIME_SECONDS * 1000)
-    .on("update", (val: number) => {
-      if (typeof audioEngine.players[player] !== "undefined") {
-        audioEngine.players[player]?.setVolume(val);
-      }
-    })
-    .on("complete", () => {
-      dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
-      // clean up when done
-      delete playerGainTweens[player];
-    });
-
-  playerGainTweens[player] = {
-    target: "full",
-    tweens: [gainTween, gainTween],
-  };
-};
-
-export const setChannelTrim = (player: number, val: number): AppThunk => async (
-  dispatch
-) => {
-  dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
-  audioEngine.players[player]?.setTrim(val);
 };
 
 export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (

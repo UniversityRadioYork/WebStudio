@@ -256,9 +256,7 @@ export function Player({ id }: { id: number }) {
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
-            onClick={() =>
-              dispatch(MixerState.toggleAutoAdvance({ player: id }))
-            }
+            onClick={() => dispatch(MixerState.toggleAutoAdvance(id))}
           >
             <FaLevelDownAlt />
             &nbsp; Auto Advance
@@ -269,9 +267,7 @@ export function Player({ id }: { id: number }) {
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
-            onClick={() =>
-              dispatch(MixerState.togglePlayOnLoad({ player: id }))
-            }
+            onClick={() => dispatch(MixerState.togglePlayOnLoad(id))}
           >
             <FaPlayCircle />
             &nbsp; Play on Load
@@ -282,7 +278,7 @@ export function Player({ id }: { id: number }) {
                 ? "btn-primary"
                 : "btn-outline-secondary") + " btn btn-sm col-4 sp-play-on-load"
             }
-            onClick={() => dispatch(MixerState.toggleRepeat({ player: id }))}
+            onClick={() => dispatch(MixerState.toggleRepeat(id))}
           >
             <FaRedo />
             &nbsp; Repeat {playerState.repeat}

@@ -151,6 +151,24 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                   time: bapsicle_state.pos_true,
                 })
               );
+              store.dispatch(
+                MixerState.setAutoAdvance({
+                  player: channel,
+                  enabled: bapsicle_state.auto_advance,
+                })
+              );
+              store.dispatch(
+                MixerState.setPlayOnLoad({
+                  player: channel,
+                  enabled: bapsicle_state.play_on_load,
+                })
+              );
+              store.dispatch(
+                MixerState.setRepeat({
+                  player: channel,
+                  mode: bapsicle_state.repeat.toLowerCase(),
+                })
+              );
             }
 
             if (!("show_plan" in message.data)) {
