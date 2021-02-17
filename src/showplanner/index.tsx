@@ -347,17 +347,20 @@ export function LoadingDialogue({
         <p>
           <strong>{subtitle}</strong>
         </p>
-        {error !== null && (
-          <>
-            <p>
-              <strong>Failed!</strong> Please tell Computing Team that something
-              broke.
-            </p>
-            <p>
-              <code>{error}</code>
-            </p>
-          </>
-        )}
+        {error !== null &&
+          (error === "Error: No valid authentication data provided." ? (
+            <p>Redirecting you to MyRadio, please wait...</p>
+          ) : (
+            <>
+              <p>
+                <strong>Failed!</strong> Please tell Computing Team that
+                something broke.
+              </p>
+              <p>
+                <code>{error}</code>
+              </p>
+            </>
+          ))}
       </span>
     </div>
   );
