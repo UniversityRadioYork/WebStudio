@@ -1,4 +1,6 @@
 import qs from "qs";
+import { getUserError, setCurrentUser } from "./session/state";
+import store from "./store";
 
 export const MYRADIO_NON_API_BASE = process.env.REACT_APP_MYRADIO_NONAPI_BASE!;
 export const MYRADIO_BASE_URL = process.env.REACT_APP_MYRADIO_BASE!;
@@ -42,8 +44,14 @@ export async function myradioApiRequest(
   if (json.status === "OK") {
     return json.payload;
   } else {
-    console.error(json.payload);
-    throw new ApiException(json.payload);
+    if (res.status === 401) {
+      // We've logged out! Oh no!
+      store.dispatch(setCurrentUser({ user: null, canBroadcast: false }));
+      store.dispatch(getUserError("User is no longer logged in."));
+    } else {
+      console.error(json.payload);
+      throw new ApiException(json.payload);
+    }
   }
 }
 
