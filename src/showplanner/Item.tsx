@@ -42,7 +42,8 @@ export const Item = memo(function Item({
   );
 
   const partyMode = useSelector((state: RootState) => state.settings.partyMode);
-  const showName = !partyMode || !isTrack(x) || ("played" in x && x.played);
+  const showName =
+    !partyMode || column > 2 || !isTrack(x) || ("played" in x && x.played);
 
   function triggerClick() {
     if (column > -1) {
