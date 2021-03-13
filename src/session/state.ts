@@ -73,6 +73,8 @@ const sessionState = createSlice({
 
 export default sessionState.reducer;
 
+export const { setCurrentUser, getUserError } = sessionState.actions;
+
 export const getCurrentUser = (): AppThunk => async (dispatch, getState) => {
   return getState().session.currentUser;
 };
@@ -91,7 +93,7 @@ export const getUser = (): AppThunk => async (dispatch) => {
     });
     dispatch(sessionState.actions.setCurrentUser({ user, canBroadcast }));
   } catch (e) {
-    console.log("failed to get user. " + e.toString());
+    console.log("Failed to get user. " + e.toString());
     dispatch(sessionState.actions.getUserError(e.toString()));
   }
 };
@@ -102,7 +104,7 @@ export const getTimeslot = (): AppThunk => async (dispatch) => {
     const timeslot = await getCurrentApiTimeslot();
     dispatch(sessionState.actions.getTimeslotSuccess(timeslot));
   } catch (e) {
-    console.log("failed to get selected timeslot. " + e.toString());
+    console.log("Failed to get selected timeslot. " + e.toString());
     dispatch(sessionState.actions.getTimeslotError(e.toString()));
   }
 };

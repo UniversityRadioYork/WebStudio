@@ -42,6 +42,10 @@ $number-of-channels: 3;
     font-size: 0.92em;
   }
 
+  .navbar.hover-menu .hover-label {
+    display: none;
+  }
+
   .hover-menu {
     .btn {
       padding-top: 0.1em;
@@ -57,7 +61,6 @@ $number-of-channels: 3;
     }
 
     &:not(:hover) {
-      overflow: hidden;
       height: 15px;
 
       > *:not(.hover-label) {

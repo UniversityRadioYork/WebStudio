@@ -173,38 +173,42 @@ export function LibraryColumn() {
 }
 
 export function CentralMusicLibrary() {
-  const [track, setTrack] = useState("");
-  const [artist, setArtist] = useState("");
-  const debouncedTrack = useDebounce(track, 1000);
-  const debouncedArtist = useDebounce(artist, 1000);
-  const [items, setItems] = useState<Track[]>([]);
+  const [trackSearchTerm, setTrackSearchTerm] = useState("");
+  const [artistSearchTerm, setArtistSearchTerm] = useState("");
+  const debouncedTrackSearchTerm = useDebounce(trackSearchTerm, 1000);
+  const debouncedArtistSearchTerm = useDebounce(artistSearchTerm, 1000);
+  const [tracks, setTracks] = useState<Track[]>([]);
 
-  const [state, setState] = useState<searchingStateEnum>("not-searching");
+  const [searchingState, setSearchingState] = useState<searchingStateEnum>(
+    "not-searching"
+  );
 
   useEffect(() => {
-    if (debouncedTrack === "" && debouncedArtist === "") {
-      setItems([]);
-      setState("not-searching");
+    if (debouncedTrackSearchTerm === "" && debouncedArtistSearchTerm === "") {
+      setTracks([]);
+      setSearchingState("not-searching");
       return;
     }
-    setItems([]);
-    setState("searching");
-    searchForTracks(artist, track).then((tracks) => {
-      tracks.forEach((track) => {
-        const id = itemId(track);
-        if (!(id in CML_CACHE)) {
-          CML_CACHE[id] = track;
+    setTracks([]);
+    setSearchingState("searching");
+    searchForTracks(debouncedArtistSearchTerm, debouncedTrackSearchTerm).then(
+      (tracks) => {
+        tracks.forEach((track) => {
+          const id = itemId(track);
+          if (!(id in CML_CACHE)) {
+            CML_CACHE[id] = track;
+          }
+        });
+        setTracks(tracks);
+        if (tracks.length === 0) {
+          setSearchingState("no-results");
+        } else {
+          setSearchingState("results");
+          ReactTooltip.rebuild(); // Update tooltips so they appear.
         }
-      });
-      setItems(tracks);
-      if (tracks.length === 0) {
-        setState("no-results");
-      } else {
-        setState("results");
-        ReactTooltip.rebuild(); // Update tooltips so they appear.
       }
-    });
-  }, [debouncedTrack, debouncedArtist, artist, track]);
+    );
+  }, [debouncedTrackSearchTerm, debouncedArtistSearchTerm]);
   return (
     <div className="library library-central">
       <span className="px-2">
@@ -212,19 +216,19 @@ export function CentralMusicLibrary() {
           className="form-control form-control-sm"
           type="text"
           placeholder="Filter by track..."
-          value={track}
-          onChange={(e) => setTrack(e.target.value)}
+          value={trackSearchTerm}
+          onChange={(e) => setTrackSearchTerm(e.target.value)}
         />
         <input
           className="form-control form-control-sm mt-2"
           type="text"
           placeholder="Filter by artist..."
-          value={artist}
-          onChange={(e) => setArtist(e.target.value)}
+          value={artistSearchTerm}
+          onChange={(e) => setArtistSearchTerm(e.target.value)}
         />
       </span>
       <div className="border-top mt-2"></div>
-      <ResultsPlaceholder state={state} />
+      <ResultsPlaceholder searchingState={searchingState} />
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
           <div
@@ -232,7 +236,7 @@ export function CentralMusicLibrary() {
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
-            {items.map((item, index) => (
+            {tracks.map((item, index) => (
               <Item
                 key={itemId(item)}
                 item={item}
@@ -249,18 +253,20 @@ export function CentralMusicLibrary() {
 }
 
 export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
-  const [track, setTrack] = useState("");
-  const [artist, setArtist] = useState("");
-  const debouncedTrack = useDebounce(track, 1000);
-  const debouncedArtist = useDebounce(artist, 1000);
+  const [trackSearchTerm, setTrackSearchTerm] = useState("");
+  const [artistSearchTerm, setArtistSearchTerm] = useState("");
+  const debouncedTrackSearchTerm = useDebounce(trackSearchTerm, 1000);
+  const debouncedArtistSearchTerm = useDebounce(artistSearchTerm, 1000);
   const [items, setItems] = useState<Track[]>([]);
 
-  const [state, setState] = useState<searchingStateEnum>("not-searching");
+  const [searchingState, setSearchingState] = useState<searchingStateEnum>(
+    "not-searching"
+  );
 
   useEffect(() => {
     async function load() {
       setItems([]);
-      setState("searching");
+      setSearchingState("searching");
       const libItems = await loadPlaylistLibrary(libraryId);
       libItems.forEach((item) => {
         const id = itemId(item);
@@ -270,9 +276,9 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
       });
       setItems(libItems);
       if (libItems.length === 0) {
-        setState("no-results");
+        setSearchingState("no-results");
       } else {
-        setState("results");
+        setSearchingState("results");
         ReactTooltip.rebuild(); // Update tooltips so they appear.
       }
     }
@@ -285,19 +291,19 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
           className="form-control form-control-sm"
           type="text"
           placeholder="Filter by track..."
-          value={track}
-          onChange={(e) => setTrack(e.target.value)}
+          value={trackSearchTerm}
+          onChange={(e) => setTrackSearchTerm(e.target.value)}
         />
         <input
           className="form-control form-control-sm mt-2"
           type="text"
           placeholder="Filter by artist..."
-          value={artist}
-          onChange={(e) => setArtist(e.target.value)}
+          value={artistSearchTerm}
+          onChange={(e) => setArtistSearchTerm(e.target.value)}
         />
       </span>
       <div className="border-top mt-2"></div>
-      <ResultsPlaceholder state={state} />
+      <ResultsPlaceholder searchingState={searchingState} />
       <Droppable droppableId="$CML">
         {(provided, snapshot) => (
           <div
@@ -311,14 +317,14 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
                   its.title
                     .toString()
                     .toLowerCase()
-                    .indexOf(debouncedTrack.toLowerCase()) > -1
+                    .indexOf(debouncedTrackSearchTerm.toLowerCase()) > -1
               )
               .filter(
                 (its) =>
                   its.artist
                     .toString()
                     .toLowerCase()
-                    .indexOf(debouncedArtist.toLowerCase()) > -1
+                    .indexOf(debouncedArtistSearchTerm.toLowerCase()) > -1
               )
               .map((item, index) => (
                 <Item
@@ -343,12 +349,14 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
   const debouncedQuery = useDebounce(searchQuery, 500);
   const [items, setItems] = useState<AuxItem[]>([]);
 
-  const [state, setState] = useState<searchingStateEnum>("not-searching");
+  const [searchingState, setSearchingState] = useState<searchingStateEnum>(
+    "not-searching"
+  );
 
   useEffect(() => {
     async function load() {
       setItems([]);
-      setState("searching");
+      setSearchingState("searching");
       const libItems = await loadAuxLibrary(libraryId);
       libItems.forEach((item) => {
         const id = itemId(item);
@@ -359,9 +367,9 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
       setItems(libItems);
       ReactTooltip.rebuild(); // Update tooltips so they appear.
       if (libItems.length === 0) {
-        setState("no-results");
+        setSearchingState("no-results");
       } else {
-        setState("results");
+        setSearchingState("results");
       }
     }
     load();
@@ -378,7 +386,7 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
         />
       </span>
       <div className="border-top mt-2"></div>
-      <ResultsPlaceholder state={state} />
+      <ResultsPlaceholder searchingState={searchingState} />
       <Droppable droppableId="$AUX">
         {(provided, snapshot) => (
           <div
@@ -410,20 +418,28 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
   );
 }
 
-export function ResultsPlaceholder({ state }: { state: string }) {
+export function ResultsPlaceholder({
+  searchingState,
+}: {
+  searchingState: searchingStateEnum;
+}) {
   return (
     <span
-      className={state !== "results" ? "mt-5 text-center text-muted" : "d-none"}
+      className={
+        searchingState !== "results" ? "mt-5 text-center text-muted" : "d-none"
+      }
     >
-      {state === "not-searching" && <FaSearch size={56} />}
-      {state === "searching" && <FaCog size={56} className="fa-spin" />}
-      {state === "no-results" && <FaTimesCircle size={56} />}
+      {searchingState === "not-searching" && <FaSearch size={56} />}
+      {searchingState === "searching" && (
+        <FaCog size={56} className="fa-spin" />
+      )}
+      {searchingState === "no-results" && <FaTimesCircle size={56} />}
       <br />
-      {state === "not-searching"
+      {searchingState === "not-searching"
         ? "Enter a search term."
-        : state === "searching"
+        : searchingState === "searching"
         ? "Searching..."
-        : state === "no-results"
+        : searchingState === "no-results"
         ? "No results."
         : ""}
     </span>

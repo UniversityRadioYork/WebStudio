@@ -3,6 +3,7 @@ import { INTERNAL_OUTPUT_ID, PLAYER_COUNT } from "../mixer/audio";
 
 interface Settings {
   showDebugInfo: boolean;
+  allowStreamingOnReject: boolean;
   enableRecording: boolean;
   tracklist: "always" | "while_live" | "never";
   doTheNews: "always" | "while_live" | "never";
@@ -19,6 +20,7 @@ const settingsState = createSlice({
   name: "settings",
   initialState: {
     showDebugInfo: false,
+    allowStreamingOnReject: false,
     enableRecording: false,
     tracklist: "while_live",
     doTheNews: "while_live",
