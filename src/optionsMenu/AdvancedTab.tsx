@@ -305,6 +305,25 @@ export function AdvancedTab() {
         />
         <label className="form-check-label">Enable recording</label>
       </div>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          checked={settings.partyMode}
+          onChange={(e) =>
+            dispatch(
+              changeSetting({
+                key: "partyMode",
+                val: e.target.checked,
+              })
+            )
+          }
+        />
+        <label>
+          Party Mode (no, seriously, don't enable this unless you know what
+          you're doing)
+        </label>
+      </div>
     </>
   );
 }
