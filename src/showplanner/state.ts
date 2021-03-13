@@ -3,6 +3,7 @@ import * as api from "../api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { cloneDeep } from "lodash";
+import { sendBAPSicleChannel } from "../bapsicle";
 
 export interface ItemGhost {
   type: "ghost";
@@ -257,6 +258,15 @@ export const moveItem = (
       itemToMove.weight
     } to ${to[0]}x${to[1]}`
   );
+  sendBAPSicleChannel({
+    command: "MOVE",
+    channel: itemToMove.channel,
+    weight: itemToMove.weight,
+    new_channel: to[0],
+    new_weight: to[1],
+    item: itemToMove,
+  });
+  return;
   dispatch(showplan.actions.setPlanSaving(true));
 
   const oldChannel = itemToMove.channel;

@@ -63,31 +63,6 @@ export function BAPSicleModal(props: BAPSicleModalProps) {
           props.close();
         }}
       />
-      <button
-        onClick={() => {
-          for (var i = 0; i < showplan.plan!.length; i++) {
-            let item = showplan.plan![i];
-            sendBAPSicleChannel({
-              channel: item.channel,
-              command: "ADD",
-              newItem: {
-                weight: item.weight,
-                timeslotItemId:
-                  "timeslotitemid" in item ? item.timeslotitemid : null,
-                trackId:
-                  "trackid" in item && item.type == "central"
-                    ? item.trackid
-                    : null,
-                managedId: "auxid" in item ? item.auxid : null,
-                title: item.title,
-                artist: "artist" in item ? item.artist : null,
-              },
-            });
-          }
-        }}
-      >
-        Load Show Plan
-      </button>
     </Modal>
   );
 }

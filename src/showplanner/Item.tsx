@@ -76,7 +76,10 @@ export const Item = memo(function Item({
             <span className={"icon " + x.type} />
             &nbsp;
             {x.title.toString()}
-            {"artist" in x && x.artist !== "" && " - " + x.artist}
+            {"artist" in x &&
+              x.artist !== "" &&
+              x.artist !== null &&
+              " - " + x.artist}
             <small
               className={
                 "border rounded border-danger text-danger p-1 m-1" +
@@ -85,7 +88,7 @@ export const Item = memo(function Item({
             >
               Explicit
             </small>
-            <code>{x.type.toString()}</code>
+            <code>{"weight" in x && x.weight}</code>
           </ContextMenuTrigger>
         </div>
       )}
