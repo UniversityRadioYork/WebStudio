@@ -13,6 +13,7 @@ interface Settings {
   channelOutputIds: string[];
   resetTrimOnLoad: boolean;
   saveShowPlanChanges: boolean;
+  partyMode: boolean;
 }
 
 const settingsState = createSlice({
@@ -29,6 +30,7 @@ const settingsState = createSlice({
     channelOutputIds: Array(PLAYER_COUNT).fill(INTERNAL_OUTPUT_ID),
     resetTrimOnLoad: true,
     saveShowPlanChanges: true,
+    partyMode: false,
   } as Settings,
   reducers: {
     changeSetting<K extends keyof Settings>(
