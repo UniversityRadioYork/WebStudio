@@ -6,16 +6,15 @@ import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 
 import ShowplanReducer from "./showplanner/state";
 import MixerReducer from "./mixer/state";
-import sessionReducer from "./session/state";
+//import sessionReducer from "./session/state";
+import sessionReducer from "./bapiclesession/state";
 import NavbarReducer from "./navbar/state";
-import ConnectionReducer from "./bapsicle";
 
 const rootReducer = combineReducers({
   showplan: ShowplanReducer,
   mixer: MixerReducer,
   session: sessionReducer,
   navbar: NavbarReducer,
-  connection: ConnectionReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

@@ -12,26 +12,8 @@ import {
 } from "./showplanner/state";
 import { AppThunk } from "./store";
 import * as MixerState from "./mixer/state";
-interface Connection {
-  connectionState: string;
-}
-
-const initialState: Connection = {
-  connectionState: "Not Connected",
-};
-
-const connection = createSlice({
-  name: "connection",
-  initialState: initialState,
-  reducers: {
-    setConnectionState(state, action: PayloadAction<string>): void {
-      console.log("updating" + action.payload);
-      state.connectionState = action.payload;
-    },
-  },
-});
-
-export default connection.reducer;
+import * as SessionState from "./bapiclesession/state";
+import { Session } from "inspector";
 
 export var BAPSicleWS: WebSocket | null = null;
 
@@ -39,65 +21,11 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   store
 ) => (next) => (action) => {
   if (BAPSicleWS) {
-    const timeslotId = store.getState().session.currentTimeslot!.timeslot_id;
     BAPSicleWS!.onmessage = (event) => {
       var message = JSON.parse(event.data);
       console.log(message);
       if ("channel" in message) {
         switch (message.command) {
-          case "PLAY":
-            console.log("play channel" + message.channel);
-            //store.dispatch(play(message.channel));
-            break;
-          case "PAUSE":
-            //store.dispatch(pause(message.channel));
-            break;
-          case "UNPAUSE":
-            //store.dispatch(play(message.channel));
-            break;
-          case "STOP":
-            //store.dispatch(stop(message.channel));
-            break;
-          case "SEEK":
-            //store.dispatch(seek(message.channel, message.time));
-            break;
-          case "LOAD":
-            break;
-            //console.log(store.getState().showplan);
-            var itemToLoad: PlanItem;
-            store.getState().showplan.plan?.forEach((item) => {
-              if (
-                item.channel === message.channel &&
-                item.weight === message.weight
-              ) {
-                itemToLoad = item;
-              }
-            });
-            //console.log(itemToLoad!);
-            //store.dispatch(load(message.channel, itemToLoad!));
-            break;
-          case "REMOVE":
-            break;
-            var itemToRemove: PlanItem;
-            store.getState().showplan.plan?.forEach((item) => {
-              if (
-                item.channel === message.channel &&
-                item.weight === message.weight
-              ) {
-                itemToRemove = item;
-              }
-            });
-            store.dispatch(
-              removeItem(
-                timeslotId,
-                (itemToRemove! as TimeslotItem).timeslotitemid
-              )
-            );
-            break;
-          case "ADD":
-            break;
-            store.dispatch(addItem(timeslotId, message.newItem));
-
           case "POS":
             store.dispatch(
               MixerState.setTimeCurrent({
@@ -201,9 +129,9 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
         }
       } else if ("message" in message) {
         if (message.message === "Hello") {
-          store.dispatch(
-            connection.actions.setConnectionState(message.serverName)
-          );
+          //store.dispatch(
+          //  connection.actions.setServerState(message.serverName)
+          //);
         }
       }
     };
@@ -222,13 +150,9 @@ export const connectBAPSicle = (path: string): AppThunk => async (
   getState
 ) => {
   BAPSicleWS = new WebSocket(path);
-  dispatch(connection.actions.setConnectionState("Connecting..."));
-  BAPSicleWS.onopen = () =>
-    dispatch(
-      connection.actions.setConnectionState("Connected to BAPSicle Server")
-    );
-  BAPSicleWS.onclose = () =>
-    dispatch(connection.actions.setConnectionState("Disconnected"));
+  dispatch(SessionState.setServerState("CONNECTING"));
+  BAPSicleWS.onopen = () => dispatch(SessionState.setServerState("CONNECTED"));
+  BAPSicleWS.onclose = () => dispatch(SessionState.setServerState("FAILED"));
 };
 
 export const disconnectBAPSicle = () => {

@@ -3,7 +3,10 @@ import { useSelector } from "react-redux";
 import qs from "qs";
 import "./App.css";
 import Showplanner from "./showplanner";
-import SessionHandler from "./session";
+
+//import SessionHandler from "./session";
+import SessionHandler from "./bapiclesession";
+
 import { RootState } from "./rootReducer";
 import "./light-theme.scss";
 import "./App.scss";
@@ -31,45 +34,20 @@ const App: React.FC = () => {
 
   const q = qs.parse(window.location.search, { ignoreQueryPrefix: true });
 
-  const {
+  /*const {
     currentUser,
     userLoading,
     currentTimeslot,
     timeslotLoading,
-  } = useSelector((state: RootState) => state.session);
+  } = useSelector((state: RootState) => state.session); */
+  const connectionState = useSelector(
+    (state: RootState) => state.session.connectionState
+  );
 
-  if (
-    currentUser == null ||
-    userLoading ||
-    currentTimeslot == null ||
-    timeslotLoading
-  ) {
+  if (connectionState !== "CONNECTED") {
     return <SessionHandler />;
   } else {
-    var timeslotid: number | null = null;
-    if ("timeslot_id" in q && typeof q.timeslot_id === "string") {
-      timeslotid = parseInt(q.timeslot_id);
-    } else if (currentTimeslot.timeslot_id != null) {
-      timeslotid = currentTimeslot.timeslot_id;
-    }
-    if (timeslotid !== null) {
-      return <Showplanner timeslotId={timeslotid} />;
-    } else {
-      return (
-        <div style={{ marginLeft: "1.5%" }}>
-          <h1>Welcome to WebStudio</h1>
-          <input
-            type="text"
-            placeholder="enter a timeslot id"
-            value={inputVal}
-            onChange={(e) => setInputVal(e.target.value)}
-            onKeyPress={(e) => enterKeyCont(e.key)}
-            autoFocus
-          />
-          <button onClick={cont}>Continue</button>
-        </div>
-      );
-    }
+    return <Showplanner />;
   }
 };
 

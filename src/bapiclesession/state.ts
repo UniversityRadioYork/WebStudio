@@ -1,21 +1,18 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
-import {
-  User,
-  getCurrentApiUser,
-  Timeslot,
-  getCurrentApiTimeslot,
-  doesCurrentUserHavePermission,
-} from "../api";
+import { Timeslot } from "../api";
+import { connectBAPSicle } from "../bapsicle";
 
-const BROADCAST_PERMISSION_ID = 340;
+interface bapsServer {
+  hostname: String | null;
+  port: Number | null;
+  name: String | null;
+}
 
 interface sessionState {
-  currentUser: User | null;
+  currentServer: bapsServer | null; // Connection Failed, Disconnected
+  connectionState: "CONNECTED" | "CONNECTING" | "FAILED" | "DISCONNECTED";
   currentTimeslot: Timeslot | null;
-  userCanBroadcast: boolean;
-  userLoading: boolean;
-  userLoadError: string | null;
   timeslotLoading: boolean;
   timeslotLoadError: string | null;
 }
@@ -23,32 +20,24 @@ interface sessionState {
 const sessionState = createSlice({
   name: "Session",
   initialState: {
-    currentUser: null,
+    currentServer: null,
+    connectionState: "DISCONNECTED",
     currentTimeslot: null,
-    userCanBroadcast: false,
-    userLoading: false,
-    userLoadError: null,
     timeslotLoading: false,
     timeslotLoadError: null,
   } as sessionState,
   reducers: {
-    setCurrentUser(
+    setCurrentServer(state, action: PayloadAction<{ server: bapsServer }>) {
+      state.currentServer = action.payload.server;
+      state.connectionState = "CONNECTING";
+    },
+    setServerState(
       state,
-      action: PayloadAction<{ user: User | null; canBroadcast: boolean }>
+      action: PayloadAction<sessionState["connectionState"]>
     ) {
-      state.userLoading = false;
-      state.userLoadError = null;
-      state.currentUser = action.payload.user;
-      state.userCanBroadcast = action.payload.canBroadcast;
+      state.connectionState = action.payload;
     },
-    getUserStarting(state) {
-      state.userLoadError = null;
-      state.userLoading = true;
-    },
-    getUserError(state, action: PayloadAction<string>) {
-      state.userLoading = false;
-      state.userLoadError = action.payload;
-    },
+    /*
     getTimeslotStarting(state) {
       state.timeslotLoadError = null;
       state.timeslotLoading = true;
@@ -63,6 +52,7 @@ const sessionState = createSlice({
       state.timeslotLoading = false;
       state.timeslotLoadError = action.payload;
     },
+*/
     getState(state) {
       return state;
     },
@@ -71,11 +61,22 @@ const sessionState = createSlice({
 
 export default sessionState.reducer;
 
-export const getCurrentUser = (): AppThunk => async (dispatch, getState) => {
-  return getState().session.currentUser;
+export const { setServerState } = sessionState.actions;
+
+export const getCurrentServer = (): AppThunk => async (dispatch, getState) => {
+  return getState().session.currentServer;
 };
 
-export const getUser = (): AppThunk => async (dispatch) => {
+export const getServer = (): AppThunk => async (dispatch) => {
+  // TODO Server Details Configurable
+  let bapsServer: bapsServer = {
+    hostname: "webstudio-dev.ury.org.uk",
+    port: 13501,
+    name: "Connecting...",
+  };
+  dispatch(sessionState.actions.setCurrentServer({ server: bapsServer }));
+  dispatch(connectBAPSicle("ws://webstudio-dev.ury.org.uk:13501"));
+  /*
   dispatch(sessionState.actions.getUserStarting());
   try {
     const [user, canBroadcast] = await Promise.all([
@@ -87,9 +88,10 @@ export const getUser = (): AppThunk => async (dispatch) => {
     console.log("failed to get user. " + e.toString());
     dispatch(sessionState.actions.getUserError(e.toString()));
   }
+  */
 };
 
-export const getTimeslot = (): AppThunk => async (dispatch) => {
+/* export const getTimeslot = (): AppThunk => async (dispatch) => {
   dispatch(sessionState.actions.getTimeslotStarting());
   try {
     const timeslot = await getCurrentApiTimeslot();
@@ -99,3 +101,4 @@ export const getTimeslot = (): AppThunk => async (dispatch) => {
     dispatch(sessionState.actions.getTimeslotError(e.toString()));
   }
 };
+*/

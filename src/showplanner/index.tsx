@@ -150,10 +150,8 @@ function incrReducer(state: number, action: any) {
   return state + 1;
 }
 
-const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
-  const { plan: showplan, planLoadError, planLoading } = useSelector(
-    (state: RootState) => state.showplan
-  );
+const Showplanner: React.FC = function() {
+  const showplan = useSelector((state: RootState) => state.showplan.plan);
 
   // Tell Modals that #root is the main page content, for accessability reasons.
   Modal.setAppElement("#root");
@@ -164,9 +162,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   useBeforeunload((event) => event.preventDefault());
 
-  useEffect(() => {
-    dispatch(getShowplan(timeslotId));
-  }, [dispatch, timeslotId]);
+  //useEffect(() => {
+  //  dispatch(getShowplan());
+  //}, [dispatch]);
 
   function toggleSidebar() {
     var element = document.getElementById("sidebar");
@@ -225,7 +223,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     } else {
       // this is a normal move (ghosts aren't draggable)
       dispatch(
-        moveItem(timeslotId, result.draggableId, [
+        moveItem(result.draggableId, [
           parseInt(result.destination.droppableId, 10),
           result.destination.index,
         ])
@@ -256,7 +254,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   // Add support for reloading the show plan from the iFrames.
   // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
-  useEffect(() => {
+  /*useEffect(() => {
     function reloadListener(event: MessageEvent) {
       if (!event.origin.includes("ury.org.uk")) {
         return;
@@ -272,13 +270,13 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       window.removeEventListener("message", reloadListener);
     };
   }, [dispatch, session.currentTimeslot]);
-
+  */
   if (showplan === null) {
     return (
       <LoadingDialogue
         title="Getting Show Plan..."
-        subtitle={planLoading ? "Hang on a sec..." : ""}
-        error={planLoadError}
+        subtitle={"Hang on a sec..."}
+        error={null}
         percent={100}
       />
     );

@@ -18,15 +18,14 @@ interface BAPSicleModalProps {
 
 export function BAPSicleModal(props: BAPSicleModalProps) {
   const [BAPSicleServer, setBAPSicleServer] = useState("ws://localhost:13501");
-  const connectionState = useSelector((state: RootState) => state.connection);
+  const connectionState = useSelector(
+    (state: RootState) => state.session.connectionState
+  );
   const [connectType, setConnectType] = useState("Connect");
   const dispatch = useDispatch();
   const showplan = useSelector((state: RootState) => state.showplan);
 
-  if (
-    connectType !== "Connect" &&
-    connectionState.connectionState === "Disconnected"
-  ) {
+  if (connectType !== "Connect" && connectionState === "DISCONNECTED") {
     setConnectType("Connect");
   }
 

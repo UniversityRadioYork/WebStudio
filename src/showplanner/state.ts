@@ -62,7 +62,7 @@ interface ShowplanState {
 const initialState: ShowplanState = {
   planLoading: true,
   planLoadError: null,
-  plan: null,
+  plan: [],
   planSaving: false,
   planSaveError: null,
   auxPlaylists: [],
@@ -243,7 +243,6 @@ export const {
 } = showplan.actions;
 
 export const moveItem = (
-  timeslotid: number,
   itemid: string,
   to: [number, number]
 ): AppThunk => async (dispatch, getState) => {
