@@ -306,11 +306,21 @@ export const load = (
 
   if (item.type === "central") {
     // track
-    url = MYRADIO_NON_API_BASE + "/NIPSWeb/secure_play?trackid=" + item.trackid;
-  } else if ("managedid" in item) {
     url =
-      MYRADIO_NON_API_BASE +
-      "/NIPSWeb/managed_play?managedid=" +
+      "http://" +
+      getState().session.currentServer?.hostname +
+      ":13500/audiofile/track/" +
+      item.trackid;
+    //url = MYRADIO_NON_API_BASE + "/NIPSWeb/secure_play?trackid=" + item.trackid;
+  } else if ("managedid" in item) {
+    //url =
+    //  MYRADIO_NON_API_BASE +
+    //  "/NIPSWeb/managed_play?managedid=" +
+    //  item.managedid;
+    url =
+      "http://" +
+      getState().session.currentServer?.hostname +
+      ":13500/audiofile/managed/" +
       item.managedid;
   } else {
     throw new Error(
