@@ -144,7 +144,16 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
           })
         );
         if (streamer) {
-          await streamer.stop("ApiException " + e.message);
+          // We're connected,
+          var remain_connected = getState().settings.allowStreamingOnReject;
+          if (remain_connected) {
+            console.log(
+              "StateServer refused registration. Due to setting, staying connected.",
+              e
+            );
+          } else {
+            await streamer.stop("ApiException " + e.message);
+          }
         }
       } else {
         // let raygun handle it

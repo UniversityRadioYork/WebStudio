@@ -41,6 +41,10 @@ export const Item = memo(function Item({
     (state: RootState) => state.settings.showDebugInfo
   );
 
+  const partyMode = useSelector((state: RootState) => state.settings.partyMode);
+  const showName =
+    !partyMode || column > 2 || !isTrack(x) || ("played" in x && x.played);
+
   function triggerClick() {
     if (column > -1) {
       dispatch(MixerState.load(column, x));
@@ -76,11 +80,16 @@ export const Item = memo(function Item({
   }
 
   function generateTooltipData() {
-    let data = ["Title: " + x.title.toString()];
+    let data = [];
+    if (partyMode) {
+      data.push("Title: 🎉🎉🎉PARTY MODE🎉🎉🎉");
+    } else {
+      data.push("Title: " + x.title.toString());
 
-    if ("artist" in x && x.artist !== "") data.push("Artist: " + x.artist);
-    if ("album" in x && x.album.title !== "")
-      data.push("Album: " + x.album.title);
+      if ("artist" in x && x.artist !== "") data.push("Artist: " + x.artist);
+      if ("album" in x && x.album.title !== "")
+        data.push("Album: " + x.album.title);
+    }
     data.push("Length: " + x.length);
     if ("intro" in x)
       data.push(
@@ -133,8 +142,12 @@ export const Item = memo(function Item({
         >
           <span className={"icon " + x.type} />
           &nbsp;
-          {x.title.toString()}
-          {"artist" in x && x.artist !== "" && " - " + x.artist}
+          {showName && (
+            <>
+              {x.title.toString()}
+              {"artist" in x && x.artist !== "" && " - " + x.artist}
+            </>
+          )}
           <small
             className={
               "border rounded border-danger text-danger p-1 m-1" +

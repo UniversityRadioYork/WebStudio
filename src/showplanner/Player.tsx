@@ -220,11 +220,20 @@ function LoadedTrackInfo({ id }: { id: number }) {
     (state: RootState) => state.mixer.players[id].loadError
   );
 
+  const partyMode = useSelector((state: RootState) => state.settings.partyMode);
+  const showName =
+    !partyMode ||
+    loadedItem === null ||
+    !ShowPlanState.isTrack(loadedItem) ||
+    ("played" in loadedItem && loadedItem.played);
+
   return (
     <span className="card-title">
       <strong>
         {loadedItem !== null && loading === -1
-          ? loadedItem.title
+          ? showName
+            ? loadedItem.title
+            : ""
           : loading !== -1
           ? `LOADING`
           : loadError
@@ -271,6 +280,8 @@ export function Player({
         omit(b, "timeCurrent", "timeRemaining")
       )
   );
+
+  const partyMode = useSelector((state: RootState) => state.settings.partyMode);
 
   useBeforeunload((event) => {
     console.log("Checking player " + id + " for un-ended tracklists.");
@@ -381,6 +392,7 @@ export function Player({
               <span className="text-muted">
                 {playerState.loadedItem !== null && playerState.loading === -1
                   ? "artist" in playerState.loadedItem &&
+                    !partyMode &&
                     playerState.loadedItem.artist
                   : ""}
                 &nbsp;
