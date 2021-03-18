@@ -115,6 +115,7 @@ export function LibraryColumn() {
         </div>
         <div className="px-2">
           <select
+            id="sidebarLibrarySelect"
             className="form-control form-control-sm"
             style={{ flex: "none" }}
             value={sauce}

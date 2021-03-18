@@ -170,10 +170,15 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         ])
       );
     }
-    // If we're dragging from a pseudo-column, and a search field is focused, defocus it.
+    // If we're dragging from a pseudo-column,
+    // and a search field or library dropdown is focused, defocus it.
     if (result.source.droppableId[0] === "$") {
       const focus = document.activeElement;
-      if (focus && focus instanceof HTMLInputElement && focus.type === "text") {
+      if (
+        (focus && focus instanceof HTMLInputElement && focus.type === "text") ||
+        (focus instanceof HTMLSelectElement &&
+          focus.id === "sidebarLibrarySelect")
+      ) {
         focus.blur();
       }
     }
