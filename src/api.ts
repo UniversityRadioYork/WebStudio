@@ -47,6 +47,20 @@ export async function myradioApiRequest(
   }
 }
 
+export async function bapsicleApiRequest(
+  endpoint: string,
+  method: "GET" | "POST" | "PUT",
+  params: any
+): Promise<any> {
+  const res = await apiRequest(
+    "http://webstudio-dev.ury.org.uk:13500" + endpoint,
+    method,
+    params
+  );
+  const json = await res.json();
+  return json;
+}
+
 export async function broadcastApiRequest<TRes = any>(
   endpoint: string,
   method: "GET" | "POST" | "PUT",
@@ -180,12 +194,17 @@ export function searchForTracks(
   artist: string,
   title: string
 ): Promise<Array<Track>> {
+  return bapsicleApiRequest("/library/search/track", "GET", {
+    artist,
+    title,
+  });
+  /*
   return myradioApiRequest("/track/search", "GET", {
     artist,
     title,
     limit: 100,
     digitised: true,
-  });
+  }); */
 }
 
 export interface NipswebPlaylist {
