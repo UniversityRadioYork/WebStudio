@@ -61,41 +61,53 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                 managedid: raw_planitem.managedId,
                 ...raw_planitem,
               };
+              if (bapsicle_state.loaded) {
+                console.log("isLoaded");
+                store.dispatch(
+                  MixerState.load(channel, loadedItem)
+                  //MixerState.loadItem({ player: channel, item: loadedItem })
+                );
+              } else {
+                store.dispatch(
+                  MixerState.itemLoadPercentage({ player: channel, percent: 0 })
+                );
+              }
+            } else {
               store.dispatch(
-                MixerState.loadItem({ player: channel, item: loadedItem })
-              );
-              store.dispatch(MixerState.itemLoadComplete({ player: channel }));
-              store.dispatch(
-                MixerState.setTimeLength({
-                  player: channel,
-                  time: bapsicle_state.length,
-                })
-              );
-              store.dispatch(
-                MixerState.setTimeCurrent({
-                  player: channel,
-                  time: bapsicle_state.pos_true,
-                })
-              );
-              store.dispatch(
-                MixerState.setAutoAdvance({
-                  player: channel,
-                  enabled: bapsicle_state.auto_advance,
-                })
-              );
-              store.dispatch(
-                MixerState.setPlayOnLoad({
-                  player: channel,
-                  enabled: bapsicle_state.play_on_load,
-                })
-              );
-              store.dispatch(
-                MixerState.setRepeat({
-                  player: channel,
-                  mode: bapsicle_state.repeat.toLowerCase(),
-                })
+                MixerState.itemLoadPercentage({ player: channel, percent: 0 })
               );
             }
+
+            store.dispatch(
+              MixerState.setTimeLength({
+                player: channel,
+                time: bapsicle_state.length,
+              })
+            );
+            store.dispatch(
+              MixerState.setTimeCurrent({
+                player: channel,
+                time: bapsicle_state.pos_true,
+              })
+            );
+            store.dispatch(
+              MixerState.setAutoAdvance({
+                player: channel,
+                enabled: bapsicle_state.auto_advance,
+              })
+            );
+            store.dispatch(
+              MixerState.setPlayOnLoad({
+                player: channel,
+                enabled: bapsicle_state.play_on_load,
+              })
+            );
+            store.dispatch(
+              MixerState.setRepeat({
+                player: channel,
+                mode: bapsicle_state.repeat.toLowerCase(),
+              })
+            );
 
             if (!("show_plan" in message.data)) {
               console.error("Show plan data missing from status");

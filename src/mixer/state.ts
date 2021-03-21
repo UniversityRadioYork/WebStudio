@@ -368,6 +368,11 @@ export const load = (
     }
     lastObjectURLs[player] = objectUrl;
 
+    playerInstance.on("loadComplete", (duration) => {
+      console.log("loadComplete");
+      dispatch(mixerState.actions.itemLoadComplete({ player }));
+    });
+
     // TODO: This needs to happen without wavesurfer
     playerInstance.on("timeChangeSeek", (time) => {
       if (Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5) {
@@ -416,6 +421,7 @@ export const {
   setPlayerState,
   setAutoAdvance,
   itemLoadComplete,
+  itemLoadPercentage,
   setPlayOnLoad,
   setRepeat,
 } = mixerState.actions;

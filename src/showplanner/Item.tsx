@@ -44,7 +44,7 @@ export const Item = memo(function Item({
         weight: index,
       });
       console.log("Clicking to load:", x);
-      dispatch(MixerState.load(column, x));
+      //dispatch(MixerState.load(column, x));
     }
   }
 
