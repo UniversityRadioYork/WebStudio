@@ -23,7 +23,6 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
   if (BAPSicleWS) {
     BAPSicleWS!.onmessage = (event) => {
       var message = JSON.parse(event.data);
-      console.log(message);
       if ("channel" in message) {
         switch (message.command) {
           case "POS":
@@ -36,9 +35,8 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             break;
           case "STATUS":
             // Bapsicle is telling us it's full state on this channel. Let's update the UI.
-            console.log("STATUS");
-            console.log(message.data);
 
+            // TODO: This hangs the state of timers etc for a second or two, maybe do stuff more selectively
             const channel = message.channel;
             // Update the player state
             const bapsicle_state = message.data;
@@ -133,6 +131,8 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
           //  connection.actions.setServerState(message.serverName)
           //);
         }
+      } else {
+        console.log("Unhandled: ", message);
       }
     };
   }
