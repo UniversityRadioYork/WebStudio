@@ -207,6 +207,10 @@ export function searchForTracks(
   }); */
 }
 
+export function getTimeslots(): Promise<Array<Timeslot>> {
+  return bapsicleApiRequest("/plan/list", "GET", {});
+}
+
 export interface NipswebPlaylist {
   type: "userPlaylist";
   title: string;

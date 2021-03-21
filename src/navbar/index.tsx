@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Clock from "react-live-clock";
 
@@ -8,13 +8,10 @@ import { RootState } from "../rootReducer";
 
 import "./navbar.scss";
 import { closeAlert } from "./state";
-//import { BAPSicleModal } from "./BAPSicleModal";
+import { BAPSicleModal } from "./BAPSicleModal";
 
 export function NavBarMain() {
-  const connectionState = useSelector(
-    (state: RootState) => state.session.connectionState
-  );
-  //const [showBAPSicleModal, setShowBAPSicleModal] = useState(false);
+  const [showBAPSicleModal, setShowBAPSicleModal] = useState(true);
 
   const { planSaveError, planSaving } = useSelector(
     (state: RootState) => state.showplan
@@ -60,23 +57,22 @@ export function NavBarMain() {
             <div
               className="nav-link"
               onClick={() => {
-                //setShowBAPSicleModal(true);
+                setShowBAPSicleModal(true);
               }}
             >
-              <b>{connectionState}</b>
+              <b>Load Show</b>
             </div>
           </li>
         </ul>
       </div>
+      <BAPSicleModal
+        close={() => setShowBAPSicleModal(false)}
+        isOpen={showBAPSicleModal}
+      />
     </>
   );
 }
-/*
-<BAPSicleModal
-close={() => setShowBAPSicleModal(false)}
-isOpen={showBAPSicleModal}
-/>
-*/
+
 function AlertBar() {
   const state = useSelector((state: RootState) => state.navbar.currentAlert);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
