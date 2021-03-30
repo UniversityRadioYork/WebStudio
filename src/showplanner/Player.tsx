@@ -16,7 +16,6 @@ import * as ShowPlanState from "../showplanner/state";
 import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
 import * as api from "../api";
 import { AppThunk } from "../store";
-import { sendBAPSicleChannel } from "../bapsicle";
 
 export const USE_REAL_GAIN_VALUE = false;
 

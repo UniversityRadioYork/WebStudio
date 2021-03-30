@@ -1,10 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import * as SessionState from "./state";
-import { MYRADIO_NON_API_BASE } from "../api";
 
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
-import Showplanner, { LoadingDialogue } from "../showplanner";
+import Showplanner from "../showplanner";
 
 import BAPSicleLogo from "../assets/images/bapsicle.png";
 import appLogo from "../assets/images/bapsicle.png";
@@ -60,41 +59,7 @@ export function ConnectionDialogue({ error }: { error: String | null }) {
 const SessionHandler: React.FC = function() {
   const dispatch = useDispatch();
 
-  /* useEffect(() => {
-    dispatch(SessionState.getTimeslot());
-  }, [dispatch]);
-
-  function redirectToLogin() {
-    return window.location.replace(
-      MYRADIO_NON_API_BASE +
-        "/MyRadio/login/?next=" +
-        encodeURIComponent(
-          MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
-        )
-    );
-  }
-
-  function redirectToTimeslotSelect() {
-    return window.location.replace(
-      MYRADIO_NON_API_BASE + "/MyRadio/timeslot/?next=" + redirect_url
-    );
-  }
-
-  const {
-    currentUser,
-    currentTimeslot,
-    userLoading,
-    userLoadError,
-    timeslotLoading,
-    timeslotLoadError,
-  } = useSelector((state: RootState) => state.session);
-
-  var redirect_url = encodeURIComponent(window.location.toString());
-  */
-
-  const { connectionState, currentServer, currentTimeslot } = useSelector(
-    (state: RootState) => state.session
-  );
+  const { connectionState } = useSelector((state: RootState) => state.session);
 
   switch (connectionState) {
     case "CONNECTED":

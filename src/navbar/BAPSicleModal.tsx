@@ -2,7 +2,6 @@ import React from "react";
 import { FaTimes } from "react-icons/fa";
 import Modal from "react-modal";
 import { Button } from "reactstrap";
-import BAPSicleLogo from "../assets/images/bapsicle.png";
 
 import { LoadShowDialogue } from "./loadshow";
 

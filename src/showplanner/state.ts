@@ -87,7 +87,7 @@ const showplan = createSlice({
       action: PayloadAction<{ channel: Number; planItems: PlanItem[] }>
     ) {
       var newItems = state.plan?.filter(
-        (item) => item.channel != action.payload.channel
+        (item) => item.channel !== action.payload.channel
       );
       if (newItems) {
         newItems = newItems.concat(action.payload.planItems);
@@ -265,108 +265,6 @@ export const moveItem = (
     new_weight: to[1],
     item: itemToMove,
   });
-  return;
-  dispatch(showplan.actions.setPlanSaving(true));
-
-  const oldChannel = itemToMove.channel;
-  const oldWeight = itemToMove.weight;
-  const [newChannel, newWeight] = to;
-
-  const inc: string[] = [];
-  const dec: string[] = [];
-
-  if (oldChannel === newChannel) {
-    // Moving around in the same channel
-    const itemChan = plan
-      .filter((x) => x.channel === oldChannel)
-      .sort((a, b) => a.weight - b.weight);
-    if (oldWeight < newWeight) {
-      // moved the item down (incremented) - everything in between needs decrementing
-      for (let i = oldWeight + 1; i <= newWeight; i++) {
-        dec.push(itemId(itemChan[i]));
-        itemChan[i].weight -= 1;
-      }
-    } else {
-      // moved the item up (decremented) - everything in between needs incrementing
-      for (let i = newWeight; i < oldWeight; i++) {
-        inc.push(itemId(itemChan[i]));
-        itemChan[i].weight += 1;
-      }
-    }
-    itemToMove.channel = newChannel;
-    itemToMove.weight = newWeight;
-  } else {
-    // Moving between channels
-    // So here's the plan.
-    // We're going to temporarily remove the item we're actually moving from the plan
-    // This is because its position becomes nondeterministic when we move it around.
-    plan.splice(plan.indexOf(itemToMove), 1);
-    itemToMove.channel = newChannel;
-    itemToMove.weight = newWeight;
-
-    // First, decrement everything between the old weight and the end of the old channel
-    // (inclusive of old weight, because we've removed the item)
-    const oldChannelData = plan
-      .filter((x) => x.channel === oldChannel)
-      .sort((a, b) => a.weight - b.weight);
-    for (let i = oldWeight; i < oldChannelData.length; i++) {
-      const movingItem = oldChannelData[i];
-      movingItem.weight -= 1;
-      dec.push(itemId(movingItem));
-    }
-
-    // Then, increment everything between the new weight and the end of the new channel
-    // (again, inclusive)
-    const newChannelData = plan
-      .filter((x) => x.channel === newChannel)
-      .sort((a, b) => a.weight - b.weight);
-    for (let i = newWeight; i < newChannelData.length; i++) {
-      const movingItem = newChannelData[i];
-      movingItem.weight += 1;
-      inc.push(itemId(movingItem));
-    }
-  }
-
-  const ops: api.UpdateOp[] = [];
-  console.log("Inc, dec:", inc, dec);
-
-  inc.forEach((id) => {
-    const item = plan.find((x) => itemId(x) === id)!;
-    ops.push({
-      op: "MoveItem",
-      timeslotitemid: itemId(item),
-      oldchannel: item.channel,
-      oldweight: item.weight - 1,
-      channel: item.channel,
-      weight: item.weight,
-    });
-  });
-
-  dec.forEach((id) => {
-    const item = plan.find((x) => itemId(x) === id)!;
-    ops.push({
-      op: "MoveItem",
-      timeslotitemid: itemId(item),
-      oldchannel: item.channel,
-      oldweight: item.weight + 1,
-      channel: item.channel,
-      weight: item.weight,
-    });
-  });
-
-  // Then, and only then, put the item in its new place
-  ops.push({
-    op: "MoveItem",
-    timeslotitemid: (itemToMove as TimeslotItem).timeslotitemid,
-    oldchannel: oldChannel,
-    oldweight: oldWeight,
-    channel: newChannel,
-    weight: newWeight,
-  });
-
-  dispatch(showplan.actions.applyOps(ops));
-
-  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const addItem = (

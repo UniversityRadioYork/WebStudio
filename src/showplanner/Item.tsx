@@ -1,10 +1,9 @@
 import React, { memo } from "react";
 import { PlanItem, itemId } from "./state";
 import { Track, AuxItem } from "../api";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
 
-import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { ContextMenuTrigger } from "react-contextmenu";
 import "./item.scss";
@@ -21,7 +20,6 @@ export const Item = memo(function Item({
   index: number;
   column: number;
 }) {
-  const dispatch = useDispatch();
   const id = itemId(x);
   const isReal = "timeslotitemid" in x;
   const isGhost = "ghostid" in x;

@@ -5,19 +5,14 @@ import {
   Middleware,
 } from "@reduxjs/toolkit";
 import fetchProgress, { FetchProgressData } from "fetch-progress";
-import Between from "between.js";
-import { itemId, PlanItem, setItemPlayed } from "../showplanner/state";
+import { itemId, PlanItem } from "../showplanner/state";
 import Keys from "keymaster";
-import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
+import { Track, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import { audioEngine, ChannelMapping } from "./audio";
+import { audioEngine } from "./audio";
 import { sendBAPSicleChannel } from "../bapsicle";
 
-const playerGainTweens: Array<{
-  target: VolumePresetEnum;
-  tweens: Between[];
-}> = [];
 const loadAbortControllers: AbortController[] = [];
 const lastObjectURLs: string[] = [];
 

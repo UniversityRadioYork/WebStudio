@@ -17,11 +17,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 import {
   PlanItem,
-  getShowplan,
   itemId,
   moveItem,
-  addItem,
-  removeItem,
   setItemPlayed,
   getPlaylists,
   PlanItemBase,
@@ -155,8 +152,6 @@ const Showplanner: React.FC = function() {
 
   // Tell Modals that #root is the main page content, for accessability reasons.
   Modal.setAppElement("#root");
-
-  const session = useSelector((state: RootState) => state.session);
 
   const dispatch = useDispatch();
 

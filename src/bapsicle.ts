@@ -1,19 +1,10 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { any } from "prop-types";
 import { Dispatch, Middleware } from "redux";
-import { TimeslotItem, Track } from "./api";
 
 import { RootState } from "./rootReducer";
-import {
-  addItem,
-  PlanItem,
-  removeItem,
-  getShowplanSuccessChannel,
-} from "./showplanner/state";
+import { PlanItem, getShowplanSuccessChannel } from "./showplanner/state";
 import { AppThunk } from "./store";
 import * as MixerState from "./mixer/state";
 import * as SessionState from "./bapiclesession/state";
-import { Session } from "inspector";
 
 export var BAPSicleWS: WebSocket | null = null;
 
