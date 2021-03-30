@@ -110,7 +110,7 @@
     "workbox-webpack-plugin": "^5.1.2",
     "worklet-loader": "^1.0.0"
   },
-  "homepage": "https://ury.org.uk/webstudio",
+  "homepage": "./",
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
