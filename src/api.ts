@@ -232,22 +232,30 @@ export function getUserPlaylists(): Promise<Array<NipswebPlaylist>> {
   );
 }
 
+// Gets the list of managed music playlists.
 export function getManagedPlaylists(): Promise<Array<ManagedPlaylist>> {
-  return myradioApiRequest("/playlist/allitonesplaylists", "GET", {});
+  return bapsicleApiRequest("/library/playlists/music", "GET", {});
+  //return myradioApiRequest("/playlist/allitonesplaylists", "GET", {});
 }
 
+// Gets the list of managed aux playlists (sfx, beds etc.)
 export function getAuxPlaylists(): Promise<Array<NipswebPlaylist>> {
-  return myradioApiRequest("/nipswebPlaylist/allmanagedplaylists", "GET", {});
+  return bapsicleApiRequest("/library/playlists/aux", "GET", {});
+  //return myradioApiRequest("/nipswebPlaylist/allmanagedplaylists", "GET", {});
 }
 
+// Loads the playlist items for a certain aux playlist
 export function loadAuxLibrary(libraryId: string): Promise<AuxItem[]> {
-  return apiRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
-    libraryid: libraryId,
-  }).then((res) => res.json());
+  return bapsicleApiRequest("/library/playlist/aux/" + libraryId, "GET", {});
+
+  //return apiRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
+  //  libraryid: libraryId,
+  //}).then((res) => res.json());
 }
 
 export function loadPlaylistLibrary(libraryId: string): Promise<Track[]> {
-  return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
+  return bapsicleApiRequest("/library/playlist/music/" + libraryId, "GET", {});
+  //return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
 }
 
 export function setTimeslotItemCue(
