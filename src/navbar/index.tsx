@@ -11,7 +11,7 @@ import { closeAlert } from "./state";
 import { BAPSicleModal } from "./BAPSicleModal";
 
 export function NavBarMain() {
-  const [showBAPSicleModal, setShowBAPSicleModal] = useState(true);
+  const [showBAPSicleModal, setShowBAPSicleModal] = useState(false);
 
   const { planSaveError, planSaving } = useSelector(
     (state: RootState) => state.showplan
