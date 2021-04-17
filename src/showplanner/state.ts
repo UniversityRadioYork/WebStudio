@@ -399,14 +399,6 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
 
 export const getPlaylists = (): AppThunk => async (dispatch) => {
   try {
-    const userPlaylists = await api.getUserPlaylists();
-
-    dispatch(showplan.actions.addUserPlaylists(userPlaylists));
-  } catch (e) {
-    console.error(e);
-  }
-
-  try {
     const managedPlaylists = await api.getManagedPlaylists();
     dispatch(showplan.actions.addManagedPlaylists(managedPlaylists));
   } catch (e) {

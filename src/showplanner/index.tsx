@@ -67,7 +67,7 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
 function LibraryColumn() {
   const [sauce, setSauce] = useState("None");
   const dispatch = useDispatch();
-  const { auxPlaylists, managedPlaylists, userPlaylists } = useSelector(
+  const { auxPlaylists, managedPlaylists } = useSelector(
     (state: RootState) => state.showplan
   );
 
@@ -95,12 +95,6 @@ function LibraryColumn() {
               Choose a library
             </option>
             <option value={"CentralMusicLibrary"}>Central Music Library</option>
-            <option disabled>Personal Resources</option>
-            {userPlaylists.map((playlist: any) => (
-              <option key={playlist.managedid} value={playlist.managedid}>
-                {playlist.title}
-              </option>
-            ))}
             <option disabled>Shared Resources</option>
             {auxPlaylists.map((playlist: any) => (
               <option
