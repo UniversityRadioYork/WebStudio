@@ -45,7 +45,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             if (bapsicle_state.loaded_item) {
               const raw_planitem = bapsicle_state.loaded_item;
               var loadedItem: PlanItem = {
-                timeslotitemid: String(raw_planitem.timeslotItemId),
+                timeslotitemid: raw_planitem.timeslotItemId,
                 channel: message.channel,
                 played: false,
                 type: raw_planitem.trackId ? "central" : "aux",
@@ -55,10 +55,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
               };
               if (bapsicle_state.loaded) {
                 console.log("isLoaded");
-                store.dispatch(
-                  MixerState.load(channel, loadedItem)
-                  //MixerState.loadItem({ player: channel, item: loadedItem })
-                );
+                store.dispatch(MixerState.load(channel, loadedItem));
               } else {
                 store.dispatch(
                   MixerState.itemLoadPercentage({ player: channel, percent: 0 })
