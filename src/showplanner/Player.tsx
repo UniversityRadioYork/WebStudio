@@ -61,10 +61,23 @@ function PlayerNumbers({ id }: { id: number }) {
 }
 
 const setTrackIntro = (
-  track: api.Track,
+  item: api.TimeslotItem,
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
+  let marker = {
+    name: "Intro",
+    time: secs,
+    position: "start",
+    section: null,
+  };
+  sendBAPSicleChannel({
+    channel: player,
+    command: "SETMARKER",
+    timeslotitemid: item.timeslotitemid,
+    marker: marker,
+  });
+  /*
   try {
     // Api only deals with whole seconds.
     secs = Math.round(secs);
@@ -73,15 +86,27 @@ const setTrackIntro = (
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
     console.error("Failed to set track intro: " + e);
-  }
+  }*/
 };
 
 const setTrackOutro = (
-  track: api.Track,
+  item: api.TimeslotItem,
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
-  try {
+  let marker = {
+    name: "Outro",
+    time: secs,
+    position: "end",
+    section: null,
+  };
+  sendBAPSicleChannel({
+    channel: player,
+    command: "SETMARKER",
+    timeslotitemid: item.timeslotitemid,
+    marker: marker,
+  });
+  /*try {
     // Api only deals with whole seconds.
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
@@ -89,7 +114,7 @@ const setTrackOutro = (
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
     console.error("Failed to set track outro: " + e);
-  }
+  }*/
 };
 
 const setTrackCue = (
@@ -97,7 +122,6 @@ const setTrackCue = (
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
-  console.log("Setting Cue to " + secs);
   let marker = {
     name: "Cue",
     time: secs,
@@ -140,7 +164,7 @@ function TimingButtons({ id }: { id: number }) {
       <div
         className="intro btn btn-sm btn-outline-secondary rounded-0"
         onClick={() => {
-          if (state.loadedItem?.type === "central") {
+          if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
             dispatch(
               setTrackIntro(
                 state.loadedItem,
@@ -172,7 +196,7 @@ function TimingButtons({ id }: { id: number }) {
       <div
         className="outro btn btn-sm btn-outline-secondary rounded-0"
         onClick={() => {
-          if (state.loadedItem?.type === "central") {
+          if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
             dispatch(
               setTrackOutro(
                 state.loadedItem,

@@ -290,6 +290,24 @@ export const load = (
   // If this is already the currently loaded item, don't bother
   const currentItem = getState().mixer.players[player].loadedItem;
   if (currentItem !== null && itemId(currentItem) === itemId(item)) {
+    // The cue/intro/outro point(s) have changed.
+    if ("cue" in currentItem && "cue" in item && currentItem.cue !== item.cue) {
+      dispatch(setLoadedItemCue(player, item.cue));
+    }
+    if (
+      "intro" in currentItem &&
+      "intro" in item &&
+      currentItem.intro !== item.intro
+    ) {
+      dispatch(setLoadedItemIntro(player, item.intro));
+    }
+    if (
+      "outro" in currentItem &&
+      "outro" in item &&
+      currentItem.outro !== item.outro
+    ) {
+      dispatch(setLoadedItemOutro(player, item.outro));
+    }
     return;
   }
   // If we're already loading something, abort it
