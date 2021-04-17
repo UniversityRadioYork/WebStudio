@@ -38,6 +38,7 @@ export function LoadShowDialogue(close: any) {
         <ul>
           {items.map((item, index) => (
             <li
+              key={index}
               onClick={() => {
                 sendBAPSicleChannel({
                   command: "GET_PLAN",
