@@ -376,7 +376,21 @@ export const load = (
       dispatch(mixerState.actions.itemLoadComplete({ player }));
     });
 
+    // Add the audio marker regions
+    const state = getState().mixer.players[player];
+
     // TODO: This needs to happen without wavesurfer
+
+    if (state.loadedItem && "intro" in state.loadedItem) {
+      playerInstance.setIntro(state.loadedItem.intro);
+    }
+    if (state.loadedItem && "cue" in state.loadedItem) {
+      playerInstance.setCue(state.loadedItem.cue);
+      playerInstance.setCurrentTime(state.loadedItem.cue);
+    }
+    if (state.loadedItem && "outro" in state.loadedItem) {
+      playerInstance.setOutro(state.loadedItem.outro);
+    }
     playerInstance.on("timeChangeSeek", (time) => {
       if (Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5) {
         sendBAPSicleChannel({ channel: player, command: "SEEK", time: time });

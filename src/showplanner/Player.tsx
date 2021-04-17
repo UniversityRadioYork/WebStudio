@@ -16,6 +16,7 @@ import * as ShowPlanState from "../showplanner/state";
 import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
 import * as api from "../api";
 import { AppThunk } from "../store";
+import { sendBAPSicleChannel } from "../bapsicle";
 
 export const USE_REAL_GAIN_VALUE = false;
 
@@ -96,15 +97,28 @@ const setTrackCue = (
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
-  try {
-    // Api only deals with whole seconds.
-    secs = Math.round(secs);
-    dispatch(MixerState.setLoadedItemCue(player, secs));
-    dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
-  } catch (e) {
-    dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
-    console.error("Failed to set track cue: " + e);
-  }
+  console.log("Setting Cue to " + secs);
+  let marker = {
+    name: "Cue",
+    time: secs,
+    position: "mid",
+    section: null,
+  };
+  sendBAPSicleChannel({
+    channel: player,
+    command: "SETMARKER",
+    timeslotitemid: item.timeslotitemid,
+    marker: marker,
+  });
+  //try {
+  // Api only deals with whole seconds.
+  //secs = Math.round(secs);
+  //dispatch(MixerState.setLoadedItemCue(player, secs));
+  //dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
+  //} catch (e) {
+  //dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
+  //console.error("Failed to set track cue: " + e);
+  //}
 };
 
 function TimingButtons({ id }: { id: number }) {

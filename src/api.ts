@@ -258,6 +258,7 @@ export function loadPlaylistLibrary(libraryId: string): Promise<Track[]> {
   //return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
 }
 
+/*
 export function setTimeslotItemCue(
   timeslotItemId: string,
   secs: number
@@ -278,6 +279,7 @@ export function setTrackOutro(trackId: number, secs: number): Promise<null> {
     duration: secs,
   });
 }
+*/
 
 export type UpdateOp =
   | {

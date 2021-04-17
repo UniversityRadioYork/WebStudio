@@ -145,7 +145,9 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
 
 export function sendBAPSicleChannel(message: any): void {
   if (BAPSicleWS) {
-    BAPSicleWS.send(JSON.stringify(message));
+    message = JSON.stringify(message);
+    console.log("Sending message to BAPSicle:", message);
+    BAPSicleWS.send(message);
   }
 }
 
