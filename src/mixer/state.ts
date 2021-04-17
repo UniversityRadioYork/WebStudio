@@ -263,6 +263,14 @@ export const setLoadedItemOutro = (
   }
 };
 
+export const seek = (player: number, time_s: number): AppThunk => async () => {
+  const playerInstance = await audioEngine.getPlayer(player);
+
+  if (playerInstance) {
+    playerInstance.setCurrentTime(time_s);
+  }
+};
+
 export const load = (
   player: number,
   item: PlanItem | Track | AuxItem

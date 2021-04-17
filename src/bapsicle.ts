@@ -23,6 +23,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                 time: parseInt(message.data),
               })
             );
+            store.dispatch(MixerState.seek(message.channel, message.data));
             break;
           case "STATUS":
             // Bapsicle is telling us it's full state on this channel. Let's update the UI.

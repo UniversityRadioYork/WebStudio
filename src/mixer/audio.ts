@@ -21,6 +21,7 @@ const PlayerEmitter: StrictEmitter<
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   private volume = 0;
   private trim = 0;
+  private ignore_next_seek: boolean = false;
   private constructor(
     private readonly engine: AudioEngine,
     private readonly player: Number,
@@ -44,7 +45,15 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   setCurrentTime(secs: number) {
-    this.wavesurfer.setCurrentTime(secs);
+    // Only trouble wavesurfer if we've actually moved
+    if (
+      secs > 0 &&
+      this.wavesurfer.getDuration() > 0 &&
+      Math.abs(this.wavesurfer.getCurrentTime() - secs) >= 0.1
+    ) {
+      this.ignore_next_seek = true;
+      this.wavesurfer.setCurrentTime(secs);
+    }
   }
 
   setIntro(duration: number) {
@@ -197,7 +206,11 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       instance.emit("pause");
     });
     wavesurfer.on("seek", () => {
-      instance.emit("timeChangeSeek", wavesurfer.getCurrentTime());
+      if (instance.ignore_next_seek) {
+        instance.ignore_next_seek = false;
+      } else {
+        instance.emit("timeChangeSeek", wavesurfer.getCurrentTime());
+      }
       instance.emit("timeChange", wavesurfer.getCurrentTime());
     });
     wavesurfer.on("finish", () => {
