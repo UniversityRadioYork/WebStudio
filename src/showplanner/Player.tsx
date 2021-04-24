@@ -368,7 +368,13 @@ export function Player({ id }: { id: number }) {
               <FaPlay />
             </button>
             <button
-              onClick={() => dispatch(MixerState.pause(id))}
+              onClick={() =>
+                dispatch(
+                  playerState.state === "paused"
+                    ? MixerState.unpause(id)
+                    : MixerState.pause(id)
+                )
+              }
               className={
                 playerState.state === "paused" ? "sp-state-paused" : ""
               }

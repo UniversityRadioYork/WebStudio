@@ -445,6 +445,10 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
   sendBAPSicleChannel({ channel: player, command: "PAUSE" });
 };
 
+export const unpause = (player: number): AppThunk => (dispatch, getState) => {
+  sendBAPSicleChannel({ channel: player, command: "UNPAUSE" });
+};
+
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
   sendBAPSicleChannel({ channel: player, command: "STOP" });
 };
