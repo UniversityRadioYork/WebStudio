@@ -47,11 +47,7 @@ export const Item = memo(function Item({
   }
 
   return (
-    <Draggable
-      draggableId={id}
-      index={index}
-      isDragDisabled={isGhost || isLoaded}
-    >
+    <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
