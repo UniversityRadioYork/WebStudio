@@ -169,7 +169,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       backgroundColor: "#FFFFFF",
       progressColor: "#9999FF",
       backend: "MediaElementWebAudio",
-      barWidth: 2,
+      barWidth: 1,
       responsive: true,
       xhr: {
         credentials: "include",
