@@ -47,7 +47,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   setCurrentTime(secs: number) {
     // Only trouble wavesurfer if we've actually moved
     if (
-      secs > 0 &&
+      secs >= 0 &&
       this.wavesurfer.getDuration() > 0 &&
       Math.abs(this.wavesurfer.getCurrentTime() - secs) >= 0.1
     ) {
