@@ -95,6 +95,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   setOutro(startTime: number) {
     if ("outro" in this.wavesurfer.regions.list) {
+      // Just in case the outro end was incorrect before (possibly 0, so would be at beginning and not work)
+      this.wavesurfer.regions.list.outro.end = this.wavesurfer.getDuration();
       // If the outro is set to 0, we assume that's no outro.
       if (startTime === 0) {
         // Can't just delete the outro, so set it to the end of the track to hide it.

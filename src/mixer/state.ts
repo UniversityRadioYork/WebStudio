@@ -273,7 +273,7 @@ export const seek = (player: number, time_s: number): AppThunk => async () => {
 
 export const load = (
   player: number,
-  item: PlanItem | Track | AuxItem
+  item: PlanItem | Track | AuxItem | null
 ): AppThunk => async (dispatch, getState) => {
   if (typeof audioEngine.players[player] !== "undefined") {
     if (audioEngine.players[player]?.isPlaying) {
@@ -282,12 +282,23 @@ export const load = (
     }
   }
 
+  if (!item) {
+    // Unload the player.
+    dispatch(
+      mixerState.actions.loadItem({
+        player,
+        item,
+      })
+    );
+    return;
+  }
+
   // Can't really load a ghost, it'll break setting cues etc. Do nothing.
   if (item.type === "ghost") {
     return;
   }
 
-  // If this is already the currently loaded item, don't bother
+  // If this is already the currently loaded item, don't bother reloading the item, short circuit.
   const currentItem = getState().mixer.players[player].loadedItem;
   if (currentItem !== null && itemId(currentItem) === itemId(item)) {
     // The cue/intro/outro point(s) have changed.
@@ -392,27 +403,27 @@ export const load = (
     playerInstance.on("loadComplete", (duration) => {
       console.log("loadComplete");
       dispatch(mixerState.actions.itemLoadComplete({ player }));
-    });
 
-    // Add the audio marker regions
-    const state = getState().mixer.players[player];
+      // Add the audio marker regions, we have to do these after load complete, since otherwise it won't know the end of the file duration!
+      const state = getState().mixer.players[player];
 
-    // TODO: This needs to happen without wavesurfer
-
-    if (state.loadedItem && "intro" in state.loadedItem) {
-      playerInstance.setIntro(state.loadedItem.intro);
-    }
-    if (state.loadedItem && "cue" in state.loadedItem) {
-      playerInstance.setCue(state.loadedItem.cue);
-      playerInstance.setCurrentTime(state.loadedItem.cue);
-    }
-    if (state.loadedItem && "outro" in state.loadedItem) {
-      playerInstance.setOutro(state.loadedItem.outro);
-    }
-    playerInstance.on("timeChangeSeek", (time) => {
-      if (Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5) {
-        sendBAPSicleChannel({ channel: player, command: "SEEK", time: time });
+      if (state.loadedItem && "intro" in state.loadedItem) {
+        playerInstance.setIntro(state.loadedItem.intro);
       }
+      if (state.loadedItem && "cue" in state.loadedItem) {
+        playerInstance.setCue(state.loadedItem.cue);
+        playerInstance.setCurrentTime(state.loadedItem.cue);
+      }
+      if (state.loadedItem && "outro" in state.loadedItem) {
+        playerInstance.setOutro(state.loadedItem.outro);
+      }
+      playerInstance.on("timeChangeSeek", (time) => {
+        if (
+          Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
+        ) {
+          sendBAPSicleChannel({ channel: player, command: "SEEK", time: time });
+        }
+      });
     });
 
     // Double-check we haven't been aborted since
@@ -460,6 +471,7 @@ export const {
   setPlayerState,
   setAutoAdvance,
   itemLoadComplete,
+  itemLoadError,
   itemLoadPercentage,
   setPlayOnLoad,
   setRepeat,

@@ -62,9 +62,14 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                 );
               }
             } else {
-              store.dispatch(
-                MixerState.itemLoadPercentage({ player: channel, percent: 0 })
-              );
+              store.dispatch(MixerState.load(channel, null));
+            }
+
+            if (
+              !bapsicle_state.initialised ||
+              (bapsicle_state.loaded_item && !bapsicle_state.loaded)
+            ) {
+              store.dispatch(MixerState.itemLoadError({ player: channel }));
             }
 
             store.dispatch(
