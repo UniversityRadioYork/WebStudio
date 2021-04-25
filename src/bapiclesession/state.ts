@@ -70,12 +70,12 @@ export const getCurrentServer = (): AppThunk => async (dispatch, getState) => {
 export const getServer = (): AppThunk => async (dispatch) => {
   // TODO Server Details Configurable
   let bapsServer: bapsServer = {
-    hostname: "webstudio-dev.ury.org.uk",
+    hostname: window.location.hostname,
     port: 13501,
     name: "Connecting...",
   };
   dispatch(sessionState.actions.setCurrentServer({ server: bapsServer }));
-  dispatch(connectBAPSicle("ws://webstudio-dev.ury.org.uk:13501"));
+  dispatch(connectBAPSicle("ws://" + window.location.hostname + ":13501"));
   /*
   dispatch(sessionState.actions.getUserStarting());
   try {

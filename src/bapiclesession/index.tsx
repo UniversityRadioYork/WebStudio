@@ -5,14 +5,14 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../rootReducer";
 import Showplanner from "../showplanner";
 
-import BAPSicleLogo from "../assets/images/bapsicle.png";
-import appLogo from "../assets/images/bapsicle.png";
+import serverLogo from "../assets/images/serverlogo.png";
+import appLogo from "../assets/images/presenterlogo.png";
 
 export function ConnectionDialogue({ error }: { error: String | null }) {
   return (
     <div className="loading-dialogue">
       <div className="logo-container">
-        <img className="logo mb-5" src={appLogo} alt="BAPS Logo" />
+        <img className="logo-big mb-2" src={appLogo} alt="BAPS Logo" />
       </div>
 
       <span className="inner">
@@ -21,37 +21,25 @@ export function ConnectionDialogue({ error }: { error: String | null }) {
           <strong>Broadcast &amp; Presenting Suite</strong>
         </p>
         <hr />
-        {error !== null && (
-          <>
-            <span>
-              <strong>Failed!</strong> <code>{error}</code>
-            </span>
-            <form>
-              <div>
-                <label htmlFor="hostname">Hostname: </label>
-                <input
-                  name="hostname"
-                  type="text"
-                  placeholder="localhost"
-                ></input>
-              </div>
-              <div>
-                <label htmlFor="port">Port: </label>
-                <input name="port" type="text" placeholder="13501"></input>
-              </div>
-              <div>
-                <input type="submit" value="Connect" />
-              </div>
-            </form>
-            <hr />
-          </>
-        )}
-        {error == null && <p>Connecting...</p>}
+        <span className="my-2">
+          {error == null && <strong>Connecting...</strong>}
+          {error != null && (
+            <>
+              <strong>Disconnected!</strong> <code>{error}</code>
+            </>
+          )}
+        </span>
+        <form className="my-3">
+          <input className="btn btn-primary" type="submit" value="Reconnect" />
+        </form>
       </span>
       <hr />
       <div className="logo-container">
         Powered by
-        <img className="logo mb-5" src={BAPSicleLogo} alt="BAPSicle Logo" />
+        <br />
+        <a href={"http://" + window.location.hostname + ":13500"}>
+          <img className="logo mb-5" src={serverLogo} alt="BAPSicle" />
+        </a>
       </div>
     </div>
   );

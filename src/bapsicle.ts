@@ -161,6 +161,7 @@ export const connectBAPSicle = (path: string): AppThunk => async (
   dispatch(SessionState.setServerState("CONNECTING"));
   BAPSicleWS.onopen = () => dispatch(SessionState.setServerState("CONNECTED"));
   BAPSicleWS.onclose = () => dispatch(SessionState.setServerState("FAILED"));
+  BAPSicleWS.onerror = () => dispatch(SessionState.setServerState("FAILED"));
 };
 
 export const disconnectBAPSicle = () => {
