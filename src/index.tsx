@@ -4,25 +4,30 @@ import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorkerLoader";
 
-import raygun from "raygun4js";
+import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
 
-import store, { getActionHistory } from "./store";
+import store from "./store";
 import { Provider } from "react-redux";
 
-raygun("apiKey", "mtj24r3YzPoYyCG8cVArA");
-raygun("enableCrashReporting", true);
-if (
-  typeof process.env.REACT_APP_VERSION === "string" &&
-  process.env.REACT_APP_VERSION.length > 0
-) {
-  raygun("setVersion", process.env.REACT_APP_VERSION);
+function getEnvironment() {
+  // this is only set when building for prod
+  if (process.env.REACT_APP_PRODUCTION === "true") {
+    return "production";
+  }
+  if (process.env.NODE_ENV === "production") {
+    return "webstudio-dev";
+  }
+  return process.env.NODE_ENV;
 }
 
-raygun("withCustomData", function() {
-  return {
-    state: store.getState(),
-    actionHistory: getActionHistory(),
-  };
+Sentry.init({
+  dsn: process.env.REACT_APP_SENTRY_PUBLIC_DSN,
+  integrations: [new Integrations.BrowserTracing()],
+  tracesSampleRate: 1.0,
+  environment: getEnvironment(),
+  release: process.env.REACT_APP_VERSION,
+  normalizeDepth: 10,
 });
 
 function render() {

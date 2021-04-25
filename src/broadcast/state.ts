@@ -156,7 +156,7 @@ export const registerForShow = (): AppThunk => async (dispatch, getState) => {
           }
         }
       } else {
-        // let raygun handle it
+        // let sentry handle it
         throw e;
       }
     }
@@ -182,7 +182,7 @@ export const cancelTimeslot = (): AppThunk => async (dispatch, getState) => {
           })
         );
       } else {
-        // let raygun handle it
+        // let sentry handle it
         throw e;
       }
     }
