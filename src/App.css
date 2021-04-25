@@ -191,6 +191,7 @@ button {
 
 .waveform .graph > wave {
   height: 6vh !important;
+  overflow: hidden !important;
 }
 
 .waveform .loading {
