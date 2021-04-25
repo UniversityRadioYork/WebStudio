@@ -1,7 +1,7 @@
 import SdpTransform from "sdp-transform";
 import * as later from "later";
 
-import raygun from "raygun4js";
+import * as Sentry from "@sentry/react";
 
 import * as BroadcastState from "./state";
 
@@ -44,9 +44,7 @@ export class WebRTCStreamer extends Streamer {
   }
 
   async stop(reason?: string): Promise<void> {
-    raygun("send", {
-      error: new Error("Connection stop due to " + reason),
-    });
+    Sentry.captureException(new Error(`Connection STOP due to ${reason}`));
     if (this.ws) {
       this.ws.close();
       this.ws = null as any;
