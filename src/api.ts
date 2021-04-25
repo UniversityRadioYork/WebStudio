@@ -53,7 +53,7 @@ export async function bapsicleApiRequest(
   params: any
 ): Promise<any> {
   const res = await apiRequest(
-    "http://webstudio-dev.ury.org.uk:13500" + endpoint,
+    "http://" + window.location.hostname + ":13500" + endpoint,
     method,
     params
   );
