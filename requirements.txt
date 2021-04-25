@@ -1,4 +1,4 @@
-aiohttp==3.6.2
+aiohttp==3.7.4
 aioice==0.6.18
 aiortc==0.9.27
 appdirs==1.4.4
