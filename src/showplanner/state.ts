@@ -508,14 +508,17 @@ export const removeItem = (
   if (getState().settings.saveShowPlanChanges) {
     const result = await api.updateShowplan(timeslotId, ops);
     if (!result.every((x) => x.status)) {
-      Sentry.captureException(new Error("Showplan update failure [addItem]"), {
-        contexts: {
-          updateShowplan: {
-            ops,
-            result,
+      Sentry.captureException(
+        new Error("Showplan update failure [removeItem]"),
+        {
+          contexts: {
+            updateShowplan: {
+              ops,
+              result,
+            },
           },
-        },
-      });
+        }
+      );
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
     }
