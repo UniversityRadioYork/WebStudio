@@ -15,7 +15,7 @@ import jack as Jack  # type: ignore
 import websockets
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
 from aiortc.mediastreams import MediaStreamError  # type: ignore
-import sentry_sdk
+import sentry_sdk  # type: ignore
 
 config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
