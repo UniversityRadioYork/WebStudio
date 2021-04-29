@@ -554,8 +554,8 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
           ops.push({
             op: "MoveItem",
             timeslotitemid: item.timeslotitemid,
-            oldchannel: colIndex,
-            channel: colIndex,
+            oldchannel: item.channel,
+            channel: item.channel,
             oldweight: item.weight,
             weight: itemIndex,
           });
