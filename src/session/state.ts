@@ -8,7 +8,7 @@ import {
   doesCurrentUserHavePermission,
 } from "../api";
 
-import raygun from "raygun4js";
+import * as Sentry from "@sentry/react";
 
 const BROADCAST_PERMISSION_ID = 340;
 
@@ -86,10 +86,10 @@ export const getUser = (): AppThunk => async (dispatch) => {
       getCurrentApiUser(),
       doesCurrentUserHavePermission(BROADCAST_PERMISSION_ID),
     ]);
-    raygun("setUser", {
-      identifier: user.memberid.toString(10),
-      firstName: user.fname,
-      fullName: user.fname + " " + user.sname,
+    Sentry.setUser({
+      id: user.memberid.toString(10),
+      email: user.public_email,
+      username: user.fname + " " + user.sname,
     });
     dispatch(sessionState.actions.setCurrentUser({ user, canBroadcast }));
   } catch (e) {
@@ -102,6 +102,7 @@ export const getTimeslot = (): AppThunk => async (dispatch) => {
   dispatch(sessionState.actions.getTimeslotStarting());
   try {
     const timeslot = await getCurrentApiTimeslot();
+    Sentry.setTag("timeslot_id", timeslot.timeslot_id);
     dispatch(sessionState.actions.getTimeslotSuccess(timeslot));
   } catch (e) {
     console.log("Failed to get selected timeslot. " + e.toString());

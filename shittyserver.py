@@ -15,23 +15,16 @@ import jack as Jack  # type: ignore
 import websockets
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
 from aiortc.mediastreams import MediaStreamError  # type: ignore
-from raygun4py import raygunprovider  # type: ignore
+import sentry_sdk  # type: ignore
 
 config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
 
-if config.get("raygun", "enable") == "True":
-    def handle_exception(
-            exc_type: Type[BaseException],
-            exc_value: BaseException,
-            exc_traceback: TracebackType,
-    ) -> None:
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        cl = raygunprovider.RaygunSender(config.get("raygun", "key"))
-        cl.send_exception(exc_info=(exc_type, exc_value, exc_traceback))
-
-
-    sys.excepthook = handle_exception
+if config.get("sentry", "enable") == "True":
+    sentry_sdk.init(
+        config.get("sentry", "dsn"),
+        traces_sample_rate=1.0
+    )
 
 file_contents_ex = re.compile(r"^ws=\d$")
 
@@ -331,7 +324,7 @@ class Session(object):
         print(self.connection_id, "Connected")
         ice_config = get_turn_credentials()
         print(self.connection_id, "Obtained ICE")
-        # TODO Raygun user ID
+        sentry_sdk.set_context("session", {"session_id": self.connection_id})
         await websocket.send(
             json.dumps({"kind": "HELLO", "connectionId": self.connection_id, "iceServers": ice_config})
         )

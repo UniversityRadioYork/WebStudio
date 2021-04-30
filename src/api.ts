@@ -311,6 +311,7 @@ export interface User {
   sname: string;
   url: string;
   photo: string;
+  public_email?: string;
 }
 
 export function getCurrentApiUser(): Promise<User> {

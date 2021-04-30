@@ -1,10 +1,4 @@
-import {
-  configureStore,
-  Action,
-  getDefaultMiddleware,
-  Middleware,
-  Dispatch,
-} from "@reduxjs/toolkit";
+import { configureStore, Action, getDefaultMiddleware } from "@reduxjs/toolkit";
 import rootReducer, { RootState } from "./rootReducer";
 import { ThunkAction } from "redux-thunk";
 import {
@@ -21,27 +15,30 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
+import * as Sentry from "@sentry/react";
 
-const ACTION_HISTORY_MAX_SIZE = 20;
+// const ACTION_HISTORY_MAX_SIZE = 20;
 
-const actionHistory: Array<Action> = [];
+// const actionHistory: Array<Action> = [];
 
-const actionHistoryMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
-  store
-) => (next) => (action) => {
-  while (actionHistory.length > ACTION_HISTORY_MAX_SIZE) {
-    actionHistory.shift();
-  }
-  actionHistory.push({
-    ...action,
-    _timestamp: new Date().toString(),
-  });
-  return next(action);
-};
+// const actionHistoryMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
+//   store
+// ) => (next) => (action) => {
+//   while (actionHistory.length > ACTION_HISTORY_MAX_SIZE) {
+//     actionHistory.shift();
+//   }
+//   actionHistory.push({
+//     ...action,
+//     _timestamp: new Date().toString(),
+//   });
+//   return next(action);
+// };
 
-export function getActionHistory() {
-  return actionHistory;
-}
+// export function getActionHistory() {
+//   return actionHistory;
+// }
+
+const sentryEnhancer = Sentry.createReduxEnhancer({});
 
 // See https://github.com/rt2zz/redux-persist/issues/988 for getDefaultMiddleware tweak.
 const store = configureStore({
@@ -49,13 +46,14 @@ const store = configureStore({
   middleware: [
     mixerMiddleware,
     mixerKeyboardShortcutsMiddleware,
-    actionHistoryMiddleware,
+    // actionHistoryMiddleware,
     ...getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }),
   ],
+  enhancers: [sentryEnhancer],
 });
 
 if (process.env.NODE_ENV === "development" && module.hot) {
