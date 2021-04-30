@@ -18,10 +18,10 @@ export function ConnectionDialogue({ error }: { error: String | null }) {
       <span className="inner">
         <h1>BAPS3</h1>
         <p>
-          <strong>Broadcast &amp; Presenting Suite</strong>
+          <strong>Broadcast And Presenting Suite</strong>
         </p>
         <hr />
-        <span className="my-2">
+        <span className="my-2 text-center">
           {error == null && <strong>Connecting...</strong>}
           {error != null && (
             <>
