@@ -4,6 +4,8 @@ import Modal from "react-modal";
 import { Button } from "reactstrap";
 
 import { LoadShowDialogue } from "./loadshow";
+import "./BAPSicleModal.scss";
+import { SidebarDialogue } from "./sidebar";
 
 interface BAPSicleModalProps {
   isOpen: boolean;
@@ -13,7 +15,7 @@ interface BAPSicleModalProps {
 export function BAPSicleModal(props: BAPSicleModalProps) {
   return (
     <Modal isOpen={props.isOpen} onRequestClose={props.close}>
-      <h1 className="d-inline">Load a Show</h1>
+      <h1 className="d-inline">Menu</h1>
       <Button
         onClick={props.close}
         className="float-right pt-1"
@@ -22,7 +24,14 @@ export function BAPSicleModal(props: BAPSicleModalProps) {
         <FaTimes />
       </Button>
       <hr className="mt-1 mb-3" />
-      <LoadShowDialogue close={props.close} />
+      <div className="row">
+        <div className="col-8">
+          <LoadShowDialogue close={props.close} />
+        </div>
+        <div className="col-4">
+          <SidebarDialogue />
+        </div>
+      </div>
     </Modal>
   );
 }

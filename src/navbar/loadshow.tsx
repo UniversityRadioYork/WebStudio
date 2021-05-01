@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { getTimeslots, Timeslot } from "../api";
 
-import { FaCog, FaSearch, FaTimesCircle } from "react-icons/fa";
+import {
+  FaCog,
+  FaDownload,
+  FaSearch,
+  FaTimesCircle,
+  FaTrashAlt,
+} from "react-icons/fa";
 import { sendBAPSicleChannel } from "../bapsicle";
-
-//import "./libraries.scss";
 
 type searchingStateEnum = "searching" | "results" | "no-results" | "error";
 
@@ -31,46 +35,72 @@ export function LoadShowDialogue(close: any) {
     });
   }, [state]);
   return (
-    <div className="">
-      <div className="border-top mt-2"></div>
+    <>
       <ResultsPlaceholder state={state} />
-      <div className="timeslot-item-list">
-        <ul>
-          {items.map((item, index) => (
-            <li
-              key={index}
-              onClick={() => {
-                sendBAPSicleChannel({
-                  command: "GET_PLAN",
-                  timeslotId: item.timeslot_id,
-                });
-              }}
-            >
-              {item.start_time} - {item.title}
-            </li>
-          ))}
-        </ul>
+      {state !== "searching" && (
+        <div
+          className="btn btn-outline-danger outline float-right"
+          onClick={() => {
+            sendBAPSicleChannel({
+              command: "CLEAR",
+            });
+          }}
+        >
+          <FaTrashAlt size={16} /> Clear All Channels
+        </div>
+      )}
+      <h2>Load Show</h2>
+      <div className="loadshow-list">
+        {items.map((item, index) => (
+          <div className="loadshow-result card text-dark" key={index}>
+            <div className="card-body">
+              <span
+                className="btn btn-outline-primary float-right"
+                onClick={() => {
+                  sendBAPSicleChannel({
+                    command: "GET_PLAN",
+                    timeslotId: item.timeslot_id,
+                  });
+                }}
+              >
+                <FaDownload size={15} /> Load Show Plan
+              </span>
+
+              <h5 className="card-title">{item.title}</h5>
+              <h6 className="card-subtitle mb-2 text-muted">
+                {item.start_time} - Duration: {item.duration}
+              </h6>
+              <p className="card-text">
+                <i>with {item.credits_string}</i>
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
-    </div>
+    </>
   );
 }
 // <Item key={itemId(item)} item={item} index={index} column={-1} />
 export function ResultsPlaceholder({ state }: { state: string }) {
   return (
-    <span
-      className={state !== "results" ? "mt-5 text-center text-muted" : "d-none"}
+    <div
+      className={
+        "loading " + (state !== "results" ? "text-center text-muted" : "d-none")
+      }
     >
       {state === "not-searching" && <FaSearch size={56} />}
       {state === "searching" && <FaCog size={56} className="fa-spin" />}
       {state === "no-results" && <FaTimesCircle size={56} />}
       <br />
-      {state === "not-searching"
-        ? "Enter a search term."
-        : state === "searching"
-        ? "Searching..."
-        : state === "no-results"
-        ? "No results."
-        : "An error has occurred while getting shows."}
-    </span>
+      <span className="ml-3">
+        {state === "not-searching"
+          ? ""
+          : state === "searching"
+          ? "Searching..."
+          : state === "no-results"
+          ? "No results."
+          : "An error has occurred while getting shows."}
+      </span>
+    </div>
   );
 }

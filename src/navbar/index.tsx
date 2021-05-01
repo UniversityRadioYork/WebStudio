@@ -12,7 +12,7 @@ import { closeAlert } from "./state";
 import { BAPSicleModal } from "./BAPSicleModal";
 
 export function NavBarMain() {
-  const [showBAPSicleModal, setShowBAPSicleModal] = useState(false);
+  const [showBAPSicleModal, setShowBAPSicleModal] = useState(true);
 
   return (
     <>
@@ -48,7 +48,7 @@ export function NavBarMain() {
             }}
           >
             <FaCompactDisc size={16} className="mr-2" />
-            <b>Load Show</b>
+            <b>Menu</b>
           </li>
         </ul>
       </div>

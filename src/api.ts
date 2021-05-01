@@ -322,6 +322,8 @@ export interface Timeslot {
   time: number;
   start_time: string;
   title: string;
+  duration: string;
+  credits_string: string;
 }
 
 export function getCurrentApiTimeslot(): Promise<Timeslot> {
