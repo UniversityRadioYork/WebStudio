@@ -67,8 +67,13 @@ export const Item = memo(function Item({
             id={isReal ? TS_ITEM_MENU_ID : ""}
             collect={() => ({ id, column, index })}
           >
-            <span className={"icon " + x.type} />
+            <span className={"icon " + x.type}></span>
             &nbsp;
+            {"play_count" in x && (
+              <>
+                <code>{x.play_count}</code>&nbsp;
+              </>
+            )}
             {x.title.toString()}
             {"artist" in x &&
               x.artist !== "" &&
@@ -82,7 +87,6 @@ export const Item = memo(function Item({
             >
               Explicit
             </small>
-            <code>{"weight" in x && x.weight}</code>
           </ContextMenuTrigger>
         </div>
       )}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getTimeslots, Timeslot } from "../api";
 
 import {
+  FaCircleNotch,
   FaCog,
   FaDownload,
   FaSearch,
@@ -38,18 +39,32 @@ export function LoadShowDialogue(close: any) {
     <>
       <ResultsPlaceholder state={state} />
       {state !== "searching" && (
-        <div
-          className="btn btn-outline-danger outline float-right"
-          onClick={() => {
-            sendBAPSicleChannel({
-              command: "CLEAR",
-            });
-          }}
-        >
-          <FaTrashAlt size={16} /> Clear All Channels
-        </div>
+        <>
+          <div
+            className="btn btn-outline-danger outline float-right"
+            onClick={() => {
+              sendBAPSicleChannel({
+                command: "CLEAR",
+              });
+            }}
+          >
+            <FaTrashAlt size={15} /> Clear All Channels
+          </div>
+          <div
+            className="btn btn-outline-dark outline float-right mr-1"
+            onClick={() => {
+              sendBAPSicleChannel({
+                command: "RESETPLAYED",
+                weight: -1,
+              });
+            }}
+          >
+            <FaCircleNotch size={15} /> Mark All Unplayed
+          </div>
+          <h2>Load Show</h2>
+        </>
       )}
-      <h2>Load Show</h2>
+
       <div className="loadshow-list">
         {items.map((item, index) => (
           <div className="loadshow-result card text-dark" key={index}>

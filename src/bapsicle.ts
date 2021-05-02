@@ -47,14 +47,12 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
               var loadedItem: PlanItem = {
                 timeslotitemid: raw_planitem.timeslotItemId,
                 channel: message.channel,
-                played: false,
                 type: raw_planitem.trackId ? "central" : "aux",
                 trackid: raw_planitem.trackId,
                 managedid: raw_planitem.managedId,
                 ...raw_planitem,
               };
               if (bapsicle_state.loaded) {
-                console.log("isLoaded");
                 store.dispatch(MixerState.load(channel, loadedItem));
               } else {
                 store.dispatch(
@@ -120,7 +118,6 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                 managedid: raw_planitem.managedId,
                 ...raw_planitem,
               };
-              //planItem.draggableId = planItem.timeslotitemid.toString()
               planItem = planItem as PlanItem;
               planItems.push(planItem);
             });

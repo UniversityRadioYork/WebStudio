@@ -21,6 +21,7 @@ export interface ItemGhost {
 
 export interface PlanItemBase {
   played?: boolean;
+  play_count?: number;
 }
 export type PlanItem = (TimeslotItem | ItemGhost) & PlanItemBase;
 
@@ -237,10 +238,40 @@ export default showplan.reducer;
 
 export const {
   setItemTimings,
-  setItemPlayed,
+  //setItemPlayed,
   planSaveError,
   getShowplanSuccessChannel,
 } = showplan.actions;
+
+export const setItemPlayed = (
+  itemid: string,
+  played: boolean,
+  player: number | null = null
+): AppThunk => async (dispatch, getState) => {
+  if (played) {
+    return;
+  }
+  var weight = -1;
+
+  if (itemid) {
+    const idx = getState().showplan.plan!.findIndex(
+      (x) => itemId(x) === itemid
+    );
+    weight = getState().showplan.plan![idx].weight;
+  }
+  if (player) {
+    sendBAPSicleChannel({
+      channel: player,
+      command: "RESETPLAYED",
+      weight: weight,
+    });
+  } else {
+    sendBAPSicleChannel({
+      command: "RESETPLAYED",
+      weight: weight,
+    });
+  }
+};
 
 export const moveItem = (
   itemid: string,
