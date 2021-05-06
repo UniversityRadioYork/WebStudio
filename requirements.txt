@@ -15,7 +15,7 @@ crc32c==2.0
 cryptography==2.8
 expiringdict==1.2.1
 Flask==1.1.2
-Flask-Cors==3.0.8
+Flask-Cors==3.0.9
 gunicorn==20.0.4
 idna==2.9
 itsdangerous==1.1.0
