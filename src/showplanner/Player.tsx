@@ -334,6 +334,11 @@ export function Player({ id }: { id: number }) {
                 ? "LOAD FAILED"
                 : "No Media Selected"}
             </strong>
+            <code>
+              {playerState.loadedItem &&
+                "weight" in playerState.loadedItem &&
+                playerState.loadedItem.weight}
+            </code>
             <small
               className={
                 "border rounded border-danger text-danger p-1 m-1" +

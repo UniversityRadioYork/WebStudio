@@ -87,6 +87,10 @@ export const Item = memo(function Item({
             >
               Explicit
             </small>
+            <code>
+              {"weight" in x && x.weight} {index}{" "}
+              {"weight" in x && x.weight !== index && "!!!!!!!!!!!"}
+            </code>
           </ContextMenuTrigger>
         </div>
       )}
