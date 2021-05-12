@@ -44,7 +44,7 @@ export class WebRTCStreamer extends Streamer {
   }
 
   async stop(reason?: string): Promise<void> {
-    Sentry.captureException(new Error(`Connection STOP due to ${reason}`));
+    Sentry.captureMessage(`Connection STOP due to ${reason}`);
     if (this.ws) {
       this.ws.close();
       this.ws = null as any;
