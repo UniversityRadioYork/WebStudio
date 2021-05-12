@@ -243,8 +243,11 @@ const Showplanner: React.FC = function() {
       weight: data.index,
     });
   }
-  async function onCtxUnPlayedClick(e: any, data: { id: string }) {
-    dispatch(setItemPlayed(data.id, false));
+  async function onCtxUnPlayedClick(
+    e: any,
+    data: { id: string; column: number; index: number }
+  ) {
+    dispatch(setItemPlayed(data.id.toString(), false, data.column));
   }
 
   // Add support for reloading the show plan from the iFrames.
