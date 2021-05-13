@@ -68,7 +68,7 @@ pipeline {
           export SENTRY_RELEASE="$(jq -r '.version' package.json)-$(git rev-parse --short HEAD)"
           sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
           sentry-cli releases set-commits $SENTRY_RELEASE --auto
-          sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps build/static/js --url-prefix '/webstudio/static/js'
+          sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps build/static/js --url-prefix '/webstudio-dev/static/js'
           sentry-cli releases finalize $SENTRY_RELEASE
           sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
         '''
