@@ -13,7 +13,7 @@ import { sendBAPSicleChannel } from "../bapsicle";
 
 type searchingStateEnum = "searching" | "results" | "no-results" | "error";
 
-export function LoadShowDialogue(close: any) {
+export function LoadShowDialogue({ close }: { close: () => any }) {
   const [items, setItems] = useState<Timeslot[]>([]);
 
   const [state, setState] = useState<searchingStateEnum>("searching");
