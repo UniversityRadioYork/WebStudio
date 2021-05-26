@@ -46,6 +46,7 @@ export function LoadShowDialogue({ close }: { close: () => any }) {
               sendBAPSicleChannel({
                 command: "CLEAR",
               });
+              close();
             }}
           >
             <FaTrashAlt size={15} /> Clear All Channels
