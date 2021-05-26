@@ -545,6 +545,35 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   RootState,
   Dispatch<any>
 > = (store) => {
+  // The F keys will only work in places like Electron (NeutronStudio) where they don't trigger browser functions.
+  Keys("f1", () => {
+    sendBAPSicleChannel({ channel: 0, command: "PLAY" });
+  });
+  Keys("f2", () => {
+    sendBAPSicleChannel({ channel: 0, command: "PAUSE" });
+  });
+  Keys("f3", () => {
+    sendBAPSicleChannel({ channel: 0, command: "STOP" });
+  });
+  Keys("f5", () => {
+    sendBAPSicleChannel({ channel: 1, command: "PLAY" });
+  });
+  Keys("f6", () => {
+    sendBAPSicleChannel({ channel: 1, command: "PAUSE" });
+  });
+  Keys("f7", () => {
+    sendBAPSicleChannel({ channel: 1, command: "STOP" });
+  });
+  Keys("f9", () => {
+    sendBAPSicleChannel({ channel: 2, command: "PLAY" });
+  });
+  Keys("f10", () => {
+    sendBAPSicleChannel({ channel: 2, command: "PAUSE" });
+  });
+  Keys("f11", () => {
+    sendBAPSicleChannel({ channel: 2, command: "STOP" });
+  });
+
   Keys("q", () => {
     sendBAPSicleChannel({ channel: 0, command: "PLAY" });
   });
