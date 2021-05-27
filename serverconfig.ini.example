@@ -1,0 +1,20 @@
+[sentry]
+dsn = CHANGEME
+enable = False
+
+[twilio]
+account_sid = CHANGEME
+auth_token = CHANGEME
+
+[time]
+local_timezone = Europe/London
+
+[shittyserver]
+notify_url = https://example.com
+websocket_port = 8079
+telnet_port = 8078
+turn_provider = twilio
+
+[stateserver]
+myradio_key = CHANGEME
+sustainer_autonews = True

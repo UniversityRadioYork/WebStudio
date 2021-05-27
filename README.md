@@ -1,5 +1,3 @@
-# POSSIBLE NEW BAPS INTERFACE
-
 # WebStudio
 
 WebStudio is URY's big fun machine for doing radio shows from home, using Web Audio and WebRTC.
