@@ -5,13 +5,21 @@ import {
   Middleware,
 } from "@reduxjs/toolkit";
 import fetchProgress, { FetchProgressData } from "fetch-progress";
-import { itemId, PlanItem } from "../showplanner/state";
+import Between from "between.js";
+import { itemId, PlanItem, setItemPlayed } from "../showplanner/state";
+import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
-import { Track, AuxItem } from "../api";
+import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import { audioEngine } from "./audio";
+import { audioEngine, ChannelMapping } from "./audio";
+import * as TheNews from "./the_news";
 import { sendBAPSicleChannel } from "../bapsicle";
+
+const playerGainTweens: Array<{
+  target: VolumePresetEnum;
+  tweens: Between[];
+}> = [];
 
 const loadAbortControllers: AbortController[] = [];
 const lastObjectURLs: string[] = [];
@@ -19,6 +27,8 @@ const lastObjectURLs: string[] = [];
 export type PlayerStateEnum = "playing" | "paused" | "stopped";
 type PlayerRepeatEnum = "none" | "one" | "all";
 type VolumePresetEnum = "off" | "bed" | "full";
+type MicVolumePresetEnum = "off" | "full";
+export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
 const defaultTrimDB = -6; // The default trim applied to channel players.
 
@@ -39,8 +49,18 @@ interface PlayerState {
   tracklistItemID: number;
 }
 
+interface MicState {
+  open: boolean;
+  openError: null | MicErrorEnum;
+  volume: 1 | 0;
+  baseGain: number;
+  id: string | null;
+  processing: boolean;
+}
+
 interface MixerState {
   players: PlayerState[];
+  mic: MicState;
 }
 
 const BasePlayerState: PlayerState = {
@@ -64,6 +84,15 @@ const mixerState = createSlice({
   name: "Player",
   initialState: {
     players: [BasePlayerState, BasePlayerState, BasePlayerState],
+    mic: {
+      open: false,
+      volume: 1,
+      gain: 1,
+      baseGain: 0,
+      openError: null,
+      id: "None",
+      processing: true,
+    },
   } as MixerState,
   reducers: {
     loadItem(
@@ -71,6 +100,8 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         item: PlanItem | Track | AuxItem | null;
+        customOutput: boolean;
+        resetTrim?: boolean;
       }>
     ) {
       state.players[action.payload.player].loadedItem = action.payload.item;
@@ -85,6 +116,14 @@ const mixerState = createSlice({
       state.players[action.payload.player].timeLength = 0;
       state.players[action.payload.player].tracklistItemID = -1;
       state.players[action.payload.player].loadError = false;
+
+      if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        if (action.payload.customOutput) {
+          state.players[action.payload.player].trim = 0;
+        } else if (action.payload.resetTrim) {
+          state.players[action.payload.player].trim = defaultTrimDB;
+        }
+      }
     },
     itemLoadPercentage(
       state,
@@ -168,6 +207,22 @@ const mixerState = createSlice({
         loadedItem.outro = action.payload.secs;
       }
     },
+    setMicError(state, action: PayloadAction<null | MicErrorEnum>) {
+      state.mic.openError = action.payload;
+    },
+    micOpen(state, action) {
+      state.mic.open = true;
+      state.mic.id = action.payload;
+    },
+    setMicLevels(state, action: PayloadAction<{ volume: 1 | 0 }>) {
+      state.mic.volume = action.payload.volume;
+    },
+    setMicBaseGain(state, action: PayloadAction<number>) {
+      state.mic.baseGain = action.payload;
+    },
+    setMicProcessingEnabled(state, action: PayloadAction<boolean>) {
+      state.mic.processing = action.payload;
+    },
     setTimeCurrent(
       state,
       action: PayloadAction<{
@@ -211,10 +266,27 @@ const mixerState = createSlice({
       state,
       action: PayloadAction<{
         player: number;
-        mode: PlayerRepeatEnum;
+        mode?: PlayerRepeatEnum;
       }>
     ) {
-      state.players[action.payload.player].repeat = action.payload.mode;
+      if (action.payload.mode) {
+        state.players[action.payload.player].repeat = action.payload.mode;
+        return;
+      }
+      // If we don't specify an option, toggle it.
+      var playVal = state.players[action.payload.player].repeat;
+      switch (playVal) {
+        case "none":
+          playVal = "one";
+          break;
+        case "one":
+          playVal = "all";
+          break;
+        case "all":
+          playVal = "none";
+          break;
+      }
+      state.players[action.payload.player].repeat = playVal;
     },
     setTracklistItemID(
       state,
@@ -288,6 +360,7 @@ export const load = (
       mixerState.actions.loadItem({
         player,
         item,
+        customOutput: false,
       })
     );
     return;
@@ -301,23 +374,29 @@ export const load = (
   // If this is already the currently loaded item, don't bother reloading the item, short circuit.
   const currentItem = getState().mixer.players[player].loadedItem;
   if (currentItem !== null && itemId(currentItem) === itemId(item)) {
-    // The cue/intro/outro point(s) have changed.
-    if ("cue" in currentItem && "cue" in item && currentItem.cue !== item.cue) {
-      dispatch(setLoadedItemCue(player, item.cue));
-    }
-    if (
-      "intro" in currentItem &&
-      "intro" in item &&
-      currentItem.intro !== item.intro
-    ) {
-      dispatch(setLoadedItemIntro(player, item.intro));
-    }
-    if (
-      "outro" in currentItem &&
-      "outro" in item &&
-      currentItem.outro !== item.outro
-    ) {
-      dispatch(setLoadedItemOutro(player, item.outro));
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      // The cue/intro/outro point(s) have changed.
+      if (
+        "cue" in currentItem &&
+        "cue" in item &&
+        currentItem.cue !== item.cue
+      ) {
+        dispatch(setLoadedItemCue(player, item.cue));
+      }
+      if (
+        "intro" in currentItem &&
+        "intro" in item &&
+        currentItem.intro !== item.intro
+      ) {
+        dispatch(setLoadedItemIntro(player, item.intro));
+      }
+      if (
+        "outro" in currentItem &&
+        "outro" in item &&
+        currentItem.outro !== item.outro
+      ) {
+        dispatch(setLoadedItemOutro(player, item.outro));
+      }
     }
     return;
   }
@@ -327,10 +406,16 @@ export const load = (
   }
   loadAbortControllers[player] = new AbortController();
 
+  const shouldResetTrim = getState().settings.resetTrimOnLoad;
+  const customOutput =
+    getState().settings.channelOutputIds[player] !== "internal";
+
   dispatch(
     mixerState.actions.loadItem({
       player,
       item,
+      customOutput,
+      resetTrim: shouldResetTrim,
     })
   );
 
@@ -338,22 +423,30 @@ export const load = (
 
   if (item.type === "central") {
     // track
-    url =
-      "http://" +
-      getState().session.currentServer?.hostname +
-      ":13500/audiofile/track/" +
-      item.trackid;
-    //url = MYRADIO_NON_API_BASE + "/NIPSWeb/secure_play?trackid=" + item.trackid;
+
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      url =
+        "http://" +
+        getState().bapsSession.currentServer?.hostname +
+        ":13500/audiofile/track/" +
+        item.trackid;
+    } else {
+      url =
+        MYRADIO_NON_API_BASE + "/NIPSWeb/secure_play?trackid=" + item.trackid;
+    }
   } else if ("managedid" in item) {
-    //url =
-    //  MYRADIO_NON_API_BASE +
-    //  "/NIPSWeb/managed_play?managedid=" +
-    //  item.managedid;
-    url =
-      "http://" +
-      getState().session.currentServer?.hostname +
-      ":13500/audiofile/managed/" +
-      item.managedid;
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      url =
+        "http://" +
+        getState().bapsSession.currentServer?.hostname +
+        ":13500/audiofile/managed/" +
+        item.managedid;
+    } else {
+      url =
+        MYRADIO_NON_API_BASE +
+        "/NIPSWeb/managed_play?managedid=" +
+        item.managedid;
+    }
   } else {
     throw new Error(
       "Unsure how to handle this!\r\n\r\n" + JSON.stringify(item)
@@ -392,7 +485,14 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const playerInstance = await audioEngine.createPlayer(player, objectUrl);
+    const channelOutputId = getState().settings.channelOutputIds[player];
+
+    const playerInstance = await audioEngine.createPlayer(
+      player,
+      channelOutputId,
+      false, // TODO PFL.
+      objectUrl
+    );
 
     // Clear the last one out from memory
     if (typeof lastObjectURLs[player] === "string") {
@@ -404,8 +504,29 @@ export const load = (
       console.log("loadComplete");
       dispatch(mixerState.actions.itemLoadComplete({ player }));
 
+      if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        dispatch(
+          mixerState.actions.setTimeLength({
+            player,
+            time: duration,
+          })
+        );
+        dispatch(
+          mixerState.actions.setTimeCurrent({
+            player,
+            time: 0,
+          })
+        );
+      }
+
       // Add the audio marker regions, we have to do these after load complete, since otherwise it won't know the end of the file duration!
       const state = getState().mixer.players[player];
+
+      if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        if (state.playOnLoad) {
+          playerInstance.play();
+        }
+      }
 
       if (state.loadedItem && "intro" in state.loadedItem) {
         playerInstance.setIntro(state.loadedItem.intro);
@@ -417,13 +538,90 @@ export const load = (
       if (state.loadedItem && "outro" in state.loadedItem) {
         playerInstance.setOutro(state.loadedItem.outro);
       }
-      playerInstance.on("timeChangeSeek", (time) => {
-        if (
-          Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
-        ) {
-          sendBAPSicleChannel({ channel: player, command: "SEEK", time: time });
-        }
-      });
+
+      if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        playerInstance.on("timeChangeSeek", (time) => {
+          if (
+            Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
+          ) {
+            sendBAPSicleChannel({
+              channel: player,
+              command: "SEEK",
+              time: time,
+            });
+          }
+        });
+      } else {
+        playerInstance.on("play", () => {
+          dispatch(
+            mixerState.actions.setPlayerState({ player, state: "playing" })
+          );
+
+          const state = getState().mixer.players[player];
+          if (state.loadedItem != null) {
+            dispatch(setItemPlayed(itemId(state.loadedItem), true));
+          }
+        });
+        playerInstance.on("pause", () => {
+          dispatch(
+            mixerState.actions.setPlayerState({
+              player,
+              state: playerInstance.currentTime === 0 ? "stopped" : "paused",
+            })
+          );
+        });
+        playerInstance.on("timeChange", (time) => {
+          if (
+            Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
+          ) {
+            dispatch(
+              mixerState.actions.setTimeCurrent({
+                player,
+                time,
+              })
+            );
+          }
+        });
+        playerInstance.on("finish", () => {
+          dispatch(
+            mixerState.actions.setPlayerState({ player, state: "stopped" })
+          );
+          const state = getState().mixer.players[player];
+          if (state.tracklistItemID !== -1) {
+            dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
+          }
+          if (state.repeat === "one") {
+            playerInstance.play();
+          } else if (state.repeat === "all") {
+            if ("channel" in item) {
+              // it's not in the CML/libraries "column"
+              const itsChannel = getState()
+                .showplan.plan!.filter((x) => x.channel === item.channel)
+                .sort((x, y) => x.weight - y.weight);
+              const itsIndex = itsChannel.indexOf(item);
+              if (itsIndex === itsChannel.length - 1) {
+                dispatch(load(player, itsChannel[0]));
+              }
+            }
+          } else if (state.autoAdvance) {
+            if ("channel" in item) {
+              // it's not in the CML/libraries "column"
+              const itsChannel = getState()
+                .showplan.plan!.filter((x) => x.channel === item.channel)
+                .sort((x, y) => x.weight - y.weight);
+              // Sadly, we can't just do .indexOf() item directly,
+              // since the player's idea of an item may be changed over it's lifecycle (setting played,intro/cue/outro etc.)
+              // Therefore we'll find the updated item from the plan and match that.
+              const itsIndex = itsChannel.findIndex(
+                (x) => itemId(x) === itemId(item)
+              );
+              if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
+                dispatch(load(player, itsChannel[itsIndex + 1]));
+              }
+            }
+          }
+        });
+      }
     });
 
     // Double-check we haven't been aborted since
@@ -449,19 +647,105 @@ export const play = (player: number): AppThunk => async (
   dispatch,
   getState
 ) => {
-  sendBAPSicleChannel({ channel: player, command: "PLAY" });
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({ channel: player, command: "PLAY" });
+    return;
+  }
+
+  if (typeof audioEngine.players[player] === "undefined") {
+    console.log("nothing loaded");
+    return;
+  }
+  if (audioEngine.audioContext.state !== "running") {
+    console.log("Resuming AudioContext because Chrome bad");
+    await audioEngine.audioContext.resume();
+  }
+  const state = getState().mixer.players[player];
+  if (state.loading !== -1) {
+    console.log("not ready");
+    return;
+  }
+  audioEngine.players[player]?.play();
+
+  if (state.loadedItem && "album" in state.loadedItem) {
+    //track
+    console.log("potentially tracklisting", state.loadedItem);
+    if (getState().mixer.players[player].tracklistItemID === -1) {
+      dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
+    } else {
+      console.log("not tracklisting because already tracklisted");
+    }
+  }
 };
 
 export const pause = (player: number): AppThunk => (dispatch, getState) => {
-  sendBAPSicleChannel({ channel: player, command: "PAUSE" });
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({ channel: player, command: "PAUSE" });
+    return;
+  }
+
+  if (typeof audioEngine.players[player] === "undefined") {
+    console.log("nothing loaded");
+    return;
+  }
+  if (getState().mixer.players[player].loading !== -1) {
+    console.log("not ready");
+    return;
+  }
+  if (audioEngine.players[player]?.isPlaying) {
+    audioEngine.players[player]?.pause();
+  } else {
+    audioEngine.players[player]?.play();
+  }
 };
 
 export const unpause = (player: number): AppThunk => (dispatch, getState) => {
-  sendBAPSicleChannel({ channel: player, command: "UNPAUSE" });
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({ channel: player, command: "UNPAUSE" });
+    return;
+  }
+
+  // TODO: WEBSTUDIO PAUSE
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
-  sendBAPSicleChannel({ channel: player, command: "STOP" });
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({ channel: player, command: "STOP" });
+    return;
+  }
+
+  const playerInstance = audioEngine.players[player];
+  if (typeof playerInstance === "undefined") {
+    console.log("nothing loaded");
+    return;
+  }
+  var state = getState().mixer.players[player];
+  if (state.loading !== -1) {
+    console.log("not ready");
+    return;
+  }
+
+  let cueTime = 0;
+
+  if (
+    state.loadedItem &&
+    "cue" in state.loadedItem &&
+    Math.round(playerInstance.currentTime) !== Math.round(state.loadedItem.cue)
+  ) {
+    cueTime = state.loadedItem.cue;
+  }
+
+  playerInstance.stop();
+
+  dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime }));
+  playerInstance.setCurrentTime(cueTime);
+
+  // Incase wavesurver wasn't playing, it won't 'finish', so just make sure the UI is stopped.
+  dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
+
+  if (state.tracklistItemID !== -1) {
+    dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
+  }
 };
 
 export const {
@@ -475,6 +759,8 @@ export const {
   itemLoadPercentage,
   setPlayOnLoad,
   setRepeat,
+  setTracklistItemID,
+  setMicBaseGain,
 } = mixerState.actions;
 
 export const toggleAutoAdvance = (player: number): AppThunk => (
@@ -522,6 +808,156 @@ export const redrawWavesurfers = (): AppThunk => () => {
   audioEngine.players.forEach(function(item) {
     item?.redraw();
   });
+};
+
+const FADE_TIME_SECONDS = 1;
+export const setVolume = (
+  player: number,
+  level: VolumePresetEnum
+): AppThunk => (dispatch, getState) => {
+  let volume: number;
+  let uiLevel: number;
+  switch (level) {
+    case "off":
+      volume = -40;
+      uiLevel = 0;
+      break;
+    case "bed":
+      volume = -13;
+      uiLevel = 0.5;
+      break;
+    case "full":
+      volume = 0;
+      uiLevel = 1;
+      break;
+  }
+
+  // Right, okay, big fun is happen.
+  // To make the fade sound natural, we need to ramp it exponentially.
+  // To make the UI look sensible, we need to ramp it linearly.
+  // Time for cheating!
+
+  if (typeof playerGainTweens[player] !== "undefined") {
+    // We've interrupted a previous fade.
+    // If we've just hit the button/key to go to the same value as that fade,
+    // stop it and immediately cut to the target value.
+    // Otherwise, stop id and start a new fade.
+    playerGainTweens[player].tweens.forEach((tween) => tween.pause());
+    if (playerGainTweens[player].target === level) {
+      delete playerGainTweens[player];
+      dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+      dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
+      return;
+    }
+  }
+
+  const state = getState().mixer.players[player];
+
+  const currentLevel = state.volume;
+  let currentGain = state.gain;
+
+  // If we can, use the engine's 'real' volume gain.
+  // This helps when we've interupted a previous fade, so the state gain won't be correct.
+  if (typeof audioEngine.players[player] !== "undefined") {
+    currentGain = audioEngine.players[player]!.getVolume();
+  }
+
+  const volumeTween = new Between(currentLevel, uiLevel)
+    .time(FADE_TIME_SECONDS * 1000)
+    .on("update", (val: number) => {
+      dispatch(mixerState.actions.setPlayerVolume({ player, volume: val }));
+    });
+  const gainTween = new Between(currentGain, volume)
+    .time(FADE_TIME_SECONDS * 1000)
+    .on("update", (val: number) => {
+      if (typeof audioEngine.players[player] !== "undefined") {
+        audioEngine.players[player]?.setVolume(val);
+      }
+    })
+    .on("complete", () => {
+      dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
+      // clean up when done
+      delete playerGainTweens[player];
+    });
+
+  playerGainTweens[player] = {
+    target: level,
+    tweens: [volumeTween, gainTween],
+  };
+};
+
+export const setChannelTrim = (player: number, val: number): AppThunk => async (
+  dispatch
+) => {
+  dispatch(mixerState.actions.setPlayerTrim({ player, trim: val }));
+  audioEngine.players[player]?.setTrim(val);
+};
+
+export const openMicrophone = (
+  micID: string,
+  micMapping: ChannelMapping
+): AppThunk => async (dispatch, getState) => {
+  if (audioEngine.audioContext.state !== "running") {
+    console.log("Resuming AudioContext because Chrome bad");
+    await audioEngine.audioContext.resume();
+  }
+  dispatch(mixerState.actions.setMicError(null));
+  if (!("mediaDevices" in navigator)) {
+    // mediaDevices is not there - we're probably not in a secure context
+    dispatch(mixerState.actions.setMicError("NOT_SECURE_CONTEXT"));
+    return;
+  }
+  try {
+    await audioEngine.openMic(micID, micMapping);
+  } catch (e) {
+    if (e instanceof DOMException) {
+      switch (e.message) {
+        case "Permission denied":
+          dispatch(mixerState.actions.setMicError("NO_PERMISSION"));
+          break;
+        default:
+          dispatch(mixerState.actions.setMicError("UNKNOWN"));
+      }
+    } else {
+      dispatch(mixerState.actions.setMicError("UNKNOWN"));
+    }
+    return;
+  }
+
+  const state = getState().mixer.mic;
+  audioEngine.setMicCalibrationGain(state.baseGain);
+  audioEngine.setMicVolume(state.volume);
+  // Now to patch in the Mic to the Compressor, or Bypass it.
+  audioEngine.setMicProcessingEnabled(state.processing);
+  dispatch(mixerState.actions.micOpen(micID));
+};
+
+export const setMicProcessingEnabled = (enabled: boolean): AppThunk => async (
+  dispatch
+) => {
+  dispatch(mixerState.actions.setMicProcessingEnabled(enabled));
+  audioEngine.setMicProcessingEnabled(enabled);
+};
+
+export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
+  dispatch
+) => {
+  // no tween fuckery here, just cut the level
+  const levelVal = level === "full" ? 1 : 0;
+  // actually, that's a lie - if we're turning it off we delay it a little to compensate for
+  // processing latency
+  if (levelVal !== 0) {
+    dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
+  } else {
+    window.setTimeout(() => {
+      dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
+      // latency, plus a little buffer
+    }, audioEngine.audioContext.baseLatency * 1000 + 150);
+  }
+};
+
+export const startNewsTimer = (): AppThunk => (_, getState) => {
+  TheNews.butNowItsTimeFor(getState);
 };
 
 export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (

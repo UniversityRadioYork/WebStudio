@@ -36,6 +36,7 @@ const PlayerEmitter: StrictEmitter<
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   private volume = 0;
   private trim = 0;
+  private ignore_next_seek: boolean = false;
   private pfl = false;
   private constructor(
     private readonly engine: AudioEngine,
