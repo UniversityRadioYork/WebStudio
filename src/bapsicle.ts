@@ -4,7 +4,7 @@ import { RootState } from "./rootReducer";
 import { PlanItem, getShowplanSuccessChannel } from "./showplanner/state";
 import { AppThunk } from "./store";
 import * as MixerState from "./mixer/state";
-import * as SessionState from "./bapiclesession/state";
+import * as SessionState from "./bapsiclesession/state";
 
 export var BAPSicleWS: WebSocket | null = null;
 
