@@ -45,7 +45,6 @@ export function itemId(
       ? item.trackid.toString()
       : "T" + item.album.recordid + "-" + item.trackid;
   }
-  console.log(item);
   throw new Error("Can't get id of unknown item.");
 }
 
@@ -238,7 +237,6 @@ export default showplan.reducer;
 
 export const {
   setItemTimings,
-  //setItemPlayed,
   planSaveError,
   getShowplanSuccessChannel,
 } = showplan.actions;
@@ -259,17 +257,24 @@ export const setItemPlayed = (
     );
     weight = getState().showplan.plan![idx].weight;
   }
-  if (player) {
-    sendBAPSicleChannel({
-      channel: player,
-      command: "RESETPLAYED",
-      weight: weight,
-    });
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    if (player) {
+      sendBAPSicleChannel({
+        channel: player,
+        command: "RESETPLAYED",
+        weight: weight,
+      });
+    } else {
+      sendBAPSicleChannel({
+        command: "RESETPLAYED",
+        weight: weight,
+      });
+    }
+    return;
   } else {
-    sendBAPSicleChannel({
-      command: "RESETPLAYED",
-      weight: weight,
-    });
+    dispatch(
+      showplan.actions.setItemPlayed({ itemId: itemid, played: played })
+    );
   }
 };
 
@@ -289,14 +294,128 @@ export const moveItem = (
       itemToMove.weight
     } to ${to[0]}x${to[1]}`
   );
-  sendBAPSicleChannel({
-    command: "MOVE",
-    channel: itemToMove.channel,
-    weight: itemToMove.weight,
-    new_channel: to[0],
-    new_weight: to[1],
-    item: itemToMove,
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({
+      command: "MOVE",
+      channel: itemToMove.channel,
+      weight: itemToMove.weight,
+      new_channel: to[0],
+      new_weight: to[1],
+      item: itemToMove,
+    });
+
+    return;
+  }
+
+  dispatch(showplan.actions.setPlanSaving(true));
+
+  const oldChannel = itemToMove.channel;
+  const oldWeight = itemToMove.weight;
+  const [newChannel, newWeight] = to;
+
+  const inc: string[] = [];
+  const dec: string[] = [];
+
+  if (oldChannel === newChannel) {
+    // Moving around in the same channel
+    const itemChan = plan
+      .filter((x) => x.channel === oldChannel)
+      .sort((a, b) => a.weight - b.weight);
+    if (oldWeight < newWeight) {
+      // moved the item down (incremented) - everything in between needs decrementing
+      for (let i = oldWeight + 1; i <= newWeight; i++) {
+        dec.push(itemId(itemChan[i]));
+        itemChan[i].weight -= 1;
+      }
+    } else {
+      // moved the item up (decremented) - everything in between needs incrementing
+      for (let i = newWeight; i < oldWeight; i++) {
+        inc.push(itemId(itemChan[i]));
+        itemChan[i].weight += 1;
+      }
+    }
+    itemToMove.channel = newChannel;
+    itemToMove.weight = newWeight;
+  } else {
+    // Moving between channels
+    // So here's the plan.
+    // We're going to temporarily remove the item we're actually moving from the plan
+    // This is because its position becomes nondeterministic when we move it around.
+    plan.splice(plan.indexOf(itemToMove), 1);
+    itemToMove.channel = newChannel;
+    itemToMove.weight = newWeight;
+
+    // First, decrement everything between the old weight and the end of the old channel
+    // (inclusive of old weight, because we've removed the item)
+    const oldChannelData = plan
+      .filter((x) => x.channel === oldChannel)
+      .sort((a, b) => a.weight - b.weight);
+    for (let i = oldWeight; i < oldChannelData.length; i++) {
+      const movingItem = oldChannelData[i];
+      movingItem.weight -= 1;
+      dec.push(itemId(movingItem));
+    }
+
+    // Then, increment everything between the new weight and the end of the new channel
+    // (again, inclusive)
+    const newChannelData = plan
+      .filter((x) => x.channel === newChannel)
+      .sort((a, b) => a.weight - b.weight);
+    for (let i = newWeight; i < newChannelData.length; i++) {
+      const movingItem = newChannelData[i];
+      movingItem.weight += 1;
+      inc.push(itemId(movingItem));
+    }
+  }
+
+  const ops: api.UpdateOp[] = [];
+  console.log("Inc, dec:", inc, dec);
+
+  inc.forEach((id) => {
+    const item = plan.find((x) => itemId(x) === id)!;
+    ops.push({
+      op: "MoveItem",
+      timeslotitemid: itemId(item),
+      oldchannel: item.channel,
+      oldweight: item.weight - 1,
+      channel: item.channel,
+      weight: item.weight,
+    });
   });
+
+  dec.forEach((id) => {
+    const item = plan.find((x) => itemId(x) === id)!;
+    ops.push({
+      op: "MoveItem",
+      timeslotitemid: itemId(item),
+      oldchannel: item.channel,
+      oldweight: item.weight + 1,
+      channel: item.channel,
+      weight: item.weight,
+    });
+  });
+
+  // Then, and only then, put the item in its new place
+  ops.push({
+    op: "MoveItem",
+    timeslotitemid: (itemToMove as TimeslotItem).timeslotitemid,
+    oldchannel: oldChannel,
+    oldweight: oldWeight,
+    channel: newChannel,
+    weight: newWeight,
+  });
+
+  dispatch(showplan.actions.applyOps(ops));
+
+  if (getState().settings.saveShowPlanChanges) {
+    const result = await api.updateShowplan(timeslotid, ops);
+    if (!result.every((x) => x.status)) {
+      dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+      return;
+    }
+  }
+
+  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const addItem = (
@@ -332,7 +451,58 @@ export const addItem = (
   // is there - then, once we get a timeslotitemid, replace it with a proper item
 
   dispatch(showplan.actions.applyOps(ops));
-  dispatch(showplan.actions.addItem(newItemData));
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    dispatch(showplan.actions.addItem(newItemData));
+  } else {
+    if (getState().settings.saveShowPlanChanges) {
+      const ghostId = Math.random().toString(10);
+
+      const ghost: ItemGhost = {
+        ghostid: ghostId,
+        channel: newItemData.channel,
+        weight: newItemData.weight,
+        title: newItemData.title,
+        artist: newItemData.type === "central" ? newItemData.artist : "",
+        length: newItemData.length,
+        clean: newItemData.clean,
+        intro: newItemData.type === "central" ? newItemData.intro : 0,
+        outro: newItemData.type === "central" ? newItemData.outro : 0,
+        cue: 0,
+        type: "ghost",
+      };
+
+      const idForServer =
+        newItemData.type === "central"
+          ? `${newItemData.album.recordid}-${newItemData.trackid}`
+          : `ManagedDB-${newItemData.managedid}`;
+
+      dispatch(showplan.actions.insertGhost(ghost));
+      ops.push({
+        op: "AddItem",
+        channel: newItemData.channel,
+        weight: newItemData.weight,
+        id: idForServer,
+      });
+      const result = await api.updateShowplan(timeslotId, ops);
+      if (!result.every((x) => x.status)) {
+        dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+        return;
+      }
+      const lastResult = result[result.length - 1]; // this is the add op
+      const newItemId = lastResult.timeslotitemid!;
+
+      newItemData.timeslotitemid = newItemId;
+      dispatch(
+        showplan.actions.replaceGhost({
+          ghostId: "G" + ghostId,
+          newItemData,
+        })
+      );
+    } else {
+      // Just add it straight to the show plan without updating the server.
+      dispatch(showplan.actions.addItem(newItemData));
+    }
+  }
   dispatch(showplan.actions.setPlanSaving(false));
 };
 
@@ -367,6 +537,25 @@ export const removeItem = (
       weight: movingItem.weight - 1,
     });
     movingItem.weight -= 1;
+
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      if (getState().settings.saveShowPlanChanges) {
+        const result = await api.updateShowplan(timeslotId, ops);
+        if (!result.every((x) => x.status)) {
+          raygun("send", {
+            error: new Error("Showplan update failure [removeItem]"),
+            customData: {
+              ops,
+              result,
+            },
+          });
+          dispatch(
+            showplan.actions.planSaveError("Failed to update show plan.")
+          );
+          return;
+        }
+      }
+    }
   }
 
   dispatch(showplan.actions.applyOps(ops));
@@ -430,6 +619,15 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
 };
 
 export const getPlaylists = (): AppThunk => async (dispatch) => {
+  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    try {
+      const userPlaylists = await api.getUserPlaylists();
+
+      dispatch(showplan.actions.addUserPlaylists(userPlaylists));
+    } catch (e) {
+      console.error(e);
+    }
+  }
   try {
     const managedPlaylists = await api.getManagedPlaylists();
     dispatch(showplan.actions.addManagedPlaylists(managedPlaylists));
