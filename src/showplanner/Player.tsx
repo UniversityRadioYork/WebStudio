@@ -12,8 +12,10 @@ import {
 import { omit } from "lodash";
 import { RootState } from "../rootReducer";
 import * as MixerState from "../mixer/state";
-//import * as ShowPlanState from "../showplanner/state";
+import * as ShowPlanState from "../showplanner/state";
 import { HHMMTosec, secToHHMM, timestampToHHMM } from "../lib/utils";
+import ProModeButtons from "./ProModeButtons";
+import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import * as api from "../api";
 import { AppThunk } from "../store";
 import { sendBAPSicleChannel } from "../bapsicle";
@@ -67,28 +69,33 @@ const setTrackIntro = (
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
-  let marker = {
-    name: "Intro",
-    time: secs,
-    position: "start",
-    section: null,
-  };
-  sendBAPSicleChannel({
-    channel: player,
-    command: "SETMARKER",
-    timeslotitemid: item.timeslotitemid,
-    marker: marker,
-  });
-  /*
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Intro",
+      time: secs,
+      position: "start",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+    return;
+  }
   try {
     // Api only deals with whole seconds.
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
-    dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTrackIntro(item.trackid, secs);
+    }
+    dispatch(ShowPlanState.setItemTimings({ item: item, intro: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
     console.error("Failed to set track intro: " + e);
-  }*/
+  }
 };
 
 const setTrackOutro = (
@@ -96,27 +103,33 @@ const setTrackOutro = (
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
-  let marker = {
-    name: "Outro",
-    time: secs,
-    position: "end",
-    section: null,
-  };
-  sendBAPSicleChannel({
-    channel: player,
-    command: "SETMARKER",
-    timeslotitemid: item.timeslotitemid,
-    marker: marker,
-  });
-  /*try {
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Outro",
+      time: secs,
+      position: "end",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+    return;
+  }
+  try {
     // Api only deals with whole seconds.
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
-    dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTrackOutro(item.trackid, secs);
+    }
+    dispatch(ShowPlanState.setItemTimings({ item: item, outro: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
     console.error("Failed to set track outro: " + e);
-  }*/
+  }
 };
 
 const setTrackCue = (
@@ -124,27 +137,32 @@ const setTrackCue = (
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
-  let marker = {
-    name: "Cue",
-    time: secs,
-    position: "mid",
-    section: null,
-  };
-  sendBAPSicleChannel({
-    channel: player,
-    command: "SETMARKER",
-    timeslotitemid: item.timeslotitemid,
-    marker: marker,
-  });
-  //try {
-  // Api only deals with whole seconds.
-  //secs = Math.round(secs);
-  //dispatch(MixerState.setLoadedItemCue(player, secs));
-  //dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
-  //} catch (e) {
-  //dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
-  //console.error("Failed to set track cue: " + e);
-  //}
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Cue",
+      time: secs,
+      position: "mid",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+  }
+  try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
+    dispatch(MixerState.setLoadedItemCue(player, secs));
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTimeslotItemCue(item.timeslotitemid, secs);
+    }
+    dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
+    console.error("Failed to set track cue: " + e);
+  }
 };
 
 function TimingButtons({ id }: { id: number }) {
@@ -245,18 +263,21 @@ export function Player({ id }: { id: number }) {
   );
   const dispatch = useDispatch();
 
-  // const VUsource = (id: number) => {
-  //   switch (id) {
-  //     case 0:
-  //       return "player-0";
-  //     case 1:
-  //       return "player-1";
-  //     case 2:
-  //       return "player-2";
-  //     default:
-  //       throw new Error("Unknown Player VUMeter source: " + id);
-  //   }
-  // };
+  const settings = useSelector((state: RootState) => state.settings);
+  const customOutput = settings.channelOutputIds[id] !== "internal";
+
+  const VUsource = (id: number) => {
+    switch (id) {
+      case 0:
+        return "player-0";
+      case 1:
+        return "player-1";
+      case 2:
+        return "player-2";
+      default:
+        throw new Error("Unknown Player VUMeter source: " + id);
+    }
+  };
 
   let channelDuration = 0;
   let channelUnplayed = 0;
@@ -323,6 +344,9 @@ export function Player({ id }: { id: number }) {
             &nbsp; Repeat {playerState.repeat}
           </button>
         </div>
+        {!process.env.REACT_APP_BAPSICLE_INTERFACE &&
+          settings.proMode &&
+          !customOutput && <ProModeButtons channel={id} />}
         <div className="card-body p-0">
           <span className="card-title">
             <strong>
@@ -450,6 +474,37 @@ export function Player({ id }: { id: number }) {
           }}
         ></div>
       </div>
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
+            Off
+          </button>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
+            Bed
+          </button>
+          <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
+            Full
+          </button>
+
+          {settings.proMode && settings.channelVUs && (
+            <div className="channel-vu">
+              {customOutput ? (
+                <span className="text-muted">
+                  Custom audio output disables VU meters.
+                </span>
+              ) : (
+                <VUMeter
+                  width={300}
+                  height={40}
+                  source={VUsource(id)}
+                  range={[-40, 0]}
+                  stereo={settings.channelVUsStereo}
+                />
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
