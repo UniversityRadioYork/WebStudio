@@ -194,17 +194,19 @@ export function searchForTracks(
   artist: string,
   title: string
 ): Promise<Array<Track>> {
-  return bapsicleApiRequest("/library/search/track", "GET", {
-    artist,
-    title,
-  });
-  /*
-  return myradioApiRequest("/track/search", "GET", {
-    artist,
-    title,
-    limit: 100,
-    digitised: true,
-  }); */
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    return bapsicleApiRequest("/library/search/track", "GET", {
+      artist,
+      title,
+    });
+  } else {
+    return myradioApiRequest("/track/search", "GET", {
+      artist,
+      title,
+      limit: 100,
+      digitised: true,
+    });
+  }
 }
 
 export function getTimeslots(): Promise<Array<Timeslot>> {
@@ -234,31 +236,42 @@ export function getUserPlaylists(): Promise<Array<NipswebPlaylist>> {
 
 // Gets the list of managed music playlists.
 export function getManagedPlaylists(): Promise<Array<ManagedPlaylist>> {
-  return bapsicleApiRequest("/library/playlists/music", "GET", {});
-  //return myradioApiRequest("/playlist/allitonesplaylists", "GET", {});
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    return bapsicleApiRequest("/library/playlists/music", "GET", {});
+  }
+  return myradioApiRequest("/playlist/allitonesplaylists", "GET", {});
 }
 
 // Gets the list of managed aux playlists (sfx, beds etc.)
 export function getAuxPlaylists(): Promise<Array<NipswebPlaylist>> {
-  return bapsicleApiRequest("/library/playlists/aux", "GET", {});
-  //return myradioApiRequest("/nipswebPlaylist/allmanagedplaylists", "GET", {});
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    return bapsicleApiRequest("/library/playlists/aux", "GET", {});
+  }
+  return myradioApiRequest("/nipswebPlaylist/allmanagedplaylists", "GET", {});
 }
 
 // Loads the playlist items for a certain aux playlist
 export function loadAuxLibrary(libraryId: string): Promise<AuxItem[]> {
-  return bapsicleApiRequest("/library/playlist/aux/" + libraryId, "GET", {});
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    return bapsicleApiRequest("/library/playlist/aux/" + libraryId, "GET", {});
+  }
 
-  //return apiRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
-  //  libraryid: libraryId,
-  //}).then((res) => res.json());
+  return apiRequest(MYRADIO_NON_API_BASE + "/NIPSWeb/load_aux_lib", "GET", {
+    libraryid: libraryId,
+  }).then((res) => res.json());
 }
 
 export function loadPlaylistLibrary(libraryId: string): Promise<Track[]> {
-  return bapsicleApiRequest("/library/playlist/music/" + libraryId, "GET", {});
-  //return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    return bapsicleApiRequest(
+      "/library/playlist/music/" + libraryId,
+      "GET",
+      {}
+    );
+  }
+  return myradioApiRequest("/playlist/" + libraryId + "/tracks", "GET", {});
 }
 
-/*
 export function setTimeslotItemCue(
   timeslotItemId: string,
   secs: number
@@ -279,7 +292,6 @@ export function setTrackOutro(trackId: number, secs: number): Promise<null> {
     duration: secs,
   });
 }
-*/
 
 export type UpdateOp =
   | {
@@ -340,6 +352,7 @@ export interface User {
   sname: string;
   url: string;
   photo: string;
+  public_email: string;
 }
 
 export function getCurrentApiUser(): Promise<User> {
