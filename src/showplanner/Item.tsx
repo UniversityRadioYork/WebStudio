@@ -58,7 +58,7 @@ export const Item = memo(function Item({
 
   let isDragDisabled = isGhost;
 
-  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
     isDragDisabled = isDragDisabled || isLoaded;
   }
   return (
