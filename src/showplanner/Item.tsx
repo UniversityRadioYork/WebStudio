@@ -1,9 +1,10 @@
 import React, { memo } from "react";
 import { PlanItem, itemId } from "./state";
 import { Track, AuxItem } from "../api";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
 
+import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { ContextMenuTrigger } from "react-contextmenu";
 import "./item.scss";
@@ -20,6 +21,7 @@ export const Item = memo(function Item({
   index: number;
   column: number;
 }) {
+  const dispatch = useDispatch();
   const id = itemId(x);
   const isReal = "timeslotitemid" in x;
   const isGhost = "ghostid" in x;
@@ -34,20 +36,33 @@ export const Item = memo(function Item({
 
   const isLoaded = loadedItem !== null ? itemId(loadedItem) === id : false;
 
+  const showDebug = useSelector(
+    (state: RootState) => state.settings.showDebugInfo
+  );
+
   function triggerClick() {
     if (column > -1) {
-      sendBAPSicleChannel({
-        channel: column,
-        command: "LOAD",
-        weight: index,
-      });
       console.log("Clicking to load:", x);
-      //dispatch(MixerState.load(column, x));
+
+      if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        sendBAPSicleChannel({
+          channel: column,
+          command: "LOAD",
+          weight: index,
+        });
+        return;
+      }
+      dispatch(MixerState.load(column, x));
     }
   }
 
+  let isDragDisabled = isGhost;
+
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    isDragDisabled = isDragDisabled || isLoaded;
+  }
   return (
-    <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
+    <Draggable draggableId={id} index={index} isDragDisabled={isDragDisabled}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -67,7 +82,7 @@ export const Item = memo(function Item({
             id={isReal ? TS_ITEM_MENU_ID : ""}
             collect={() => ({ id, column, index })}
           >
-            <span className={"icon " + x.type}></span>
+            <span className={"icon " + x.type} />
             &nbsp;
             {"play_count" in x && (
               <>
@@ -87,10 +102,11 @@ export const Item = memo(function Item({
             >
               Explicit
             </small>
-            <code>
-              {"weight" in x && x.weight} {index}{" "}
-              {"weight" in x && x.weight !== index && "!!!!!!!!!!!"}
-            </code>
+            {showDebug && (
+              <code>
+                {itemId(x)} {"channel" in x && x.channel + "/" + x.weight}
+              </code>
+            )}
           </ContextMenuTrigger>
         </div>
       )}
