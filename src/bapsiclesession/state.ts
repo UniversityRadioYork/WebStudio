@@ -37,22 +37,6 @@ const sessionState = createSlice({
     ) {
       state.connectionState = action.payload;
     },
-    /*
-    getTimeslotStarting(state) {
-      state.timeslotLoadError = null;
-      state.timeslotLoading = true;
-    },
-    getTimeslotSuccess(state, action: PayloadAction<Timeslot>) {
-      console.log("Getting timeslot succeeded.");
-      state.timeslotLoading = false;
-      state.timeslotLoadError = null;
-      state.currentTimeslot = action.payload;
-    },
-    getTimeslotError(state, action: PayloadAction<string>) {
-      state.timeslotLoading = false;
-      state.timeslotLoadError = action.payload;
-    },
-*/
     getState(state) {
       return state;
     },
