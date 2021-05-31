@@ -8,9 +8,9 @@ import ShowplanReducer from "./showplanner/state";
 import MixerReducer from "./mixer/state";
 import BroadcastReducer from "./broadcast/state";
 import sessionReducer from "./session/state";
+import NavbarReducer from "./navbar/state";
 import OptionsMenuReducer from "./optionsMenu/state";
 import SettingsState from "./optionsMenu/settingsState";
-import NavbarReducer from "./navbar/state";
 
 import BAPSSessionReducer from "./bapsiclesession/state";
 
