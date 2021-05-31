@@ -25,11 +25,18 @@ const App: React.FC = () => {
   const [inputVal, setInputVal] = useState("");
   const force = useForceUpdate();
 
+  const {
+    currentUser,
+    userLoading,
+    currentTimeslot,
+    timeslotLoading,
+  } = useSelector((state: RootState) => state.session);
+
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
     if (bapsConnectionState !== "CONNECTED") {
       return <BAPSSessionHandler />;
     } else {
-      return <Showplanner />;
+      return <Showplanner timeslotId={-1} />;
     }
   }
 
@@ -45,13 +52,6 @@ const App: React.FC = () => {
   }
 
   const q = qs.parse(window.location.search, { ignoreQueryPrefix: true });
-
-  const {
-    currentUser,
-    userLoading,
-    currentTimeslot,
-    timeslotLoading,
-  } = useSelector((state: RootState) => state.session);
 
   if (
     currentUser == null ||

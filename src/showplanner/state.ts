@@ -274,6 +274,7 @@ export const setItemPlayed = (
 };
 
 export const moveItem = (
+  timeslotid: number,
   itemid: string,
   to: [number, number]
 ): AppThunk => async (dispatch, getState) => {
