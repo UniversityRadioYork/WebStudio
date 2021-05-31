@@ -150,6 +150,7 @@ const setTrackCue = (
       timeslotitemid: item.timeslotitemid,
       marker: marker,
     });
+    return;
   }
   try {
     // Api only deals with whole seconds.
