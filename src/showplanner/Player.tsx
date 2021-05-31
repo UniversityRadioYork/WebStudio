@@ -474,38 +474,38 @@ export function Player({ id }: { id: number }) {
               "%",
           }}
         ></div>
-      </div>
-      {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
-        <>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
-            Off
-          </button>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
-            Bed
-          </button>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
-            Full
-          </button>
+        {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+          <>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
+              Off
+            </button>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
+              Bed
+            </button>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
+              Full
+            </button>
 
-          {settings.proMode && settings.channelVUs && (
-            <div className="channel-vu">
-              {customOutput ? (
-                <span className="text-muted">
-                  Custom audio output disables VU meters.
-                </span>
-              ) : (
-                <VUMeter
-                  width={300}
-                  height={40}
-                  source={VUsource(id)}
-                  range={[-40, 0]}
-                  stereo={settings.channelVUsStereo}
-                />
-              )}
-            </div>
-          )}
-        </>
-      )}
+            {settings.proMode && settings.channelVUs && (
+              <div className="channel-vu">
+                {customOutput ? (
+                  <span className="text-muted">
+                    Custom audio output disables VU meters.
+                  </span>
+                ) : (
+                  <VUMeter
+                    width={300}
+                    height={40}
+                    source={VUsource(id)}
+                    range={[-40, 0]}
+                    stereo={settings.channelVUsStereo}
+                  />
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
