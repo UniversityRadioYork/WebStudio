@@ -64,7 +64,7 @@ export default sessionState.reducer;
 export const { setServerState } = sessionState.actions;
 
 export const getCurrentServer = (): AppThunk => async (dispatch, getState) => {
-  return getState().session.currentServer;
+  return getState().bapsSession.currentServer;
 };
 
 export const getServer = (): AppThunk => async (dispatch) => {
@@ -76,29 +76,4 @@ export const getServer = (): AppThunk => async (dispatch) => {
   };
   dispatch(sessionState.actions.setCurrentServer({ server: bapsServer }));
   dispatch(connectBAPSicle("ws://" + window.location.hostname + ":13501"));
-  /*
-  dispatch(sessionState.actions.getUserStarting());
-  try {
-    const [user, canBroadcast] = await Promise.all([
-      getCurrentApiUser(),
-      doesCurrentUserHavePermission(BROADCAST_PERMISSION_ID),
-    ]);
-    dispatch(sessionState.actions.setCurrentUser({ user, canBroadcast }));
-  } catch (e) {
-    console.log("failed to get user. " + e.toString());
-    dispatch(sessionState.actions.getUserError(e.toString()));
-  }
-  */
 };
-
-/* export const getTimeslot = (): AppThunk => async (dispatch) => {
-  dispatch(sessionState.actions.getTimeslotStarting());
-  try {
-    const timeslot = await getCurrentApiTimeslot();
-    dispatch(sessionState.actions.getTimeslotSuccess(timeslot));
-  } catch (e) {
-    console.log("failed to get selected timeslot. " + e.toString());
-    dispatch(sessionState.actions.getTimeslotError(e.toString()));
-  }
-};
-*/

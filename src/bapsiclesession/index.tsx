@@ -47,7 +47,9 @@ export function ConnectionDialogue({ error }: { error: String | null }) {
 const SessionHandler: React.FC = function() {
   const dispatch = useDispatch();
 
-  const { connectionState } = useSelector((state: RootState) => state.session);
+  const { connectionState } = useSelector(
+    (state: RootState) => state.bapsSession
+  );
 
   switch (connectionState) {
     case "CONNECTED":
@@ -60,42 +62,6 @@ const SessionHandler: React.FC = function() {
       dispatch(SessionState.getServer());
       return null;
   }
-  /* return (
-      <div>
-        <LoadingDialogue
-          title="Getting User..."
-          subtitle={userLoading ? "Hang on a sec..." : ""}
-          error={userLoadError}
-          percent={39}
-        />
-        {userLoadError !== null &&
-          userLoadError !== undefined &&
-          !userLoading &&
-          redirectToLogin()}
-      </div>
-    ); */
-
-  /*
-  if (currentTimeslot === null) {
-    return (
-      <div>
-        <LoadingDialogue
-          title="Getting Timeslot..."
-          subtitle={timeslotLoading ? "Hang on a sec..." : ""}
-          error={userLoadError}
-          percent={71}
-        />
-        {currentTimeslot === null &&
-          timeslotLoadError == null &&
-          timeslotLoadError !== undefined &&
-          !timeslotLoading &&
-          redirectToTimeslotSelect()}
-      </div>
-    );
-  }
-  */
-
-  return <p></p>;
 };
 
 export default SessionHandler;
