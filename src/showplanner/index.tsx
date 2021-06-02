@@ -102,44 +102,48 @@ function LibraryColumn() {
 
   return (
     <>
-      (!process.env.REACT_APP_BAPSICLE_INTERFACE &&
-      <LibraryUploadModal
-        isOpen={showLibraryUploadModal}
-        close={() => setShowLibraryModal(false)}
-      />
-      <ImporterModal
-        close={() => setShowImporterModal(false)}
-        isOpen={showImporterModal}
-      />
-      )
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <>
+          <LibraryUploadModal
+            isOpen={showLibraryUploadModal}
+            close={() => setShowLibraryModal(false)}
+          />
+          <ImporterModal
+            close={() => setShowImporterModal(false)}
+            isOpen={showImporterModal}
+          />
+        </>
+      )}
       <div className="library-column">
         <div className="mx-2 mb-2">
           <h2>
             <FaBookOpen className="mx-2" size={28} />
             Libraries
           </h2>
-          (!process.env.REACT_APP_BAPSICLE_INTERFACE &&
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Import From Showplan"
-            size="sm"
-            outline={true}
-            onClick={() => setShowImporterModal(true)}
-          >
-            <FaFileImport /> Import
-          </Button>
-          <Button
-            className="mr-1"
-            color="primary"
-            title="Upload to Library"
-            size="sm"
-            outline={true}
-            onClick={() => setShowLibraryModal(true)}
-          >
-            <FaUpload /> Upload
-          </Button>
-          )
+          {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+            <>
+              <Button
+                className="mr-1"
+                color="primary"
+                title="Import From Showplan"
+                size="sm"
+                outline={true}
+                onClick={() => setShowImporterModal(true)}
+              >
+                <FaFileImport /> Import
+              </Button>
+              <Button
+                className="mr-1"
+                color="primary"
+                title="Upload to Library"
+                size="sm"
+                outline={true}
+                onClick={() => setShowLibraryModal(true)}
+              >
+                <FaUpload /> Upload
+              </Button>
+            </>
+          )}
         </div>
         <div className="px-2">
           <select
@@ -153,14 +157,17 @@ function LibraryColumn() {
               Choose a library
             </option>
             <option value={"CentralMusicLibrary"}>Central Music Library</option>
-            (!process.env.REACT_APP_BAPSICLE_INTERFACE &&
-            <option disabled>Personal Resources</option>
-            {userPlaylists.map((playlist) => (
-              <option key={playlist.managedid} value={playlist.managedid}>
-                {playlist.title}
-              </option>
-            ))}
-            )<option disabled>Shared Resources</option>
+            {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+              <>
+                <option disabled>Personal Resources</option>
+                {userPlaylists.map((playlist) => (
+                  <option key={playlist.managedid} value={playlist.managedid}>
+                    {playlist.title}
+                  </option>
+                ))}
+              </>
+            )}
+            <option disabled>Shared Resources</option>
             {auxPlaylists.map((playlist: any) => (
               <option
                 key={"aux-" + playlist.managedid}
@@ -486,8 +493,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <div id="sidebar">
             <LibraryColumn />
             <div className="border-top"></div>
-            (!process.env.REACT_APP_BAPSICLE_INTERFACE) &&
-            <MicControl />)
+            {!process.env.REACT_APP_BAPSICLE_INTERFACE && <MicControl />}
           </div>
         </DragDropContext>
       </div>
@@ -499,14 +505,20 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <FaCircleNotch /> Mark Unplayed
         </MenuItem>
       </ContextMenu>
-      (!process.env.REACT_APP_BAPSICLE_INTERFACE) &&
-      <OptionsMenu />
-      <WelcomeModal
-        isOpen={showWelcomeModal}
-        close={() => setShowWelcomeModal(false)}
-      />
-      <PisModal close={() => setShowPisModal(false)} isOpen={showPisModal} />
-      <MicLiveIndicator />)
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <>
+          <OptionsMenu />
+          <WelcomeModal
+            isOpen={showWelcomeModal}
+            close={() => setShowWelcomeModal(false)}
+          />
+          <PisModal
+            close={() => setShowPisModal(false)}
+            isOpen={showPisModal}
+          />
+          <MicLiveIndicator />
+        </>
+      )}
     </div>
   );
 };

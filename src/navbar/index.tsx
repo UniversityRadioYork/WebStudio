@@ -115,7 +115,7 @@ export function NavBarMyRadio() {
               className="dropdown-item"
               onClick={() =>
                 sessionState.currentTimeslot !== null &&
-                dispatch(setItemPlayed({ itemId: "all", played: false }))
+                dispatch(setItemPlayed("all", false))
               }
             >
               Mark All Items Unplayed
@@ -395,18 +395,18 @@ export function CombinedNavAlertBar() {
   return (
     <>
       <AlertBar />
-      (!process.env.REACT_APP_BAPSICLE_INTERFACE &&
-      <>
-        <header className="navbar navbar-myradio navbar-expand-sm hover-menu p-0 bd-navbar">
-          <span className="hover-label hover-label-hide text-light text-center">
-            Hover for MyRadio Menu
-          </span>
-          <nav className="container-fluid px-0">
-            <NavBarMyRadio />
-          </nav>
-        </header>
-      </>
-      )
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <>
+          <header className="navbar navbar-myradio navbar-expand-sm hover-menu p-0 bd-navbar">
+            <span className="hover-label hover-label-hide text-light text-center">
+              Hover for MyRadio Menu
+            </span>
+            <nav className="container-fluid px-0">
+              <NavBarMyRadio />
+            </nav>
+          </header>
+        </>
+      )}
       <header className="navbar navbar-main navbar-expand-sm p-0 bd-navbar">
         <nav className="container-fluid px-0">
           <NavBarMain />

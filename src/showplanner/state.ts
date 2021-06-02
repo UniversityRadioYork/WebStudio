@@ -542,13 +542,6 @@ export const removeItem = (
       if (getState().settings.saveShowPlanChanges) {
         const result = await api.updateShowplan(timeslotId, ops);
         if (!result.every((x) => x.status)) {
-          raygun("send", {
-            error: new Error("Showplan update failure [removeItem]"),
-            customData: {
-              ops,
-              result,
-            },
-          });
           dispatch(
             showplan.actions.planSaveError("Failed to update show plan.")
           );

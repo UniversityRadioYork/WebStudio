@@ -13,9 +13,24 @@ import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
 import { AppThunk } from "../store";
 import { RootState } from "../rootReducer";
-import { audioEngine, ChannelMapping } from "./audio";
+
+import {
+  audioEngine,
+  ChannelMapping,
+  INTERNAL_OUTPUT_ID,
+  PLAYER_COUNT,
+  PLAYER_ID_PREVIEW,
+  DEFAULT_TRIM_DB,
+  OFF_LEVEL_DB,
+  BED_LEVEL_DB,
+  FULL_LEVEL_DB,
+} from "./audio";
+
 import * as TheNews from "./the_news";
 import { sendBAPSicleChannel } from "../bapsicle";
+
+import { changeSetting } from "../optionsMenu/settingsState";
+import { PLAYER_COUNTER_UPDATE_PERIOD_MS } from "../showplanner/Player";
 
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
@@ -31,14 +46,13 @@ type VolumePresetEnum = "off" | "bed" | "full";
 type MicVolumePresetEnum = "off" | "full";
 export type MicErrorEnum = "NO_PERMISSION" | "NOT_SECURE_CONTEXT" | "UNKNOWN";
 
-const defaultTrimDB = -6; // The default trim applied to channel players.
-
 interface PlayerState {
   loadedItem: PlanItem | Track | AuxItem | null;
   loading: number;
   loadError: boolean;
   state: PlayerStateEnum;
   volume: number;
+  volumeEnum: VolumePresetEnum;
   gain: number;
   trim: number;
   micAutoDuck: boolean;
@@ -73,8 +87,8 @@ const BasePlayerState: PlayerState = {
   volume: 1,
   volumeEnum: "full",
   gain: 0,
-  micAutoDuck: false,
   trim: DEFAULT_TRIM_DB,
+  micAutoDuck: false,
   pfl: false,
   timeCurrent: 0,
   timeRemaining: 0,
@@ -127,7 +141,7 @@ const mixerState = createSlice({
         if (action.payload.customOutput) {
           state.players[action.payload.player].trim = 0;
         } else if (action.payload.resetTrim) {
-          state.players[action.payload.player].trim = defaultTrimDB;
+          state.players[action.payload.player].trim = DEFAULT_TRIM_DB;
         }
       }
     },
@@ -838,7 +852,8 @@ export const redrawWavesurfers = (): AppThunk => () => {
 const FADE_TIME_SECONDS = 1;
 export const setVolume = (
   player: number,
-  level: VolumePresetEnum
+  level: VolumePresetEnum,
+  fade: boolean = true
 ): AppThunk => (dispatch, getState) => {
   let volume: number;
   let uiLevel: number;
