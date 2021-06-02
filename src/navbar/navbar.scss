@@ -50,6 +50,10 @@
   max-height: 7vh;
   flex-shrink: 0;
 
+  .btn {
+    max-height: 45px;
+  }
+
   .nav-vu {
     background: black;
   }
@@ -285,23 +289,11 @@
   }
 }
 
-#timelord {
-  background: black;
-  border: red 1px solid;
-  color: white;
-  min-width: 85px;
-}
-
-#timelord a {
-  text-decoration: none;
-  color: white;
-}
-
-#timelord .time {
-  font-weight: bold;
-  font-size: 1.1em;
-}
-
 .nav-link.connect {
   min-width: 90px;
+}
+
+.pfl-live.nav-vu {
+  box-shadow: inset 0 0 3px 6px #dc3545;
+  padding-top: 6px;
 }

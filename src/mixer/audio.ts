@@ -241,6 +241,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
       customOutput = outputId !== INTERNAL_OUTPUT_ID;
     }
+    
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
       throw new Error();

@@ -32,6 +32,15 @@ import { sendBAPSicleChannel } from "../bapsicle";
 import { changeSetting } from "../optionsMenu/settingsState";
 import { PLAYER_COUNTER_UPDATE_PERIOD_MS } from "../showplanner/Player";
 
+import { changeSetting } from "../optionsMenu/settingsState";
+import {
+  DEFAULT_TRIM_DB,
+  OFF_LEVEL_DB,
+  BED_LEVEL_DB,
+  FULL_LEVEL_DB,
+} from "./audio";
+import { PLAYER_COUNTER_UPDATE_PERIOD_MS } from "../showplanner/Player";
+
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
   tweens: Between[];
@@ -87,8 +96,8 @@ const BasePlayerState: PlayerState = {
   volume: 1,
   volumeEnum: "full",
   gain: 0,
-  trim: DEFAULT_TRIM_DB,
   micAutoDuck: false,
+  trim: DEFAULT_TRIM_DB,
   pfl: false,
   timeCurrent: 0,
   timeRemaining: 0,
@@ -103,10 +112,12 @@ const BasePlayerState: PlayerState = {
 const mixerState = createSlice({
   name: "Player",
   initialState: {
-    players: [BasePlayerState, BasePlayerState, BasePlayerState],
+    // Fill the players with channel and preview players.
+    players: Array(PLAYER_COUNT).fill(BasePlayerState),
     mic: {
       open: false,
       volume: 1,
+      volumeEnum: "full",
       gain: 1,
       baseGain: 0,
       openError: null,
@@ -169,9 +180,12 @@ const mixerState = createSlice({
       action: PayloadAction<{
         player: number;
         volume: number;
+        volumeEnum: VolumePresetEnum;
       }>
     ) {
       state.players[action.payload.player].volume = action.payload.volume;
+      state.players[action.payload.player].volumeEnum =
+        action.payload.volumeEnum;
     },
     setPlayerGain(
       state,
@@ -404,6 +418,14 @@ export const load = (
     return;
   }
 
+  // If somehow we've managed to re-load the channel without ending tracklisting.
+  // This could happen if they paused it at the end, or if Wavesurfer forgot somehow.
+  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    const tracklistItemID = getState().mixer.players[player].tracklistItemID;
+    if (tracklistItemID !== -1) {
+      dispatch(BroadcastState.tracklistEnd(tracklistItemID));
+    }
+  }
   // Can't really load a ghost, it'll break setting cues etc. Do nothing.
   if (item.type === "ghost") {
     return;
@@ -446,7 +468,8 @@ export const load = (
 
   const shouldResetTrim = getState().settings.resetTrimOnLoad;
   const customOutput =
-    getState().settings.channelOutputIds[player] !== "internal";
+    getState().settings.channelOutputIds[player] !== INTERNAL_OUTPUT_ID;
+  const isPFL = getState().mixer.players[player].pfl;
 
   dispatch(
     mixerState.actions.loadItem({
@@ -523,12 +546,22 @@ export const load = (
     const blob = new Blob([rawData]);
     const objectUrl = URL.createObjectURL(blob);
 
-    const channelOutputId = getState().settings.channelOutputIds[player];
+    let channelOutputId = getState().settings.channelOutputIds[player];
+    // If the player setting doesn't exist, reset the settings. (Happens after player count is increased)
+    if (!channelOutputId) {
+      channelOutputId = INTERNAL_OUTPUT_ID;
+      dispatch(
+        changeSetting({
+          key: "channelOutputIds",
+          val: Array(PLAYER_COUNT).fill(channelOutputId),
+        })
+      );
+    }
 
     const playerInstance = await audioEngine.createPlayer(
       player,
       channelOutputId,
-      false, // TODO PFL.
+      isPFL,
       objectUrl
     );
 
@@ -595,52 +628,56 @@ export const load = (
             mixerState.actions.setPlayerState({ player, state: "playing" })
           );
 
-          const state = getState().mixer.players[player];
-          if (state.loadedItem != null) {
-            dispatch(setItemPlayed(itemId(state.loadedItem), true));
-          }
-        });
-        playerInstance.on("pause", () => {
-          dispatch(
-            mixerState.actions.setPlayerState({
-              player,
-              state: playerInstance.currentTime === 0 ? "stopped" : "paused",
-            })
-          );
-        });
-        playerInstance.on("timeChange", (time) => {
-          if (
-            Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
-          ) {
-            dispatch(
-              mixerState.actions.setTimeCurrent({
-                player,
-                time,
-              })
-            );
-          }
-        });
-        playerInstance.on("finish", () => {
-          dispatch(
-            mixerState.actions.setPlayerState({ player, state: "stopped" })
-          );
-          const state = getState().mixer.players[player];
-          if (state.tracklistItemID !== -1) {
-            dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
-          }
-          if (state.repeat === "one") {
-            playerInstance.play();
-          } else if (state.repeat === "all") {
-            if ("channel" in item) {
-              // it's not in the CML/libraries "column"
-              const itsChannel = getState()
-                .showplan.plan!.filter((x) => x.channel === item.channel)
-                .sort((x, y) => x.weight - y.weight);
-              const itsIndex = itsChannel.indexOf(item);
-              if (itsIndex === itsChannel.length - 1) {
-                dispatch(load(player, itsChannel[0]));
-              }
-            }
+      const state = getState().mixer.players[player];
+      // Don't set played on Preview Channel
+      if (state.loadedItem != null && player !== PLAYER_ID_PREVIEW) {
+        dispatch(
+          dispatch(setItemPlayed(itemId(state.loadedItem), true));
+        );
+      }
+    });
+    playerInstance.on("pause", () => {
+      dispatch(
+        mixerState.actions.setPlayerState({
+          player,
+          state: playerInstance.currentTime === 0 ? "stopped" : "paused",
+        })
+      );
+    });
+    playerInstance.on("timeChange", (time) => {
+      if (
+        Math.abs(time - getState().mixer.players[player].timeCurrent) >
+        PLAYER_COUNTER_UPDATE_PERIOD_MS / 1000
+      ) {
+        dispatch(
+          mixerState.actions.setTimeCurrent({
+            player,
+            time,
+          })
+        );
+      }
+    });
+    playerInstance.on("finish", () => {
+      // If the Preview Player finishes playing, turn off PFL in the UI.
+      if (player === PLAYER_ID_PREVIEW) {
+        dispatch(setChannelPFL(player, false));
+      }
+      dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
+      const state = getState().mixer.players[player];
+      if (state.tracklistItemID !== -1) {
+        dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
+      }
+      if (state.repeat === "one") {
+        playerInstance.play();
+      } else if (state.repeat === "all") {
+        if ("channel" in item) {
+          // it's not in the CML/libraries "column"
+          const itsChannel = getState()
+            .showplan.plan!.filter((x) => x.channel === item.channel)
+            .sort((x, y) => x.weight - y.weight);
+          const itsIndex = itsChannel.indexOf(item);
+          if (itsIndex === itsChannel.length - 1) {
+            dispatch(load(player, itsChannel[0]));
           } else if (state.autoAdvance) {
             if ("channel" in item) {
               // it's not in the CML/libraries "column"
@@ -703,12 +740,33 @@ export const play = (player: number): AppThunk => async (
     console.log("not ready");
     return;
   }
+
+  // If it's the Preview player starting, turn on PFL automatically.
+  if (player === PLAYER_ID_PREVIEW) {
+    dispatch(setChannelPFL(player, true));
+  }
   audioEngine.players[player]?.play();
 
-  if (state.loadedItem && "album" in state.loadedItem) {
+  // If we're starting off audible, try and tracklist.
+  if (state.volume > 0) {
+    dispatch(attemptTracklist(player));
+  }
+};
+
+const attemptTracklist = (player: number): AppThunk => async (
+  dispatch,
+  getState
+) => {
+  const state = getState().mixer.players[player];
+  if (
+    state.loadedItem &&
+    state.loadedItem.type === "central" &&
+    audioEngine.players[player]?.isPlaying &&
+    player !== PLAYER_ID_PREVIEW
+  ) {
     //track
     console.log("potentially tracklisting", state.loadedItem);
-    if (getState().mixer.players[player].tracklistItemID === -1) {
+    if (state.tracklistItemID === -1) {
       dispatch(BroadcastState.tracklistStart(player, state.loadedItem.trackid));
     } else {
       console.log("not tracklisting because already tracklisted");
@@ -733,6 +791,10 @@ export const pause = (player: number): AppThunk => (dispatch, getState) => {
   if (audioEngine.players[player]?.isPlaying) {
     audioEngine.players[player]?.pause();
   } else {
+    // If it's the Preview player starting, turn on PFL automatically.
+    if (player === PLAYER_ID_PREVIEW) {
+      dispatch(setChannelPFL(player, true));
+    }
     audioEngine.players[player]?.play();
   }
 };
@@ -775,6 +837,11 @@ export const stop = (player: number): AppThunk => (dispatch, getState) => {
 
   playerInstance.stop();
 
+  // If we're stoping the Preview player, turn off PFL in the UI.
+  if (player === PLAYER_ID_PREVIEW) {
+    dispatch(setChannelPFL(player, false));
+  }
+
   dispatch(mixerState.actions.setTimeCurrent({ player, time: cueTime }));
   playerInstance.setCurrentTime(cueTime);
 
@@ -799,6 +866,9 @@ export const {
   setRepeat,
   setTracklistItemID,
   setMicBaseGain,
+  toggleAutoAdvance,
+  togglePlayOnLoad,
+  toggleRepeat,
   setPlayerMicAutoDuck,
 } = mixerState.actions;
 
@@ -859,15 +929,15 @@ export const setVolume = (
   let uiLevel: number;
   switch (level) {
     case "off":
-      volume = -40;
+      volume = OFF_LEVEL_DB; // The sweet spot for getting below the silence rounding in audio.ts -> _applyVolume()
       uiLevel = 0;
       break;
     case "bed":
-      volume = -13;
+      volume = BED_LEVEL_DB;
       uiLevel = 0.5;
       break;
     case "full":
-      volume = 0;
+      volume = FULL_LEVEL_DB;
       uiLevel = 1;
       break;
   }
@@ -885,10 +955,36 @@ export const setVolume = (
     playerGainTweens[player].tweens.forEach((tween) => tween.pause());
     if (playerGainTweens[player].target === level) {
       delete playerGainTweens[player];
-      dispatch(mixerState.actions.setPlayerVolume({ player, volume: uiLevel }));
+      dispatch(
+        mixerState.actions.setPlayerVolume({
+          player,
+          volume: uiLevel,
+          volumeEnum: level,
+        })
+      );
       dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
       return;
     }
+  }
+
+  if (level !== "off") {
+    // If we're fading up the volume, disable the PFL.
+    dispatch(setChannelPFL(player, false));
+    // Also catch a tracklist if we started with the channel off.
+    dispatch(attemptTracklist(player));
+  }
+
+  // If not fading, just do it.
+  if (!fade) {
+    dispatch(
+      mixerState.actions.setPlayerVolume({
+        player,
+        volume: uiLevel,
+        volumeEnum: level,
+      })
+    );
+    dispatch(mixerState.actions.setPlayerGain({ player, gain: volume }));
+    return;
   }
 
   const state = getState().mixer.players[player];
@@ -905,7 +1001,13 @@ export const setVolume = (
   const volumeTween = new Between(currentLevel, uiLevel)
     .time(FADE_TIME_SECONDS * 1000)
     .on("update", (val: number) => {
-      dispatch(mixerState.actions.setPlayerVolume({ player, volume: val }));
+      dispatch(
+        mixerState.actions.setPlayerVolume({
+          player,
+          volume: val,
+          volumeEnum: level,
+        })
+      );
     });
   const gainTween = new Between(currentGain, volume)
     .time(FADE_TIME_SECONDS * 1000)
@@ -1008,15 +1110,34 @@ export const setMicProcessingEnabled = (enabled: boolean): AppThunk => async (
 };
 
 export const setMicVolume = (level: MicVolumePresetEnum): AppThunk => (
-  dispatch
+  dispatch,
+  getState
 ) => {
+  const players = getState().mixer.players;
+
   // no tween fuckery here, just cut the level
   const levelVal = level === "full" ? 1 : 0;
   // actually, that's a lie - if we're turning it off we delay it a little to compensate for
   // processing latency
+
   if (levelVal !== 0) {
     dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
+    for (let player = 0; player < players.length; player++) {
+      // If we have auto duck enabled on this channel player, tell it to fade down.
+      if (
+        players[player].micAutoDuck &&
+        players[player].volumeEnum === "full"
+      ) {
+        dispatch(setVolume(player, "bed"));
+      }
+    }
   } else {
+    for (let player = 0; player < players.length; player++) {
+      // If we have auto duck enabled on this channel player, tell it to fade back up.
+      if (players[player].micAutoDuck && players[player].volumeEnum === "bed") {
+        dispatch(setVolume(player, "full"));
+      }
+    }
     window.setTimeout(() => {
       dispatch(mixerState.actions.setMicLevels({ volume: levelVal }));
       // latency, plus a little buffer

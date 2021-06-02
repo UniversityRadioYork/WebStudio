@@ -1,4 +1,6 @@
 import qs from "qs";
+import { getUserError, setCurrentUser } from "./session/state";
+import store from "./store";
 
 export const MYRADIO_NON_API_BASE = process.env.REACT_APP_MYRADIO_NONAPI_BASE!;
 export const MYRADIO_BASE_URL = process.env.REACT_APP_MYRADIO_BASE!;
@@ -42,8 +44,14 @@ export async function myradioApiRequest(
   if (json.status === "OK") {
     return json.payload;
   } else {
-    console.error(json.payload);
-    throw new ApiException(json.payload);
+    if (res.status === 401) {
+      // We've logged out! Oh no!
+      store.dispatch(setCurrentUser({ user: null, canBroadcast: false }));
+      store.dispatch(getUserError("User is no longer logged in."));
+    } else {
+      console.error(json.payload);
+      throw new ApiException(json.payload);
+    }
   }
 }
 
@@ -91,19 +99,19 @@ interface Album {
   // TODO
 }
 
-interface TimeslotItemBase {
+export interface TimeslotItemBase {
   timeslotitemid: string;
   channel: number;
   weight: number;
   title: string;
   length: string;
-  trackid: number;
   clean: boolean;
   cue: number;
 }
 
-interface TimeslotItemCentral {
+export interface TimeslotItemCentral {
   type: "central";
+  trackid: number;
   artist: string;
   intro: number;
   outro: number;
@@ -118,10 +126,8 @@ export interface AuxItem {
   title: string | number;
   managedid: number;
   length: string;
-  trackid: number;
   expirydate: boolean | string;
   expired: boolean;
-  recordid: string;
   auxid: string;
 }
 
@@ -352,7 +358,7 @@ export interface User {
   sname: string;
   url: string;
   photo: string;
-  public_email: string;
+  public_email?: string;
 }
 
 export function getCurrentApiUser(): Promise<User> {

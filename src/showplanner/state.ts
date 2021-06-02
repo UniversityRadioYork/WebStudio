@@ -3,7 +3,10 @@ import * as api from "../api";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { cloneDeep } from "lodash";
+
 import { sendBAPSicleChannel } from "../bapsicle";
+
+import * as Sentry from "@sentry/react";
 
 export interface ItemGhost {
   type: "ghost";
@@ -46,6 +49,16 @@ export function itemId(
       : "T" + item.album.recordid + "-" + item.trackid;
   }
   throw new Error("Can't get id of unknown item.");
+}
+
+export function isTrack(
+  item: PlanItem | Track | AuxItem
+): item is (api.TimeslotItemBase & api.TimeslotItemCentral) | Track {
+  return item.type === "central";
+}
+
+export function isAux(item: PlanItem | Track | AuxItem): item is AuxItem {
+  return "auxid" in item;
 }
 
 interface ShowplanState {
@@ -207,7 +220,11 @@ const showplan = createSlice({
       const idx = state.plan!.findIndex(
         (x) => itemId(x) === action.payload.itemId
       );
-      state.plan![idx].played = action.payload.played;
+
+      if (idx > -1) {
+        state.plan![idx].played = action.payload.played;
+      }
+      // If we don't find an index, it's because the item has been deleted, just ignore.
     },
     replaceGhost(
       state,
@@ -410,6 +427,14 @@ export const moveItem = (
   if (getState().settings.saveShowPlanChanges) {
     const result = await api.updateShowplan(timeslotid, ops);
     if (!result.every((x) => x.status)) {
+      Sentry.captureException(new Error("Showplan update failure [moveItem]"), {
+        contexts: {
+          updateShowplan: {
+            ops,
+            result,
+          },
+        },
+      });
       dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
     }
@@ -451,43 +476,56 @@ export const addItem = (
   // is there - then, once we get a timeslotitemid, replace it with a proper item
 
   dispatch(showplan.actions.applyOps(ops));
+
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
     dispatch(showplan.actions.addItem(newItemData));
   } else {
-    if (getState().settings.saveShowPlanChanges) {
-      const ghostId = Math.random().toString(10);
 
-      const ghost: ItemGhost = {
-        ghostid: ghostId,
-        channel: newItemData.channel,
-        weight: newItemData.weight,
-        title: newItemData.title,
-        artist: newItemData.type === "central" ? newItemData.artist : "",
-        length: newItemData.length,
-        clean: newItemData.clean,
-        intro: newItemData.type === "central" ? newItemData.intro : 0,
-        outro: newItemData.type === "central" ? newItemData.outro : 0,
-        cue: 0,
-        type: "ghost",
-      };
+      if (getState().settings.saveShowPlanChanges) {
+        const ghostId = Math.random().toString(10);
 
-      const idForServer =
-        newItemData.type === "central"
-          ? `${newItemData.album.recordid}-${newItemData.trackid}`
-          : `ManagedDB-${newItemData.managedid}`;
+        const ghost: ItemGhost = {
+          ghostid: ghostId,
+          channel: newItemData.channel,
+          weight: newItemData.weight,
+          title: newItemData.title,
+          artist: newItemData.type === "central" ? newItemData.artist : "",
+          length: newItemData.length,
+          clean: newItemData.clean,
+          intro: newItemData.type === "central" ? newItemData.intro : 0,
+          outro: newItemData.type === "central" ? newItemData.outro : 0,
+          cue: 0,
+          type: "ghost",
+        };
 
-      dispatch(showplan.actions.insertGhost(ghost));
-      ops.push({
-        op: "AddItem",
-        channel: newItemData.channel,
-        weight: newItemData.weight,
-        id: idForServer,
-      });
-      const result = await api.updateShowplan(timeslotId, ops);
-      if (!result.every((x) => x.status)) {
-        dispatch(showplan.actions.planSaveError("Failed to update show plan."));
-        return;
-      }
+        const idForServer =
+          newItemData.type === "central"
+            ? `${newItemData.album.recordid}-${newItemData.trackid}`
+            : "managedid" in newItemData
+            ? `ManagedDB-${newItemData.managedid}`
+            : null;
+
+        if (!idForServer) return; // Something went very wrong
+
+        dispatch(showplan.actions.insertGhost(ghost));
+        ops.push({
+          op: "AddItem",
+          channel: newItemData.channel,
+          weight: newItemData.weight,
+          id: idForServer,
+        });
+        const result = await api.updateShowplan(timeslotId, ops);
+        if (!result.every((x) => x.status)) {
+          Sentry.captureException(new Error("Showplan update failure [addItem]"), {
+            contexts: {
+              updateShowplan: {
+                ops,
+                result,
+              },
+            },
+
+          });
+
       const lastResult = result[result.length - 1]; // this is the add op
       const newItemId = lastResult.timeslotitemid!;
 
@@ -539,20 +577,30 @@ export const removeItem = (
     movingItem.weight -= 1;
 
     if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+
       if (getState().settings.saveShowPlanChanges) {
         const result = await api.updateShowplan(timeslotId, ops);
         if (!result.every((x) => x.status)) {
-          dispatch(
-            showplan.actions.planSaveError("Failed to update show plan.")
+          Sentry.captureException(
+            new Error("Showplan update failure [removeItem]"),
+            {
+              contexts: {
+                updateShowplan: {
+                  ops,
+                  result,
+                },
+              },
+            }
           );
+          dispatch(showplan.actions.planSaveError("Failed to update show plan."));
           return;
         }
       }
+      
     }
-  }
 
-  dispatch(showplan.actions.applyOps(ops));
-  dispatch(showplan.actions.setPlanSaving(false));
+    dispatch(showplan.actions.applyOps(ops));
+    dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const getShowplan = (timeslotId: number): AppThunk => async (
@@ -582,8 +630,8 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
           ops.push({
             op: "MoveItem",
             timeslotitemid: item.timeslotitemid,
-            oldchannel: colIndex,
-            channel: colIndex,
+            oldchannel: item.channel,
+            channel: item.channel,
             oldweight: item.weight,
             weight: itemIndex,
           });

@@ -1,7 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Clock from "react-live-clock";
-import Stopwatch from "react-stopwatch";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 
 import {
   FaCircle,
@@ -12,6 +10,7 @@ import {
   FaExclamationTriangle,
   FaCog,
   FaCompactDisc,
+  FaHeadphonesAlt,
 } from "react-icons/fa";
 
 import { RootState } from "../rootReducer";
@@ -30,6 +29,9 @@ import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import { getShowplan, setItemPlayed } from "../showplanner/state";
 
 import * as OptionsMenuState from "../optionsMenu/state";
+import { setChannelPFL } from "../mixer/state";
+import { secToHHMM, useInterval } from "../lib/utils";
+import { Timelord } from "./timelord";
 
 function nicifyConnectionState(state: ConnectionStateEnum): string {
   switch (state) {
@@ -163,10 +165,44 @@ export function NavBarMyRadio() {
 }
 
 export function NavBarMain() {
+  return (
+    <>
+      <ul className="nav navbar-nav navbar-left">
+        <Timelord />
+        <SavingAlert />
+      </ul>
+      <ul className="nav navbar-nav navbar-right mr-0 pr-0">
+        <RegisterButton />
+        <RecordingButton />
+        <OptionsButton />
+        <MeterBridge />
+      </ul>
+    </>
+  );
+}
+function SavingAlert() {
+  const { planSaveError, planSaving } = useSelector(
+    (state: RootState) => state.showplan
+  );
+  return (
+    <>
+      {planSaving && (
+        <li className="btn rounded-0 py-2 nav-item alert-info">
+          <FaSpinner className="nav-spin mb-1" /> Saving show plan...
+        </li>
+      )}
+      {planSaveError && (
+        <li className="btn rounded-0 py-2 nav-item alert-danger">
+          <FaExclamationTriangle className="p-0 mr-1" />
+          {planSaveError}
+        </li>
+      )}
+    </>
+  );
+}
+function RegisterButton() {
   const dispatch = useDispatch();
   const broadcastState = useSelector((state: RootState) => state.broadcast);
-  const settings = useSelector((state: RootState) => state.settings);
-
   const [connectButtonAnimating, setConnectButtonAnimating] = useState(false);
 
   const prevRegistrationStage = useRef(broadcastState.stage);
@@ -233,117 +269,130 @@ export function NavBarMain() {
   // Full WebStudio NavBar
   return (
     <>
-      <ul className="nav navbar-nav navbar-left">
-        <li
-          className="btn rounded-0 py-2 nav-link nav-item"
-          id="timelord"
-          onClick={(e) => {
-            e.preventDefault();
-            window.open(
-              "http://ury.org.uk/timelord/",
-              "URY - Timelord",
-              "resizable,status"
-            );
-          }}
-        >
-          <Clock
-            format={"HH:mm:ss"}
-            ticking={true}
-            timezone={"europe/london"}
-          />
-        </li>
-        {planSaving && (
-          <li className="btn rounded-0 py-2 nav-item alert-info">
-            <FaSpinner className="nav-spin mb-1" /> Saving show plan...
-          </li>
+      <li className="nav-item" style={{ color: "white" }}>
+        <div className="nav-link">
+          <b>{nicifyConnectionState(broadcastState.connectionState)}</b>
+        </div>
+      </li>
+      <li
+        className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link connect"
+        onClick={() => {
+          setConnectButtonAnimating(true);
+          switch (broadcastState.stage) {
+            case "NOT_REGISTERED":
+              dispatch(BroadcastState.goOnAir());
+              break;
+            case "REGISTERED":
+              dispatch(BroadcastState.cancelTimeslot());
+              break;
+          }
+        }}
+      >
+        {connectButtonAnimating ? (
+          <>
+            <FaBroadcastTower size={17} className="mr-2" />
+            <FaSpinner size={17} className="nav-spin mr-2" />
+          </>
+        ) : (
+          <>
+            <FaBroadcastTower size={17} className="mr-2" />
+            {broadcastState.stage === "NOT_REGISTERED" && "Register"}
+            {broadcastState.stage === "REGISTERED" && "Stop"}
+          </>
         )}
-        {planSaveError && (
-          <li className="btn rounded-0 py-2 nav-item alert-danger">
-            <FaExclamationTriangle className="p-0 mr-1" />
-            {planSaveError}
-          </li>
-        )}
-      </ul>
-
-      <ul className="nav navbar-nav navbar-right mr-0 pr-0">
-        <li className="nav-item" style={{ color: "white" }}>
-          <div className="nav-link">
-            <b>{nicifyConnectionState(broadcastState.connectionState)}</b>
-          </div>
-        </li>
+      </li>
+    </>
+  );
+}
+function RecordingButton() {
+  const recordingState = useSelector(
+    (state: RootState) => state.broadcast.recordingState
+  );
+  const enableRecording = useSelector(
+    (state: RootState) => state.settings.enableRecording
+  );
+  const [count, setCount] = useState(0);
+  // Make a persistant recording counter.
+  useInterval(() => {
+    if (recordingState !== "CONNECTED") {
+      setCount(0);
+    } else {
+      setCount((c) => c + 1);
+    }
+  }, 1000);
+  const dispatch = useDispatch();
+  return (
+    <>
+      {enableRecording && (
         <li
-          className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link connect"
-          onClick={() => {
-            setConnectButtonAnimating(true);
-            switch (broadcastState.stage) {
-              case "NOT_REGISTERED":
-                dispatch(BroadcastState.goOnAir());
-                break;
-              case "REGISTERED":
-                dispatch(BroadcastState.cancelTimeslot());
-                break;
-            }
-          }}
+          className={
+            "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
+            (recordingState === "CONNECTED"
+              ? "btn-outline-danger active"
+              : "btn-outline-light")
+          }
+          onClick={() =>
+            dispatch(
+              recordingState === "NOT_CONNECTED"
+                ? BroadcastState.startRecording()
+                : BroadcastState.stopRecording()
+            )
+          }
         >
-          {connectButtonAnimating ? (
-            <>
-              <FaBroadcastTower size={17} className="mr-2" />
-              <FaSpinner size={17} className="nav-spin mr-2" />
-            </>
-          ) : (
-            <>
-              <FaBroadcastTower size={17} className="mr-2" />
-              {broadcastState.stage === "NOT_REGISTERED" && "Register"}
-              {broadcastState.stage === "REGISTERED" && "Stop"}
-            </>
-          )}
-        </li>
-        {settings.enableRecording && (
-          <li
+          <FaCircle
+            size={17}
             className={
-              "btn rounded-0 pt-2 pb-1 nav-item nav-link " +
-              (broadcastState.recordingState === "CONNECTED"
-                ? "btn-outline-danger active"
-                : "btn-outline-light")
+              recordingState === "CONNECTED" ? "rec-blink" : "rec-stop"
             }
-            onClick={() =>
-              dispatch(
-                broadcastState.recordingState === "NOT_CONNECTED"
-                  ? BroadcastState.startRecording()
-                  : BroadcastState.stopRecording()
-              )
-            }
-          >
-            <FaCircle
-              size={17}
-              className={
-                broadcastState.recordingState === "CONNECTED"
-                  ? "rec-blink"
-                  : "rec-stop"
-              }
-            />{" "}
-            {broadcastState.recordingState === "CONNECTED" ? (
-              <Stopwatch
-                seconds={0}
-                minutes={0}
-                hours={0}
-                render={({ formatted }) => {
-                  return <span>{formatted}</span>;
-                }}
-              />
-            ) : (
-              "Record"
-            )}
-          </li>
-        )}
-        <li
-          className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link"
-          onClick={() => dispatch(OptionsMenuState.open())}
-        >
-          <FaCog size={17} /> Options
+          />{" "}
+          {recordingState === "CONNECTED" ? secToHHMM(count) : "Record"}
         </li>
+      )}
+    </>
+  );
+}
+function OptionsButton() {
+  const dispatch = useDispatch();
+  return (
+    <li
+      className="btn btn-outline-light rounded-0 pt-2 pb-1 nav-item nav-link"
+      onClick={() => dispatch(OptionsMenuState.open())}
+    >
+      <FaCog size={17} /> Options
+    </li>
+  );
+}
 
-        <li className="nav-item px-2 nav-vu">
+function MeterBridge() {
+  const dispatch = useDispatch();
+  const playerPFLs = useSelector(
+    (state: RootState) => state.mixer.players.map((x) => x.pfl),
+    shallowEqual
+  );
+  const isPFL = useSelector((state) => playerPFLs).some((x) => x === true);
+
+  return (
+    <>
+      {isPFL && (
+        <li
+          className="btn btn-danger rounded-0 pt-2 pb-1 nav-item nav-link clear-pfl"
+          onClick={() => dispatch(setChannelPFL(-1, false))}
+        >
+          <FaHeadphonesAlt size={17} /> Clear PFL
+        </li>
+      )}
+
+      <li className={"nav-item px-2 nav-vu" + (isPFL ? " pfl-live" : "")}>
+        {isPFL && (
+          <VUMeter
+            width={235}
+            height={34}
+            source="pfl"
+            range={[-40, 3]}
+            stereo={true}
+          />
+        )}
+        {!isPFL && (
           <VUMeter
             width={235}
             height={40}
@@ -351,8 +400,8 @@ export function NavBarMain() {
             range={[-40, 3]}
             stereo={true}
           />
-        </li>
-      </ul>
+        )}
+      </li>
     </>
   );
 }
