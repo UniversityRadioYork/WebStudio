@@ -320,10 +320,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   useBeforeunload((event) => event.preventDefault());
 
   useEffect(() => {
-    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      dispatch(getShowplan());
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      dispatch(getShowplan(timeslotId));
     }
-  }, [dispatch]);
+  }, [dispatch, timeslotId]);
 
   function toggleSidebar() {
     var element = document.getElementById("sidebar");
@@ -386,6 +386,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           command: "ADD",
           newItem: newItem,
         });
+      } else {
+        dispatch(addItem(timeslotId, newItem));
       }
       increment(null);
     } else {
@@ -415,12 +417,17 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     e: any,
     data: { id: string; column: number; index: number }
   ) {
-    sendBAPSicleChannel({
-      channel: data.column,
-      command: "REMOVE",
-      weight: data.index,
-    });
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      sendBAPSicleChannel({
+        channel: data.column,
+        command: "REMOVE",
+        weight: data.index,
+      });
+    } else {
+      dispatch(removeItem(timeslotId, data.id));
+    }
   }
+
   async function onCtxUnPlayedClick(
     e: any,
     data: { id: string; column: number; index: number }
@@ -431,17 +438,16 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   // Add support for reloading the show plan from the iFrames.
   // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
   useEffect(() => {
-    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      function reloadListener(event: MessageEvent) {
-        if (!event.origin.includes("ury.org.uk")) {
-          return;
-        }
-        if (event.data === "reload_showplan") {
-          session.currentTimeslot !== null &&
-            dispatch(getShowplan(session.currentTimeslot.timeslot_id));
-        }
+    function reloadListener(event: MessageEvent) {
+      if (!event.origin.includes("ury.org.uk")) {
+        return;
       }
-
+      if (event.data === "reload_showplan") {
+        session.currentTimeslot !== null &&
+          dispatch(getShowplan(session.currentTimeslot.timeslot_id));
+      }
+    }
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
       window.addEventListener("message", reloadListener);
       return () => {
         window.removeEventListener("message", reloadListener);
@@ -454,7 +460,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <LoadingDialogue
         title="Getting Show Plan..."
         subtitle={"Hang on a sec..."}
-        error={null}
+        error={planLoadError}
         percent={100}
       />
     );
@@ -480,6 +486,8 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <div id="sidebar">
             <LibraryColumn />
             <div className="border-top"></div>
+            (!process.env.REACT_APP_BAPSICLE_INTERFACE) &&
+            <MicControl />)
           </div>
         </DragDropContext>
       </div>
@@ -491,6 +499,14 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <FaCircleNotch /> Mark Unplayed
         </MenuItem>
       </ContextMenu>
+      (!process.env.REACT_APP_BAPSICLE_INTERFACE) &&
+      <OptionsMenu />
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        close={() => setShowWelcomeModal(false)}
+      />
+      <PisModal close={() => setShowPisModal(false)} isOpen={showPisModal} />
+      <MicLiveIndicator />)
     </div>
   );
 };
