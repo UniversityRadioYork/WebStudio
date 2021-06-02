@@ -3,6 +3,7 @@ import {
   PayloadAction,
   Dispatch,
   Middleware,
+  MiddlewareAPI,
 } from "@reduxjs/toolkit";
 import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
@@ -40,6 +41,8 @@ interface PlayerState {
   volume: number;
   gain: number;
   trim: number;
+  micAutoDuck: boolean;
+  pfl: boolean;
   timeCurrent: number;
   timeRemaining: number;
   timeLength: number;
@@ -68,8 +71,11 @@ const BasePlayerState: PlayerState = {
   loading: -1,
   state: "stopped",
   volume: 1,
+  volumeEnum: "full",
   gain: 0,
-  trim: defaultTrimDB,
+  micAutoDuck: false,
+  trim: DEFAULT_TRIM_DB,
+  pfl: false,
   timeCurrent: 0,
   timeRemaining: 0,
   timeLength: 0,
@@ -170,6 +176,24 @@ const mixerState = createSlice({
       }>
     ) {
       state.players[action.payload.player].trim = action.payload.trim;
+    },
+    setPlayerMicAutoDuck(
+      state,
+      action: PayloadAction<{
+        player: number;
+        enabled: boolean;
+      }>
+    ) {
+      state.players[action.payload.player].micAutoDuck = action.payload.enabled;
+    },
+    setPlayerPFL(
+      state,
+      action: PayloadAction<{
+        player: number;
+        enabled: boolean;
+      }>
+    ) {
+      state.players[action.payload.player].pfl = action.payload.enabled;
     },
     setLoadedItemIntro(
       state,
@@ -761,6 +785,7 @@ export const {
   setRepeat,
   setTracklistItemID,
   setMicBaseGain,
+  setPlayerMicAutoDuck,
 } = mixerState.actions;
 
 export const toggleAutoAdvance = (player: number): AppThunk => (
@@ -893,6 +918,34 @@ export const setChannelTrim = (player: number, val: number): AppThunk => async (
   audioEngine.players[player]?.setTrim(val);
 };
 
+export const setChannelPFL = (
+  player: number,
+  enabled: boolean
+): AppThunk => async (dispatch) => {
+  if (
+    enabled &&
+    typeof audioEngine.players[player] !== "undefined" &&
+    !audioEngine.players[player]?.isPlaying &&
+    player !== PLAYER_ID_PREVIEW // The Preview player is setting PFL itself when it plays.
+  ) {
+    dispatch(setVolume(player, "off", false)); // This does nothing for Preview player (it's not routed.)
+    dispatch(play(player));
+  }
+  // If the player number is -1, do all channels.
+  if (player === -1) {
+    if (!enabled) {
+      dispatch(stop(PLAYER_ID_PREVIEW)); // Stop the Preview player!
+    }
+    for (let i = 0; i < audioEngine.players.length; i++) {
+      dispatch(mixerState.actions.setPlayerPFL({ player: i, enabled: false }));
+      audioEngine.setPFL(i, false);
+    }
+  } else {
+    dispatch(mixerState.actions.setPlayerPFL({ player, enabled }));
+    audioEngine.setPFL(player, enabled);
+  }
+};
+
 export const openMicrophone = (
   micID: string,
   micMapping: ChannelMapping
@@ -973,7 +1026,36 @@ export const mixerMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
     }
   });
 
+  if (newState.mic.baseGain !== oldState.mic.baseGain) {
+    audioEngine.setMicCalibrationGain(newState.mic.baseGain);
+  }
+  if (newState.mic.volume !== oldState.mic.volume) {
+    audioEngine.setMicVolume(newState.mic.volume);
+  }
+
   return result;
+};
+
+const handleKeyboardShortcut = (
+  store: MiddlewareAPI<Dispatch<any>>,
+  channel: number,
+  command: string
+): AppThunk => () => {
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({ channel: channel, command: command });
+    return;
+  }
+  switch (command) {
+    case "PLAY":
+      store.dispatch(play(channel));
+      break;
+    case "PAUSE":
+      store.dispatch(pause(channel));
+      break;
+    case "STOP":
+      store.dispatch(stop(channel));
+      break;
+  }
 };
 
 export const mixerKeyboardShortcutsMiddleware: Middleware<
@@ -981,62 +1063,64 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   RootState,
   Dispatch<any>
 > = (store) => {
-  // The F keys will only work in places like Electron (NeutronStudio) where they don't trigger browser functions.
-  Keys("f1", () => {
-    sendBAPSicleChannel({ channel: 0, command: "PLAY" });
-  });
-  Keys("f2", () => {
-    sendBAPSicleChannel({ channel: 0, command: "PAUSE" });
-  });
-  Keys("f3", () => {
-    sendBAPSicleChannel({ channel: 0, command: "STOP" });
-  });
-  Keys("f5", () => {
-    sendBAPSicleChannel({ channel: 1, command: "PLAY" });
-  });
-  Keys("f6", () => {
-    sendBAPSicleChannel({ channel: 1, command: "PAUSE" });
-  });
-  Keys("f7", () => {
-    sendBAPSicleChannel({ channel: 1, command: "STOP" });
-  });
-  Keys("f9", () => {
-    sendBAPSicleChannel({ channel: 2, command: "PLAY" });
-  });
-  Keys("f10", () => {
-    sendBAPSicleChannel({ channel: 2, command: "PAUSE" });
-  });
-  Keys("f11", () => {
-    sendBAPSicleChannel({ channel: 2, command: "STOP" });
-  });
-
-  Keys("q", () => {
-    sendBAPSicleChannel({ channel: 0, command: "PLAY" });
-  });
-  Keys("w", () => {
-    sendBAPSicleChannel({ channel: 0, command: "PAUSE" });
-  });
-  Keys("e", () => {
-    sendBAPSicleChannel({ channel: 0, command: "STOP" });
-  });
-  Keys("r", () => {
-    sendBAPSicleChannel({ channel: 1, command: "PLAY" });
-  });
-  Keys("t", () => {
-    sendBAPSicleChannel({ channel: 1, command: "PAUSE" });
-  });
-  Keys("y", () => {
-    sendBAPSicleChannel({ channel: 1, command: "STOP" });
-  });
-  Keys("u", () => {
-    sendBAPSicleChannel({ channel: 2, command: "PLAY" });
-  });
-  Keys("i", () => {
-    sendBAPSicleChannel({ channel: 2, command: "PAUSE" });
-  });
-  Keys("o", () => {
-    sendBAPSicleChannel({ channel: 2, command: "STOP" });
-  });
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    // The F keys will only work in places like Electron (NeutronStudio) where they don't trigger browser functions.
+    Keys("f1", () => {
+      handleKeyboardShortcut(store, 0, "PLAY");
+    });
+    Keys("f2", () => {
+      handleKeyboardShortcut(store, 0, "PAUSE");
+    });
+    Keys("f3", () => {
+      handleKeyboardShortcut(store, 0, "STOP");
+    });
+    Keys("f5", () => {
+      handleKeyboardShortcut(store, 1, "PLAY");
+    });
+    Keys("f6", () => {
+      handleKeyboardShortcut(store, 1, "PAUSE");
+    });
+    Keys("f7", () => {
+      handleKeyboardShortcut(store, 1, "STOP");
+    });
+    Keys("f9", () => {
+      handleKeyboardShortcut(store, 2, "PLAY");
+    });
+    Keys("f10", () => {
+      handleKeyboardShortcut(store, 2, "PAUSE");
+    });
+    Keys("f11", () => {
+      handleKeyboardShortcut(store, 2, "STOP");
+    });
+  } else {
+    Keys("q", () => {
+      handleKeyboardShortcut(store, 0, "PLAY");
+    });
+    Keys("w", () => {
+      handleKeyboardShortcut(store, 0, "PAUSE");
+    });
+    Keys("e", () => {
+      handleKeyboardShortcut(store, 0, "STOP");
+    });
+    Keys("r", () => {
+      handleKeyboardShortcut(store, 1, "PLAY");
+    });
+    Keys("t", () => {
+      handleKeyboardShortcut(store, 1, "PAUSE");
+    });
+    Keys("y", () => {
+      handleKeyboardShortcut(store, 1, "STOP");
+    });
+    Keys("u", () => {
+      handleKeyboardShortcut(store, 2, "PLAY");
+    });
+    Keys("i", () => {
+      handleKeyboardShortcut(store, 2, "PAUSE");
+    });
+    Keys("o", () => {
+      handleKeyboardShortcut(store, 2, "STOP");
+    });
+  }
 
   return (next) => (action) => next(action);
 };
