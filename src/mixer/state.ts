@@ -866,22 +866,32 @@ export const toggleAutoAdvance = (player: number): AppThunk => (
   dispatch,
   getState
 ) => {
-  sendBAPSicleChannel({
-    channel: player,
-    command: "AUTOADVANCE",
-    enabled: !getState().mixer.players[player].autoAdvance,
-  });
+  let new_mode = !getState().mixer.players[player].autoAdvance;
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({
+      channel: player,
+      command: "AUTOADVANCE",
+      enabled: new_mode,
+    });
+    return;
+  }
+  dispatch(mixerState.actions.setAutoAdvance({ player, enabled: new_mode }));
 };
 
 export const togglePlayOnLoad = (player: number): AppThunk => (
   dispatch,
   getState
 ) => {
-  sendBAPSicleChannel({
-    channel: player,
-    command: "PLAYONLOAD",
-    enabled: !getState().mixer.players[player].playOnLoad,
-  });
+  let new_mode = !getState().mixer.players[player].playOnLoad;
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({
+      channel: player,
+      command: "PLAYONLOAD",
+      enabled: new_mode,
+    });
+    return;
+  }
+  dispatch(mixerState.actions.setPlayOnLoad({ player, enabled: new_mode }));
 };
 
 export const toggleRepeat = (player: number): AppThunk => (
@@ -900,7 +910,11 @@ export const toggleRepeat = (player: number): AppThunk => (
       playVal = "none";
       break;
   }
-  sendBAPSicleChannel({ channel: player, command: "REPEAT", mode: playVal });
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({ channel: player, command: "REPEAT", mode: playVal });
+    return;
+  }
+  dispatch(mixerState.actions.setRepeat({ player, mode: playVal }));
 };
 
 export const redrawWavesurfers = (): AppThunk => () => {
