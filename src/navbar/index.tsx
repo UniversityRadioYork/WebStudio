@@ -12,7 +12,6 @@ import {
   FaCompactDisc,
   FaHeadphonesAlt,
 } from "react-icons/fa";
-import LiveClock from "react-live-clock";
 
 import { RootState } from "../rootReducer";
 
@@ -240,10 +239,6 @@ function RegisterButton() {
     }
     prevRegistrationStage.current = broadcastState.stage;
   }, [broadcastState.stage]);
-
-  const { planSaveError, planSaving } = useSelector(
-    (state: RootState) => state.showplan
-  );
 
   return (
     <>
