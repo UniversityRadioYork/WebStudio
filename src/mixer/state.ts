@@ -1192,61 +1192,65 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
     // The F keys will only work in places like Electron (NeutronStudio) where they don't trigger browser functions.
     Keys("f1", () => {
-      handleKeyboardShortcut(store, 0, "PLAY");
+      store.dispatch(handleKeyboardShortcut(store, 0, "PLAY"));
     });
     Keys("f2", () => {
-      handleKeyboardShortcut(store, 0, "PAUSE");
+      store.dispatch(handleKeyboardShortcut(store, 0, "PAUSE"));
     });
     Keys("f3", () => {
-      handleKeyboardShortcut(store, 0, "STOP");
+      store.dispatch(handleKeyboardShortcut(store, 0, "STOP"));
     });
     Keys("f5", () => {
-      handleKeyboardShortcut(store, 1, "PLAY");
+      store.dispatch(handleKeyboardShortcut(store, 1, "PLAY"));
     });
     Keys("f6", () => {
-      handleKeyboardShortcut(store, 1, "PAUSE");
+      store.dispatch(handleKeyboardShortcut(store, 1, "PAUSE"));
     });
     Keys("f7", () => {
-      handleKeyboardShortcut(store, 1, "STOP");
+      store.dispatch(handleKeyboardShortcut(store, 1, "STOP"));
     });
     Keys("f9", () => {
-      handleKeyboardShortcut(store, 2, "PLAY");
+      store.dispatch(handleKeyboardShortcut(store, 2, "PLAY"));
     });
     Keys("f10", () => {
-      handleKeyboardShortcut(store, 2, "PAUSE");
+      store.dispatch(handleKeyboardShortcut(store, 2, "PAUSE"));
     });
     Keys("f11", () => {
-      handleKeyboardShortcut(store, 2, "STOP");
-    });
-  } else {
-    Keys("q", () => {
-      handleKeyboardShortcut(store, 0, "PLAY");
-    });
-    Keys("w", () => {
-      handleKeyboardShortcut(store, 0, "PAUSE");
-    });
-    Keys("e", () => {
-      handleKeyboardShortcut(store, 0, "STOP");
-    });
-    Keys("r", () => {
-      handleKeyboardShortcut(store, 1, "PLAY");
-    });
-    Keys("t", () => {
-      handleKeyboardShortcut(store, 1, "PAUSE");
-    });
-    Keys("y", () => {
-      handleKeyboardShortcut(store, 1, "STOP");
-    });
-    Keys("u", () => {
-      handleKeyboardShortcut(store, 2, "PLAY");
-    });
-    Keys("i", () => {
-      handleKeyboardShortcut(store, 2, "PAUSE");
-    });
-    Keys("o", () => {
-      handleKeyboardShortcut(store, 2, "STOP");
+      store.dispatch(handleKeyboardShortcut(store, 2, "STOP"));
     });
   }
+  Keys("q", () => {
+    store.dispatch(handleKeyboardShortcut(store, 0, "PLAY"));
+  });
+  Keys("w", () => {
+    store.dispatch(handleKeyboardShortcut(store, 0, "PAUSE"));
+  });
+  Keys("e", () => {
+    store.dispatch(handleKeyboardShortcut(store, 0, "STOP"));
+  });
+  Keys("r", () => {
+    store.dispatch(handleKeyboardShortcut(store, 1, "PLAY"));
+  });
+  Keys("t", () => {
+    store.dispatch(handleKeyboardShortcut(store, 1, "PAUSE"));
+  });
+  Keys("y", () => {
+    store.dispatch(handleKeyboardShortcut(store, 1, "STOP"));
+  });
+  Keys("u", () => {
+    store.dispatch(handleKeyboardShortcut(store, 2, "PLAY"));
+  });
+  Keys("i", () => {
+    store.dispatch(handleKeyboardShortcut(store, 2, "PAUSE"));
+  });
+  Keys("o", () => {
+    store.dispatch(handleKeyboardShortcut(store, 2, "STOP"));
+  });
+
+  Keys("x", () => {
+    const state = store.getState().mixer.mic;
+    store.dispatch(setMicVolume(state.volume === 1 ? "off" : "full"));
+  });
 
   return (next) => (action) => next(action);
 };
