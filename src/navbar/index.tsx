@@ -12,6 +12,7 @@ import {
   FaCompactDisc,
   FaHeadphonesAlt,
 } from "react-icons/fa";
+import LiveClock from "react-live-clock";
 
 import { RootState } from "../rootReducer";
 
@@ -19,7 +20,7 @@ import * as BroadcastState from "../broadcast/state";
 import appLogo from "../assets/images/webstudio.svg";
 import myradioLogo from "../assets/images/myradio.svg";
 import { MYRADIO_NON_API_BASE } from "../api";
-import logo from "../assets/images/navbarlogo.png";
+
 import "./navbar.scss";
 import { closeAlert } from "./state";
 import { BAPSicleModal } from "./BAPSicleModal";
@@ -165,6 +166,33 @@ export function NavBarMyRadio() {
 }
 
 export function NavBarMain() {
+  const [showBAPSicleModal, setShowBAPSicleModal] = useState(true);
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    return (
+      <>
+        <ul className="nav navbar-nav navbar-left">
+          <Timelord />
+        </ul>
+
+        <ul className="nav navbar-nav navbar-right mr-0 pr-0">
+          <li
+            className="btn btn-outline-light rounded-0 pt-2 pb-2 nav-item nav-link"
+            style={{ color: "white" }}
+            onClick={() => {
+              setShowBAPSicleModal(true);
+            }}
+          >
+            <FaCompactDisc size={16} className="mr-2" />
+            <b>Menu</b>
+          </li>
+        </ul>
+        <BAPSicleModal
+          close={() => setShowBAPSicleModal(false)}
+          isOpen={showBAPSicleModal}
+        />
+      </>
+    );
+  }
   return (
     <>
       <ul className="nav navbar-nav navbar-left">
@@ -217,56 +245,6 @@ function RegisterButton() {
     (state: RootState) => state.showplan
   );
 
-  const [showBAPSicleModal, setShowBAPSicleModal] = useState(true);
-
-  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-    return (
-      <>
-        <ul className="nav navbar-nav navbar-left">
-          <li
-            className="btn rounded-0 py-1 nav-link nav-item"
-            id="timelord"
-            onClick={(e) => {
-              e.preventDefault();
-              window.open(
-                "http://ury.org.uk/timelord/",
-                "URY - Timelord",
-                "resizable,status"
-              );
-            }}
-          >
-            <img src={logo} className="mr-2" height={32} alt="Logo" />
-            <Clock
-              format={"HH:mm:ss"}
-              ticking={true}
-              timezone={"europe/london"}
-            />
-          </li>
-        </ul>
-
-        <div>
-          <ul className="nav navbar-nav navbar-right mr-0 pr-0">
-            <li
-              className="btn btn-outline-light rounded-0 pt-2 pb-2 nav-item nav-link"
-              style={{ color: "white" }}
-              onClick={() => {
-                setShowBAPSicleModal(true);
-              }}
-            >
-              <FaCompactDisc size={16} className="mr-2" />
-              <b>Menu</b>
-            </li>
-          </ul>
-        </div>
-        <BAPSicleModal
-          close={() => setShowBAPSicleModal(false)}
-          isOpen={showBAPSicleModal}
-        />
-      </>
-    );
-  }
-
-  // Full WebStudio NavBar
   return (
     <>
       <li className="nav-item" style={{ color: "white" }}>

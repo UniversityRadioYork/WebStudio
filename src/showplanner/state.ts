@@ -480,62 +480,64 @@ export const addItem = (
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
     dispatch(showplan.actions.addItem(newItemData));
   } else {
+    if (getState().settings.saveShowPlanChanges) {
+      const ghostId = Math.random().toString(10);
 
-      if (getState().settings.saveShowPlanChanges) {
-        const ghostId = Math.random().toString(10);
+      const ghost: ItemGhost = {
+        ghostid: ghostId,
+        channel: newItemData.channel,
+        weight: newItemData.weight,
+        title: newItemData.title,
+        artist: newItemData.type === "central" ? newItemData.artist : "",
+        length: newItemData.length,
+        clean: newItemData.clean,
+        intro: newItemData.type === "central" ? newItemData.intro : 0,
+        outro: newItemData.type === "central" ? newItemData.outro : 0,
+        cue: 0,
+        type: "ghost",
+      };
 
-        const ghost: ItemGhost = {
-          ghostid: ghostId,
-          channel: newItemData.channel,
-          weight: newItemData.weight,
-          title: newItemData.title,
-          artist: newItemData.type === "central" ? newItemData.artist : "",
-          length: newItemData.length,
-          clean: newItemData.clean,
-          intro: newItemData.type === "central" ? newItemData.intro : 0,
-          outro: newItemData.type === "central" ? newItemData.outro : 0,
-          cue: 0,
-          type: "ghost",
-        };
+      const idForServer =
+        newItemData.type === "central"
+          ? `${newItemData.album.recordid}-${newItemData.trackid}`
+          : "managedid" in newItemData
+          ? `ManagedDB-${newItemData.managedid}`
+          : null;
 
-        const idForServer =
-          newItemData.type === "central"
-            ? `${newItemData.album.recordid}-${newItemData.trackid}`
-            : "managedid" in newItemData
-            ? `ManagedDB-${newItemData.managedid}`
-            : null;
+      if (!idForServer) return; // Something went very wrong
 
-        if (!idForServer) return; // Something went very wrong
-
-        dispatch(showplan.actions.insertGhost(ghost));
-        ops.push({
-          op: "AddItem",
-          channel: newItemData.channel,
-          weight: newItemData.weight,
-          id: idForServer,
-        });
-        const result = await api.updateShowplan(timeslotId, ops);
-        if (!result.every((x) => x.status)) {
-          Sentry.captureException(new Error("Showplan update failure [addItem]"), {
+      dispatch(showplan.actions.insertGhost(ghost));
+      ops.push({
+        op: "AddItem",
+        channel: newItemData.channel,
+        weight: newItemData.weight,
+        id: idForServer,
+      });
+      const result = await api.updateShowplan(timeslotId, ops);
+      if (!result.every((x) => x.status)) {
+        Sentry.captureException(
+          new Error("Showplan update failure [addItem]"),
+          {
             contexts: {
               updateShowplan: {
                 ops,
                 result,
               },
             },
+          }
+        );
 
-          });
+        const lastResult = result[result.length - 1]; // this is the add op
+        const newItemId = lastResult.timeslotitemid!;
 
-      const lastResult = result[result.length - 1]; // this is the add op
-      const newItemId = lastResult.timeslotitemid!;
-
-      newItemData.timeslotitemid = newItemId;
-      dispatch(
-        showplan.actions.replaceGhost({
-          ghostId: "G" + ghostId,
-          newItemData,
-        })
-      );
+        newItemData.timeslotitemid = newItemId;
+        dispatch(
+          showplan.actions.replaceGhost({
+            ghostId: "G" + ghostId,
+            newItemData,
+          })
+        );
+      }
     } else {
       // Just add it straight to the show plan without updating the server.
       dispatch(showplan.actions.addItem(newItemData));
@@ -577,7 +579,6 @@ export const removeItem = (
     movingItem.weight -= 1;
 
     if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
-
       if (getState().settings.saveShowPlanChanges) {
         const result = await api.updateShowplan(timeslotId, ops);
         if (!result.every((x) => x.status)) {
@@ -592,15 +593,17 @@ export const removeItem = (
               },
             }
           );
-          dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+          dispatch(
+            showplan.actions.planSaveError("Failed to update show plan.")
+          );
           return;
         }
       }
-      
     }
+  }
 
-    dispatch(showplan.actions.applyOps(ops));
-    dispatch(showplan.actions.setPlanSaving(false));
+  dispatch(showplan.actions.applyOps(ops));
+  dispatch(showplan.actions.setPlanSaving(false));
 };
 
 export const getShowplan = (timeslotId: number): AppThunk => async (
@@ -663,12 +666,12 @@ export const getPlaylists = (): AppThunk => async (dispatch) => {
   if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
     try {
       const userPlaylists = await api.getUserPlaylists();
-
       dispatch(showplan.actions.addUserPlaylists(userPlaylists));
     } catch (e) {
       console.error(e);
     }
   }
+
   try {
     const managedPlaylists = await api.getManagedPlaylists();
     dispatch(showplan.actions.addManagedPlaylists(managedPlaylists));
@@ -678,7 +681,6 @@ export const getPlaylists = (): AppThunk => async (dispatch) => {
 
   try {
     const auxPlaylists = await api.getAuxPlaylists();
-
     dispatch(showplan.actions.addAuxPlaylists(auxPlaylists));
   } catch (e) {
     console.error(e);

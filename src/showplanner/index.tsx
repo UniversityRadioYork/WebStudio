@@ -226,7 +226,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
     dispatch(setItemPlayed(data.id.toString(), false, data.column));
   }
 
-
   // Add support for reloading the show plan from the iFrames.
   // There is a similar listener in showplanner/ImporterModal.tsx to handle closing the iframe.
   useEffect(() => {
@@ -277,18 +276,14 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         </CtxMenuItem>
         <CtxMenuItem
           onClick={(args) =>
-            dispatch(
-              setItemPlayed({ itemId: (args.props as any).id, played: false })
-            )
+            dispatch(setItemPlayed((args.props as any).id, false))
           }
         >
           <FaCircleNotch /> Mark Unplayed
         </CtxMenuItem>
         <CtxMenuItem
           onClick={(args) =>
-            dispatch(
-              setItemPlayed({ itemId: (args.props as any).id, played: true })
-            )
+            dispatch(setItemPlayed((args.props as any).id, true))
           }
         >
           <FaCircle /> Mark Played
@@ -347,7 +342,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
             isOpen={showWelcomeModal}
             close={() => setShowWelcomeModal(false)}
           />
-          <PisModal close={() => setShowPisModal(false)} isOpen={showPisModal} />
+          <PisModal
+            close={() => setShowPisModal(false)}
+            isOpen={showPisModal}
+          />
           <MicLiveIndicator />
         </>
       )}

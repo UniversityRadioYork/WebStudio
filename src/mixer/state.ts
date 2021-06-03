@@ -32,15 +32,6 @@ import { sendBAPSicleChannel } from "../bapsicle";
 import { changeSetting } from "../optionsMenu/settingsState";
 import { PLAYER_COUNTER_UPDATE_PERIOD_MS } from "../showplanner/Player";
 
-import { changeSetting } from "../optionsMenu/settingsState";
-import {
-  DEFAULT_TRIM_DB,
-  OFF_LEVEL_DB,
-  BED_LEVEL_DB,
-  FULL_LEVEL_DB,
-} from "./audio";
-import { PLAYER_COUNTER_UPDATE_PERIOD_MS } from "../showplanner/Player";
-
 const playerGainTweens: Array<{
   target: VolumePresetEnum;
   tweens: Between[];
@@ -609,105 +600,107 @@ export const load = (
       if (state.loadedItem && "outro" in state.loadedItem) {
         playerInstance.setOutro(state.loadedItem.outro);
       }
+    });
 
-      if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-        playerInstance.on("timeChangeSeek", (time) => {
-          if (
-            Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
-          ) {
-            sendBAPSicleChannel({
-              channel: player,
-              command: "SEEK",
-              time: time,
-            });
-          }
-        });
-      } else {
-        playerInstance.on("play", () => {
-          dispatch(
-            mixerState.actions.setPlayerState({ player, state: "playing" })
-          );
-
-      const state = getState().mixer.players[player];
-      // Don't set played on Preview Channel
-      if (state.loadedItem != null && player !== PLAYER_ID_PREVIEW) {
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      playerInstance.on("timeChangeSeek", (time) => {
+        if (
+          Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
+        ) {
+          sendBAPSicleChannel({
+            channel: player,
+            command: "SEEK",
+            time: time,
+          });
+        }
+      });
+    } else {
+      playerInstance.on("play", () => {
         dispatch(
-          dispatch(setItemPlayed(itemId(state.loadedItem), true));
+          mixerState.actions.setPlayerState({ player, state: "playing" })
         );
-      }
-    });
-    playerInstance.on("pause", () => {
-      dispatch(
-        mixerState.actions.setPlayerState({
-          player,
-          state: playerInstance.currentTime === 0 ? "stopped" : "paused",
-        })
-      );
-    });
-    playerInstance.on("timeChange", (time) => {
-      if (
-        Math.abs(time - getState().mixer.players[player].timeCurrent) >
-        PLAYER_COUNTER_UPDATE_PERIOD_MS / 1000
-      ) {
+
+        const state = getState().mixer.players[player];
+        // Don't set played on Preview Channel
+        if (state.loadedItem != null && player !== PLAYER_ID_PREVIEW) {
+          dispatch(setItemPlayed(itemId(state.loadedItem), true));
+        }
+      });
+      playerInstance.on("pause", () => {
         dispatch(
-          mixerState.actions.setTimeCurrent({
+          mixerState.actions.setPlayerState({
             player,
-            time,
+            state: playerInstance.currentTime === 0 ? "stopped" : "paused",
           })
         );
-      }
-    });
-    playerInstance.on("finish", () => {
-      // If the Preview Player finishes playing, turn off PFL in the UI.
-      if (player === PLAYER_ID_PREVIEW) {
-        dispatch(setChannelPFL(player, false));
-      }
-      dispatch(mixerState.actions.setPlayerState({ player, state: "stopped" }));
-      const state = getState().mixer.players[player];
-      if (state.tracklistItemID !== -1) {
-        dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
-      }
-      if (state.repeat === "one") {
-        playerInstance.play();
-      } else if (state.repeat === "all") {
-        if ("channel" in item) {
-          // it's not in the CML/libraries "column"
-          const itsChannel = getState()
-            .showplan.plan!.filter((x) => x.channel === item.channel)
-            .sort((x, y) => x.weight - y.weight);
-          const itsIndex = itsChannel.indexOf(item);
-          if (itsIndex === itsChannel.length - 1) {
-            dispatch(load(player, itsChannel[0]));
-          } else if (state.autoAdvance) {
-            if ("channel" in item) {
-              // it's not in the CML/libraries "column"
-              const itsChannel = getState()
-                .showplan.plan!.filter((x) => x.channel === item.channel)
-                .sort((x, y) => x.weight - y.weight);
-              // Sadly, we can't just do .indexOf() item directly,
-              // since the player's idea of an item may be changed over it's lifecycle (setting played,intro/cue/outro etc.)
-              // Therefore we'll find the updated item from the plan and match that.
-              const itsIndex = itsChannel.findIndex(
-                (x) => itemId(x) === itemId(item)
-              );
-              if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
-                dispatch(load(player, itsChannel[itsIndex + 1]));
-              }
+      });
+      playerInstance.on("timeChange", (time) => {
+        if (
+          Math.abs(time - getState().mixer.players[player].timeCurrent) >
+          PLAYER_COUNTER_UPDATE_PERIOD_MS / 1000
+        ) {
+          dispatch(
+            mixerState.actions.setTimeCurrent({
+              player,
+              time,
+            })
+          );
+        }
+      });
+      playerInstance.on("finish", () => {
+        // If the Preview Player finishes playing, turn off PFL in the UI.
+        if (player === PLAYER_ID_PREVIEW) {
+          dispatch(setChannelPFL(player, false));
+        }
+        dispatch(
+          mixerState.actions.setPlayerState({ player, state: "stopped" })
+        );
+        const state = getState().mixer.players[player];
+        if (state.tracklistItemID !== -1) {
+          dispatch(BroadcastState.tracklistEnd(state.tracklistItemID));
+        }
+        if (state.repeat === "one") {
+          playerInstance.play();
+        } else if (state.repeat === "all") {
+          if ("channel" in item) {
+            // it's not in the CML/libraries "column"
+            const itsChannel = getState()
+              .showplan.plan!.filter((x) => x.channel === item.channel)
+              .sort((x, y) => x.weight - y.weight);
+            const itsIndex = itsChannel.indexOf(item);
+            if (itsIndex === itsChannel.length - 1) {
+              dispatch(load(player, itsChannel[0]));
             }
           }
-        });
+        } else if (state.autoAdvance) {
+          if ("channel" in item) {
+            // it's not in the CML/libraries "column"
+            const itsChannel = getState()
+              .showplan.plan!.filter((x) => x.channel === item.channel)
+              .sort((x, y) => x.weight - y.weight);
+            // Sadly, we can't just do .indexOf() item directly,
+            // since the player's idea of an item may be changed over it's lifecycle (setting played,intro/cue/outro etc.)
+            // Therefore we'll find the updated item from the plan and match that.
+            const itsIndex = itsChannel.findIndex(
+              (x) => itemId(x) === itemId(item)
+            );
+            if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
+              dispatch(load(player, itsChannel[itsIndex + 1]));
+            }
+          }
+        }
+      });
+
+      // Double-check we haven't been aborted since
+      if (signal.aborted) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new DOMException("abort load", "AbortError");
       }
-    });
 
-    // Double-check we haven't been aborted since
-    if (signal.aborted) {
-      // noinspection ExceptionCaughtLocallyJS
-      throw new DOMException("abort load", "AbortError");
+      playerInstance.setVolume(getState().mixer.players[player].gain);
+      playerInstance.setTrim(getState().mixer.players[player].trim);
+      delete loadAbortControllers[player];
     }
-
-    playerInstance.setVolume(getState().mixer.players[player].gain);
-    playerInstance.setTrim(getState().mixer.players[player].trim);
-    delete loadAbortControllers[player];
   } catch (e) {
     if ("name" in e && e.name === "AbortError") {
       // load was aborted, ignore the error
@@ -866,9 +859,6 @@ export const {
   setRepeat,
   setTracklistItemID,
   setMicBaseGain,
-  toggleAutoAdvance,
-  togglePlayOnLoad,
-  toggleRepeat,
   setPlayerMicAutoDuck,
 } = mixerState.actions;
 

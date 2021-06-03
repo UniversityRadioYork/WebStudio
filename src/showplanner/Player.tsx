@@ -101,7 +101,9 @@ const setTrackIntro = (
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
-      await api.setTrackIntro(item.trackid, secs);
+      if ("trackid" in item) {
+        await api.setTrackIntro(item.trackid, secs);
+      }
     }
     dispatch(ShowPlanState.setItemTimings({ item: item, intro: secs }));
   } catch (e) {
@@ -135,7 +137,9 @@ const setTrackOutro = (
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
-      await api.setTrackOutro(item.trackid, secs);
+      if ("trackid" in item) {
+        await api.setTrackOutro(item.trackid, secs);
+      }
     }
     dispatch(ShowPlanState.setItemTimings({ item: item, outro: secs }));
   } catch (e) {
@@ -391,9 +395,7 @@ export function Player({
                     : "btn-outline-secondary") +
                   " btn btn-sm col-4 sp-play-on-load"
                 }
-                onClick={() =>
-                  dispatch(MixerState.toggleAutoAdvance({ player: id }))
-                }
+                onClick={() => dispatch(MixerState.toggleAutoAdvance(id))}
               >
                 <FaLevelDownAlt />
                 &nbsp; Auto Advance
@@ -405,9 +407,7 @@ export function Player({
                     : "btn-outline-secondary") +
                   " btn btn-sm col-4 sp-play-on-load"
                 }
-                onClick={() =>
-                  dispatch(MixerState.togglePlayOnLoad({ player: id }))
-                }
+                onClick={() => dispatch(MixerState.togglePlayOnLoad(id))}
               >
                 <FaPlayCircle />
                 &nbsp; Play on Load
@@ -419,9 +419,7 @@ export function Player({
                     : "btn-outline-secondary") +
                   " btn btn-sm col-4 sp-play-on-load"
                 }
-                onClick={() =>
-                  dispatch(MixerState.toggleRepeat({ player: id }))
-                }
+                onClick={() => dispatch(MixerState.toggleRepeat(id))}
               >
                 <FaRedo />
                 &nbsp; Repeat {playerState.repeat}
@@ -519,56 +517,63 @@ export function Player({
           </div>
         </div>
       </div>
-      {!isPreviewChannel && !customOutput && (
-        <div
-          className={
-            "mixer-buttons " +
-            (playerState.state === "playing"
-              ? playerState.volume === 0 && !playerState.pfl
-                ? "error-animation"
-                : playerState.pfl && "pfl"
-              : "")
-          }
-        >
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE &&
+        !isPreviewChannel &&
+        !customOutput && (
           <div
-            className="mixer-buttons-backdrop"
-            style={{
-              width:
-                (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
-                  100 +
-                "%",
-            }}
-          ></div>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
-            Off
-          </button>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
-            Bed
-          </button>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
-            Full
-          </button>
-        </div>
-      )}
-      {!isPreviewChannel && settings.proMode && settings.channelVUs && (
-        <div className="channel-vu">
-          {customOutput ? (
-            <span className="text-muted">
-              Custom audio output disables VU meters.
-            </span>
-          ) : playerState.pfl ? (
-            <span className="text-muted">This Player is playing in PFL.</span>
-          ) : (
-            <VUMeter
-              width={300}
-              height={40}
-              source={VUsource(id)}
-              range={[-40, 0]}
-              stereo={settings.channelVUsStereo}
-            />
-          )}
-        </div>
-      )}
+            className={
+              "mixer-buttons " +
+              (playerState.state === "playing"
+                ? playerState.volume === 0 && !playerState.pfl
+                  ? "error-animation"
+                  : playerState.pfl && "pfl"
+                : "")
+            }
+          >
+            <div
+              className="mixer-buttons-backdrop"
+              style={{
+                width:
+                  (USE_REAL_GAIN_VALUE
+                    ? playerState.gain
+                    : playerState.volume) *
+                    100 +
+                  "%",
+              }}
+            ></div>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
+              Off
+            </button>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
+              Bed
+            </button>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
+              Full
+            </button>
+          </div>
+        )}
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE &&
+        !isPreviewChannel &&
+        settings.proMode &&
+        settings.channelVUs && (
+          <div className="channel-vu">
+            {customOutput ? (
+              <span className="text-muted">
+                Custom audio output disables VU meters.
+              </span>
+            ) : playerState.pfl ? (
+              <span className="text-muted">This Player is playing in PFL.</span>
+            ) : (
+              <VUMeter
+                width={300}
+                height={40}
+                source={VUsource(id)}
+                range={[-40, 0]}
+                stereo={settings.channelVUsStereo}
+              />
+            )}
+          </div>
+        )}
     </div>
   );
 }

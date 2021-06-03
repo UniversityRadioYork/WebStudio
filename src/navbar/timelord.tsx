@@ -5,6 +5,7 @@ import { myradioApiRequest } from "../api";
 import { useInterval } from "../lib/utils";
 import { RootState } from "../rootReducer";
 import "./timelord.scss";
+import logo from "../assets/images/navbarlogo.png";
 
 const SILENCE_WARN_SECS = 5;
 
@@ -72,6 +73,10 @@ export function Timelord() {
         );
       }}
     >
+      {process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <img src={logo} className="mr-2" height={32} alt="Logo" />
+      )}
+
       <LiveClock
         format={"HH:mm:ss"}
         ticking={true}
