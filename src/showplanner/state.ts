@@ -260,21 +260,25 @@ export const {
 
 export const setItemPlayed = (
   itemid: string,
-  played: boolean,
-  player: number | null = null
+  played: boolean
 ): AppThunk => async (dispatch, getState) => {
-  if (played) {
-    return;
-  }
-  var weight = -1;
-
-  if (itemid) {
-    const idx = getState().showplan.plan!.findIndex(
-      (x) => itemId(x) === itemid
-    );
-    weight = getState().showplan.plan![idx].weight;
-  }
+  // The server handles marking things played
+  // TODO: Add support in BAPSicle for marking things played
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    if (played) {
+      return;
+    }
+    var weight = -1;
+    var player = null;
+
+    if (itemid) {
+      const idx = getState().showplan.plan!.findIndex(
+        (x) => itemId(x) === itemid
+      );
+      weight = getState().showplan.plan![idx].weight;
+      player = getState().showplan.plan![idx].channel;
+    }
+
     if (player) {
       sendBAPSicleChannel({
         channel: player,
@@ -288,11 +292,8 @@ export const setItemPlayed = (
       });
     }
     return;
-  } else {
-    dispatch(
-      showplan.actions.setItemPlayed({ itemId: itemid, played: played })
-    );
   }
+  dispatch(showplan.actions.setItemPlayed({ itemId: itemid, played: played }));
 };
 
 export const moveItem = (
