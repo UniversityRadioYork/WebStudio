@@ -33,6 +33,7 @@ const App: React.FC = () => {
   } = useSelector((state: RootState) => state.session);
 
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    document.title = "BAPS3 Presenter";
     if (bapsConnectionState !== "CONNECTED") {
       return <BAPSSessionHandler />;
     } else {
