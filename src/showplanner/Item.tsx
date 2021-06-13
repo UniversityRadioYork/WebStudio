@@ -98,7 +98,7 @@ export const Item = memo(function Item({
     } else {
       data.push("Title: " + x.title.toString());
 
-      if ("artist" in x && x.artist !== "") data.push("Artist: " + x.artist);
+      if ("artist" in x && x.artist) data.push("Artist: " + x.artist);
       if ("album" in x && x.album.title !== "")
         data.push("Album: " + x.album.title);
     }
@@ -167,7 +167,7 @@ export const Item = memo(function Item({
           {showName && (
             <>
               {x.title.toString()}
-              {"artist" in x && x.artist !== "" && " - " + x.artist}
+              {"artist" in x && x.artist && " - " + x.artist}
             </>
           )}
           <small
