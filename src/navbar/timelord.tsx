@@ -11,6 +11,8 @@ const SILENCE_WARN_SECS = 5;
 
 export function Timelord() {
   async function getSource() {
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE)
+      return { id: -1, name: "Unknown" };
     let studio = await myradioApiRequest("/selector/studioattime", "GET", null);
 
     const sourceNames = [
@@ -33,6 +35,7 @@ export function Timelord() {
   }
 
   async function getSilence() {
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) return false;
     let silence = await myradioApiRequest("/selector/issilence", "GET", null);
 
     return silence >= SILENCE_WARN_SECS;
