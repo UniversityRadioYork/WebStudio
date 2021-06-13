@@ -99,6 +99,8 @@ const showplan = createSlice({
       state,
       action: PayloadAction<{ channel: Number; planItems: PlanItem[] }>
     ) {
+      // This is used for BAPSicle only to read in individual channels of show plan into the show state from the server.
+      // TODO: Does this need to be this complicated?
       var newItems = state.plan?.filter(
         (item) => item.channel !== action.payload.channel
       );
@@ -263,11 +265,7 @@ export const setItemPlayed = (
   played: boolean
 ): AppThunk => async (dispatch, getState) => {
   // The server handles marking things played
-  // TODO: Add support in BAPSicle for marking things played
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-    if (played) {
-      return;
-    }
     var weight = -1;
     var player = null;
 
@@ -282,13 +280,15 @@ export const setItemPlayed = (
     if (player) {
       sendBAPSicleChannel({
         channel: player,
-        command: "RESETPLAYED",
+        command: "SETPLAYED",
         weight: weight,
+        played: played,
       });
     } else {
       sendBAPSicleChannel({
-        command: "RESETPLAYED",
+        command: "SETPLAYED",
         weight: weight,
+        played: played,
       });
     }
     return;
@@ -448,6 +448,15 @@ export const addItem = (
   timeslotId: number,
   newItemData: TimeslotItem
 ): AppThunk => async (dispatch, getState) => {
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    sendBAPSicleChannel({
+      channel: newItemData.channel,
+      command: "ADD",
+      newItem: newItemData,
+    });
+    return;
+  }
+
   dispatch(showplan.actions.setPlanSaving(true));
   console.log("New Weight: " + newItemData.weight);
   const plan = cloneDeep(getState().showplan.plan!);
@@ -527,18 +536,19 @@ export const addItem = (
             },
           }
         );
-
-        const lastResult = result[result.length - 1]; // this is the add op
-        const newItemId = lastResult.timeslotitemid!;
-
-        newItemData.timeslotitemid = newItemId;
-        dispatch(
-          showplan.actions.replaceGhost({
-            ghostId: "G" + ghostId,
-            newItemData,
-          })
-        );
+        dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+        return;
       }
+      const lastResult = result[result.length - 1]; // this is the add op
+      const newItemId = lastResult.timeslotitemid!;
+
+      newItemData.timeslotitemid = newItemId;
+      dispatch(
+        showplan.actions.replaceGhost({
+          ghostId: "G" + ghostId,
+          newItemData,
+        })
+      );
     } else {
       // Just add it straight to the show plan without updating the server.
       dispatch(showplan.actions.addItem(newItemData));
@@ -551,10 +561,24 @@ export const removeItem = (
   timeslotId: number,
   itemid: string
 ): AppThunk => async (dispatch, getState) => {
-  dispatch(showplan.actions.setPlanSaving(true));
   // This is a simplified version of the second case of moveItem
   const plan = cloneDeep(getState().showplan.plan!);
   const item = plan.find((x) => itemId(x) === itemid)!;
+
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    // Server handles deletion, short circuit.
+    if (item) {
+      sendBAPSicleChannel({
+        channel: item.channel,
+        command: "REMOVE",
+        weight: item.weight,
+      });
+    }
+    return;
+  }
+
+  dispatch(showplan.actions.setPlanSaving(true));
+
   const planColumn = plan
     .filter((x) => x.channel === item.channel)
     .sort((a, b) => a.weight - b.weight);
@@ -578,27 +602,25 @@ export const removeItem = (
       weight: movingItem.weight - 1,
     });
     movingItem.weight -= 1;
+  }
 
-    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      if (getState().settings.saveShowPlanChanges) {
-        const result = await api.updateShowplan(timeslotId, ops);
-        if (!result.every((x) => x.status)) {
-          Sentry.captureException(
-            new Error("Showplan update failure [removeItem]"),
-            {
-              contexts: {
-                updateShowplan: {
-                  ops,
-                  result,
-                },
+  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    if (getState().settings.saveShowPlanChanges) {
+      const result = await api.updateShowplan(timeslotId, ops);
+      if (!result.every((x) => x.status)) {
+        Sentry.captureException(
+          new Error("Showplan update failure [removeItem]"),
+          {
+            contexts: {
+              updateShowplan: {
+                ops,
+                result,
               },
-            }
-          );
-          dispatch(
-            showplan.actions.planSaveError("Failed to update show plan.")
-          );
-          return;
-        }
+            },
+          }
+        );
+        dispatch(showplan.actions.planSaveError("Failed to update show plan."));
+        return;
       }
     }
   }

@@ -289,6 +289,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       instance.emit("pause");
     });
     wavesurfer.on("seek", () => {
+      // This is used to prevent infinite loops when bapsicle tells wavesurfer to change position,
+      // since otherwise it would send an change update back to the bapsicle server again (as if the user seeked intentionally).
       if (instance.ignore_next_seek) {
         instance.ignore_next_seek = false;
       } else {

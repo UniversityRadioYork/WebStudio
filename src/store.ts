@@ -20,7 +20,6 @@ import { bapsicleMiddleware } from "./bapsicle";
 
 import * as Sentry from "@sentry/react";
 
-
 // const ACTION_HISTORY_MAX_SIZE = 20;
 
 // const actionHistory: Array<Action> = [];

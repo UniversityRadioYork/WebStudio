@@ -205,14 +205,13 @@ export function searchForTracks(
       artist,
       title,
     });
-  } else {
-    return myradioApiRequest("/track/search", "GET", {
-      artist,
-      title,
-      limit: 100,
-      digitised: true,
-    });
   }
+  return myradioApiRequest("/track/search", "GET", {
+    artist,
+    title,
+    limit: 100,
+    digitised: true,
+  });
 }
 
 export function getTimeslots(): Promise<Array<Timeslot>> {

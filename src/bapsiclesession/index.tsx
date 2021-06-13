@@ -12,7 +12,7 @@ export function ConnectionDialogue({ error }: { error: String | null }) {
   return (
     <div className="loading-dialogue">
       <div className="logo-container">
-        <img className="logo-big mb-2" src={appLogo} alt="BAPS Logo" />
+        <img className="logo-big-bapsicle mb-2" src={appLogo} alt="BAPS Logo" />
       </div>
 
       <span className="inner">

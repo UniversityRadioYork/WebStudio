@@ -81,6 +81,7 @@ const setTrackIntro = (
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
+  // TODO Move into MixerState
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
     let marker = {
       name: "Intro",

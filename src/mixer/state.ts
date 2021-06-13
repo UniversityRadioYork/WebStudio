@@ -379,6 +379,7 @@ export const setLoadedItemOutro = (
 };
 
 export const seek = (player: number, time_s: number): AppThunk => async () => {
+  // Used only by Bapsicle to update the wavesurfer seek position.
   const playerInstance = await audioEngine.getPlayer(player);
 
   if (playerInstance) {
@@ -426,6 +427,7 @@ export const load = (
   const currentItem = getState().mixer.players[player].loadedItem;
   if (currentItem !== null && itemId(currentItem) === itemId(item)) {
     if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      // In BAPS, another client could have updated the audio markers etc, so we have to still check and update them.
       // The cue/intro/outro point(s) have changed.
       if (
         "cue" in currentItem &&
@@ -567,6 +569,7 @@ export const load = (
       dispatch(mixerState.actions.itemLoadComplete({ player }));
 
       if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        // BAPS server will give these values already on load based on it's own calculation, not wavesurfer's.
         dispatch(
           mixerState.actions.setTimeLength({
             player,
@@ -585,6 +588,7 @@ export const load = (
       const state = getState().mixer.players[player];
 
       if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        // Client doesn't do any audio playing in BAPS.
         if (state.playOnLoad) {
           playerInstance.play();
         }
@@ -603,16 +607,18 @@ export const load = (
     });
 
     if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      // If user manually seeks on the waveform, just direct that to the webserver.
       playerInstance.on("timeChangeSeek", (time) => {
-        if (
-          Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
-        ) {
-          sendBAPSicleChannel({
-            channel: player,
-            command: "SEEK",
-            time: time,
-          });
-        }
+        // Limit
+        //if (
+        //  Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
+        //) {
+        sendBAPSicleChannel({
+          channel: player,
+          command: "SEEK",
+          time: time,
+        });
+        //}
       });
     } else {
       playerInstance.on("play", () => {
@@ -1261,10 +1267,40 @@ export const mixerKeyboardShortcutsMiddleware: Middleware<
     store.dispatch(handleKeyboardShortcut(store, 2, "STOP"));
   });
 
-  Keys("x", () => {
-    const state = store.getState().mixer.mic;
-    store.dispatch(setMicVolume(state.volume === 1 ? "off" : "full"));
-  });
+  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    Keys("a", () => {
+      store.dispatch(setVolume(0, "off"));
+    });
+    Keys("s", () => {
+      store.dispatch(setVolume(0, "bed"));
+    });
+    Keys("d", () => {
+      store.dispatch(setVolume(0, "full"));
+    });
+    Keys("f", () => {
+      store.dispatch(setVolume(1, "off"));
+    });
+    Keys("g", () => {
+      store.dispatch(setVolume(1, "bed"));
+    });
+    Keys("h", () => {
+      store.dispatch(setVolume(1, "full"));
+    });
+    Keys("j", () => {
+      store.dispatch(setVolume(2, "off"));
+    });
+    Keys("k", () => {
+      store.dispatch(setVolume(2, "bed"));
+    });
+    Keys("l", () => {
+      store.dispatch(setVolume(2, "full"));
+    });
+
+    Keys("x", () => {
+      const state = store.getState().mixer.mic;
+      store.dispatch(setMicVolume(state.volume === 1 ? "off" : "full"));
+    });
+  }
 
   return (next) => (action) => next(action);
 };

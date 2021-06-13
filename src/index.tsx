@@ -4,7 +4,6 @@ import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorkerLoader";
 
-
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
 

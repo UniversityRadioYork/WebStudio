@@ -50,8 +50,6 @@ import Modal from "react-modal";
 import { Sidebar } from "./sidebar";
 import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
-import { sendBAPSicleChannel } from "../bapsicle";
-
 function Channel({ id, data }: { id: number; data: PlanItem[] }) {
   return (
     <div className="channel" id={"channel-" + id}>
@@ -112,6 +110,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
 
   useEffect(() => {
     if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      // In BAPS, we'll load in the show plan from a async message from server.
       dispatch(getShowplan(timeslotId));
     }
   }, [dispatch, timeslotId]);
@@ -148,15 +147,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         cue: 0,
         ...data,
       };
-      if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-        sendBAPSicleChannel({
-          channel: newItem.channel,
-          command: "ADD",
-          newItem: newItem,
-        });
-      } else {
-        dispatch(addItem(timeslotId, newItem));
-      }
+      dispatch(addItem(timeslotId, newItem));
       increment(null);
     } else if (result.draggableId[0] === "A") {
       // this is an aux resource
@@ -171,15 +162,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         cue: 0,
         ...data,
       } as any;
-      if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-        sendBAPSicleChannel({
-          channel: newItem.channel,
-          command: "ADD",
-          newItem: newItem,
-        });
-      } else {
-        dispatch(addItem(timeslotId, newItem));
-      }
+      dispatch(addItem(timeslotId, newItem));
       increment(null);
     } else {
       // this is a normal move (ghosts aren't draggable)
@@ -202,28 +185,6 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         focus.blur();
       }
     }
-  }
-
-  async function onCtxRemoveClick(
-    e: any,
-    data: { id: string; column: number; index: number }
-  ) {
-    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      sendBAPSicleChannel({
-        channel: data.column,
-        command: "REMOVE",
-        weight: data.index,
-      });
-    } else {
-      dispatch(removeItem(timeslotId, data.id));
-    }
-  }
-
-  async function onCtxUnPlayedClick(
-    e: any,
-    data: { id: string; column: number; index: number }
-  ) {
-    dispatch(setItemPlayed(data.id.toString(), false, data.column));
   }
 
   // Add support for reloading the show plan from the iFrames.
@@ -275,9 +236,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <FaTrash /> Remove
         </CtxMenuItem>
         <CtxMenuItem
-          onClick={(args) =>
-            dispatch(setItemPlayed((args.props as any).id, false))
-          }
+          onClick={(args) => {
+            dispatch(setItemPlayed((args.props as any).id, false));
+          }}
         >
           <FaCircleNotch /> Mark Unplayed
         </CtxMenuItem>

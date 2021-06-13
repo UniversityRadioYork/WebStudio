@@ -50,8 +50,7 @@ export const Item = memo(function Item({
 
   function triggerClick() {
     if (column > -1) {
-      console.log("Clicking to load:", x);
-
+      // TODO: move this into mixer state if we can.
       if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
         sendBAPSicleChannel({
           channel: column,
