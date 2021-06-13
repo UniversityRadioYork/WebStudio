@@ -50,6 +50,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                 type: raw_planitem.trackId ? "central" : "aux",
                 trackid: raw_planitem.trackId,
                 managedid: raw_planitem.managedId,
+                auxid: raw_planitem.managedId,
                 ...raw_planitem,
               };
               if (bapsicle_state.loaded) {
@@ -116,6 +117,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                 type: raw_planitem.trackId ? "central" : "aux",
                 trackid: raw_planitem.trackId,
                 managedid: raw_planitem.managedId,
+                auxid: raw_planitem.managedId,
                 ...raw_planitem,
               };
               planItem = planItem as PlanItem;
