@@ -4,6 +4,12 @@
 process.env.BABEL_ENV = "development";
 process.env.NODE_ENV = "development";
 
+// If we want BAPS, specify it as the first command line argument.
+var args = process.argv.slice(2); // Remove node start.js
+if (args.length > 0 && args[0] === "baps") {
+  process.env.NODE_ENV = "baps";
+}
+
 // Makes the script crash on unhandled rejections instead of silently
 // ignoring them. In the future, promise rejections that are not handled will
 // terminate the Node.js process with a non-zero exit code.
