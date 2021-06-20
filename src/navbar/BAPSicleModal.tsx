@@ -14,7 +14,7 @@ interface BAPSicleModalProps {
 
 export function BAPSicleModal(props: BAPSicleModalProps) {
   return (
-    <Modal isOpen={props.isOpen} onRequestClose={props.close}>
+    <Modal id="baps-modal" isOpen={props.isOpen} onRequestClose={props.close}>
       <h1 className="d-inline">Menu</h1>
       <Button
         onClick={props.close}
