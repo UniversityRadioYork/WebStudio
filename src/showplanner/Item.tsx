@@ -93,6 +93,27 @@ export const Item = memo(function Item({
     }
   }
 
+  const now = new Date().valueOf();
+  let alreadyPlayedTrack = false,
+    alreadyPlayedArtist = false,
+    alreadyPlayedAlbum = false;
+  if (isTrack(x)) {
+    if (now - (playedTracks.get(x.trackid) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedTrack = true;
+    }
+    if (now - (playedArtists.get(x.artist) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedArtist = true;
+    }
+    if (now - (playedRecordids.get(x.album.recordid) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedAlbum = true;
+    }
+  }
+  const alreadyPlayedClass = alreadyPlayedTrack
+    ? "warn-red"
+    : alreadyPlayedArtist || alreadyPlayedAlbum
+    ? "warn-orange"
+    : "";
+
   function generateTooltipData() {
     let data = [];
     if (partyMode) {
@@ -133,29 +154,15 @@ export const Item = memo(function Item({
           ("channel" in x && x.channel + "/" + x.weight)
       );
     }
+    if (alreadyPlayedTrack) {
+      data.push("Warning: Already played in the last hour!");
+    } else if (alreadyPlayedArtist) {
+      data.push("Warning: Song by same artist played in last hour!");
+    } else if (alreadyPlayedAlbum) {
+      data.push("Warning: Song on same album played in past hour!");
+    }
     return data.join("¬"); // Something obscure to split against.
   }
-
-  const now = new Date().valueOf();
-  let alreadyPlayedTrack = false,
-    alreadyPlayedArtist = false,
-    alreadyPlayedAlbum = false;
-  if (isTrack(x)) {
-    if (now - (playedTracks.get(x.trackid) || 0) < ONE_HOUR_MS) {
-      alreadyPlayedTrack = true;
-    }
-    if (now - (playedArtists.get(x.artist) || 0) < ONE_HOUR_MS) {
-      alreadyPlayedArtist = true;
-    }
-    if (now - (playedRecordids.get(x.album.recordid) || 0) < ONE_HOUR_MS) {
-      alreadyPlayedAlbum = true;
-    }
-  }
-  const alreadyPlayedClass = alreadyPlayedTrack
-    ? "warn-red"
-    : alreadyPlayedArtist || alreadyPlayedAlbum
-    ? "warn-orange"
-    : "";
 
   return (
     <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
