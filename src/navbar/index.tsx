@@ -22,7 +22,7 @@ import "./navbar.scss";
 import { closeAlert } from "./state";
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
-import { getShowplan, setItemPlayed } from "../showplanner/state";
+import { getShowplan, setItemPlayedAt } from "../showplanner/state";
 
 import * as OptionsMenuState from "../optionsMenu/state";
 import { setChannelPFL } from "../mixer/state";
@@ -113,7 +113,9 @@ export function NavBarMyRadio() {
               className="dropdown-item"
               onClick={() =>
                 sessionState.currentTimeslot !== null &&
-                dispatch(setItemPlayed({ itemId: "all", played: false }))
+                dispatch(
+                  setItemPlayedAt({ itemId: "all", playedAt: undefined })
+                )
               }
             >
               Mark All Items Unplayed

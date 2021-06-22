@@ -31,7 +31,7 @@ import {
   moveItem,
   addItem,
   removeItem,
-  setItemPlayed,
+  setItemPlayedAt,
   PlanItemBase,
 } from "./state";
 
@@ -140,7 +140,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
-        played: false,
+        playedAt: undefined,
         cue: 0,
         ...data,
       };
@@ -234,7 +234,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         <CtxMenuItem
           onClick={(args) =>
             dispatch(
-              setItemPlayed({ itemId: (args.props as any).id, played: false })
+              setItemPlayedAt({
+                itemId: (args.props as any).id,
+                playedAt: undefined,
+              })
             )
           }
         >
@@ -243,7 +246,10 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         <CtxMenuItem
           onClick={(args) =>
             dispatch(
-              setItemPlayed({ itemId: (args.props as any).id, played: true })
+              setItemPlayedAt({
+                itemId: (args.props as any).id,
+                playedAt: new Date().valueOf(),
+              })
             )
           }
         >
