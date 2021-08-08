@@ -267,7 +267,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
                   (args.props as any).trackid
               );
             } else {
-              alert("Sorry, editing tracks is only possible right now.");
+              alert("Sorry, only editing tracks is possible right now");
             }
           }}
         >
