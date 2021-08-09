@@ -24,7 +24,7 @@ export function Timelord() {
     ];
 
     let sourceName = "Unknown";
-    if (studio > 0 && studio < sourceNames.length) {
+    if (studio > 0 && studio <= sourceNames.length) {
       sourceName = sourceNames[studio - 1];
     }
 
