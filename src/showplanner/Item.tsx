@@ -1,5 +1,11 @@
 import React, { memo } from "react";
-import { PlanItem, itemId, isTrack, isAux } from "./state";
+import {
+  PlanItem,
+  itemId,
+  isTrack,
+  isAux,
+  selPlayedTrackAggregates,
+} from "./state";
 import { Track, AuxItem } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
@@ -13,6 +19,8 @@ import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
 export const TS_ITEM_AUX_ID = "AuxMenu";
+
+const ONE_HOUR_MS = 1000 * 60 * 60;
 
 export const Item = memo(function Item({
   item: x,
@@ -43,7 +51,13 @@ export const Item = memo(function Item({
 
   const partyMode = useSelector((state: RootState) => state.settings.partyMode);
   const showName =
-    !partyMode || column > 2 || !isTrack(x) || ("played" in x && x.played);
+    !partyMode || column > 2 || !isTrack(x) || ("playedAt" in x && x.playedAt);
+
+  const {
+    artists: playedArtists,
+    recordIds: playedRecordids,
+    trackIds: playedTracks,
+  } = useSelector(selPlayedTrackAggregates)!;
 
   function triggerClick() {
     if (column > -1) {
@@ -79,6 +93,27 @@ export const Item = memo(function Item({
     }
   }
 
+  const now = new Date().valueOf();
+  let alreadyPlayedTrack = false,
+    alreadyPlayedArtist = false,
+    alreadyPlayedAlbum = false;
+  if (isTrack(x)) {
+    if (now - (playedTracks.get(x.trackid) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedTrack = true;
+    }
+    if (now - (playedArtists.get(x.artist) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedArtist = true;
+    }
+    if (now - (playedRecordids.get(x.album.recordid) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedAlbum = true;
+    }
+  }
+  const alreadyPlayedClass = alreadyPlayedTrack
+    ? "warn-red"
+    : alreadyPlayedArtist || alreadyPlayedAlbum
+    ? "warn-orange"
+    : "";
+
   function generateTooltipData() {
     let data = [];
     if (partyMode) {
@@ -105,7 +140,9 @@ export const Item = memo(function Item({
           (outroSecs > 60 ? secToHHMM(outroSecs) : outroSecs + " secs")
       );
     }
-    data.push("Played: " + ("played" in x ? (x.played ? "Yes" : "No") : "No"));
+    data.push(
+      "Played: " + ("playedAt" in x ? (x.playedAt ? "Yes" : "No") : "No")
+    );
     data.push(
       "ID: " + ("trackid" in x ? x.trackid : "managedid" in x && x.managedid)
     );
@@ -116,6 +153,13 @@ export const Item = memo(function Item({
           " - Channel/weight: " +
           ("channel" in x && x.channel + "/" + x.weight)
       );
+    }
+    if (alreadyPlayedTrack) {
+      data.push("Warning: Already played in the last hour!");
+    } else if (alreadyPlayedArtist) {
+      data.push("Warning: Song by same artist played in last hour!");
+    } else if (alreadyPlayedAlbum) {
+      data.push("Warning: Song on same album played in past hour!");
     }
     return data.join("¬"); // Something obscure to split against.
   }
@@ -129,7 +173,7 @@ export const Item = memo(function Item({
           data-itemid={id}
           className={
             "item " +
-            ("played" in x ? (x.played ? "played " : "") : "") +
+            ("playedAt" in x ? (x.playedAt ? "played " : "") : "") +
             x.type +
             `${column >= 0 && isLoaded ? " active" : ""}`
           }
@@ -140,7 +184,7 @@ export const Item = memo(function Item({
           data-tip={generateTooltipData()}
           data-for="track-hover-tooltip"
         >
-          <span className={"icon " + x.type} />
+          <span className={"icon " + x.type + " " + alreadyPlayedClass} />
           &nbsp;
           {showName && (
             <>

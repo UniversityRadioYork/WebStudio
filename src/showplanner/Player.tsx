@@ -26,10 +26,14 @@ import {
   PLAYER_ID_PREVIEW,
 } from "../mixer/audio";
 import { useBeforeunload } from "react-beforeunload";
+import { selPlayedTrackAggregates } from "../showplanner/state";
+import "./player.scss";
 
 export const USE_REAL_GAIN_VALUE = false;
 
 export const PLAYER_COUNTER_UPDATE_PERIOD_MS = 200;
+
+const ONE_HOUR_MS = 1000 * 60 * 60;
 
 function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
   const store = useStore<RootState, any>();
@@ -225,10 +229,41 @@ function LoadedTrackInfo({ id }: { id: number }) {
     !partyMode ||
     loadedItem === null ||
     !ShowPlanState.isTrack(loadedItem) ||
-    ("played" in loadedItem && loadedItem.played);
+    ("playedAt" in loadedItem && loadedItem.playedAt);
+
+  // TODO: this is a duplicate of the logic in Item.tsx
+  // if this becomes more complicated, we should refactor this
+  const {
+    artists: playedArtists,
+    recordIds: playedRecordids,
+    trackIds: playedTracks,
+  } = useSelector(selPlayedTrackAggregates)!;
+  const now = new Date().valueOf();
+  let alreadyPlayedTrack = false,
+    alreadyPlayedArtist = false,
+    alreadyPlayedAlbum = false;
+  if (loadedItem !== null && ShowPlanState.isTrack(loadedItem)) {
+    if (now - (playedTracks.get(loadedItem.trackid) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedTrack = true;
+    }
+    if (now - (playedArtists.get(loadedItem.artist) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedArtist = true;
+    }
+    if (
+      now - (playedRecordids.get(loadedItem.album.recordid) || 0) <
+      ONE_HOUR_MS
+    ) {
+      alreadyPlayedAlbum = true;
+    }
+  }
+  const alreadyPlayedClass = alreadyPlayedTrack
+    ? "warn-red"
+    : alreadyPlayedArtist || alreadyPlayedAlbum
+    ? "warn-orange"
+    : "";
 
   return (
-    <span className="card-title">
+    <span className={"card-title " + alreadyPlayedClass}>
       <strong>
         {loadedItem !== null && loading === -1
           ? showName
@@ -308,7 +343,7 @@ export function Player({
   plan?.forEach((pItem) => {
     if (pItem.channel === id) {
       channelDuration += HHMMTosec(pItem.length);
-      if (!pItem.played) {
+      if (!pItem.playedAt) {
         channelUnplayed += HHMMTosec(pItem.length);
       }
     }
