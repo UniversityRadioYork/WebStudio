@@ -26,7 +26,7 @@ import { BAPSicleModal } from "./BAPSicleModal";
 
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
-import { getShowplan, setItemPlayed } from "../showplanner/state";
+import { getShowplan, setItemPlayedAt } from "../showplanner/state";
 
 import * as OptionsMenuState from "../optionsMenu/state";
 import { setChannelPFL } from "../mixer/state";
@@ -117,7 +117,7 @@ export function NavBarMyRadio() {
               className="dropdown-item"
               onClick={() =>
                 sessionState.currentTimeslot !== null &&
-                dispatch(setItemPlayed("all", false))
+                dispatch(setItemPlayedAt("all", undefined))
               }
             >
               Mark All Items Unplayed

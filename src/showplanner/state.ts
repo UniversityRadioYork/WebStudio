@@ -1,12 +1,13 @@
 import { TimeslotItem, Track, AuxItem } from "../api";
 import * as api from "../api";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, createSelector } from "@reduxjs/toolkit";
 import { AppThunk } from "../store";
 import { cloneDeep } from "lodash";
 
 import { sendBAPSicleChannel } from "../bapsicle";
 
 import * as Sentry from "@sentry/react";
+import { RootState } from "../rootReducer";
 
 export interface ItemGhost {
   type: "ghost";
@@ -23,8 +24,9 @@ export interface ItemGhost {
 }
 
 export interface PlanItemBase {
+  playedAt?: number;
   played?: boolean;
-  play_count?: number;
+  playCount?: number;
 }
 export type PlanItem = (TimeslotItem | ItemGhost) & PlanItemBase;
 
@@ -208,14 +210,14 @@ const showplan = createSlice({
       });
     },
     // Set the item as being played/unplayed in this session.
-    setItemPlayed(
+    setItemPlayedAt(
       state,
-      action: PayloadAction<{ itemId: string; played: boolean }>
+      action: PayloadAction<{ itemId: string; playedAt: number | undefined }>
     ) {
       // Used for the nav menu
       if (action.payload.itemId === "all") {
         state.plan!.forEach((x) => {
-          x.played = action.payload.played;
+          x.playedAt = action.payload.playedAt;
         });
         return;
       }
@@ -224,7 +226,7 @@ const showplan = createSlice({
       );
 
       if (idx > -1) {
-        state.plan![idx].played = action.payload.played;
+        state.plan![idx].playedAt = action.payload.playedAt;
       }
       // If we don't find an index, it's because the item has been deleted, just ignore.
     },
@@ -260,9 +262,9 @@ export const {
   getShowplanSuccessChannel,
 } = showplan.actions;
 
-export const setItemPlayed = (
+export const setItemPlayedAt = (
   itemid: string,
-  played: boolean
+  playedAt: number | undefined
 ): AppThunk => async (dispatch, getState) => {
   // The server handles marking things played
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
@@ -280,18 +282,20 @@ export const setItemPlayed = (
     if (player) {
       sendBAPSicleChannel({
         channel: player,
-        command: played ? "SETPLAYED" : "RESETPLAYED",
+        command: playedAt ? "SETPLAYED" : "RESETPLAYED",
         weight: weight,
       });
     } else {
       sendBAPSicleChannel({
-        command: played ? "SETPLAYED" : "RESETPLAYED",
+        command: playedAt ? "SETPLAYED" : "RESETPLAYED",
         weight: weight,
       });
     }
     return;
   }
-  dispatch(showplan.actions.setItemPlayed({ itemId: itemid, played: played }));
+  dispatch(
+    showplan.actions.setItemPlayedAt({ itemId: itemid, playedAt: playedAt })
+  );
 };
 
 export const moveItem = (
@@ -707,3 +711,34 @@ export const getPlaylists = (): AppThunk => async (dispatch) => {
     console.error(e);
   }
 };
+
+export const selPlayedTrackAggregates = createSelector(
+  (state: RootState) => state.showplan.plan,
+  (plan) => {
+    if (!plan) {
+      return null;
+    }
+    const trackIds = new Map<number, number>();
+    const artists = new Map<string, number>();
+    const recordIds = new Map<number, number>();
+    plan
+      // Do not be tempted to make this a selector of its own!
+      // It'll mean that this selector reruns every time the state is updated,
+      // even if the plan doesn't change.
+      .filter((x) => typeof x.playedAt !== "undefined")
+      .forEach((item) => {
+        if ("trackid" in item) {
+          trackIds.set(item.trackid, item.playedAt!);
+          artists.set(item.artist, item.playedAt!);
+          if ("album" in item) {
+            recordIds.set(item.album.recordid, item.playedAt!);
+          }
+        }
+      });
+    return {
+      trackIds,
+      artists,
+      recordIds,
+    } as const;
+  }
+);

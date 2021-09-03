@@ -114,6 +114,8 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
                 timeslotitemid: String(raw_planitem.timeslotItemId),
                 channel: message.channel,
                 played: false,
+                playedAt: raw_planitem.played_at,
+                playCount: raw_planitem.play_count,
                 type: raw_planitem.trackId ? "central" : "aux",
                 trackid: raw_planitem.trackId,
                 managedid: raw_planitem.managedId,

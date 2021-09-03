@@ -7,7 +7,7 @@ import {
 } from "@reduxjs/toolkit";
 import fetchProgress, { FetchProgressData } from "fetch-progress";
 import Between from "between.js";
-import { itemId, PlanItem, setItemPlayed } from "../showplanner/state";
+import { itemId, PlanItem, setItemPlayedAt } from "../showplanner/state";
 import * as BroadcastState from "../broadcast/state";
 import Keys from "keymaster";
 import { Track, MYRADIO_NON_API_BASE, AuxItem } from "../api";
@@ -624,7 +624,7 @@ export const load = (
         const state = getState().mixer.players[player];
         // Don't set played on Preview Channel
         if (state.loadedItem != null && player !== PLAYER_ID_PREVIEW) {
-          dispatch(setItemPlayed(itemId(state.loadedItem), true));
+          setItemPlayedAt(itemId(state.loadedItem), new Date().valueOf());
         }
       });
       playerInstance.on("pause", () => {

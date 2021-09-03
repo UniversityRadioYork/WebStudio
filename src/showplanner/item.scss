@@ -39,5 +39,12 @@
     &.ghost {
       background-color: gray;
     }
+
+    &.warn-red {
+      background-color: #ed4040;
+    }
+    &.warn-orange {
+      background-color: #ed9640;
+    }
   }
 }

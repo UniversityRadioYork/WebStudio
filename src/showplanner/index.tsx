@@ -31,7 +31,7 @@ import {
   moveItem,
   addItem,
   removeItem,
-  setItemPlayed,
+  setItemPlayedAt,
   PlanItemBase,
 } from "./state";
 
@@ -143,7 +143,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         timeslotitemid: "I" + insertIndex,
         channel: parseInt(result.destination.droppableId, 10),
         weight: result.destination.index,
-        played: false,
+        playedAt: undefined,
         cue: 0,
         ...data,
       };
@@ -236,15 +236,17 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           <FaTrash /> Remove
         </CtxMenuItem>
         <CtxMenuItem
-          onClick={(args) => {
-            dispatch(setItemPlayed((args.props as any).id, false));
-          }}
+          onClick={(args) =>
+            dispatch(setItemPlayedAt((args.props as any).id, undefined))
+          }
         >
           <FaCircleNotch /> Mark Unplayed
         </CtxMenuItem>
         <CtxMenuItem
           onClick={(args) =>
-            dispatch(setItemPlayed((args.props as any).id, true))
+            dispatch(
+              setItemPlayedAt((args.props as any).id, new Date().valueOf())
+            )
           }
         >
           <FaCircle /> Mark Played
@@ -269,7 +271,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
                   (args.props as any).trackid
               );
             } else {
-              alert("Sorry, editing tracks is only possible right now.");
+              alert("Sorry, only editing tracks is possible right now");
             }
           }}
         >
