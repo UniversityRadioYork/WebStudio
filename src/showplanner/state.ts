@@ -280,15 +280,13 @@ export const setItemPlayed = (
     if (player) {
       sendBAPSicleChannel({
         channel: player,
-        command: "SETPLAYED",
+        command: played ? "SETPLAYED" : "RESETPLAYED",
         weight: weight,
-        played: played,
       });
     } else {
       sendBAPSicleChannel({
-        command: "SETPLAYED",
+        command: played ? "SETPLAYED" : "RESETPLAYED",
         weight: weight,
-        played: played,
       });
     }
     return;
