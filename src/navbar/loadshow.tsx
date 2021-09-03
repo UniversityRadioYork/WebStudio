@@ -74,7 +74,7 @@ export function LoadShowDialogue({ close }: { close: () => any }) {
                 className="btn btn-outline-primary float-right"
                 onClick={() => {
                   sendBAPSicleChannel({
-                    command: "GET_PLAN",
+                    command: "GETPLAN",
                     timeslotId: item.timeslot_id,
                   });
                 }}
