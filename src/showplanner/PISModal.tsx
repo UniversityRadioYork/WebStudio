@@ -46,16 +46,8 @@ function PersistNotice() {
       <div className="p-2 alert-primary">
         <h2>Welcome to WebStudio {process.env.REACT_APP_VERSION}!</h2>
         <p>
-          As of this version,{" "}
-          <strong>
-            changes to your show plan will be saved automatically.
-          </strong>
-          &nbsp; You no longer need to use Show Planner to save changes to your
-          show.
-        </p>
-        <p>
-          If you encounter any issues with saving changes, please let the
-          Computing Team know in #computing on URY Slack. Thanks, and have fun!
+          If you encounter any issues with WebStudio, please let the Computing
+          Team know in #computing on URY Slack. Thanks, and have fun!
         </p>
       </div>
       <hr />
