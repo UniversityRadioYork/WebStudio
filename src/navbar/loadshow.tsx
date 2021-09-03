@@ -37,34 +37,31 @@ export function LoadShowDialogue({ close }: { close: () => any }) {
   }, [state]);
   return (
     <>
+      <div
+        className="btn btn-outline-danger outline float-right"
+        onClick={() => {
+          sendBAPSicleChannel({
+            command: "CLEAR",
+          });
+          close();
+        }}
+      >
+        <FaTrashAlt size={15} /> Clear All Channels
+      </div>
+      <div
+        className="btn btn-outline-dark outline float-right mr-1"
+        onClick={() => {
+          sendBAPSicleChannel({
+            command: "RESETPLAYED",
+            weight: -1,
+          });
+        }}
+      >
+        <FaCircleNotch size={15} /> Mark All Unplayed
+      </div>
+
+      <h2>Load Show</h2>
       <ResultsPlaceholder state={state} />
-      {state !== "searching" && (
-        <>
-          <div
-            className="btn btn-outline-danger outline float-right"
-            onClick={() => {
-              sendBAPSicleChannel({
-                command: "CLEAR",
-              });
-              close();
-            }}
-          >
-            <FaTrashAlt size={15} /> Clear All Channels
-          </div>
-          <div
-            className="btn btn-outline-dark outline float-right mr-1"
-            onClick={() => {
-              sendBAPSicleChannel({
-                command: "RESETPLAYED",
-                weight: -1,
-              });
-            }}
-          >
-            <FaCircleNotch size={15} /> Mark All Unplayed
-          </div>
-          <h2>Load Show</h2>
-        </>
-      )}
 
       <div className="loadshow-list">
         {items.map((item, index) => (
