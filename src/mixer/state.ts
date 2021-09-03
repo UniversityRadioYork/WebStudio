@@ -609,16 +609,11 @@ export const load = (
     if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
       // If user manually seeks on the waveform, just direct that to the webserver.
       playerInstance.on("timeChangeSeek", (time) => {
-        // Limit
-        //if (
-        //  Math.abs(time - getState().mixer.players[player].timeCurrent) > 0.5
-        //) {
         sendBAPSicleChannel({
           channel: player,
           command: "SEEK",
           time: time,
         });
-        //}
       });
     } else {
       playerInstance.on("play", () => {
@@ -804,7 +799,9 @@ export const unpause = (player: number): AppThunk => (dispatch, getState) => {
     return;
   }
 
-  // TODO: WEBSTUDIO PAUSE
+  if (!audioEngine.players[player]?.isPlaying) {
+    audioEngine.players[player]?.play();
+  }
 };
 
 export const stop = (player: number): AppThunk => (dispatch, getState) => {
