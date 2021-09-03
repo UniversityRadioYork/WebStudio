@@ -249,15 +249,17 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         >
           <FaCircle /> Mark Played
         </CtxMenuItem>
-        <CtxMenuItem
-          onClick={(args) => {
-            dispatch(
-              MixerState.load(PLAYER_ID_PREVIEW, (args.props as any).item)
-            );
-          }}
-        >
-          <FaHeadphonesAlt /> Preview with PFL
-        </CtxMenuItem>
+        {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+          <CtxMenuItem
+            onClick={(args) => {
+              dispatch(
+                MixerState.load(PLAYER_ID_PREVIEW, (args.props as any).item)
+              );
+            }}
+          >
+            <FaHeadphonesAlt /> Preview with PFL
+          </CtxMenuItem>
+        )}
         <CtxMenuItem
           onClick={(args) => {
             if ("trackid" in (args.props as any)) {
