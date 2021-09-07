@@ -3,8 +3,6 @@ import Modal from "react-modal";
 import { getLatestNewsItem, NewsEntry } from "../api";
 import { Button } from "reactstrap";
 import { FaTimes } from "react-icons/fa";
-import { RootState } from "../rootReducer";
-import { useSelector } from "react-redux";
 
 function DevWarning() {
   if (process.env.REACT_APP_PRODUCTION === "true") {
@@ -25,30 +23,6 @@ function DevWarning() {
         <br />
         For the latest and greatest tested WebStudio, go to{" "}
         <a href={wsUrl}>{wsUrl}</a>.
-      </div>
-      <hr />
-    </>
-  );
-}
-
-function PersistNotice() {
-  const stateVersion = useSelector(
-    (state: RootState) => state._persist.version
-  );
-  const saving = useSelector(
-    (state: RootState) => state.settings.saveShowPlanChanges
-  );
-  if (stateVersion !== 0 || !saving) {
-    return null;
-  }
-  return (
-    <>
-      <div className="p-2 alert-primary">
-        <h2>Welcome to WebStudio {process.env.REACT_APP_VERSION}!</h2>
-        <p>
-          If you encounter any issues with WebStudio, please let the Computing
-          Team know in #computing on URY Slack. Thanks, and have fun!
-        </p>
       </div>
       <hr />
     </>
@@ -93,7 +67,6 @@ export function PisModal({
       </Button>
       <hr className="mt-1 mb-3" />
       <DevWarning />
-      <PersistNotice />
       {(news === "loading" || news === "not_loaded") && (
         <p>Loading the news...</p>
       )}
