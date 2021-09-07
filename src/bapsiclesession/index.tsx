@@ -53,7 +53,7 @@ const SessionHandler: React.FC = function() {
 
   switch (connectionState) {
     case "CONNECTED":
-      return <Showplanner timeslotId={-1} />;
+      return <Showplanner timeslotId={null} />;
     case "CONNECTING":
       return <ConnectionDialogue error={null} />;
     case "FAILED":

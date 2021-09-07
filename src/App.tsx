@@ -37,7 +37,7 @@ const App: React.FC = () => {
     if (bapsConnectionState !== "CONNECTED") {
       return <BAPSSessionHandler />;
     } else {
-      return <Showplanner timeslotId={-1} />;
+      return <Showplanner timeslotId={null} />;
     }
   }
 

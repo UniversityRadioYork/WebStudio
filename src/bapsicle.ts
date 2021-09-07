@@ -105,6 +105,7 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             if (!("show_plan" in message.data)) {
               console.error("Show plan data missing from status");
               console.error(message.data);
+              return;
             }
             // Update the list of plan items
             var raw_planitems: [any] = message.data.show_plan;
