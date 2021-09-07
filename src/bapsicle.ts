@@ -151,6 +151,11 @@ export function sendBAPSicleChannel(message: any): void {
     message = JSON.stringify(message);
     console.log("Sending message to BAPSicle:", message);
     BAPSicleWS.send(message);
+  } else {
+    console.warn(
+      "Trying to send message without BAPSicle WS connection:",
+      message
+    );
   }
 }
 
