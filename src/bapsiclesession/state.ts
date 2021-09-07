@@ -39,6 +39,11 @@ const sessionState = createSlice({
     ) {
       state.connectionState = action.payload;
     },
+    setServerName(state, action: PayloadAction<string>) {
+      if (state.currentServer) {
+        state.currentServer.name = action.payload;
+      }
+    },
     getState(state) {
       return state;
     },
@@ -47,7 +52,7 @@ const sessionState = createSlice({
 
 export default sessionState.reducer;
 
-export const { setServerState } = sessionState.actions;
+export const { setServerState, setServerName } = sessionState.actions;
 
 export const getCurrentServer = (): AppThunk => async (dispatch, getState) => {
   return getState().bapsSession.currentServer;

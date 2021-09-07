@@ -166,7 +166,15 @@ export function NavBarMyRadio() {
 
 export function NavBarMain() {
   const [showBAPSicleModal, setShowBAPSicleModal] = useState(true);
+  const sessionServer = useSelector((state: RootState) => state.bapsSession);
   if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    const server = sessionServer.currentServer;
+    if (!server) {
+      throw new Error(
+        "Trying to render navbar without BAPSicle server connection."
+      );
+    }
+    const url = `${server.ui_protocol}://${server.hostname}:${server.ui_port}`;
     return (
       <>
         <ul className="nav navbar-nav navbar-left">
@@ -174,6 +182,16 @@ export function NavBarMain() {
         </ul>
 
         <ul className="nav navbar-nav navbar-right mr-0 pr-0">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open server settings."
+            className="btn pt-2 pb-2 nav-item nav-link"
+            style={{ color: "white" }}
+          >
+            <b>{sessionServer.currentServer?.name}</b>
+          </a>
           <li
             className="btn btn-outline-light rounded-0 pt-2 pb-2 nav-item nav-link"
             style={{ color: "white" }}

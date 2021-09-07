@@ -133,10 +133,9 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             );
         }
       } else if ("message" in message) {
+        // BAPSicle says hello with it's server name.
         if (message.message === "Hello") {
-          //store.dispatch(
-          //  connection.actions.setServerState(message.serverName)
-          //);
+          store.dispatch(SessionState.setServerName(message.serverName));
         }
       } else {
         console.log("Unhandled: ", message);
