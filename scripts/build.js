@@ -7,7 +7,7 @@ process.env.NODE_ENV = "production";
 // If we want BAPS, specify it as the first command line argument.
 var args = process.argv.slice(2); // Remove node start.js
 if (args.length > 0 && args[0] === "baps") {
-  process.env.NODE_ENV = "baps";
+  process.env.NODE_ENV = "baps-production";
 }
 
 // Makes the script crash on unhandled rejections instead of silently

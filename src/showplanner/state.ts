@@ -102,7 +102,6 @@ const showplan = createSlice({
       action: PayloadAction<{ channel: Number; planItems: PlanItem[] }>
     ) {
       // This is used for BAPSicle only to read in individual channels of show plan into the show state from the server.
-      // TODO: Does this need to be this complicated?
       var newItems = state.plan?.filter(
         (item) => item.channel !== action.payload.channel
       );

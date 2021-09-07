@@ -475,31 +475,33 @@ export const load = (
 
   let url;
 
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let server = getState().bapsSession.currentServer;
+
+    if (!server) {
+      throw new Error(
+        "Trying to load audio file without BAPSicle server connection."
+      );
+    }
+    // If bapsicle, override the Myradio.
+    url = `${server.ui_protocol}://${server.hostname}:${server.ui_port}`;
+  } else {
+    url = MYRADIO_NON_API_BASE;
+  }
+
   if (item.type === "central") {
     // track
 
     if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      url =
-        "http://" +
-        getState().bapsSession.currentServer?.hostname +
-        ":13500/audiofile/track/" +
-        item.trackid;
+      url += "/audiofile/track/" + item.trackid;
     } else {
-      url =
-        MYRADIO_NON_API_BASE + "/NIPSWeb/secure_play?trackid=" + item.trackid;
+      url += "/NIPSWeb/secure_play?trackid=" + item.trackid;
     }
   } else if ("managedid" in item) {
     if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      url =
-        "http://" +
-        getState().bapsSession.currentServer?.hostname +
-        ":13500/audiofile/managed/" +
-        item.managedid;
+      url += "/audiofile/managed/" + item.managedid;
     } else {
-      url =
-        MYRADIO_NON_API_BASE +
-        "/NIPSWeb/managed_play?managedid=" +
-        item.managedid;
+      url += "/NIPSWeb/managed_play?managedid=" + item.managedid;
     }
   } else {
     throw new Error(
@@ -511,7 +513,7 @@ export const load = (
 
   let waveform = document.getElementById("waveform-" + player.toString());
   if (waveform == null) {
-    throw new Error();
+    throw new Error("No waveform element found for player.");
   }
   audioEngine.destroyPlayerIfExists(player); // clear previous (ghost) wavesurfer and it's media elements.
   // wavesurfer also sets the background white, remove for progress bar to work.

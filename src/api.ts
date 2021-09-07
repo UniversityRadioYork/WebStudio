@@ -60,11 +60,13 @@ export async function bapsicleApiRequest(
   method: "GET" | "POST" | "PUT",
   params: any
 ): Promise<any> {
-  const res = await apiRequest(
-    "http://" + window.location.hostname + ":13500" + endpoint,
-    method,
-    params
-  );
+  let server = store.getState().bapsSession.currentServer;
+
+  if (!server) {
+    throw new Error("Trying to call BAPSicle server without connection.");
+  }
+  const url = `${server.ui_protocol}://${server.hostname}:${server.ui_port}${endpoint}`;
+  const res = await apiRequest(url, method, params);
   const json = await res.json();
   return json;
 }

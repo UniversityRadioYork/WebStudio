@@ -5,7 +5,9 @@ import { connectBAPSicle } from "../bapsicle";
 
 interface bapsServer {
   hostname: String | null;
-  port: Number | null;
+  ui_port: Number | null;
+  ui_protocol: String | null;
+  ws_port: Number | null;
   name: String | null;
 }
 
@@ -52,12 +54,24 @@ export const getCurrentServer = (): AppThunk => async (dispatch, getState) => {
 };
 
 export const getServer = (): AppThunk => async (dispatch) => {
-  // TODO Server Details Configurable
+  // Since BAPS Presenter is served by the BAPSicle web server, use the current window path unless custom defined.
   let bapsServer: bapsServer = {
-    hostname: window.location.hostname,
-    port: 13501,
+    hostname: process.env.REACT_APP_BAPSICLE_HOST
+      ? process.env.REACT_APP_BAPSICLE_HOST
+      : window.location.hostname,
+    ws_port: process.env.REACT_APP_WEBSOCKET_PORT
+      ? parseInt(process.env.REACT_APP_WEBSOCKET_PORT)
+      : 13501,
+    ui_protocol: process.env.REACT_APP_BAPSICLE_PROTOCOL
+      ? process.env.REACT_APP_BAPSICLE_PROTOCOL
+      : "http",
+    ui_port: process.env.REACT_APP_BAPSICLE_PORT
+      ? parseInt(process.env.REACT_APP_BAPSICLE_PORT)
+      : parseInt(window.location.port),
     name: "Connecting...",
   };
   dispatch(sessionState.actions.setCurrentServer({ server: bapsServer }));
-  dispatch(connectBAPSicle("ws://" + window.location.hostname + ":13501"));
+  dispatch(
+    connectBAPSicle("ws://" + bapsServer.hostname + ":" + bapsServer.ws_port)
+  );
 };
