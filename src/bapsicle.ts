@@ -112,18 +112,12 @@ export const bapsicleMiddleware: Middleware<{}, RootState, Dispatch<any>> = (
             var planItems: Array<PlanItem> = [];
             raw_planitems.forEach((raw_planitem) => {
               var planItem: PlanItem = {
-                timeslotitemid: String(raw_planitem.timeslotItemId),
+                ...raw_planitem,
                 channel: message.channel,
-                played: false,
                 playedAt: raw_planitem.played_at,
                 playCount: raw_planitem.play_count,
-                type: raw_planitem.trackId ? "central" : "aux",
-                trackid: raw_planitem.trackId,
-                managedid: raw_planitem.managedId,
-                auxid: raw_planitem.managedId,
-                ...raw_planitem,
+                type: raw_planitem.trackid ? "central" : "aux",
               };
-              planItem = planItem as PlanItem;
               planItems.push(planItem);
             });
             store.dispatch(
