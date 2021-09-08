@@ -14,6 +14,9 @@ import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { contextMenu } from "react-contexify";
 import "./item.scss";
+
+import { sendBAPSicleChannel } from "../bapsicle";
+
 import { HHMMTosec, secToHHMM } from "../lib/utils";
 import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
@@ -61,6 +64,15 @@ export const Item = memo(function Item({
 
   function triggerClick() {
     if (column > -1) {
+      // TODO: move this into mixer state if we can.
+      if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        sendBAPSicleChannel({
+          channel: column,
+          command: "LOAD",
+          weight: index,
+        });
+        return;
+      }
       dispatch(MixerState.load(column, x));
     }
   }
@@ -104,7 +116,10 @@ export const Item = memo(function Item({
     if (now - (playedArtists.get(x.artist) || 0) < ONE_HOUR_MS) {
       alreadyPlayedArtist = true;
     }
-    if (now - (playedRecordids.get(x.album.recordid) || 0) < ONE_HOUR_MS) {
+    if (
+      "album" in x &&
+      now - (playedRecordids.get(x.album.recordid) || 0) < ONE_HOUR_MS
+    ) {
       alreadyPlayedAlbum = true;
     }
   }
@@ -121,7 +136,7 @@ export const Item = memo(function Item({
     } else {
       data.push("Title: " + x.title.toString());
 
-      if ("artist" in x && x.artist !== "") data.push("Artist: " + x.artist);
+      if ("artist" in x && x.artist) data.push("Artist: " + x.artist);
       if ("album" in x && x.album.title !== "")
         data.push("Album: " + x.album.title);
     }
@@ -140,9 +155,13 @@ export const Item = memo(function Item({
           (outroSecs > 60 ? secToHHMM(outroSecs) : outroSecs + " secs")
       );
     }
-    data.push(
-      "Played: " + ("playedAt" in x ? (x.playedAt ? "Yes" : "No") : "No")
-    );
+    if ("playCount" in x) {
+      data.push("Played: " + x.playCount + " times");
+    } else {
+      data.push(
+        "Played: " + ("playedAt" in x ? (x.playedAt ? "Yes" : "No") : "No")
+      );
+    }
     data.push(
       "ID: " + ("trackid" in x ? x.trackid : "managedid" in x && x.managedid)
     );
@@ -164,8 +183,13 @@ export const Item = memo(function Item({
     return data.join("¬"); // Something obscure to split against.
   }
 
+  let isDragDisabled = isGhost;
+
+  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    isDragDisabled = isDragDisabled || isLoaded;
+  }
   return (
-    <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
+    <Draggable draggableId={id} index={index} isDragDisabled={isDragDisabled}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -186,10 +210,15 @@ export const Item = memo(function Item({
         >
           <span className={"icon " + x.type + " " + alreadyPlayedClass} />
           &nbsp;
+          {"playCount" in x && (
+            <>
+              <code>{x.playCount}</code>&nbsp;
+            </>
+          )}
           {showName && (
             <>
               {x.title.toString()}
-              {"artist" in x && x.artist !== "" && " - " + x.artist}
+              {"artist" in x && x.artist && " - " + x.artist}
             </>
           )}
           <small

@@ -87,7 +87,15 @@ function incrReducer(state: number, action: any) {
   return state + 1;
 }
 
-const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
+const Showplanner: React.FC<{ timeslotId: number | null }> = function({
+  timeslotId,
+}) {
+  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    // In BAPS, we'll load in the show plan from a async message from server.
+    if (!timeslotId) {
+      throw new Error("Trying to load showplan with undefined timeslotid!");
+    }
+  }
   const isShowplan = useSelector(
     (state: RootState) => state.showplan.plan !== null,
     shallowEqual
@@ -109,7 +117,9 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
   useBeforeunload((event) => event.preventDefault());
 
   useEffect(() => {
-    dispatch(getShowplan(timeslotId));
+    if (timeslotId) {
+      dispatch(getShowplan(timeslotId!));
+    }
   }, [dispatch, timeslotId]);
 
   function toggleSidebar() {
@@ -144,7 +154,7 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         cue: 0,
         ...data,
       };
-      dispatch(addItem(timeslotId, newItem));
+      dispatch(addItem(timeslotId!, newItem));
       increment(null);
     } else if (result.draggableId[0] === "A") {
       // this is an aux resource
@@ -159,12 +169,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         cue: 0,
         ...data,
       } as any;
-      dispatch(addItem(timeslotId, newItem));
+      dispatch(addItem(timeslotId!, newItem));
       increment(null);
     } else {
       // this is a normal move (ghosts aren't draggable)
       dispatch(
-        moveItem(timeslotId, result.draggableId, [
+        moveItem(timeslotId!, result.draggableId, [
           parseInt(result.destination.droppableId, 10),
           result.destination.index,
         ])
@@ -196,11 +206,12 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
           dispatch(getShowplan(session.currentTimeslot.timeslot_id));
       }
     }
-
-    window.addEventListener("message", reloadListener);
-    return () => {
-      window.removeEventListener("message", reloadListener);
-    };
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      window.addEventListener("message", reloadListener);
+      return () => {
+        window.removeEventListener("message", reloadListener);
+      };
+    }
   }, [dispatch, session.currentTimeslot]);
 
   if (!isShowplan) {
@@ -226,19 +237,14 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
       <Menu id={TS_ITEM_MENU_ID}>
         <CtxMenuItem
           onClick={(args) =>
-            dispatch(removeItem(timeslotId, (args.props as any).id))
+            dispatch(removeItem(timeslotId!, (args.props as any).id))
           }
         >
           <FaTrash /> Remove
         </CtxMenuItem>
         <CtxMenuItem
           onClick={(args) =>
-            dispatch(
-              setItemPlayedAt({
-                itemId: (args.props as any).id,
-                playedAt: undefined,
-              })
-            )
+            dispatch(setItemPlayedAt((args.props as any).id, undefined))
           }
         >
           <FaCircleNotch /> Mark Unplayed
@@ -246,24 +252,23 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         <CtxMenuItem
           onClick={(args) =>
             dispatch(
-              setItemPlayedAt({
-                itemId: (args.props as any).id,
-                playedAt: new Date().valueOf(),
-              })
+              setItemPlayedAt((args.props as any).id, new Date().valueOf())
             )
           }
         >
           <FaCircle /> Mark Played
         </CtxMenuItem>
-        <CtxMenuItem
-          onClick={(args) => {
-            dispatch(
-              MixerState.load(PLAYER_ID_PREVIEW, (args.props as any).item)
-            );
-          }}
-        >
-          <FaHeadphonesAlt /> Preview with PFL
-        </CtxMenuItem>
+        {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+          <CtxMenuItem
+            onClick={(args) => {
+              dispatch(
+                MixerState.load(PLAYER_ID_PREVIEW, (args.props as any).item)
+              );
+            }}
+          >
+            <FaHeadphonesAlt /> Preview with PFL
+          </CtxMenuItem>
+        )}
         <CtxMenuItem
           onClick={(args) => {
             if ("trackid" in (args.props as any)) {
@@ -302,13 +307,20 @@ const Showplanner: React.FC<{ timeslotId: number }> = function({ timeslotId }) {
         delayShow={300}
         place="bottom"
       />
-      <OptionsMenu />
-      <WelcomeModal
-        isOpen={showWelcomeModal}
-        close={() => setShowWelcomeModal(false)}
-      />
-      <PisModal close={() => setShowPisModal(false)} isOpen={showPisModal} />
-      <MicLiveIndicator />
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <>
+          <OptionsMenu />
+          <WelcomeModal
+            isOpen={showWelcomeModal}
+            close={() => setShowWelcomeModal(false)}
+          />
+          <PisModal
+            close={() => setShowPisModal(false)}
+            isOpen={showPisModal}
+          />
+          <MicLiveIndicator />
+        </>
+      )}
     </div>
   );
 };

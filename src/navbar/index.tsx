@@ -9,6 +9,7 @@ import {
   FaSpinner,
   FaExclamationTriangle,
   FaCog,
+  FaCompactDisc,
   FaHeadphonesAlt,
 } from "react-icons/fa";
 
@@ -18,8 +19,11 @@ import * as BroadcastState from "../broadcast/state";
 import appLogo from "../assets/images/webstudio.svg";
 import myradioLogo from "../assets/images/myradio.svg";
 import { MYRADIO_NON_API_BASE } from "../api";
+
 import "./navbar.scss";
 import { closeAlert } from "./state";
+import { BAPSicleModal } from "./BAPSicleModal";
+
 import { ConnectionStateEnum } from "../broadcast/streamer";
 import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import { getShowplan, setItemPlayedAt } from "../showplanner/state";
@@ -113,9 +117,7 @@ export function NavBarMyRadio() {
               className="dropdown-item"
               onClick={() =>
                 sessionState.currentTimeslot !== null &&
-                dispatch(
-                  setItemPlayedAt({ itemId: "all", playedAt: undefined })
-                )
+                dispatch(setItemPlayedAt("all", undefined))
               }
             >
               Mark All Items Unplayed
@@ -163,6 +165,51 @@ export function NavBarMyRadio() {
 }
 
 export function NavBarMain() {
+  const [showBAPSicleModal, setShowBAPSicleModal] = useState(true);
+  const sessionServer = useSelector((state: RootState) => state.bapsSession);
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    const server = sessionServer.currentServer;
+    if (!server) {
+      throw new Error(
+        "Trying to render navbar without BAPSicle server connection."
+      );
+    }
+    const url = `${server.ui_protocol}://${server.hostname}:${server.ui_port}`;
+    return (
+      <>
+        <ul className="nav navbar-nav navbar-left">
+          <Timelord />
+        </ul>
+
+        <ul className="nav navbar-nav navbar-right mr-0 pr-0">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open server settings."
+            className="btn pt-2 pb-2 nav-item nav-link"
+            style={{ color: "white" }}
+          >
+            <b>{sessionServer.currentServer?.name}</b>
+          </a>
+          <li
+            className="btn btn-outline-light rounded-0 pt-2 pb-2 nav-item nav-link"
+            style={{ color: "white" }}
+            onClick={() => {
+              setShowBAPSicleModal(true);
+            }}
+          >
+            <FaCompactDisc size={16} className="mr-2" />
+            <b>Menu</b>
+          </li>
+        </ul>
+        <BAPSicleModal
+          close={() => setShowBAPSicleModal(false)}
+          isOpen={showBAPSicleModal}
+        />
+      </>
+    );
+  }
   return (
     <>
       <ul className="nav navbar-nav navbar-left">
@@ -388,14 +435,18 @@ export function CombinedNavAlertBar() {
   return (
     <>
       <AlertBar />
-      <header className="navbar navbar-myradio navbar-expand-sm hover-menu p-0 bd-navbar">
-        <span className="hover-label hover-label-hide text-light text-center">
-          Hover for MyRadio Menu
-        </span>
-        <nav className="container-fluid px-0">
-          <NavBarMyRadio />
-        </nav>
-      </header>
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <>
+          <header className="navbar navbar-myradio navbar-expand-sm hover-menu p-0 bd-navbar">
+            <span className="hover-label hover-label-hide text-light text-center">
+              Hover for MyRadio Menu
+            </span>
+            <nav className="container-fluid px-0">
+              <NavBarMyRadio />
+            </nav>
+          </header>
+        </>
+      )}
       <header className="navbar navbar-main navbar-expand-sm p-0 bd-navbar">
         <nav className="container-fluid px-0">
           <NavBarMain />

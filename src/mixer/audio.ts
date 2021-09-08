@@ -36,6 +36,7 @@ const PlayerEmitter: StrictEmitter<
 class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   private volume = 0;
   private trim = 0;
+  private ignore_next_seek: boolean = false;
   private pfl = false;
   private constructor(
     private readonly engine: AudioEngine,
@@ -55,15 +56,21 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   play() {
-    return this.wavesurfer.play();
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      return this.wavesurfer.play();
+    }
   }
 
   pause() {
-    return this.wavesurfer.pause();
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      return this.wavesurfer.pause();
+    }
   }
 
   stop() {
-    return this.wavesurfer.stop();
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      return this.wavesurfer.stop();
+    }
   }
 
   redraw() {
@@ -71,6 +78,18 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
   }
 
   setCurrentTime(secs: number) {
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      // Only trouble wavesurfer if we've actually moved
+      if (
+        secs >= 0 &&
+        this.wavesurfer.getDuration() > 0 &&
+        Math.abs(this.wavesurfer.getCurrentTime() - secs) >= 0.1
+      ) {
+        this.ignore_next_seek = true;
+        this.wavesurfer.setCurrentTime(secs);
+      }
+      return;
+    }
     this.wavesurfer.setCurrentTime(secs);
   }
 
@@ -113,6 +132,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
 
   setOutro(startTime: number) {
     if ("outro" in this.wavesurfer.regions.list) {
+      // Just in case the outro end was incorrect before (possibly 0, so would be at beginning and not work)
+      this.wavesurfer.regions.list.outro.end = this.wavesurfer.getDuration();
       // If the outro is set to 0, we assume that's no outro.
       if (startTime === 0) {
         // Can't just delete the outro, so set it to the end of the track to hide it.
@@ -216,7 +237,10 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
     url: string
   ) {
     // If we want to output to a custom audio device, we're gonna need to do things differently.
-    const customOutput = outputId !== INTERNAL_OUTPUT_ID;
+    let customOutput = false;
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      customOutput = outputId !== INTERNAL_OUTPUT_ID;
+    }
 
     let waveform = document.getElementById("waveform-" + player.toString());
     if (waveform == null) {
@@ -232,7 +256,7 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       backgroundColor: "#FFFFFF",
       progressColor: "#9999FF",
       backend: customOutput ? "MediaElement" : "MediaElementWebAudio",
-      barWidth: 2,
+      barWidth: 1,
       responsive: true,
       xhr: {
         credentials: "include",
@@ -265,6 +289,13 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       instance.emit("pause");
     });
     wavesurfer.on("seek", () => {
+      // This is used to prevent infinite loops when bapsicle tells wavesurfer to change position,
+      // since otherwise it would send an change update back to the bapsicle server again (as if the user seeked intentionally).
+      if (instance.ignore_next_seek) {
+        instance.ignore_next_seek = false;
+      } else {
+        instance.emit("timeChangeSeek", wavesurfer.getCurrentTime());
+      }
       instance.emit("timeChange", wavesurfer.getCurrentTime());
     });
     wavesurfer.on("finish", () => {
