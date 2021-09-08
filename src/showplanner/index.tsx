@@ -117,7 +117,9 @@ const Showplanner: React.FC<{ timeslotId: number | null }> = function({
   useBeforeunload((event) => event.preventDefault());
 
   useEffect(() => {
-    dispatch(getShowplan(timeslotId!));
+    if (timeslotId) {
+      dispatch(getShowplan(timeslotId!));
+    }
   }, [dispatch, timeslotId]);
 
   function toggleSidebar() {
