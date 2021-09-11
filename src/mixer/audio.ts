@@ -4,7 +4,6 @@ import StrictEmitter from "strict-event-emitter-types";
 import WaveSurfer from "wavesurfer.js";
 import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
-import NewsEndCountdown from "../assets/audio/NewsEndCountdown.wav";
 import NewsIntro from "../assets/audio/NewsIntro.wav";
 
 import StereoAnalyserNode from "stereo-analyser-node";
