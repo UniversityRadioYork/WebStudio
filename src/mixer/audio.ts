@@ -9,6 +9,13 @@ import NewsIntro from "../assets/audio/NewsIntro.wav";
 
 import StereoAnalyserNode from "stereo-analyser-node";
 
+let NewsEndCountdown: any;
+let NewsIntro: any;
+if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+  NewsEndCountdown = require("../assets/audio/NewsEndCountdown.wav");
+  NewsIntro = require("../assets/audio/NewsIntro.wav");
+}
+
 export const DEFAULT_TRIM_DB = -6; // The default trim applied to channel players.
 
 export const OFF_LEVEL_DB = -40;
