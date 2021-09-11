@@ -7,8 +7,8 @@ import RegionsPlugin from "wavesurfer.js/dist/plugin/wavesurfer.regions.min.js";
 
 import StereoAnalyserNode from "stereo-analyser-node";
 
-let NewsEndCountdown: any;
-let NewsIntro: any;
+let NewsEndCountdown: string;
+let NewsIntro: string;
 if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
   NewsEndCountdown = require("../assets/audio/NewsEndCountdown.wav");
   NewsIntro = require("../assets/audio/NewsIntro.wav");
