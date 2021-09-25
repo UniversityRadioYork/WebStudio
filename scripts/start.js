@@ -7,7 +7,9 @@ process.env.NODE_ENV = "development";
 // If we want BAPS, specify it as the first command line argument.
 var args = process.argv.slice(2); // Remove node start.js
 if (args.length > 0 && args[0] === "baps") {
-  process.env.NODE_ENV = "baps-development";
+  // We set this here first; later on, in env.js, we'll reference it to load in
+  // the other variables from .env.baps-${NODE_ENV}
+  process.env.REACT_APP_BAPSICLE_INTERFACE = "true";
 }
 
 // Makes the script crash on unhandled rejections instead of silently
