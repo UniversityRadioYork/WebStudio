@@ -278,7 +278,7 @@ export const setItemPlayedAt = (
       player = getState().showplan.plan![idx].channel;
     }
 
-    if (player) {
+    if (player != null) {
       sendBAPSicleChannel({
         channel: player,
         command: playedAt ? "SETPLAYED" : "RESETPLAYED",
