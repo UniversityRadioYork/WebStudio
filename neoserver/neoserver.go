@@ -88,7 +88,7 @@ func main() {
 
 		connId := uuid.Must(uuid.NewRandom())
 		ccLogger := baseLogger.Named("cc").With(zap.String("id", connId.String()))
-		cc, err := createClientConnection(ccLogger, ws, ctx, func() ([]webrtc.ICEServer, error) {
+		cc, err := createClientConnection(ccLogger, connId, ws, ctx, func() ([]webrtc.ICEServer, error) {
 			tok, err := twilioClient.ApiV2010.CreateToken(nil)
 			if err != nil {
 				return nil, err

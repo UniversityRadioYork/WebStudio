@@ -34,14 +34,14 @@ type AudioPayload struct {
 	Timestamp uint32
 }
 
-func createClientConnection(logger *zap.Logger, ws *websocket.Conn, ctx context.Context, getICE func() ([]webrtc.ICEServer, error)) (*ClientConnection, error) {
+func createClientConnection(logger *zap.Logger, id uuid.UUID, ws *websocket.Conn, ctx context.Context, getICE func() ([]webrtc.ICEServer, error)) (*ClientConnection, error) {
 	ice, err := getICE()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ICE: %w", err)
 	}
 	cc := &ClientConnection{
 		logger:     logger,
-		id:         uuid.Must(uuid.NewRandom()),
+		id:         id,
 		iceServers: ice,
 		ws:         ws,
 		shutdown:   ctx,
