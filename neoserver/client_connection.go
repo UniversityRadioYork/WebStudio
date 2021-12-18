@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/pion/webrtc/v3"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"sync"
 	"time"
 )
@@ -19,6 +21,7 @@ type ClientConnection struct {
 	logger     *zap.Logger
 	me         *webrtc.MediaEngine
 	pc         *webrtc.PeerConnection
+	features   connectionFeatures
 	iceServers []webrtc.ICEServer
 	ws         *websocket.Conn
 	shutdown   context.Context
@@ -45,6 +48,7 @@ func createClientConnection(logger *zap.Logger, id uuid.UUID, ws *websocket.Conn
 		iceServers: ice,
 		ws:         ws,
 		shutdown:   ctx,
+		features:   make(connectionFeatures),
 	}
 	go cc.handle()
 	go func() {
@@ -54,24 +58,67 @@ func createClientConnection(logger *zap.Logger, id uuid.UUID, ws *websocket.Conn
 	return cc, nil
 }
 
+type connectionFeature string
+
+const (
+	featTrickleIce connectionFeature = "trickleICE"
+)
+
+var allFeatures = []connectionFeature{featTrickleIce}
+
+func (f connectionFeature) Valid() bool {
+	switch f {
+	case featTrickleIce:
+		return true
+	default:
+		return false
+	}
+}
+
+type connectionFeatures map[connectionFeature]struct{}
+
+func (c connectionFeatures) MarshalLogArray(enc zapcore.ArrayEncoder) error {
+	for feat := range c {
+		enc.AppendString(string(feat))
+	}
+	return nil
+}
+
+func (c connectionFeatures) ToJSON() []connectionFeature {
+	result := make([]connectionFeature, len(c))
+	i := 0
+	for feat := range c {
+		result[i] = feat
+		i++
+	}
+	return result
+}
+
 type baseMessage struct {
 	Kind string `json:"kind"`
 }
 
 type helloMessage struct {
 	baseMessage
-	ConnectionID string             `json:"connectionID"`
-	ICEServers   []webrtc.ICEServer `json:"iceServers"`
+	ConnectionID string              `json:"connectionID"`
+	ICEServers   []webrtc.ICEServer  `json:"iceServers"`
+	Features     []connectionFeature `json:"features"`
 }
 
 type offerMessage struct {
 	baseMessage
 	webrtc.SessionDescription
+	Features []connectionFeature `json:"features"`
 }
 
 type answerMessage struct {
 	baseMessage
 	webrtc.SessionDescription
+}
+
+type candidatesMessage struct {
+	baseMessage
+	Candidates []webrtc.ICECandidateInit `json:"candidates"`
 }
 
 type errorMessage struct {
@@ -84,6 +131,7 @@ func (c *ClientConnection) handle() {
 		baseMessage:  baseMessage{Kind: "HELLO"},
 		ConnectionID: c.id.String(),
 		ICEServers:   c.iceServers,
+		Features:     allFeatures,
 	})
 	if err != nil {
 		c.logger.Error("Failed to send HELLO", zap.Error(err))
@@ -109,6 +157,8 @@ func (c *ClientConnection) handle() {
 		switch base.Kind {
 		case "OFFER":
 			c.handleOffer(msg)
+		case "CANDIDATES":
+			c.HandleCandidates(msg)
 		default:
 			c.logger.Info("Got unknown kind", zap.String("kind", base.Kind))
 			c.ws.WriteJSON(errorMessage{
@@ -142,6 +192,7 @@ func (c *ClientConnection) createPeerConnectionUNLOCKED() error {
 	if c.pc != nil {
 		return fmt.Errorf("PC already exists (bug!)")
 	}
+
 	me := &webrtc.MediaEngine{}
 	err := me.RegisterCodec(webrtc.RTPCodecParameters{
 		RTPCodecCapability: webrtc.RTPCodecCapability{
@@ -156,10 +207,12 @@ func (c *ClientConnection) createPeerConnectionUNLOCKED() error {
 	if err != nil {
 		return fmt.Errorf("could not register codec: %w", err)
 	}
+
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(me))
 	if err != nil {
 		return fmt.Errorf("failed to get ICE: %w", err)
 	}
+
 	pc, err := api.NewPeerConnection(webrtc.Configuration{
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlan,
 		ICEServers:   c.iceServers,
@@ -167,11 +220,17 @@ func (c *ClientConnection) createPeerConnectionUNLOCKED() error {
 	if err != nil {
 		return fmt.Errorf("failed to create PeerConnection: %w", err)
 	}
+
 	_, err = pc.AddTransceiverFromKind(webrtc.RTPCodecTypeAudio)
 	if err != nil {
 		return fmt.Errorf("could not add transceiver: %w", err)
 	}
 	pc.OnTrack(c.handleNewTrack)
+
+	if _, ok := c.features[featTrickleIce]; ok {
+		pc.OnICECandidate(c.handleICECandidate)
+	}
+
 	c.pc = pc
 	return nil
 }
@@ -187,6 +246,15 @@ func (c *ClientConnection) handleOffer(msg []byte) {
 
 	c.stateMux.Lock()
 	defer c.stateMux.Unlock()
+
+	for _, feat := range payload.Features {
+		if feat.Valid() {
+			c.features[feat] = struct{}{}
+		} else {
+			c.logger.Info("Client requested invalid feature", zap.String("feat", string(feat)))
+		}
+	}
+	c.logger.Info("Client features", zap.Any("features", c.features))
 
 	err = c.createPeerConnectionUNLOCKED()
 	if err != nil {
@@ -221,6 +289,31 @@ func (c *ClientConnection) handleOffer(msg []byte) {
 		c.logger.Error("Failed to send answer", zap.Error(err))
 		c.Close(err)
 		return
+	}
+}
+
+func (c *ClientConnection) HandleCandidates(msg []byte) {
+	var payload candidatesMessage
+	if err := json.Unmarshal(msg, &payload); err != nil {
+		c.logger.Error("Failed to unmarshal ICE candidates", zap.Error(err))
+		c.Close(err)
+		return
+	}
+
+	c.stateMux.Lock()
+	defer c.stateMux.Unlock()
+	if c.pc == nil {
+		err := errors.New("invalid state: got CANDIDATES before we have a PC")
+		c.logger.Error(err.Error())
+		c.Close(err)
+		return
+	}
+	if payload.Candidates != nil {
+		for _, cdt := range payload.Candidates {
+			if err := c.pc.AddICECandidate(cdt); err != nil {
+				c.logger.Error("Failed to add ICE candidate", zap.Error(err))
+			}
+		}
 	}
 }
 
@@ -285,4 +378,28 @@ func (c *ClientConnection) SetDoneCallback(cb CCCallback) {
 	defer c.stateMux.Unlock()
 	c.done = cb
 	c.logger.Debug("Set done callback")
+}
+
+func (c *ClientConnection) handleICECandidate(candidate *webrtc.ICECandidate) {
+	var err error
+	if candidate == nil {
+		err = c.ws.WriteJSON(candidatesMessage{
+			baseMessage: baseMessage{
+				Kind: "CANDIDATES",
+			},
+			Candidates: nil,
+		})
+	} else {
+		err = c.ws.WriteJSON(candidatesMessage{
+			baseMessage: baseMessage{
+				Kind: "CANDIDATES",
+			},
+			Candidates: []webrtc.ICECandidateInit{candidate.ToJSON()},
+		})
+	}
+	if err != nil {
+		c.logger.Error("Failed to send candidate", zap.Error(err))
+		c.Close(err)
+		return
+	}
 }
