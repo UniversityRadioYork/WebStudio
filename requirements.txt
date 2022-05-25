@@ -33,7 +33,7 @@ pathspec==0.8.1
 pluggy==0.13.1
 pycparser==2.20
 pyee==7.0.1
-PyJWT==1.7.1
+PyJWT==2.4.0
 pylibsrtp==0.6.6
 pyls==0.1.6
 pyls-mypy==0.1.8
