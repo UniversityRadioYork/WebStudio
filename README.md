@@ -10,11 +10,11 @@ The clientside is written in TypeScript using React and Redux, the serverside is
 
 Client:
 
- * Node.js and Yarn (Yarn 1, 2 isn't supported very well by webpack/typescript/anything really)
+ * Node.js and Yarn 1.x
 
 Server:
 
-* Python >=3.7
+* Python 3.7-3.9 (note: Python 3.10 is not supported)
 
 ### Installing
 
