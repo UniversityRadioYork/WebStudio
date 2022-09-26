@@ -31,7 +31,7 @@ export function SidebarDialogue(close: any) {
         <br />
         <strong>2004 - 2021</strong>
         <br />
-        Build upon the ideas and learnings of the many previous attempts of
+        Built upon the ideas and learnings of the many previous attempts of
         BAPS3.
       </p>
     </div>
