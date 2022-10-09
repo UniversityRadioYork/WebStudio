@@ -100,6 +100,9 @@ const Showplanner: React.FC<{ timeslotId: number | null }> = function({
     (state: RootState) => state.showplan.plan !== null,
     shallowEqual
   );
+  const planSaving = useSelector(
+    (state: RootState) => state.showplan.planSaving
+  );
 
   // Tell Modals that #root is the main page content, for accessability reasons.
   Modal.setAppElement("#root");
@@ -239,6 +242,7 @@ const Showplanner: React.FC<{ timeslotId: number | null }> = function({
           onClick={(args) =>
             dispatch(removeItem(timeslotId!, (args.props as any).id))
           }
+          disabled={planSaving}
         >
           <FaTrash /> Remove
         </CtxMenuItem>

@@ -682,7 +682,7 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
     dispatch(showplan.actions.getShowplanSuccess(plan.flat(2)));
   } catch (e) {
     console.error(e);
-    dispatch(showplan.actions.getShowplanError(e.toString()));
+    dispatch(showplan.actions.getShowplanError(String(e)));
   }
 };
 
