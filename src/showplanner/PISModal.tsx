@@ -64,6 +64,10 @@ function StudioWarning() {
           If you're not sure what this means, message #studio-faults in Slack
           for help!
         </p>
+        <p>
+          (If you're only here to plan your show rather than to go live, you can
+          ignore this message.)
+        </p>
       </div>
       <hr />
     </>
