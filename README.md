@@ -14,7 +14,7 @@ Client:
 
 Server:
 
-- Python 3.7-3.9 (note: Python 3.10 is not supported)
+- Python 3.7-3.10
 
 ### Installing
 
