@@ -10,11 +10,11 @@ The clientside is written in TypeScript using React and Redux, the serverside is
 
 Client:
 
- * Node.js and Yarn 1.x
+- Node.js and Yarn 1.x
 
 Server:
 
-* Python 3.7-3.9 (note: Python 3.10 is not supported)
+- Python 3.7-3.10
 
 ### Installing
 
@@ -22,12 +22,10 @@ Clone the repo and run `yarn`.
 
 You'll probably want to change the values in `.env` to reflect the MyRadio environment and/or where the server is running (e.g. if you're running the server locally, change `REACT_APP_WS_URL` to `ws://localhost:8079/stream`).
 
-If you want to hack on the server, create a virtualenv and install Python packages:
+If you want to hack on the server, use [Poetry](https://python-poetry.org/docs/) create a virtualenv and install Python packages:
 
 ```sh
-$ python3 -m venv venv
-$ source venv/bin/activate
-$ pip install -r requirements.txt
+$ poetry install
 ```
 
 ### Versions
@@ -65,6 +63,7 @@ This is done via the BAPSicle project by updating the `/presenter` submodule, si
 If you want to demo build a BAPS Presenter release, run `npm run build-baps` and the result will be in the `build` directory.
 
 ## Screenshots
+
 ![Mic Live With Main Screen](images/HomeWithMic.png?raw=true "Mic Live on Main Screen")
 
 ![Home Page of webstudio](images/Home.png?raw=true "Home Page of WebStudio")

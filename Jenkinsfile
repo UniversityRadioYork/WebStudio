@@ -15,8 +15,7 @@ pipeline {
     }
     stage('Python') {
       steps {
-        sh '/usr/local/bin/python3.7 -m venv env'
-        sh 'env/bin/pip install -r requirements.ci.txt'
+        sh 'poetry install'
      }
     }
    }
@@ -31,12 +30,12 @@ pipeline {
       }
       stage('MyPy (stateserver)') {
         steps {
-          sh 'env/bin/mypy stateserver.py'
+          sh 'poetry run mypy stateserver.py'
         }
       }
       stage('MyPy (shittyserver)') {
         steps {
-          sh 'env/bin/mypy shittyserver.py'
+          sh 'poetry run mypy shittyserver.py'
         }
       }
     }
@@ -118,7 +117,8 @@ pipeline {
           sshagent(credentials: ['ury']) {
            sh 'scp -v -o StrictHostKeyChecking=no stateserver.py liquidsoap@dolby.ury:/opt/webstudioserver/stateserver.py'
            sh 'scp -v -o StrictHostKeyChecking=no shittyserver.py liquidsoap@dolby.ury:/opt/webstudioserver/shittyserver.py'
-           sh 'scp -v -o StrictHostKeyChecking=no requirements.txt liquidsoap@dolby.ury:/opt/webstudioserver/requirements.txt'
+           sh 'scp -v -o StrictHostKeyChecking=no pyproject.toml liquidsoap@dolby.ury:/opt/webstudioserver/pyproject.toml'
+           sh 'scp -v -o StrictHostKeyChecking=no poetry.lock liquidsoap@dolby.ury:/opt/webstudioserver/poetry.lock'
           }
         }
       }

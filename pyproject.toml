@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "webstudio"
+version = "1.6.0"
+description = ""
+authors = ["Marks Polakovs <marks.polakovs@ury.org.uk>", "Matthew Stratford <matthew.stratford@ury.org.uk>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+aiohttp = "^3.8.4"
+av = "^10.0.0"
+jack-client = "^0.5.4"
+websockets = "^10.4"
+aiortc = "^1.4.0"
+sentry-sdk = "^1.16.0"
+requests = "^2.28.2"
+flask = "^2.2.3"
+flask-cors = "^3.0.10"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+mypy = "^1.1.1"
+types-jack-client = "^0.5.10.7"
+types-requests = "^2.28.11.15"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
