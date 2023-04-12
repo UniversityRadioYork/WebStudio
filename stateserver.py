@@ -7,11 +7,14 @@ from typing import List, Any, Dict, Optional
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS  # type: ignore
+from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.serving import run_simple
 import requests
 import datetime
 import random
 from telnetlib import Telnet
 import configparser
+import ipaddress
 
 config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
@@ -431,5 +434,24 @@ def post_wsSessions() -> Any:
     return genPayload("Thx, K, bye.")
 
 
+@app.route("/api/v1/isInStudio", methods=["GET"])
+def get_isInStudio():
+    ip = request.remote_addr
+    if ip is None:
+        return genPayload(False)
+
+    studio_ip_ranges = config.get("stateserver", "studio_ip_ranges", fallback="").split(
+        ","
+    )
+    for ip_range in studio_ip_ranges:
+        if ipaddress.ip_address(ip) in ipaddress.ip_network(ip_range):
+            return genPayload(True)
+    return genPayload(False)
+
+
+if config.get("stateserver", "behind_trusted_proxy", fallback=None) == "True":
+    app = ProxyFix(app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    run_simple("0.0.0.0", 5000, app)

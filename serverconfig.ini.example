@@ -18,3 +18,5 @@ turn_provider = twilio
 [stateserver]
 myradio_key = CHANGEME
 sustainer_autonews = True
+studio_ip_ranges = 127.0.0.0/8
+behind_trusted_proxy = False

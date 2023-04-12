@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
-import { getLatestNewsItem, NewsEntry } from "../api";
+import { broadcastApiRequest, getLatestNewsItem, NewsEntry } from "../api";
 import { Button } from "reactstrap";
 import { FaTimes } from "react-icons/fa";
 
@@ -23,6 +23,51 @@ function DevWarning() {
         <br />
         For the latest and greatest tested WebStudio, go to{" "}
         <a href={wsUrl}>{wsUrl}</a>.
+      </div>
+      <hr />
+    </>
+  );
+}
+
+function StudioWarning() {
+  const [isInStudio, setIsInStudio] = useState<boolean | null>(null);
+  useEffect(() => {
+    const abortController = new AbortController();
+    async function checkStudio() {
+      const result = await broadcastApiRequest(
+        "/isInStudio",
+        "GET",
+        {},
+        abortController.signal
+      );
+      setIsInStudio(result);
+    }
+    checkStudio();
+    return () => abortController.abort();
+  }, []);
+  if (!isInStudio) {
+    return null;
+  }
+  return (
+    <>
+      <div className="p-2 alert-danger">
+        <h2>WARNING</h2>
+        <p>
+          You appear to be using WebStudio in the URY Studios. You probably want
+          to use BAPS3 instead.{" "}
+          <strong>
+            Do not use WebStudio to broadcast a live show from the studios!
+          </strong>
+        </p>
+        <p>If BAPS is not open, use the shortcut on the desktop.</p>
+        <p>
+          If you're not sure what this means, message #studio-faults in Slack
+          for help!
+        </p>
+        <p>
+          (If you're only here to plan your show rather than to go live, you can
+          ignore this message.)
+        </p>
       </div>
       <hr />
     </>
@@ -67,6 +112,7 @@ export function PisModal({
       </Button>
       <hr className="mt-1 mb-3" />
       <DevWarning />
+      <StudioWarning />
       {(news === "loading" || news === "not_loaded") && (
         <p>Loading the news...</p>
       )}

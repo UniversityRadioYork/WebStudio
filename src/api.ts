@@ -12,12 +12,14 @@ export async function apiRequest(
   url: string,
   method: "GET" | "POST" | "PUT",
   params: any,
-  need_auth: boolean = true
+  need_auth: boolean = true,
+  abortSignal?: AbortSignal
 ): Promise<Response> {
   var req: Promise<Response> | null = null;
   if (method === "GET") {
     req = fetch(url + qs.stringify(params, { addQueryPrefix: true }), {
       credentials: need_auth ? "include" : "omit",
+      signal: abortSignal,
     });
   } else {
     const body = JSON.stringify(params);
@@ -29,6 +31,7 @@ export async function apiRequest(
         "Content-Type": "application/json; charset=UTF-8",
       },
       credentials: need_auth ? "include" : "omit",
+      signal: abortSignal,
     });
   }
   return await req;
@@ -74,13 +77,15 @@ export async function bapsicleApiRequest(
 export async function broadcastApiRequest<TRes = any>(
   endpoint: string,
   method: "GET" | "POST" | "PUT",
-  params: any
+  params: any,
+  abortSignal?: AbortSignal
 ): Promise<TRes> {
   const res = await apiRequest(
     BROADCAST_API_BASE_URL + endpoint,
     method,
     params,
-    false
+    false,
+    abortSignal
   );
   const json = await res.json();
   if (json.status === "OK") {
