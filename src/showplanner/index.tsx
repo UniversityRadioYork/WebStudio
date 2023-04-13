@@ -70,7 +70,7 @@ function Channel({ id, data }: { id: number; data: PlanItem[] }) {
           </div>
         )}
       </Droppable>
-      <Player id={id} isPreviewChannel={false} />
+      <Player id={id} />
     </div>
   );
 }
