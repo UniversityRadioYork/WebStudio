@@ -626,7 +626,9 @@ export const load = (
         const state = getState().mixer.players[player];
         // Don't set played on Preview Channel
         if (state.loadedItem != null && player !== PLAYER_ID_PREVIEW) {
-          setItemPlayedAt(itemId(state.loadedItem), new Date().valueOf());
+          dispatch(
+            setItemPlayedAt(itemId(state.loadedItem), new Date().valueOf())
+          );
         }
       });
       playerInstance.on("pause", () => {
