@@ -666,32 +666,23 @@ export const load = (
         }
         if (state.repeat === "one") {
           playerInstance.play();
-        } else if (state.repeat === "all") {
-          if ("channel" in item) {
-            // it's not in the CML/libraries "column"
-            const itsChannel = getState()
-              .showplan.plan!.filter((x) => x.channel === item.channel)
-              .sort((x, y) => x.weight - y.weight);
-            const itsIndex = itsChannel.indexOf(item);
-            if (itsIndex === itsChannel.length - 1) {
-              dispatch(load(player, itsChannel[0]));
-            }
-          }
-        } else if (state.autoAdvance) {
-          if ("channel" in item) {
-            // it's not in the CML/libraries "column"
-            const itsChannel = getState()
-              .showplan.plan!.filter((x) => x.channel === item.channel)
-              .sort((x, y) => x.weight - y.weight);
-            // Sadly, we can't just do .indexOf() item directly,
-            // since the player's idea of an item may be changed over it's lifecycle (setting played,intro/cue/outro etc.)
-            // Therefore we'll find the updated item from the plan and match that.
-            const itsIndex = itsChannel.findIndex(
-              (x) => itemId(x) === itemId(item)
-            );
-            if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
-              dispatch(load(player, itsChannel[itsIndex + 1]));
-            }
+        } else if (state.autoAdvance && "channel" in item) {
+          // it's not in the CML/libraries "column"
+          const itsChannel = getState()
+            .showplan.plan!.filter((x) => x.channel === item.channel)
+            .sort((x, y) => x.weight - y.weight);
+          // Sadly, we can't just do .indexOf() item directly,
+          // since the player's idea of an item may be changed over it's lifecycle (setting played,intro/cue/outro etc.)
+          // Therefore we'll find the updated item from the plan and match that.
+          const itsIndex = itsChannel.findIndex(
+            (x) => itemId(x) === itemId(item)
+          );
+          if (itsIndex === itsChannel.length - 1 && state.repeat === "all") {
+            // Autoadvance and repeat all, we're on last item so jump to top!
+            dispatch(load(player, itsChannel[0]));
+          } else if (itsIndex > -1 && itsIndex !== itsChannel.length - 1) {
+            // We found the item and we're not the last item, load the next one!
+            dispatch(load(player, itsChannel[itsIndex + 1]));
           }
         }
       });
