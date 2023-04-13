@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@babel/core": "7.6.0",
+    "@babel/helper-validator-option": "^7.21.0",
     "@reduxjs/toolkit": "^1.0.4",
     "@sentry/react": "^6.3.1",
     "@sentry/tracing": "^6.3.1",
