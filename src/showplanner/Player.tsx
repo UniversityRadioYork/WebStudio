@@ -345,15 +345,11 @@ function LoadedTrackInfo({ id }: { id: number }) {
   );
 }
 
-export function Player({
-  id,
-  isPreviewChannel,
-}: {
-  id: number;
-  isPreviewChannel: boolean;
-}) {
+export function Player({ id }: { id: number }) {
   // Define time remaining (secs) when the play icon should flash.
   const SECS_REMAINING_WARNING = 20;
+
+  const isPreviewChannel = id === PLAYER_ID_PREVIEW;
 
   // We want to force update the selector when we pass the SECS_REMAINING_WARNING barrier.
   const playerState = useSelector(
@@ -620,7 +616,7 @@ export function PflPlayer() {
       <span className="mx-1 hover-label always-show">
         Preview Player (Headphones Only)
       </span>
-      <Player id={PLAYER_ID_PREVIEW} isPreviewChannel={true} />
+      <Player id={PLAYER_ID_PREVIEW} />
     </div>
   );
 }

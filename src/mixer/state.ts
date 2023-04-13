@@ -100,11 +100,19 @@ const BasePlayerState: PlayerState = {
   loadError: false,
 };
 
+// Override any settings for the preview player
+const PreviewPlayerState: PlayerState = {
+  ...BasePlayerState,
+  autoAdvance: false,
+};
+const playersInitialState = Array(PLAYER_COUNT).fill(BasePlayerState);
+playersInitialState[PLAYER_ID_PREVIEW] = PreviewPlayerState;
+
 const mixerState = createSlice({
   name: "Player",
   initialState: {
     // Fill the players with channel and preview players.
-    players: Array(PLAYER_COUNT).fill(BasePlayerState),
+    players: playersInitialState,
     mic: {
       open: false,
       volume: 1,
