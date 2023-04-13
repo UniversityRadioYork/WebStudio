@@ -383,6 +383,11 @@ export function Player({ id }: { id: number }) {
     if (id < PLAYER_COUNT) {
       return ("player-" + id) as LevelsSource;
     }
+    // We don't want the Preview channel doing anything silly, overwrite default player settings.
+    if (isPreviewChannel) {
+      dispatch(MixerState.setAutoAdvance({ player: id, enabled: false }));
+    }
+
     throw new Error("Unknown Player VUMeter source: " + id);
   };
 
