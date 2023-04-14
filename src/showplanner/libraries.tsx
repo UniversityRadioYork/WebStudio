@@ -186,8 +186,9 @@ export function CentralMusicLibrary() {
   const debouncedArtistSearchTerm = useDebounce(artistSearchTerm, 1000);
   const [tracks, setTracks] = useState<Track[]>([]);
 
-  const [searchingState, setSearchingState] =
-    useState<searchingStateEnum>("not-searching");
+  const [searchingState, setSearchingState] = useState<searchingStateEnum>(
+    "not-searching"
+  );
 
   useEffect(() => {
     if (debouncedTrackSearchTerm === "" && debouncedArtistSearchTerm === "") {
@@ -265,8 +266,9 @@ export function ManagedPlaylistLibrary({ libraryId }: { libraryId: string }) {
   const debouncedArtistSearchTerm = useDebounce(artistSearchTerm, 1000);
   const [items, setItems] = useState<Track[]>([]);
 
-  const [searchingState, setSearchingState] =
-    useState<searchingStateEnum>("not-searching");
+  const [searchingState, setSearchingState] = useState<searchingStateEnum>(
+    "not-searching"
+  );
 
   useEffect(() => {
     async function load() {
@@ -354,8 +356,9 @@ export function AuxLibrary({ libraryId }: { libraryId: string }) {
   const debouncedQuery = useDebounce(searchQuery, 500);
   const [items, setItems] = useState<AuxItem[]>([]);
 
-  const [searchingState, setSearchingState] =
-    useState<searchingStateEnum>("not-searching");
+  const [searchingState, setSearchingState] = useState<searchingStateEnum>(
+    "not-searching"
+  );
 
   useEffect(() => {
     async function load() {

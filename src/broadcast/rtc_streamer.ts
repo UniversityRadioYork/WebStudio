@@ -87,9 +87,9 @@ export class WebRTCStreamer extends Streamer {
             }
             // TODO: maybe delete non-Opus candidates?
           }
-          track.fmtp[opusIndex].config += `; maxaveragebitrate=${
-            192 * 2 * 1024
-          }; stereo=1; sprop-stereo=1 ; cbr=1`;
+          track.fmtp[opusIndex].config += `; maxaveragebitrate=${192 *
+            2 *
+            1024}; stereo=1; sprop-stereo=1 ; cbr=1`;
         });
 
         offer.sdp = SdpTransform.write(parsed);

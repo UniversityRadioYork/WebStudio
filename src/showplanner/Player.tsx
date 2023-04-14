@@ -40,8 +40,10 @@ const ONE_HOUR_MS = 1000 * 60 * 60;
 
 function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
   const store = useStore<RootState, any>();
-  const [[timeCurrent, timeLength, timeRemaining, endTime], setTimings] =
-    useState([0, 0, 0, 0]);
+  const [
+    [timeCurrent, timeLength, timeRemaining, endTime],
+    setTimings,
+  ] = useState([0, 0, 0, 0]);
   const tickerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -78,106 +80,112 @@ function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
   );
 }
 
-const setTrackIntro =
-  (item: api.TimeslotItem, secs: number, player: number): AppThunk =>
-  async (dispatch, getState) => {
-    // TODO Move into MixerState
-    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      let marker = {
-        name: "Intro",
-        time: secs,
-        position: "start",
-        section: null,
-      };
-      sendBAPSicleChannel({
-        channel: player,
-        command: "SETMARKER",
-        timeslotitemid: item.timeslotitemid,
-        marker: marker,
-      });
-      return;
-    }
-    try {
-      // Api only deals with whole seconds.
-      secs = Math.round(secs);
-      dispatch(MixerState.setLoadedItemIntro(player, secs));
-      if (getState().settings.saveShowPlanChanges) {
-        if ("trackid" in item) {
-          await api.setTrackIntro(item.trackid, secs);
-        }
+const setTrackIntro = (
+  item: api.TimeslotItem,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch, getState) => {
+  // TODO Move into MixerState
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Intro",
+      time: secs,
+      position: "start",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+    return;
+  }
+  try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
+    dispatch(MixerState.setLoadedItemIntro(player, secs));
+    if (getState().settings.saveShowPlanChanges) {
+      if ("trackid" in item) {
+        await api.setTrackIntro(item.trackid, secs);
       }
-      dispatch(ShowPlanState.setItemTimings({ item: item, intro: secs }));
-    } catch (e) {
-      dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
-      console.error("Failed to set track intro: " + e);
     }
-  };
+    dispatch(ShowPlanState.setItemTimings({ item: item, intro: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
+    console.error("Failed to set track intro: " + e);
+  }
+};
 
-const setTrackOutro =
-  (item: api.TimeslotItem, secs: number, player: number): AppThunk =>
-  async (dispatch, getState) => {
-    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      let marker = {
-        name: "Outro",
-        time: secs,
-        position: "end",
-        section: null,
-      };
-      sendBAPSicleChannel({
-        channel: player,
-        command: "SETMARKER",
-        timeslotitemid: item.timeslotitemid,
-        marker: marker,
-      });
-      return;
-    }
-    try {
-      // Api only deals with whole seconds.
-      secs = Math.round(secs);
-      dispatch(MixerState.setLoadedItemOutro(player, secs));
-      if (getState().settings.saveShowPlanChanges) {
-        if ("trackid" in item) {
-          await api.setTrackOutro(item.trackid, secs);
-        }
+const setTrackOutro = (
+  item: api.TimeslotItem,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch, getState) => {
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Outro",
+      time: secs,
+      position: "end",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+    return;
+  }
+  try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
+    dispatch(MixerState.setLoadedItemOutro(player, secs));
+    if (getState().settings.saveShowPlanChanges) {
+      if ("trackid" in item) {
+        await api.setTrackOutro(item.trackid, secs);
       }
-      dispatch(ShowPlanState.setItemTimings({ item: item, outro: secs }));
-    } catch (e) {
-      dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
-      console.error("Failed to set track outro: " + e);
     }
-  };
+    dispatch(ShowPlanState.setItemTimings({ item: item, outro: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
+    console.error("Failed to set track outro: " + e);
+  }
+};
 
-const setTrackCue =
-  (item: api.TimeslotItem, secs: number, player: number): AppThunk =>
-  async (dispatch, getState) => {
-    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-      let marker = {
-        name: "Cue",
-        time: secs,
-        position: "mid",
-        section: null,
-      };
-      sendBAPSicleChannel({
-        channel: player,
-        command: "SETMARKER",
-        timeslotitemid: item.timeslotitemid,
-        marker: marker,
-      });
-      return;
+const setTrackCue = (
+  item: api.TimeslotItem,
+  secs: number,
+  player: number
+): AppThunk => async (dispatch, getState) => {
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Cue",
+      time: secs,
+      position: "mid",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+    return;
+  }
+  try {
+    // Api only deals with whole seconds.
+    secs = Math.round(secs);
+    dispatch(MixerState.setLoadedItemCue(player, secs));
+    if (getState().settings.saveShowPlanChanges) {
+      await api.setTimeslotItemCue(item.timeslotitemid, secs);
     }
-    try {
-      // Api only deals with whole seconds.
-      secs = Math.round(secs);
-      dispatch(MixerState.setLoadedItemCue(player, secs));
-      if (getState().settings.saveShowPlanChanges) {
-        await api.setTimeslotItemCue(item.timeslotitemid, secs);
-      }
-      dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
-    } catch (e) {
-      dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
-      console.error("Failed to set track cue: " + e);
-    }
-  };
+    dispatch(ShowPlanState.setItemTimings({ item, cue: secs }));
+  } catch (e) {
+    dispatch(ShowPlanState.planSaveError("Failed saving track cue."));
+    console.error("Failed to set track cue: " + e);
+  }
+};
 
 function TimingButtons({ id }: { id: number }) {
   const dispatch = useDispatch();

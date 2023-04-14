@@ -68,7 +68,7 @@ function ChannelOutputSelect({
         <option value={INTERNAL_OUTPUT_ID}>
           Internal (Direct to Stream/Headphones)
         </option>
-        {(outputList || []).map(function (e, i) {
+        {(outputList || []).map(function(e, i) {
           return (
             <option value={e.deviceId} key={i}>
               {e.label !== "" ? e.label : e.deviceId}
@@ -203,7 +203,7 @@ export function AdvancedTab() {
         </div>
       )}
 
-      {[...Array(PLAYER_COUNT)].map(function (object, i) {
+      {[...Array(PLAYER_COUNT)].map(function(object, i) {
         return (
           <ChannelOutputSelect key={i} outputList={outputList} channel={i} />
         );
