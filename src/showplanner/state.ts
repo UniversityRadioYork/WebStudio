@@ -255,362 +255,176 @@ const showplan = createSlice({
 
 export default showplan.reducer;
 
-export const {
-  setItemTimings,
-  planSaveError,
-  getShowplanSuccessChannel,
-} = showplan.actions;
+export const { setItemTimings, planSaveError, getShowplanSuccessChannel } =
+  showplan.actions;
 
-export const setItemPlayedAt = (
-  itemid: string,
-  playedAt: number | undefined
-): AppThunk => async (dispatch, getState) => {
-  // The server handles marking things played
-  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-    var weight = -1;
-    var player = null;
+export const setItemPlayedAt =
+  (itemid: string, playedAt: number | undefined): AppThunk =>
+  async (dispatch, getState) => {
+    // The server handles marking things played
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      var weight = -1;
+      var player = null;
 
-    if (itemid) {
-      const idx = getState().showplan.plan!.findIndex(
-        (x) => itemId(x) === itemid
-      );
-      weight = getState().showplan.plan![idx].weight;
-      player = getState().showplan.plan![idx].channel;
-    }
-
-    if (player != null) {
-      sendBAPSicleChannel({
-        channel: player,
-        command: playedAt ? "SETPLAYED" : "RESETPLAYED",
-        weight: weight,
-      });
-    } else {
-      sendBAPSicleChannel({
-        command: playedAt ? "SETPLAYED" : "RESETPLAYED",
-        weight: weight,
-      });
-    }
-    return;
-  }
-  dispatch(
-    showplan.actions.setItemPlayedAt({ itemId: itemid, playedAt: playedAt })
-  );
-};
-
-export const moveItem = (
-  timeslotid: number,
-  itemid: string,
-  to: [number, number]
-): AppThunk => async (dispatch, getState) => {
-  // Make a copy of the plan, because we are about to engage in FUCKERY.
-  const plan = cloneDeep(getState().showplan.plan!);
-  const itemToMove = plan.find((x) => itemId(x) === itemid)!;
-  if (itemToMove.channel === to[0] && itemToMove.weight === to[1]) {
-    return;
-  }
-  console.log(
-    `Moving item ${itemId(itemToMove)} from ${itemToMove.channel}x${
-      itemToMove.weight
-    } to ${to[0]}x${to[1]}`
-  );
-  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-    sendBAPSicleChannel({
-      command: "MOVE",
-      channel: itemToMove.channel,
-      weight: itemToMove.weight,
-      new_channel: to[0],
-      new_weight: to[1],
-      item: itemToMove,
-    });
-
-    return;
-  }
-
-  dispatch(showplan.actions.setPlanSaving(true));
-
-  const oldChannel = itemToMove.channel;
-  const oldWeight = itemToMove.weight;
-  const [newChannel, newWeight] = to;
-
-  const inc: string[] = [];
-  const dec: string[] = [];
-
-  if (oldChannel === newChannel) {
-    // Moving around in the same channel
-    const itemChan = plan
-      .filter((x) => x.channel === oldChannel)
-      .sort((a, b) => a.weight - b.weight);
-    if (oldWeight < newWeight) {
-      // moved the item down (incremented) - everything in between needs decrementing
-      for (let i = oldWeight + 1; i <= newWeight; i++) {
-        dec.push(itemId(itemChan[i]));
-        itemChan[i].weight -= 1;
+      if (itemid) {
+        const idx = getState().showplan.plan!.findIndex(
+          (x) => itemId(x) === itemid
+        );
+        weight = getState().showplan.plan![idx].weight;
+        player = getState().showplan.plan![idx].channel;
       }
-    } else {
-      // moved the item up (decremented) - everything in between needs incrementing
-      for (let i = newWeight; i < oldWeight; i++) {
-        inc.push(itemId(itemChan[i]));
-        itemChan[i].weight += 1;
+
+      if (player != null) {
+        sendBAPSicleChannel({
+          channel: player,
+          command: playedAt ? "SETPLAYED" : "RESETPLAYED",
+          weight: weight,
+        });
+      } else {
+        sendBAPSicleChannel({
+          command: playedAt ? "SETPLAYED" : "RESETPLAYED",
+          weight: weight,
+        });
       }
-    }
-    itemToMove.channel = newChannel;
-    itemToMove.weight = newWeight;
-  } else {
-    // Moving between channels
-    // So here's the plan.
-    // We're going to temporarily remove the item we're actually moving from the plan
-    // This is because its position becomes nondeterministic when we move it around.
-    plan.splice(plan.indexOf(itemToMove), 1);
-    itemToMove.channel = newChannel;
-    itemToMove.weight = newWeight;
-
-    // First, decrement everything between the old weight and the end of the old channel
-    // (inclusive of old weight, because we've removed the item)
-    const oldChannelData = plan
-      .filter((x) => x.channel === oldChannel)
-      .sort((a, b) => a.weight - b.weight);
-    for (let i = oldWeight; i < oldChannelData.length; i++) {
-      const movingItem = oldChannelData[i];
-      movingItem.weight -= 1;
-      dec.push(itemId(movingItem));
-    }
-
-    // Then, increment everything between the new weight and the end of the new channel
-    // (again, inclusive)
-    const newChannelData = plan
-      .filter((x) => x.channel === newChannel)
-      .sort((a, b) => a.weight - b.weight);
-    for (let i = newWeight; i < newChannelData.length; i++) {
-      const movingItem = newChannelData[i];
-      movingItem.weight += 1;
-      inc.push(itemId(movingItem));
-    }
-  }
-
-  const ops: api.UpdateOp[] = [];
-  console.log("Inc, dec:", inc, dec);
-
-  inc.forEach((id) => {
-    const item = plan.find((x) => itemId(x) === id)!;
-    ops.push({
-      op: "MoveItem",
-      timeslotitemid: itemId(item),
-      oldchannel: item.channel,
-      oldweight: item.weight - 1,
-      channel: item.channel,
-      weight: item.weight,
-    });
-  });
-
-  dec.forEach((id) => {
-    const item = plan.find((x) => itemId(x) === id)!;
-    ops.push({
-      op: "MoveItem",
-      timeslotitemid: itemId(item),
-      oldchannel: item.channel,
-      oldweight: item.weight + 1,
-      channel: item.channel,
-      weight: item.weight,
-    });
-  });
-
-  // Then, and only then, put the item in its new place
-  ops.push({
-    op: "MoveItem",
-    timeslotitemid: (itemToMove as TimeslotItem).timeslotitemid,
-    oldchannel: oldChannel,
-    oldweight: oldWeight,
-    channel: newChannel,
-    weight: newWeight,
-  });
-
-  dispatch(showplan.actions.applyOps(ops));
-
-  if (getState().settings.saveShowPlanChanges) {
-    const result = await api.updateShowplan(timeslotid, ops);
-    if (!result.every((x) => x.status)) {
-      Sentry.captureException(new Error("Showplan update failure [moveItem]"), {
-        contexts: {
-          updateShowplan: {
-            ops,
-            result,
-          },
-        },
-      });
-      dispatch(showplan.actions.planSaveError("Failed to update show plan."));
       return;
     }
-  }
+    dispatch(
+      showplan.actions.setItemPlayedAt({ itemId: itemid, playedAt: playedAt })
+    );
+  };
 
-  dispatch(showplan.actions.setPlanSaving(false));
-};
-
-export const addItem = (
-  timeslotId: number,
-  newItemData: TimeslotItem
-): AppThunk => async (dispatch, getState) => {
-  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-    sendBAPSicleChannel({
-      channel: newItemData.channel,
-      command: "ADD",
-      newItem: newItemData,
-    });
-    return;
-  }
-
-  dispatch(showplan.actions.setPlanSaving(true));
-  console.log("New Weight: " + newItemData.weight);
-  const plan = cloneDeep(getState().showplan.plan!);
-  const ops: api.UpdateOp[] = [];
-
-  // This is basically a simplified version of the second case above
-  // Before we add the new item to the plan, we increment everything below it
-  const planColumn = plan
-    .filter((x) => x.channel === newItemData.channel)
-    .sort((a, b) => a.weight - b.weight);
-  for (let i = newItemData.weight; i < planColumn.length; i++) {
-    const item = planColumn[i];
-    ops.push({
-      op: "MoveItem",
-      timeslotitemid: itemId(item),
-      oldchannel: item.channel,
-      oldweight: item.weight,
-      channel: item.channel,
-      weight: item.weight + 1,
-    });
-    item.weight += 1;
-  }
-
-  // Okay, we have a hole.
-  // Now, we're going to insert a "ghost" item into the plan while we wait for it to save
-  // Note that we're going to flush the move-over operations to Redux now, so that the hole
-  // is there - then, once we get a timeslotitemid, replace it with a proper item
-
-  dispatch(showplan.actions.applyOps(ops));
-
-  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-    dispatch(showplan.actions.addItem(newItemData));
-  } else {
-    if (getState().settings.saveShowPlanChanges) {
-      const ghostId = Math.random().toString(10);
-
-      const ghost: ItemGhost = {
-        ghostid: ghostId,
-        channel: newItemData.channel,
-        weight: newItemData.weight,
-        title: newItemData.title,
-        artist: newItemData.type === "central" ? newItemData.artist : "",
-        length: newItemData.length,
-        clean: newItemData.clean,
-        intro: newItemData.type === "central" ? newItemData.intro : 0,
-        outro: newItemData.type === "central" ? newItemData.outro : 0,
-        cue: 0,
-        type: "ghost",
-      };
-
-      const idForServer =
-        newItemData.type === "central"
-          ? `${newItemData.album.recordid}-${newItemData.trackid}`
-          : "managedid" in newItemData
-          ? `ManagedDB-${newItemData.managedid}`
-          : null;
-
-      if (!idForServer) return; // Something went very wrong
-
-      dispatch(showplan.actions.insertGhost(ghost));
-      ops.push({
-        op: "AddItem",
-        channel: newItemData.channel,
-        weight: newItemData.weight,
-        id: idForServer,
-      });
-      const result = await api.updateShowplan(timeslotId, ops);
-      if (!result.every((x) => x.status)) {
-        Sentry.captureException(
-          new Error("Showplan update failure [addItem]"),
-          {
-            contexts: {
-              updateShowplan: {
-                ops,
-                result,
-              },
-            },
-          }
-        );
-        dispatch(showplan.actions.planSaveError("Failed to update show plan."));
-        return;
-      }
-      const lastResult = result[result.length - 1]; // this is the add op
-      const newItemId = lastResult.timeslotitemid!;
-
-      newItemData.timeslotitemid = newItemId;
-      dispatch(
-        showplan.actions.replaceGhost({
-          ghostId: "G" + ghostId,
-          newItemData,
-        })
-      );
-    } else {
-      // Just add it straight to the show plan without updating the server.
-      dispatch(showplan.actions.addItem(newItemData));
+export const moveItem =
+  (timeslotid: number, itemid: string, to: [number, number]): AppThunk =>
+  async (dispatch, getState) => {
+    // Make a copy of the plan, because we are about to engage in FUCKERY.
+    const plan = cloneDeep(getState().showplan.plan!);
+    const itemToMove = plan.find((x) => itemId(x) === itemid)!;
+    if (itemToMove.channel === to[0] && itemToMove.weight === to[1]) {
+      return;
     }
-  }
-  dispatch(showplan.actions.setPlanSaving(false));
-};
-
-export const removeItem = (
-  timeslotId: number,
-  itemid: string
-): AppThunk => async (dispatch, getState) => {
-  // This is a simplified version of the second case of moveItem
-  const plan = cloneDeep(getState().showplan.plan!);
-  const item = plan.find((x) => itemId(x) === itemid)!;
-
-  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
-    // Server handles deletion, short circuit.
-    if (item) {
+    console.log(
+      `Moving item ${itemId(itemToMove)} from ${itemToMove.channel}x${
+        itemToMove.weight
+      } to ${to[0]}x${to[1]}`
+    );
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
       sendBAPSicleChannel({
+        command: "MOVE",
+        channel: itemToMove.channel,
+        weight: itemToMove.weight,
+        new_channel: to[0],
+        new_weight: to[1],
+        item: itemToMove,
+      });
+
+      return;
+    }
+
+    dispatch(showplan.actions.setPlanSaving(true));
+
+    const oldChannel = itemToMove.channel;
+    const oldWeight = itemToMove.weight;
+    const [newChannel, newWeight] = to;
+
+    const inc: string[] = [];
+    const dec: string[] = [];
+
+    if (oldChannel === newChannel) {
+      // Moving around in the same channel
+      const itemChan = plan
+        .filter((x) => x.channel === oldChannel)
+        .sort((a, b) => a.weight - b.weight);
+      if (oldWeight < newWeight) {
+        // moved the item down (incremented) - everything in between needs decrementing
+        for (let i = oldWeight + 1; i <= newWeight; i++) {
+          dec.push(itemId(itemChan[i]));
+          itemChan[i].weight -= 1;
+        }
+      } else {
+        // moved the item up (decremented) - everything in between needs incrementing
+        for (let i = newWeight; i < oldWeight; i++) {
+          inc.push(itemId(itemChan[i]));
+          itemChan[i].weight += 1;
+        }
+      }
+      itemToMove.channel = newChannel;
+      itemToMove.weight = newWeight;
+    } else {
+      // Moving between channels
+      // So here's the plan.
+      // We're going to temporarily remove the item we're actually moving from the plan
+      // This is because its position becomes nondeterministic when we move it around.
+      plan.splice(plan.indexOf(itemToMove), 1);
+      itemToMove.channel = newChannel;
+      itemToMove.weight = newWeight;
+
+      // First, decrement everything between the old weight and the end of the old channel
+      // (inclusive of old weight, because we've removed the item)
+      const oldChannelData = plan
+        .filter((x) => x.channel === oldChannel)
+        .sort((a, b) => a.weight - b.weight);
+      for (let i = oldWeight; i < oldChannelData.length; i++) {
+        const movingItem = oldChannelData[i];
+        movingItem.weight -= 1;
+        dec.push(itemId(movingItem));
+      }
+
+      // Then, increment everything between the new weight and the end of the new channel
+      // (again, inclusive)
+      const newChannelData = plan
+        .filter((x) => x.channel === newChannel)
+        .sort((a, b) => a.weight - b.weight);
+      for (let i = newWeight; i < newChannelData.length; i++) {
+        const movingItem = newChannelData[i];
+        movingItem.weight += 1;
+        inc.push(itemId(movingItem));
+      }
+    }
+
+    const ops: api.UpdateOp[] = [];
+    console.log("Inc, dec:", inc, dec);
+
+    inc.forEach((id) => {
+      const item = plan.find((x) => itemId(x) === id)!;
+      ops.push({
+        op: "MoveItem",
+        timeslotitemid: itemId(item),
+        oldchannel: item.channel,
+        oldweight: item.weight - 1,
         channel: item.channel,
-        command: "REMOVE",
         weight: item.weight,
       });
-    }
-    return;
-  }
+    });
 
-  dispatch(showplan.actions.setPlanSaving(true));
+    dec.forEach((id) => {
+      const item = plan.find((x) => itemId(x) === id)!;
+      ops.push({
+        op: "MoveItem",
+        timeslotitemid: itemId(item),
+        oldchannel: item.channel,
+        oldweight: item.weight + 1,
+        channel: item.channel,
+        weight: item.weight,
+      });
+    });
 
-  const planColumn = plan
-    .filter((x) => x.channel === item.channel)
-    .sort((a, b) => a.weight - b.weight);
-
-  const ops: api.UpdateOp[] = [];
-  ops.push({
-    op: "RemoveItem",
-    timeslotitemid: itemid,
-    channel: item.channel,
-    weight: item.weight,
-  });
-  planColumn.splice(planColumn.indexOf(item), 1);
-  for (let i = item.weight; i < planColumn.length; i++) {
-    const movingItem = planColumn[i];
+    // Then, and only then, put the item in its new place
     ops.push({
       op: "MoveItem",
-      timeslotitemid: itemId(movingItem),
-      oldchannel: movingItem.channel,
-      oldweight: movingItem.weight,
-      channel: movingItem.channel,
-      weight: movingItem.weight - 1,
+      timeslotitemid: (itemToMove as TimeslotItem).timeslotitemid,
+      oldchannel: oldChannel,
+      oldweight: oldWeight,
+      channel: newChannel,
+      weight: newWeight,
     });
-    movingItem.weight -= 1;
-  }
 
-  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    dispatch(showplan.actions.applyOps(ops));
+
     if (getState().settings.saveShowPlanChanges) {
-      const result = await api.updateShowplan(timeslotId, ops);
+      const result = await api.updateShowplan(timeslotid, ops);
       if (!result.every((x) => x.status)) {
         Sentry.captureException(
-          new Error("Showplan update failure [removeItem]"),
+          new Error("Showplan update failure [moveItem]"),
           {
             contexts: {
               updateShowplan: {
@@ -624,67 +438,254 @@ export const removeItem = (
         return;
       }
     }
-  }
 
-  dispatch(showplan.actions.applyOps(ops));
-  dispatch(showplan.actions.setPlanSaving(false));
-};
+    dispatch(showplan.actions.setPlanSaving(false));
+  };
 
-export const getShowplan = (timeslotId: number): AppThunk => async (
-  dispatch
-) => {
-  dispatch(showplan.actions.getShowplanStarting());
-  try {
-    const plan = await api.getShowplan(timeslotId);
-    // Sanity check
+export const addItem =
+  (timeslotId: number, newItemData: TimeslotItem): AppThunk =>
+  async (dispatch, getState) => {
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      sendBAPSicleChannel({
+        channel: newItemData.channel,
+        command: "ADD",
+        newItem: newItemData,
+      });
+      return;
+    }
+
+    dispatch(showplan.actions.setPlanSaving(true));
+    console.log("New Weight: " + newItemData.weight);
+    const plan = cloneDeep(getState().showplan.plan!);
     const ops: api.UpdateOp[] = [];
 
-    for (let colIndex = 0; colIndex < plan.length; colIndex++) {
-      // Sort the column
-      plan[colIndex] = plan[colIndex].sort((a, b) => {
-        const weightRes = a.weight - b.weight;
-        if (weightRes !== 0) {
-          return weightRes;
-        }
-        return parseInt(a.timeslotitemid, 10) - parseInt(b.timeslotitemid, 10);
+    // This is basically a simplified version of the second case above
+    // Before we add the new item to the plan, we increment everything below it
+    const planColumn = plan
+      .filter((x) => x.channel === newItemData.channel)
+      .sort((a, b) => a.weight - b.weight);
+    for (let i = newItemData.weight; i < planColumn.length; i++) {
+      const item = planColumn[i];
+      ops.push({
+        op: "MoveItem",
+        timeslotitemid: itemId(item),
+        oldchannel: item.channel,
+        oldweight: item.weight,
+        channel: item.channel,
+        weight: item.weight + 1,
       });
-      // If anything is out of place, budge it over
-      const col = plan[colIndex];
-      for (let itemIndex = 0; itemIndex < col.length; itemIndex++) {
-        const item = col[itemIndex];
-        if (item.weight !== itemIndex) {
-          // arse.
-          ops.push({
-            op: "MoveItem",
-            timeslotitemid: item.timeslotitemid,
-            oldchannel: item.channel,
-            channel: item.channel,
-            oldweight: item.weight,
-            weight: itemIndex,
-          });
-          plan[colIndex][itemIndex].weight = itemIndex;
+      item.weight += 1;
+    }
+
+    // Okay, we have a hole.
+    // Now, we're going to insert a "ghost" item into the plan while we wait for it to save
+    // Note that we're going to flush the move-over operations to Redux now, so that the hole
+    // is there - then, once we get a timeslotitemid, replace it with a proper item
+
+    dispatch(showplan.actions.applyOps(ops));
+
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      dispatch(showplan.actions.addItem(newItemData));
+    } else {
+      if (getState().settings.saveShowPlanChanges) {
+        const ghostId = Math.random().toString(10);
+
+        const ghost: ItemGhost = {
+          ghostid: ghostId,
+          channel: newItemData.channel,
+          weight: newItemData.weight,
+          title: newItemData.title,
+          artist: newItemData.type === "central" ? newItemData.artist : "",
+          length: newItemData.length,
+          clean: newItemData.clean,
+          intro: newItemData.type === "central" ? newItemData.intro : 0,
+          outro: newItemData.type === "central" ? newItemData.outro : 0,
+          cue: 0,
+          type: "ghost",
+        };
+
+        const idForServer =
+          newItemData.type === "central"
+            ? `${newItemData.album.recordid}-${newItemData.trackid}`
+            : "managedid" in newItemData
+            ? `ManagedDB-${newItemData.managedid}`
+            : null;
+
+        if (!idForServer) return; // Something went very wrong
+
+        dispatch(showplan.actions.insertGhost(ghost));
+        ops.push({
+          op: "AddItem",
+          channel: newItemData.channel,
+          weight: newItemData.weight,
+          id: idForServer,
+        });
+        const result = await api.updateShowplan(timeslotId, ops);
+        if (!result.every((x) => x.status)) {
+          Sentry.captureException(
+            new Error("Showplan update failure [addItem]"),
+            {
+              contexts: {
+                updateShowplan: {
+                  ops,
+                  result,
+                },
+              },
+            }
+          );
+          dispatch(
+            showplan.actions.planSaveError("Failed to update show plan.")
+          );
+          return;
+        }
+        const lastResult = result[result.length - 1]; // this is the add op
+        const newItemId = lastResult.timeslotitemid!;
+
+        newItemData.timeslotitemid = newItemId;
+        dispatch(
+          showplan.actions.replaceGhost({
+            ghostId: "G" + ghostId,
+            newItemData,
+          })
+        );
+      } else {
+        // Just add it straight to the show plan without updating the server.
+        dispatch(showplan.actions.addItem(newItemData));
+      }
+    }
+    dispatch(showplan.actions.setPlanSaving(false));
+  };
+
+export const removeItem =
+  (timeslotId: number, itemid: string): AppThunk =>
+  async (dispatch, getState) => {
+    // This is a simplified version of the second case of moveItem
+    const plan = cloneDeep(getState().showplan.plan!);
+    const item = plan.find((x) => itemId(x) === itemid)!;
+
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      // Server handles deletion, short circuit.
+      if (item) {
+        sendBAPSicleChannel({
+          channel: item.channel,
+          command: "REMOVE",
+          weight: item.weight,
+        });
+      }
+      return;
+    }
+
+    dispatch(showplan.actions.setPlanSaving(true));
+
+    const planColumn = plan
+      .filter((x) => x.channel === item.channel)
+      .sort((a, b) => a.weight - b.weight);
+
+    const ops: api.UpdateOp[] = [];
+    ops.push({
+      op: "RemoveItem",
+      timeslotitemid: itemid,
+      channel: item.channel,
+      weight: item.weight,
+    });
+    planColumn.splice(planColumn.indexOf(item), 1);
+    for (let i = item.weight; i < planColumn.length; i++) {
+      const movingItem = planColumn[i];
+      ops.push({
+        op: "MoveItem",
+        timeslotitemid: itemId(movingItem),
+        oldchannel: movingItem.channel,
+        oldweight: movingItem.weight,
+        channel: movingItem.channel,
+        weight: movingItem.weight - 1,
+      });
+      movingItem.weight -= 1;
+    }
+
+    if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+      if (getState().settings.saveShowPlanChanges) {
+        const result = await api.updateShowplan(timeslotId, ops);
+        if (!result.every((x) => x.status)) {
+          Sentry.captureException(
+            new Error("Showplan update failure [removeItem]"),
+            {
+              contexts: {
+                updateShowplan: {
+                  ops,
+                  result,
+                },
+              },
+            }
+          );
+          dispatch(
+            showplan.actions.planSaveError("Failed to update show plan.")
+          );
+          return;
         }
       }
     }
 
-    if (ops.length > 0) {
-      console.log("Is corrupt, repairing locally");
-      dispatch(showplan.actions.applyOps(ops));
+    dispatch(showplan.actions.applyOps(ops));
+    dispatch(showplan.actions.setPlanSaving(false));
+  };
 
-      console.log("Repairing showplan", ops);
-      const updateResult = await api.updateShowplan(timeslotId, ops);
-      if (!updateResult.every((x) => x.status)) {
-        console.error("Repair failed!");
-        dispatch(showplan.actions.getShowplanError("Repair failed!"));
-        return;
+export const getShowplan =
+  (timeslotId: number): AppThunk =>
+  async (dispatch) => {
+    dispatch(showplan.actions.getShowplanStarting());
+    try {
+      const plan = await api.getShowplan(timeslotId);
+      // Sanity check
+      const ops: api.UpdateOp[] = [];
+
+      for (let colIndex = 0; colIndex < plan.length; colIndex++) {
+        // Sort the column
+        plan[colIndex] = plan[colIndex].sort((a, b) => {
+          const weightRes = a.weight - b.weight;
+          if (weightRes !== 0) {
+            return weightRes;
+          }
+          return (
+            parseInt(a.timeslotitemid, 10) - parseInt(b.timeslotitemid, 10)
+          );
+        });
+        // If anything is out of place, budge it over
+        const col = plan[colIndex];
+        for (let itemIndex = 0; itemIndex < col.length; itemIndex++) {
+          const item = col[itemIndex];
+          if (item.weight !== itemIndex) {
+            // arse.
+            ops.push({
+              op: "MoveItem",
+              timeslotitemid: item.timeslotitemid,
+              oldchannel: item.channel,
+              channel: item.channel,
+              oldweight: item.weight,
+              weight: itemIndex,
+            });
+            plan[colIndex][itemIndex].weight = itemIndex;
+          }
+        }
       }
+
+      if (ops.length > 0) {
+        console.log("Is corrupt, repairing locally");
+        dispatch(showplan.actions.applyOps(ops));
+
+        console.log("Repairing showplan", ops);
+        const updateResult = await api.updateShowplan(timeslotId, ops);
+        if (!updateResult.every((x) => x.status)) {
+          console.error("Repair failed!");
+          dispatch(showplan.actions.getShowplanError("Repair failed!"));
+          return;
+        }
+      }
+      dispatch(showplan.actions.getShowplanSuccess(plan.flat(2)));
+    } catch (e: any) {
+      console.error(e);
+      dispatch(showplan.actions.getShowplanError(e.toString()));
     }
-    dispatch(showplan.actions.getShowplanSuccess(plan.flat(2)));
-  } catch (e) {
-    console.error(e);
-    dispatch(showplan.actions.getShowplanError(e.toString()));
-  }
-};
+  };
 
 export const getPlaylists = (): AppThunk => async (dispatch) => {
   if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
