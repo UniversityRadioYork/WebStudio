@@ -92,7 +92,7 @@ export const getUser = (): AppThunk => async (dispatch) => {
       username: user.fname + " " + user.sname,
     });
     dispatch(sessionState.actions.setCurrentUser({ user, canBroadcast }));
-  } catch (e: any) {
+  } catch (e) {
     console.log("Failed to get user. " + e.toString());
     dispatch(sessionState.actions.getUserError(e.toString()));
   }
@@ -104,7 +104,7 @@ export const getTimeslot = (): AppThunk => async (dispatch) => {
     const timeslot = await getCurrentApiTimeslot();
     Sentry.setTag("timeslot_id", timeslot.timeslot_id);
     dispatch(sessionState.actions.getTimeslotSuccess(timeslot));
-  } catch (e: any) {
+  } catch (e) {
     console.log("Failed to get selected timeslot. " + e.toString());
     dispatch(sessionState.actions.getTimeslotError(e.toString()));
   }
