@@ -22,6 +22,7 @@ const modules = require("./modules");
 const getClientEnvironment = require("./env");
 const ModuleNotFoundPlugin = require("react-dev-utils/ModuleNotFoundPlugin");
 const ForkTsCheckerWebpackPlugin = require("react-dev-utils/ForkTsCheckerWebpackPlugin");
+const ESLintPlugin = require("eslint-webpack-plugin");
 
 const postcssNormalize = require("postcss-normalize");
 
@@ -48,7 +49,7 @@ const sassModuleRegex = /\.module\.(scss|sass)$/;
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
-module.exports = function(webpackEnv) {
+module.exports = function (webpackEnv) {
   const isEnvDevelopment = webpackEnv === "development";
   const isEnvProduction = webpackEnv === "production";
 
@@ -261,6 +262,11 @@ module.exports = function(webpackEnv) {
         name: (entrypoint) => `runtime-${entrypoint.name}`,
       },
     },
+    plugins: [
+      new ESLintPlugin({
+        cache: true,
+      }),
+    ],
     resolve: {
       // This allows you to set a fallback for where Webpack should look for modules.
       // We placed these paths second because we want `node_modules` to "win"
@@ -311,6 +317,7 @@ module.exports = function(webpackEnv) {
         net: "empty",
         tls: "empty",
         child_process: "empty",
+        url: require.resolve("url/"),
       },
     },
     resolveLoader: {
@@ -323,24 +330,6 @@ module.exports = function(webpackEnv) {
     module: {
       strictExportPresence: true,
       rules: [
-        // First, run the linter.
-        // It's important to do this before Babel processes the JS.
-        {
-          test: /\.(js|mjs|jsx|ts|tsx)$/,
-          enforce: "pre",
-          use: [
-            {
-              options: {
-                cache: true,
-                formatter: require.resolve("react-dev-utils/eslintFormatter"),
-                eslintPath: require.resolve("eslint"),
-                resolvePluginsRelativeTo: __dirname,
-              },
-              loader: require.resolve("eslint-loader"),
-            },
-          ],
-          include: paths.appSrc,
-        },
         // We nest everything inside a oneOf, because worklets need special processing.
         {
           oneOf: [
@@ -698,10 +687,9 @@ module.exports = function(webpackEnv) {
             // as micromatch doesn't match
             // '../cra-template-typescript/template/src/App.tsx'
             // otherwise.
-            include: [
-              "../**/src/**/*.{ts,tsx}",
-              "**/src/**/*.{ts,tsx}",
-            ].map((file) => ({ file })),
+            include: ["../**/src/**/*.{ts,tsx}", "**/src/**/*.{ts,tsx}"].map(
+              (file) => ({ file })
+            ),
             exclude: [
               "**/src/**/__tests__/**",
               "**/src/**/?(*.)(spec|test).*",
