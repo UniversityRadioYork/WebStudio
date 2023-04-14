@@ -44,7 +44,7 @@ export function ConnectionDialogue({ error }: { error: String | null }) {
     </div>
   );
 }
-const SessionHandler: React.FC = function() {
+const SessionHandler: React.FC = function () {
   const dispatch = useDispatch();
 
   const { connectionState } = useSelector(

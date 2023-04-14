@@ -44,28 +44,39 @@ const TIMESLOT_ID = 147595;
     const browser = await puppeteer.launch({
       headless: false,
       defaultViewport: { width: 1366, height: 768 },
-      args: [`--window-size=1440,960`]
+      args: [`--window-size=1440,960`],
     });
     const page = await browser.newPage();
     await page.goto(baseUrl + "?timeslot_id=" + TIMESLOT_ID.toString(10));
-    await page.waitForNavigation({'waitUntil': 'networkidle0'});
+    await page.waitForNavigation({ waitUntil: "networkidle0" });
     if (page.url().indexOf("login") > -1) {
       if (fs.existsSync(path.join(__dirname, ".credentials"))) {
-        const [username, password] = fs.readFileSync(path.join(__dirname, ".credentials"), { encoding: "utf-8" }).split(":");
+        const [username, password] = fs
+          .readFileSync(path.join(__dirname, ".credentials"), {
+            encoding: "utf-8",
+          })
+          .split(":");
         await page.type("#myradio_login-user", username);
         await page.type("#myradio_login-password", password);
         if ((await page.$("#myradio_login-submit")) !== null) {
           await page.click("#myradio_login-submit");
         }
         try {
-          await page.waitForSelector("#signin-submit", {visible: true, timeout: 10000});
+          await page.waitForSelector("#signin-submit", {
+            visible: true,
+            timeout: 10000,
+          });
           await page.click("#signin-submit");
         } catch (e) {
-          console.warn(e)
-          console.warn("Signing in went a bit wrong, please do it manually. Thank!");
+          console.warn(e);
+          console.warn(
+            "Signing in went a bit wrong, please do it manually. Thank!"
+          );
         }
       } else {
-        console.log("Please sign in in the browser window. Thank! (Choose whatever timeslot you like, it'll get ignored.)");
+        console.log(
+          "Please sign in in the browser window. Thank! (Choose whatever timeslot you like, it'll get ignored.)"
+        );
       }
     }
 
@@ -73,35 +84,57 @@ const TIMESLOT_ID = 147595;
     await page.click(".ReactModal__Content button.btn-primary");
 
     console.log("Starting test: loading songs 1-3");
-    await Promise.all([0,1,2].map(id => page.click(`#channel-${id} div.item:nth-child(1)`)));
+    await Promise.all(
+      [0, 1, 2].map((id) => page.click(`#channel-${id} div.item:nth-child(1)`))
+    );
 
-    await Promise.all([0,1,2].map(id => page.waitForSelector(`#channel-${id} wave canvas`, { visible: true })));
+    await Promise.all(
+      [0, 1, 2].map((id) =>
+        page.waitForSelector(`#channel-${id} wave canvas`, { visible: true })
+      )
+    );
 
-    console.log("Songs loaded; waiting five seconds for memory usage to stabilise...");
+    console.log(
+      "Songs loaded; waiting five seconds for memory usage to stabilise..."
+    );
     await page.waitFor(5000);
     const stats1 = await page.metrics();
-    console.log(`JS Heap total at time ${stats1.Timestamp}: ${stats1.JSHeapTotalSize}, used ${stats1.JSHeapTotalSize}`);
+    console.log(
+      `JS Heap total at time ${stats1.Timestamp}: ${stats1.JSHeapTotalSize}, used ${stats1.JSHeapTotalSize}`
+    );
 
-    const arrayBufferHandle = await page.evaluateHandle(() => ArrayBuffer.prototype);
+    const arrayBufferHandle = await page.evaluateHandle(
+      () => ArrayBuffer.prototype
+    );
     const buffers1 = await page.queryObjects(arrayBufferHandle);
-    const buffersCount1 = await page.evaluate(bufs => bufs.length, buffers1);
+    const buffersCount1 = await page.evaluate((bufs) => bufs.length, buffers1);
     console.log(`ArrayBuffers found: ${buffersCount1}`);
     await buffers1.dispose();
 
-    console.log("Loading songs 4-6...")
+    console.log("Loading songs 4-6...");
 
-    await Promise.all([0,1,2].map(id => page.click(`#channel-${id} div.item:nth-child(2)`)));
+    await Promise.all(
+      [0, 1, 2].map((id) => page.click(`#channel-${id} div.item:nth-child(2)`))
+    );
     await page.waitFor(1000);
-    await Promise.all([0,1,2].map(id => page.waitForSelector(`#channel-${id} wave canvas`, { visible: true })));
+    await Promise.all(
+      [0, 1, 2].map((id) =>
+        page.waitForSelector(`#channel-${id} wave canvas`, { visible: true })
+      )
+    );
 
-    console.log("Songs loaded; waiting five seconds for memory usage to stabilise...");
+    console.log(
+      "Songs loaded; waiting five seconds for memory usage to stabilise..."
+    );
     await page.waitFor(5000);
 
     const stats2 = await page.metrics();
-    console.log(`JS Heap total at time ${stats2.Timestamp}: ${stats2.JSHeapTotalSize}, used ${stats2.JSHeapTotalSize}`);
+    console.log(
+      `JS Heap total at time ${stats2.Timestamp}: ${stats2.JSHeapTotalSize}, used ${stats2.JSHeapTotalSize}`
+    );
 
     const buffers2 = await page.queryObjects(arrayBufferHandle);
-    const buffersCount2 = await page.evaluate(bufs => bufs.length, buffers2);
+    const buffersCount2 = await page.evaluate((bufs) => bufs.length, buffers2);
     console.log(`ArrayBuffers found: ${buffersCount2}`);
     await buffers2.dispose();
 
@@ -110,9 +143,17 @@ const TIMESLOT_ID = 147595;
     const leakThresholdHeap = stats1.JSHeapUsedSize * 1.5;
     const leakThresholdBuffers = buffersCount1 * 1.5;
 
-    console.log(`Leak threshold: heap ${leakThresholdHeap}, buffers ${leakThresholdBuffers}`)
-    const leakDetected = (stats2.JSHeapUsedSize > leakThresholdHeap) || ((buffersCount2 * 1.0) > leakThresholdBuffers);
-    console.log(leakDetected ? "\r\n\r\nLeak detected!\r\n\r\n" : "\r\n\r\nLeak not detected!\r\n\r\n");
+    console.log(
+      `Leak threshold: heap ${leakThresholdHeap}, buffers ${leakThresholdBuffers}`
+    );
+    const leakDetected =
+      stats2.JSHeapUsedSize > leakThresholdHeap ||
+      buffersCount2 * 1.0 > leakThresholdBuffers;
+    console.log(
+      leakDetected
+        ? "\r\n\r\nLeak detected!\r\n\r\n"
+        : "\r\n\r\nLeak not detected!\r\n\r\n"
+    );
 
     console.log("Cleaning up...");
     await arrayBufferHandle.dispose();

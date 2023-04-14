@@ -56,7 +56,8 @@ const broadcastState = createSlice({
       state[action.payload.key] = action.payload.val;
     },
     toggleTracklisting(state) {
-      state.liveForThePurposesOfTracklisting = !state.liveForThePurposesOfTracklisting;
+      state.liveForThePurposesOfTracklisting =
+        !state.liveForThePurposesOfTracklisting;
     },
     setTracklisting(state, action: PayloadAction<boolean>) {
       state.liveForThePurposesOfTracklisting = action.payload;
@@ -83,23 +84,19 @@ const broadcastState = createSlice({
 
 export default broadcastState.reducer;
 
-export const {
-  toggleTracklisting,
-  setTracklisting,
-  setWsID,
-} = broadcastState.actions;
+export const { toggleTracklisting, setTracklisting, setWsID } =
+  broadcastState.actions;
 
 export interface TrackListItem {
   audiologid: number;
 }
 
-export const changeBroadcastSetting = <K extends keyof BroadcastState>(
-  key: K,
-  val: BroadcastState[K]
-): AppThunk => async (dispatch, getState) => {
-  dispatch(broadcastState.actions.changeSetting({ key: key, val: val }));
-  dispatch(changeTimeslot());
-};
+export const changeBroadcastSetting =
+  <K extends keyof BroadcastState>(key: K, val: BroadcastState[K]): AppThunk =>
+  async (dispatch, getState) => {
+    dispatch(broadcastState.actions.changeSetting({ key: key, val: val }));
+    dispatch(changeTimeslot());
+  };
 
 // intentionally renamed to break all existing callsites
 export const registerForShow = (): AppThunk => async (dispatch, getState) => {
@@ -253,44 +250,42 @@ function shouldTracklist(
   }
 }
 
-export const tracklistStart = (
-  player: number,
-  trackid: number
-): AppThunk => async (dispatch, getState) => {
-  const state = getState();
-  if (
-    shouldTracklist(
-      state.settings.tracklist,
-      state.broadcast.liveForThePurposesOfTracklisting
-    )
-  ) {
-    console.log("Attempting to tracklist: " + trackid);
-    var id = (await sendTracklistStart(trackid)).audiologid;
-    dispatch(MixerState.setTracklistItemID({ player, id }));
-  } else {
-    console.log("not gonna tracklist that one after all");
-  }
-};
+export const tracklistStart =
+  (player: number, trackid: number): AppThunk =>
+  async (dispatch, getState) => {
+    const state = getState();
+    if (
+      shouldTracklist(
+        state.settings.tracklist,
+        state.broadcast.liveForThePurposesOfTracklisting
+      )
+    ) {
+      console.log("Attempting to tracklist: " + trackid);
+      var id = (await sendTracklistStart(trackid)).audiologid;
+      dispatch(MixerState.setTracklistItemID({ player, id }));
+    } else {
+      console.log("not gonna tracklist that one after all");
+    }
+  };
 
-export const tracklistEnd = (tracklistitemid: number): AppThunk => async (
-  dispatch,
-  getState
-) => {
-  const state = getState();
-  if (
-    shouldTracklist(
-      state.settings.tracklist,
-      state.broadcast.liveForThePurposesOfTracklisting
-    )
-  ) {
-    console.log("Attempting to end tracklistitem: " + tracklistitemid);
-    myradioApiRequest(
-      "/tracklistItem/" + tracklistitemid + "/endtime",
-      "PUT",
-      {}
-    );
-  }
-};
+export const tracklistEnd =
+  (tracklistitemid: number): AppThunk =>
+  async (dispatch, getState) => {
+    const state = getState();
+    if (
+      shouldTracklist(
+        state.settings.tracklist,
+        state.broadcast.liveForThePurposesOfTracklisting
+      )
+    ) {
+      console.log("Attempting to end tracklistitem: " + tracklistitemid);
+      myradioApiRequest(
+        "/tracklistItem/" + tracklistitemid + "/endtime",
+        "PUT",
+        {}
+      );
+    }
+  };
 
 export function sendTracklistStart(trackid: number): Promise<TrackListItem> {
   return myradioApiRequest("/tracklistItem", "POST", {

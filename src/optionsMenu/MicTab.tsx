@@ -27,9 +27,8 @@ export function MicTab() {
   const [micList, setMicList] = useState<null | MediaDeviceInfo[]>(null);
   const dispatch = useDispatch();
   const [nextMicSource, setNextMicSource] = useState("$NONE");
-  const [nextMicMapping, setNextMicMapping] = useState<ChannelMapping>(
-    "mono-both"
-  );
+  const [nextMicMapping, setNextMicMapping] =
+    useState<ChannelMapping>("mono-both");
   const [openError, setOpenError] = useState<null | MicErrorEnum>(null);
 
   async function fetchMicNames() {
@@ -96,7 +95,7 @@ export function MicTab() {
         disabled={micList === null}
       >
         <option value={"$NONE"} disabled label="Choose a microphone" />
-        {(micList || []).map(function(e, i) {
+        {(micList || []).map(function (e, i) {
           return (
             <option value={e.deviceId} key={i}>
               {e.label !== "" ? e.label : e.deviceId}

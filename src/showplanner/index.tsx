@@ -87,7 +87,7 @@ function incrReducer(state: number, action: any) {
   return state + 1;
 }
 
-const Showplanner: React.FC<{ timeslotId: number | null }> = function({
+const Showplanner: React.FC<{ timeslotId: number | null }> = function ({
   timeslotId,
 }) {
   if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
@@ -127,7 +127,7 @@ const Showplanner: React.FC<{ timeslotId: number | null }> = function({
     if (element) {
       element.classList.toggle("hidden");
     }
-    setTimeout(function() {
+    setTimeout(function () {
       dispatch(MixerState.redrawWavesurfers());
     }, 500);
   }

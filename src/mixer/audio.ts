@@ -33,12 +33,10 @@ interface PlayerEvents {
   finish: () => void;
 }
 
-const PlayerEmitter: StrictEmitter<
-  EventEmitter,
-  PlayerEvents
-> = EventEmitter as any;
+const PlayerEmitter: StrictEmitter<EventEmitter, PlayerEvents> =
+  EventEmitter as any;
 
-class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
+class Player extends (PlayerEmitter as unknown as { new (): EventEmitter }) {
   private volume = 0;
   private trim = 0;
   private ignore_next_seek: boolean = false;
@@ -142,7 +140,8 @@ class Player extends ((PlayerEmitter as unknown) as { new (): EventEmitter }) {
       // If the outro is set to 0, we assume that's no outro.
       if (startTime === 0) {
         // Can't just delete the outro, so set it to the end of the track to hide it.
-        this.wavesurfer.regions.list.outro.start = this.wavesurfer.regions.list.outro.end;
+        this.wavesurfer.regions.list.outro.start =
+          this.wavesurfer.regions.list.outro.end;
       } else {
         this.wavesurfer.regions.list.outro.start = startTime;
       }
@@ -369,12 +368,10 @@ interface EngineEvents {
   micOpen: () => void;
 }
 
-const EngineEmitter: StrictEmitter<
-  EventEmitter,
-  EngineEvents
-> = EventEmitter as any;
+const EngineEmitter: StrictEmitter<EventEmitter, EngineEvents> =
+  EventEmitter as any;
 
-export class AudioEngine extends ((EngineEmitter as unknown) as {
+export class AudioEngine extends (EngineEmitter as unknown as {
   new (): EventEmitter;
 }) {
   // Multipurpose Bits
@@ -394,7 +391,7 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
 
   // Player Inputs
   public players: (Player | undefined)[] = [];
-  playerAnalysers: typeof StereoAnalyserNode[] = Array(PLAYER_COUNT);
+  playerAnalysers: (typeof StereoAnalyserNode)[] = Array(PLAYER_COUNT);
 
   // Final Processing
   finalCompressor: DynamicsCompressorNode;
@@ -471,7 +468,8 @@ export class AudioEngine extends ((EngineEmitter as unknown) as {
     this.streamingAnalyser = new StereoAnalyserNode(this.audioContext);
     this.streamingAnalyser.fftSize = ANALYSIS_FFT_SIZE;
 
-    this.streamingDestination = this.audioContext.createMediaStreamDestination();
+    this.streamingDestination =
+      this.audioContext.createMediaStreamDestination();
 
     // News In/Out Reminders
 
