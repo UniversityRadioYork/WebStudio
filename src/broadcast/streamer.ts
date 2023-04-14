@@ -10,8 +10,8 @@ export type ConnectionStateListener = (val: ConnectionStateEnum) => any;
 export abstract class Streamer {
   private csListeners: ConnectionStateListener[] = [];
 
-  public abstract async start(): Promise<void>;
-  public abstract async stop(): Promise<void>;
+  public abstract start(): Promise<void>;
+  public abstract stop(): Promise<void>;
   public addConnectionStateListener(listener: ConnectionStateListener) {
     this.csListeners.push(listener);
     return () => {
