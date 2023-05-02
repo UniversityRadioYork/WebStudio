@@ -38,6 +38,10 @@ export const Item = memo(function Item({
   const id = itemId(x);
   const isGhost = "ghostid" in x;
 
+  const planSaving = useSelector(
+    (state: RootState) => state.showplan.planSaving
+  );
+
   const loadedItem = useSelector(
     (state: RootState) =>
       column > -1 ? state.mixer.players[column]?.loadedItem : null,
@@ -183,7 +187,7 @@ export const Item = memo(function Item({
     return data.join("¬"); // Something obscure to split against.
   }
 
-  let isDragDisabled = isGhost;
+  let isDragDisabled = isGhost || planSaving;
 
   if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
     isDragDisabled = isDragDisabled || isLoaded;
