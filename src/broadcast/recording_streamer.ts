@@ -27,7 +27,7 @@ export class RecordingStreamer extends Streamer {
       a.click();
     };
     this.recorder.onerror = (e) => {
-      console.error(e.error);
+      console.error(e);
       this.onStateChange("CONNECTION_LOST");
     };
   }

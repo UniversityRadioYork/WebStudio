@@ -168,7 +168,7 @@ export class WebRTCStreamer extends Streamer {
 
   // TODO: supporting trickle ICE would be nICE
   waitForIceCandidates() {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       if (!this.pc) {
         throw new Error(
           "Tried to gather ICE Candidates with a null PeerConnection!"
