@@ -683,7 +683,8 @@ module.exports = function(webpackEnv) {
               urlPattern: /NIPSWeb\/(secure|managed)_play/,
               handler: "CacheFirst"
             }
-          ]
+          ],
+          maximumFileSizeToCacheInBytes: 6000000,
         }),
       // TypeScript type checking
       useTypeScript &&

@@ -55,7 +55,7 @@ pipeline {
     SENTRY_ENVIRONMENT = 'webstudio-dev'
   }
    steps {
-    sh 'newpkgjson=$(jq \'.homepage = "https://ury.org.uk/webstudio-dev"\' package.json) && echo "${newpkgjson}" > package.json'
+    sh 'jq \'.homepage = "https://ury.org.uk/webstudio-dev"\' package.json > package-replace.json && mv package-replace.json package.json'
     sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
     sshagent(credentials: ['ury']) {
      sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio-dev'
