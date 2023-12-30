@@ -18,6 +18,8 @@ import OptionsMenuReducer from "./optionsMenu/state";
 import SettingsState from "./optionsMenu/settingsState";
 import produce from "immer";
 
+import BAPSSessionReducer from "./bapsiclesession/state";
+
 const rootReducer = combineReducers({
   showplan: ShowplanReducer,
   mixer: MixerReducer,
@@ -26,6 +28,7 @@ const rootReducer = combineReducers({
   navbar: NavbarReducer,
   optionsMenu: OptionsMenuReducer,
   settings: SettingsState,
+  bapsSession: BAPSSessionReducer,
 });
 
 const persistMigrations = createMigrate({

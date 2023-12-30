@@ -11,20 +11,18 @@ from typing import Optional, Any, Type, Dict, List
 
 import aiohttp
 import av  # type: ignore
-import jack as Jack  # type: ignore
-import websockets
+import jack as Jack
+from jack import OwnPort
+import websockets.exceptions, websockets.server, websockets.connection
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
 from aiortc.mediastreams import MediaStreamError  # type: ignore
-import sentry_sdk  # type: ignore
+import sentry_sdk
 
 config = configparser.RawConfigParser()
 config.read("serverconfig.ini")
 
 if config.get("sentry", "enable") == "True":
-    sentry_sdk.init(
-        config.get("sentry", "dsn"),
-        traces_sample_rate=1.0
-    )
+    sentry_sdk.init(config.get("sentry", "dsn"), traces_sample_rate=1.0)
 
 file_contents_ex = re.compile(r"^ws=\d$")
 
@@ -53,7 +51,10 @@ def get_turn_credentials() -> TurnCredentials:
     provider = config.get("shittyserver", "turn_provider")
     if provider == "twilio":
         from twilio.rest import Client  # type: ignore
-        client = Client(config.get("twilio", "account_sid"), config.get("twilio", "auth_token"))
+
+        client = Client(
+            config.get("twilio", "account_sid"), config.get("twilio", "auth_token")
+        )
 
         token = client.tokens.create()
         # Twilio's typedef is wrong, reee
@@ -65,19 +66,19 @@ def get_turn_credentials() -> TurnCredentials:
         raise Exception("unknown provider " + provider)
 
 
-@Jack.set_error_function  # type: ignore
+@Jack.set_error_function
 def error(msg: str) -> None:
     print("Error:", msg)
 
 
-@Jack.set_info_function  # type: ignore
+@Jack.set_info_function
 def info(msg: str) -> None:
     print("Info:", msg)
 
 
 jack = Jack.Client("webstudio")
-out1 = jack.outports.register("out_0")
-out2 = jack.outports.register("out_1")
+out1: OwnPort = jack.outports.register("out_0")  # type: ignore
+out2: OwnPort = jack.outports.register("out_1")  # type: ignore
 
 transfer_buffer1: Any = None
 transfer_buffer2: Any = None
@@ -92,19 +93,19 @@ def init_buffers() -> None:
 init_buffers()
 
 
-@jack.set_process_callback  # type: ignore
+@jack.set_process_callback
 def process(frames: int) -> None:
     buf1 = out1.get_buffer()
     if transfer_buffer1.read_space == 0:
         for i in range(len(buf1)):
-            buf1[i] = b'\x00'
+            buf1[i] = b"\x00"  # type: ignore
     else:
         piece1 = transfer_buffer1.read(len(buf1))
         buf1[: len(piece1)] = piece1
     buf2 = out2.get_buffer()
     if transfer_buffer2.read_space == 0:
         for i in range(len(buf2)):
-            buf2[i] = b'\x00'
+            buf2[i] = b"\x00"  # type: ignore
     else:
         piece2 = transfer_buffer2.read(len(buf2))
         buf2[: len(piece2)] = piece2
@@ -119,7 +120,9 @@ async def notify_mattserver_about_sessions() -> None:
         data: Dict[str, Dict[str, str]] = {}
         for sid, sess in active_sessions.items():
             data[sid] = sess.to_dict()
-        async with session.post(config.get("shittyserver", "notify_url"), json=data) as response:
+        async with session.post(
+            config.get("shittyserver", "notify_url"), json=data
+        ) as response:
             print("Mattserver response", response)
 
 
@@ -128,7 +131,7 @@ class NotReadyException(BaseException):
 
 
 class Session(object):
-    websocket: Optional[websockets.WebSocketServerProtocol]
+    websocket: Optional[websockets.server.WebSocketServerProtocol]
     connection_state: Optional[str]
     pc: Optional[Any]
     connection_id: str
@@ -153,7 +156,7 @@ class Session(object):
     def to_dict(self) -> Dict[str, str]:
         return {
             "connection_id": self.connection_id,
-            "connected_at": self.connected_at.strftime("%Y-%m-%dT%H:%M:%S%z")
+            "connected_at": self.connected_at.strftime("%Y-%m-%dT%H:%M:%S%z"),
         }
 
     async def activate(self) -> None:
@@ -169,7 +172,9 @@ class Session(object):
             try:
                 await self.websocket.send(json.dumps({"kind": "DEACTIVATED"}))
             except websockets.exceptions.ConnectionClosed:
-                print(self.connection_id, "not sending DEACTIVATED as it's already closed")
+                print(
+                    self.connection_id, "not sending DEACTIVATED as it's already closed"
+                )
                 pass
 
     async def end(self) -> None:
@@ -188,14 +193,16 @@ class Session(object):
                     await self.pc.close()
 
                 if (
-                        self.websocket is not None
-                        and self.websocket.state == websockets.protocol.State.OPEN
+                    self.websocket is not None
+                    and self.websocket.state == websockets.connection.State.OPEN
                 ):
                     try:
                         await self.websocket.send(json.dumps({"kind": "DIED"}))
                         await self.websocket.close(1008)
                     except websockets.exceptions.ConnectionClosed:
-                        print(self.connection_id, "socket already closed, no died message")
+                        print(
+                            self.connection_id, "socket already closed, no died message"
+                        )
 
                 if self.connection_id in active_sessions:
                     print(self.connection_id, "removing from active_sessions")
@@ -253,7 +260,10 @@ class Session(object):
 
                 @track.on("ended")  # type: ignore
                 async def on_ended() -> None:
-                    print(self.connection_id, "Ending due to {} track end".format(track.kind))
+                    print(
+                        self.connection_id,
+                        "Ending due to {} track end".format(track.kind),
+                    )
                     await self.end()
 
                 write_ob_status(True)
@@ -314,7 +324,9 @@ class Session(object):
                 ),
             )
 
-    async def connect(self, websocket: websockets.WebSocketServerProtocol) -> None:
+    async def connect(
+        self, websocket: websockets.server.WebSocketServerProtocol
+    ) -> None:
         global active_sessions
 
         active_sessions[self.connection_id] = self
@@ -326,7 +338,13 @@ class Session(object):
         print(self.connection_id, "Obtained ICE")
         sentry_sdk.set_context("session", {"session_id": self.connection_id})
         await websocket.send(
-            json.dumps({"kind": "HELLO", "connectionId": self.connection_id, "iceServers": ice_config})
+            json.dumps(
+                {
+                    "kind": "HELLO",
+                    "connectionId": self.connection_id,
+                    "iceServers": ice_config,
+                }
+            )
         )
 
         try:
@@ -350,7 +368,9 @@ class Session(object):
             await self.end()
 
 
-async def serve(websocket: websockets.WebSocketServerProtocol, path: str) -> None:
+async def serve(
+    websocket: websockets.server.WebSocketServerProtocol, path: str
+) -> None:
     if path == "/stream":
         session = Session()
         await session.connect(websocket)
@@ -358,15 +378,19 @@ async def serve(websocket: websockets.WebSocketServerProtocol, path: str) -> Non
         pass
 
 
-start_server = websockets.serve(
+start_server = websockets.server.serve(
     serve, host=None, port=int(config.get("shittyserver", "websocket_port"))
 )
 
-print("Shittyserver WS starting on port {}.".format(config.get("shittyserver", "websocket_port")))
+print(
+    "Shittyserver WS starting on port {}.".format(
+        config.get("shittyserver", "websocket_port")
+    )
+)
 
 
 async def telnet_server(
-        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    reader: asyncio.StreamReader, writer: asyncio.StreamWriter
 ) -> None:
     global active_sessions, live_session
     while True:
@@ -387,15 +411,15 @@ async def telnet_server(
                 result[sid] = sess.to_dict()
             writer.write(
                 (
-                        json.dumps(
-                            {
-                                "live": live_session.to_dict()
-                                if live_session is not None
-                                else None,
-                                "active": result,
-                            }
-                        )
-                        + "\r\n"
+                    json.dumps(
+                        {
+                            "live": live_session.to_dict()
+                            if live_session is not None
+                            else None,
+                            "active": result,
+                        }
+                    )
+                    + "\r\n"
                 ).encode("utf-8")
             )
 
@@ -444,7 +468,11 @@ async def run_telnet_server() -> None:
 
 jack.activate()
 
-print("Shittyserver TELNET starting on port {}".format(config.get("shittyserver", "telnet_port")))
+print(
+    "Shittyserver TELNET starting on port {}".format(
+        config.get("shittyserver", "telnet_port")
+    )
+)
 asyncio.get_event_loop().run_until_complete(notify_mattserver_about_sessions())
 
 asyncio.get_event_loop().run_until_complete(

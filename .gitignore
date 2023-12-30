@@ -33,3 +33,4 @@ venv/
 serverconfig.ini
 
 .idea/
+.vscode/settings.json

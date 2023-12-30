@@ -6,9 +6,9 @@ name: Checks
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -18,32 +18,47 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - name: Get yarn cache directory path
-      id: yarn-cache-dir-path
-      run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
 
-    - uses: actions/cache@v1
-      id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
-      with:
-        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-yarn-
-        
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
-    
-    - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      - uses: actions/cache@v1
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
-    # Type checks
-    - name: TypeScript Error Reporter
-      uses: icrawl/action-tsc@v1
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
 
-    # ESLint
-    - name: ESLint Action
-      run: node_modules/.bin/eslint src/ --ext .ts,.tsx
-    
-    # Prettier
-    - name: Prettier
-      run: node_modules/.bin/prettier -c 'src/**/*.{js,ts,tsx,css,scss}'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # Type checks
+      - name: TypeScript Error Reporter
+        uses: icrawl/action-tsc@v1
+
+      # ESLint
+      - name: ESLint Action
+        run: node_modules/.bin/eslint src/ --ext .ts,.tsx
+
+      # Prettier
+      - name: Prettier
+        run: node_modules/.bin/prettier -c 'src/**/*.{js,ts,tsx,css,scss}'
+
+  python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: poetry
+      - run: poetry install --with=dev
+      - name: MyPy checks
+        run: poetry run mypy *.py

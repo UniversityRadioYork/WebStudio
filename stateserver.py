@@ -6,7 +6,7 @@ import subprocess
 from typing import List, Any, Dict, Optional
 
 from flask import Flask, jsonify, request
-from flask_cors import CORS # type: ignore
+from flask_cors import CORS  # type: ignore
 import requests
 import datetime
 import random
@@ -25,7 +25,11 @@ SUSTAINER_AUTONEWS = config.get("stateserver", "sustainer_autonews") == "True"
 
 def do_ws_srv_telnet(source: str) -> None:
     HOST = "localhost"
-    print("telnet {} {} SEL {}".format(HOST, config.get("shittyserver", "telnet_port"), source))
+    print(
+        "telnet {} {} SEL {}".format(
+            HOST, config.get("shittyserver", "telnet_port"), source
+        )
+    )
     tn = Telnet(HOST, int(config.get("shittyserver", "telnet_port")))
     tn.write(b"SEL " + str.encode(source) + b"\n")
     try:
@@ -45,7 +49,7 @@ def genPayload(payload: Any) -> Any:
 
 
 def myradioApiRequest(url: str) -> Any:
-    res = requests.get('https://ury.org.uk/api/v2/' + url + '?api_key=' + api_key)
+    res = requests.get("https://ury.org.uk/api/v2/" + url + "?api_key=" + api_key)
     if res.ok:
         return res.json()["payload"]
     else:
@@ -85,7 +89,8 @@ wsSessions: Dict[str, Dict[str, str]] = {}
 def getCurrentShowConnection() -> Optional[Connection]:
     for connection in connections:
         if (connection["startTimestamp"] <= datetime.datetime.now().timestamp()) and (
-                connection["endTimestamp"] >= getNextHourTimestamp()):
+            connection["endTimestamp"] >= getNextHourTimestamp()
+        ):
             return connection
     return None
 
@@ -109,8 +114,8 @@ def getNextHourConnection() -> Optional[Connection]:
 
 def cleanOldConnections() -> None:
     global connections
-    #Go backwards round the loop so that pop's don't interfere with the index.
-    for i in range(len(connections)-1,-1,-1):
+    # Go backwards round the loop so that pop's don't interfere with the index.
+    for i in range(len(connections) - 1, -1, -1):
         if connections[i]["endTimestamp"] < datetime.datetime.now().timestamp():
             connections.pop(i)
 
@@ -159,11 +164,15 @@ def stateDecider() -> Dict[str, Any]:
             newSelSource = currentConnection["sourceid"]
             newWSSource = currentConnection["wsid"]
         elif SUSTAINER_AUTONEWS:
-            print("There's no show on currently, so we're going to AutoNEWS on sustainer")
+            print(
+                "There's no show on currently, so we're going to AutoNEWS on sustainer"
+            )
             # Jukebox -> NEWS -> Jukebox
             newSelSource = SOURCE_JUKEBOX
         else:
-            print("There's no show on currently, but AutoNews on sustainer is disabled, so don't do news")
+            print(
+                "There's no show on currently, but AutoNews on sustainer is disabled, so don't do news"
+            )
             # Jukebox -> Jukebox
             newSelSource = SOURCE_JUKEBOX
             switchAudioAtMin = 0
@@ -173,32 +182,27 @@ def stateDecider() -> Dict[str, Any]:
         "autoNews": willRunAutoNews,
         "switchAudioAtMin": switchAudioAtMin,
         "selSource": newSelSource,
-        "wsSource": newWSSource
+        "wsSource": newWSSource,
     }
 
     return nextState
 
 
-@app.route('/api/v1/status', methods=['GET'])
+@app.route("/api/v1/status", methods=["GET"])
 def get_status() -> Any:
     print(getNextHourTimestamp())
     global connections
     cleanOldConnections()
-    return genPayload(
-        {
-            "connections": connections,
-            "wsSessions": wsSessions
-        }
-    )
+    return genPayload({"connections": connections, "wsSessions": wsSessions})
 
 
-@app.route('/api/v1/nextTransition', methods=['GET'])
+@app.route("/api/v1/nextTransition", methods=["GET"])
 def get_next_transition() -> Any:
     cleanOldConnections()
     return genPayload(stateDecider())
 
 
-@app.route('/api/v1/cancelTimeslot', methods=['POST'])
+@app.route("/api/v1/cancelTimeslot", methods=["POST"])
 def post_cancelCheck() -> Any:
     global connections
     content = request.json
@@ -215,7 +219,13 @@ def post_cancelCheck() -> Any:
         # but don't kill it during the news, or after the end time, to avoid unexpected jukeboxing
         now = datetime.datetime.now().timestamp()
         if now < (currentShow["endTimestamp"] - 15):
-            print("Jukeboxing due to {}'s ({}, {}) cancellation".format(currentShow["connid"], currentShow["timeslotid"], currentShow["wsid"]))
+            print(
+                "Jukeboxing due to {}'s ({}, {}) cancellation".format(
+                    currentShow["connid"],
+                    currentShow["timeslotid"],
+                    currentShow["wsid"],
+                )
+            )
             do_ws_srv_telnet("NUL")
             subprocess.Popen(["sel", str(SOURCE_JUKEBOX)])
 
@@ -227,7 +237,7 @@ def post_cancelCheck() -> Any:
     return genFail("Connection not found.")
 
 
-@app.route('/api/v1/registerTimeslot', methods=['POST'])
+@app.route("/api/v1/registerTimeslot", methods=["POST"])
 def post_registerCheck() -> Any:
     global connections
 
@@ -274,45 +284,62 @@ def post_registerCheck() -> Any:
     for conn in connections:
         if content["timeslotid"] == conn["timeslotid"]:
             # they've already registered, return the existing session
-            print("found existing connection {} for {}".format(conn["connid"], conn["timeslotid"]))
+            print(
+                "found existing connection {} for {}".format(
+                    conn["connid"], conn["timeslotid"]
+                )
+            )
             connection = conn
-            # make sure we update their wsID 
+            # make sure we update their wsID
             if "wsid" in content:
                 connection["wsid"] = content["wsid"]
 
     new_connection = False
     if connection is None:
-
         new_connection = True
 
         if start_time - now_time > datetime.timedelta(hours=1):
-            return genFail("This show too far away, please try again within an hour of starting your show.")
+            return genFail(
+                "This show too far away, please try again within an hour of starting your show."
+            )
 
         if start_time + duration_time < now_time:
             return genFail("This show has already ended.")
 
-        if start_time - datetime.timedelta(minutes=1) < now_time < start_time + datetime.timedelta(minutes=2):
-            return genFail("You registered too late. Please re-register after the news.")
+        if (
+            start_time - datetime.timedelta(minutes=1)
+            < now_time
+            < start_time + datetime.timedelta(minutes=2)
+        ):
+            return genFail(
+                "You registered too late. Please re-register after the news."
+            )
 
         random.seed(a=timeslot["timeslot_id"], version=2)
         connection = {
-            "connid": random.randint(0, 100000000),  # TODO: this is horrible. I'll sort this later.
+            "connid": random.randint(
+                0, 100000000
+            ),  # TODO: this is horrible. I'll sort this later.
             "timeslotid": timeslot["timeslot_id"],
             "startTimestamp": int(start_time.timestamp()),
             "endTimestamp": int(end_time.timestamp()),
             "sourceid": content["sourceid"],
-            'autoNewsBeginning': True,
-            'autoNewsMiddle': True,
-            'autoNewsEnd': True,
-            'wsid': content["wsid"]
+            "autoNewsBeginning": True,
+            "autoNewsMiddle": True,
+            "autoNewsEnd": True,
+            "wsid": content["wsid"],
         }
 
     if start_time + datetime.timedelta(minutes=2) < now_time:
         if connection["wsid"] is not None:
             # they're late, bring them live now
-            print("({}, {}) late, bringing on air now".format(connection["connid"], connection["wsid"]))
+            print(
+                "({}, {}) late, bringing on air now".format(
+                    connection["connid"], connection["wsid"]
+                )
+            )
             do_ws_srv_telnet(connection["wsid"])
-            subprocess.Popen(['sel', '5'])
+            subprocess.Popen(["sel", "5"])
 
     assert connection is not None
     if new_connection:
@@ -322,7 +349,7 @@ def post_registerCheck() -> Any:
     return genPayload(connection)
 
 
-@app.route('/api/v1/changeTimeslot', methods=['POST'])
+@app.route("/api/v1/changeTimeslot", methods=["POST"])
 def post_settingsCheck() -> Any:
     global connections
     content = request.json
@@ -349,11 +376,12 @@ def post_settingsCheck() -> Any:
     return genFail("No connection found.")
 
 
-@app.route('/api/v1/updateWSSessions', methods=['POST'])
+@app.route("/api/v1/updateWSSessions", methods=["POST"])
 def post_wsSessions() -> Any:
     global connections
     global wsSessions
     content = request.json
+    assert content is not None
     # if not content:
     #    return genFail("No parameters provided.")
     oldSessions = wsSessions
@@ -378,9 +406,13 @@ def post_wsSessions() -> Any:
         if conn["wsid"] in wsids_to_add:
             if conn["startTimestamp"] + 120 < datetime.datetime.now().timestamp():
                 # they're late, bring them on air now
-                print("({}, {}) late, bringing on air now".format(conn["connid"], conn["wsid"]))
+                print(
+                    "({}, {}) late, bringing on air now".format(
+                        conn["connid"], conn["wsid"]
+                    )
+                )
                 do_ws_srv_telnet(conn["wsid"])
-                subprocess.Popen(['sel', '5'])
+                subprocess.Popen(["sel", "5"])
 
         if conn["wsid"] in wsids_to_remove:
             print("({}, {}) gone".format(conn["connid"], conn["wsid"]))
@@ -394,10 +426,10 @@ def post_wsSessions() -> Any:
                     now = datetime.datetime.now().timestamp()
                     if now < (currentShow["endTimestamp"] - 15):
                         print("jukeboxing due to their disappearance...")
-                        subprocess.Popen(['sel', str(SOURCE_JUKEBOX)])
+                        subprocess.Popen(["sel", str(SOURCE_JUKEBOX)])
                         do_ws_srv_telnet("NUL")
     return genPayload("Thx, K, bye.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

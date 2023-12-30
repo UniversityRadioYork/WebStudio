@@ -1,9 +1,10 @@
 {
   "name": "webstudio",
-  "version": "1.5.6",
+  "version": "1.6.0",
   "private": true,
   "dependencies": {
     "@babel/core": "7.6.0",
+    "@babel/helper-validator-option": "^7.21.0",
     "@reduxjs/toolkit": "^1.0.4",
     "@sentry/react": "^6.3.1",
     "@sentry/tracing": "^6.3.1",
@@ -54,7 +55,7 @@
     "fs-extra": "7.0.1",
     "html-webpack-plugin": "4.0.0-beta.5",
     "identity-obj-proxy": "3.0.0",
-    "immer": "^8.0.1",
+    "immer": "^9.0.6",
     "is-wsl": "^1.1.0",
     "jest": "24.9.0",
     "jest-environment-jsdom-fourteen": "0.1.0",
@@ -62,7 +63,7 @@
     "jest-watch-typeahead": "0.4.0",
     "keymaster": "^1.6.2",
     "later": "^1.2.0",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "mini-css-extract-plugin": "0.8.0",
     "optimize-css-assets-webpack-plugin": "5.0.3",
     "pnp-webpack-plugin": "1.5.0",
@@ -93,7 +94,8 @@
     "redux-persist": "^6.0.0",
     "resolve": "1.12.0",
     "resolve-url-loader": "3.1.0",
-    "sass-loader": "7.2.0",
+    "sass": "^1.45.1",
+    "sass-loader": "^10.2.0",
     "sdp-transform": "^2.14.0",
     "semver": "7.3.2",
     "serialize-javascript": "^5.0.1",
@@ -111,10 +113,12 @@
     "workbox-webpack-plugin": "^5.1.2",
     "worklet-loader": "^1.0.0"
   },
-  "homepage": "https://ury.org.uk/webstudio",
+  "homepage": "./",
   "scripts": {
     "start": "node scripts/start.js",
+    "start-baps": "node scripts/start.js baps",
     "build": "node scripts/build.js",
+    "build-baps": "node scripts/build.js baps",
     "test": "node scripts/test.js"
   },
   "eslintConfig": {
@@ -137,7 +141,6 @@
     "@ury1350/prettier-config": "^1.0.0",
     "husky": "^4.3.0",
     "lint-staged": ">=10",
-    "node-sass": "^4.13.1",
     "prettier": "^1.19.1"
   },
   "jest": {

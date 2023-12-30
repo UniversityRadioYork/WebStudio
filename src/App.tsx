@@ -3,7 +3,10 @@ import { useSelector } from "react-redux";
 import qs from "qs";
 import "./App.css";
 import Showplanner from "./showplanner";
+
+import BAPSSessionHandler from "./bapsiclesession";
 import SessionHandler from "./session";
+
 import { RootState } from "./rootReducer";
 import "./light-theme.scss";
 import "./App.scss";
@@ -15,8 +18,28 @@ function useForceUpdate() {
 }
 
 const App: React.FC = () => {
+  const bapsConnectionState = useSelector(
+    (state: RootState) => state.bapsSession.connectionState
+  );
+
   const [inputVal, setInputVal] = useState("");
   const force = useForceUpdate();
+
+  const {
+    currentUser,
+    userLoading,
+    currentTimeslot,
+    timeslotLoading,
+  } = useSelector((state: RootState) => state.session);
+
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    document.title = "BAPS3 Presenter";
+    if (bapsConnectionState !== "CONNECTED") {
+      return <BAPSSessionHandler />;
+    } else {
+      return <Showplanner timeslotId={null} />;
+    }
+  }
 
   function cont() {
     window.location.search = `?timeslot_id=${inputVal}`;
@@ -30,13 +53,6 @@ const App: React.FC = () => {
   }
 
   const q = qs.parse(window.location.search, { ignoreQueryPrefix: true });
-
-  const {
-    currentUser,
-    userLoading,
-    currentTimeslot,
-    timeslotLoading,
-  } = useSelector((state: RootState) => state.session);
 
   if (
     currentUser == null ||

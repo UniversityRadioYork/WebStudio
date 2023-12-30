@@ -5,11 +5,14 @@ import { myradioApiRequest } from "../api";
 import { useInterval } from "../lib/utils";
 import { RootState } from "../rootReducer";
 import "./timelord.scss";
+import logo from "../assets/images/navbarlogo.png";
 
 const SILENCE_WARN_SECS = 5;
 
 export function Timelord() {
   async function getSource() {
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE)
+      return { id: -1, name: "Unknown" };
     let studio = await myradioApiRequest("/selector/studioattime", "GET", null);
 
     const sourceNames = [
@@ -24,7 +27,7 @@ export function Timelord() {
     ];
 
     let sourceName = "Unknown";
-    if (studio > 0 && studio < sourceNames.length) {
+    if (studio > 0 && studio <= sourceNames.length) {
       sourceName = sourceNames[studio - 1];
     }
 
@@ -32,6 +35,7 @@ export function Timelord() {
   }
 
   async function getSilence() {
+    if (process.env.REACT_APP_BAPSICLE_INTERFACE) return false;
     let silence = await myradioApiRequest("/selector/issilence", "GET", null);
 
     return silence >= SILENCE_WARN_SECS;
@@ -72,6 +76,10 @@ export function Timelord() {
         );
       }}
     >
+      {process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <img src={logo} className="mr-2" height={32} alt="Logo" />
+      )}
+
       <LiveClock
         format={"HH:mm:ss"}
         ticking={true}

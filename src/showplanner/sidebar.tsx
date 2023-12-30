@@ -15,9 +15,13 @@ export function Sidebar() {
     <div id="sidebar">
       <LibraryColumn />
       <div className="border-top"></div>
-      <PflPlayer />
-      <div className="border-top"></div>
-      <MicControl />
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+        <>
+          <PflPlayer />
+          <div className="border-top"></div>
+          <MicControl />
+        </>
+      )}
     </div>
   );
 }

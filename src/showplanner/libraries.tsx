@@ -79,39 +79,41 @@ export function LibraryColumn() {
             <FaBookOpen className="mx-2" size={25} />
             Libraries
           </h2>
-          <div className="row m-0 p-1 card-header hover-menu">
-            <span className="hover-label">Hover for Import &amp; Tools</span>
-            <Button
-              className="mr-1"
-              color="primary"
-              title="Import From Showplan"
-              size="sm"
-              outline={true}
-              onClick={() => setShowImporterModal(true)}
-            >
-              <FaFileImport /> Import
-            </Button>
-            <Button
-              className="mr-1"
-              color="primary"
-              title="Upload to Library"
-              size="sm"
-              outline={true}
-              onClick={() => setShowLibraryModal(true)}
-            >
-              <FaUpload /> Upload
-            </Button>
-            <Button
-              className="mr-1"
-              color="primary"
-              title="Auto Playout"
-              size="sm"
-              outline={true}
-              onClick={() => setAutoPlayoutModal(true)}
-            >
-              <FaPlayCircle /> Auto Playout
-            </Button>
-          </div>
+          {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+            <div className="row m-0 p-1 card-header hover-menu">
+              <span className="hover-label">Hover for Import &amp; Tools</span>
+              <Button
+                className="mr-1"
+                color="primary"
+                title="Import From Showplan"
+                size="sm"
+                outline={true}
+                onClick={() => setShowImporterModal(true)}
+              >
+                <FaFileImport /> Import
+              </Button>
+              <Button
+                className="mr-1"
+                color="primary"
+                title="Upload to Library"
+                size="sm"
+                outline={true}
+                onClick={() => setShowLibraryModal(true)}
+              >
+                <FaUpload /> Upload
+              </Button>
+              <Button
+                className="mr-1"
+                color="primary"
+                title="Auto Playout"
+                size="sm"
+                outline={true}
+                onClick={() => setAutoPlayoutModal(true)}
+              >
+                <FaPlayCircle /> Auto Playout
+              </Button>
+            </div>
+          )}
         </div>
         <div className="px-2">
           <select
@@ -125,12 +127,16 @@ export function LibraryColumn() {
               Choose a library
             </option>
             <option value={"CentralMusicLibrary"}>Central Music Library</option>
-            <option disabled>Personal Resources</option>
-            {userPlaylists.map((playlist) => (
-              <option key={playlist.managedid} value={playlist.managedid}>
-                {playlist.title}
-              </option>
-            ))}
+            {!process.env.REACT_APP_BAPSICLE_INTERFACE && (
+              <>
+                <option disabled>Personal Resources</option>
+                {userPlaylists.map((playlist) => (
+                  <option key={playlist.managedid} value={playlist.managedid}>
+                    {playlist.title}
+                  </option>
+                ))}
+              </>
+            )}
             <option disabled>Shared Resources</option>
             {auxPlaylists.map((playlist) => (
               <option

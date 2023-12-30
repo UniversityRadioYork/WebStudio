@@ -1,5 +1,11 @@
 import React, { memo } from "react";
-import { PlanItem, itemId, isTrack, isAux } from "./state";
+import {
+  PlanItem,
+  itemId,
+  isTrack,
+  isAux,
+  selPlayedTrackAggregates,
+} from "./state";
 import { Track, AuxItem } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../rootReducer";
@@ -8,11 +14,16 @@ import * as MixerState from "../mixer/state";
 import { Draggable } from "react-beautiful-dnd";
 import { contextMenu } from "react-contexify";
 import "./item.scss";
+
+import { sendBAPSicleChannel } from "../bapsicle";
+
 import { HHMMTosec, secToHHMM } from "../lib/utils";
 import { PLAYER_ID_PREVIEW } from "../mixer/audio";
 
 export const TS_ITEM_MENU_ID = "SongMenu";
 export const TS_ITEM_AUX_ID = "AuxMenu";
+
+const ONE_HOUR_MS = 1000 * 60 * 60;
 
 export const Item = memo(function Item({
   item: x,
@@ -26,6 +37,10 @@ export const Item = memo(function Item({
   const dispatch = useDispatch();
   const id = itemId(x);
   const isGhost = "ghostid" in x;
+
+  const planSaving = useSelector(
+    (state: RootState) => state.showplan.planSaving
+  );
 
   const loadedItem = useSelector(
     (state: RootState) =>
@@ -43,10 +58,25 @@ export const Item = memo(function Item({
 
   const partyMode = useSelector((state: RootState) => state.settings.partyMode);
   const showName =
-    !partyMode || column > 2 || !isTrack(x) || ("played" in x && x.played);
+    !partyMode || column > 2 || !isTrack(x) || ("playedAt" in x && x.playedAt);
+
+  const {
+    artists: playedArtists,
+    recordIds: playedRecordids,
+    trackIds: playedTracks,
+  } = useSelector(selPlayedTrackAggregates)!;
 
   function triggerClick() {
     if (column > -1) {
+      // TODO: move this into mixer state if we can.
+      if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+        sendBAPSicleChannel({
+          channel: column,
+          command: "LOAD",
+          weight: index,
+        });
+        return;
+      }
       dispatch(MixerState.load(column, x));
     }
   }
@@ -79,6 +109,30 @@ export const Item = memo(function Item({
     }
   }
 
+  const now = new Date().valueOf();
+  let alreadyPlayedTrack = false,
+    alreadyPlayedArtist = false,
+    alreadyPlayedAlbum = false;
+  if (isTrack(x)) {
+    if (now - (playedTracks.get(x.trackid) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedTrack = true;
+    }
+    if (now - (playedArtists.get(x.artist) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedArtist = true;
+    }
+    if (
+      "album" in x &&
+      now - (playedRecordids.get(x.album.recordid) || 0) < ONE_HOUR_MS
+    ) {
+      alreadyPlayedAlbum = true;
+    }
+  }
+  const alreadyPlayedClass = alreadyPlayedTrack
+    ? "warn-red"
+    : alreadyPlayedArtist || alreadyPlayedAlbum
+    ? "warn-orange"
+    : "";
+
   function generateTooltipData() {
     let data = [];
     if (partyMode) {
@@ -86,7 +140,7 @@ export const Item = memo(function Item({
     } else {
       data.push("Title: " + x.title.toString());
 
-      if ("artist" in x && x.artist !== "") data.push("Artist: " + x.artist);
+      if ("artist" in x && x.artist) data.push("Artist: " + x.artist);
       if ("album" in x && x.album.title !== "")
         data.push("Album: " + x.album.title);
     }
@@ -105,7 +159,13 @@ export const Item = memo(function Item({
           (outroSecs > 60 ? secToHHMM(outroSecs) : outroSecs + " secs")
       );
     }
-    data.push("Played: " + ("played" in x ? (x.played ? "Yes" : "No") : "No"));
+    if ("playCount" in x) {
+      data.push("Played: " + x.playCount + " times");
+    } else {
+      data.push(
+        "Played: " + ("playedAt" in x ? (x.playedAt ? "Yes" : "No") : "No")
+      );
+    }
     data.push(
       "ID: " + ("trackid" in x ? x.trackid : "managedid" in x && x.managedid)
     );
@@ -117,11 +177,23 @@ export const Item = memo(function Item({
           ("channel" in x && x.channel + "/" + x.weight)
       );
     }
+    if (alreadyPlayedTrack) {
+      data.push("Warning: Already played in the last hour!");
+    } else if (alreadyPlayedArtist) {
+      data.push("Warning: Song by same artist played in last hour!");
+    } else if (alreadyPlayedAlbum) {
+      data.push("Warning: Song on same album played in past hour!");
+    }
     return data.join("¬"); // Something obscure to split against.
   }
 
+  let isDragDisabled = isGhost || planSaving;
+
+  if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    isDragDisabled = isDragDisabled || isLoaded;
+  }
   return (
-    <Draggable draggableId={id} index={index} isDragDisabled={isGhost}>
+    <Draggable draggableId={id} index={index} isDragDisabled={isDragDisabled}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -129,7 +201,7 @@ export const Item = memo(function Item({
           data-itemid={id}
           className={
             "item " +
-            ("played" in x ? (x.played ? "played " : "") : "") +
+            ("playedAt" in x ? (x.playedAt ? "played " : "") : "") +
             x.type +
             `${column >= 0 && isLoaded ? " active" : ""}`
           }
@@ -140,12 +212,17 @@ export const Item = memo(function Item({
           data-tip={generateTooltipData()}
           data-for="track-hover-tooltip"
         >
-          <span className={"icon " + x.type} />
+          <span className={"icon " + x.type + " " + alreadyPlayedClass} />
           &nbsp;
+          {"playCount" in x && (
+            <>
+              <code>{x.playCount}</code>&nbsp;
+            </>
+          )}
           {showName && (
             <>
               {x.title.toString()}
-              {"artist" in x && x.artist !== "" && " - " + x.artist}
+              {"artist" in x && x.artist && " - " + x.artist}
             </>
           )}
           <small

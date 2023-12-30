@@ -17,6 +17,9 @@ $number-of-channels: 3;
     .logo {
       height: 50px;
     }
+    .logo-big-bapsicle {
+      height: 30vh;
+    }
   }
   .inner {
     text-align: center;
@@ -134,16 +137,17 @@ $number-of-channels: 3;
     writing-mode: vertical-rl;
     height: 100%;
   }
-  .fa-spin {
-    animation: fa-spin 2s infinite linear;
+}
+
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
   }
-  @keyframes fa-spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(359deg);
-    }
+  100% {
+    transform: rotate(359deg);
   }
 }
 

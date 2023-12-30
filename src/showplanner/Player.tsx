@@ -19,6 +19,9 @@ import { VUMeter } from "../optionsMenu/helpers/VUMeter";
 import * as BroadcastState from "../broadcast/state";
 import * as api from "../api";
 import { AppThunk } from "../store";
+
+import { sendBAPSicleChannel } from "../bapsicle";
+
 import {
   INTERNAL_OUTPUT_ID,
   LevelsSource,
@@ -26,10 +29,14 @@ import {
   PLAYER_ID_PREVIEW,
 } from "../mixer/audio";
 import { useBeforeunload } from "react-beforeunload";
+import { selPlayedTrackAggregates } from "../showplanner/state";
+import "./player.scss";
 
 export const USE_REAL_GAIN_VALUE = false;
 
 export const PLAYER_COUNTER_UPDATE_PERIOD_MS = 200;
+
+const ONE_HOUR_MS = 1000 * 60 * 60;
 
 function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
   const store = useStore<RootState, any>();
@@ -74,18 +81,36 @@ function PlayerNumbers({ id, pfl }: { id: number; pfl: boolean }) {
 }
 
 const setTrackIntro = (
-  track: api.Track,
+  item: api.TimeslotItem,
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
+  // TODO Move into MixerState
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Intro",
+      time: secs,
+      position: "start",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+    return;
+  }
   try {
     // Api only deals with whole seconds.
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemIntro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
-      await api.setTrackIntro(track.trackid, secs);
+      if ("trackid" in item) {
+        await api.setTrackIntro(item.trackid, secs);
+      }
     }
-    dispatch(ShowPlanState.setItemTimings({ item: track, intro: secs }));
+    dispatch(ShowPlanState.setItemTimings({ item: item, intro: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track intro."));
     console.error("Failed to set track intro: " + e);
@@ -93,18 +118,35 @@ const setTrackIntro = (
 };
 
 const setTrackOutro = (
-  track: api.Track,
+  item: api.TimeslotItem,
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Outro",
+      time: secs,
+      position: "end",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+    return;
+  }
   try {
     // Api only deals with whole seconds.
     secs = Math.round(secs);
     dispatch(MixerState.setLoadedItemOutro(player, secs));
     if (getState().settings.saveShowPlanChanges) {
-      await api.setTrackOutro(track.trackid, secs);
+      if ("trackid" in item) {
+        await api.setTrackOutro(item.trackid, secs);
+      }
     }
-    dispatch(ShowPlanState.setItemTimings({ item: track, outro: secs }));
+    dispatch(ShowPlanState.setItemTimings({ item: item, outro: secs }));
   } catch (e) {
     dispatch(ShowPlanState.planSaveError("Failed saving track outro."));
     console.error("Failed to set track outro: " + e);
@@ -116,6 +158,21 @@ const setTrackCue = (
   secs: number,
   player: number
 ): AppThunk => async (dispatch, getState) => {
+  if (process.env.REACT_APP_BAPSICLE_INTERFACE) {
+    let marker = {
+      name: "Cue",
+      time: secs,
+      position: "mid",
+      section: null,
+    };
+    sendBAPSicleChannel({
+      channel: player,
+      command: "SETMARKER",
+      timeslotitemid: item.timeslotitemid,
+      marker: marker,
+    });
+    return;
+  }
   try {
     // Api only deals with whole seconds.
     secs = Math.round(secs);
@@ -149,7 +206,7 @@ function TimingButtons({ id }: { id: number }) {
       <div
         className="intro btn btn-sm btn-outline-secondary rounded-0"
         onClick={() => {
-          if (state.loadedItem?.type === "central") {
+          if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
             dispatch(
               setTrackIntro(
                 state.loadedItem,
@@ -181,7 +238,7 @@ function TimingButtons({ id }: { id: number }) {
       <div
         className="outro btn btn-sm btn-outline-secondary rounded-0"
         onClick={() => {
-          if (state.loadedItem?.type === "central") {
+          if (state.loadedItem && "timeslotitemid" in state.loadedItem) {
             dispatch(
               setTrackOutro(
                 state.loadedItem,
@@ -225,10 +282,41 @@ function LoadedTrackInfo({ id }: { id: number }) {
     !partyMode ||
     loadedItem === null ||
     !ShowPlanState.isTrack(loadedItem) ||
-    ("played" in loadedItem && loadedItem.played);
+    ("playedAt" in loadedItem && loadedItem.playedAt);
+
+  // TODO: this is a duplicate of the logic in Item.tsx
+  // if this becomes more complicated, we should refactor this
+  const {
+    artists: playedArtists,
+    recordIds: playedRecordids,
+    trackIds: playedTracks,
+  } = useSelector(selPlayedTrackAggregates)!;
+  const now = new Date().valueOf();
+  let alreadyPlayedTrack = false,
+    alreadyPlayedArtist = false,
+    alreadyPlayedAlbum = false;
+  if (loadedItem !== null && ShowPlanState.isTrack(loadedItem)) {
+    if (now - (playedTracks.get(loadedItem.trackid) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedTrack = true;
+    }
+    if (now - (playedArtists.get(loadedItem.artist) || 0) < ONE_HOUR_MS) {
+      alreadyPlayedArtist = true;
+    }
+    if (
+      "album" in loadedItem &&
+      now - (playedRecordids.get(loadedItem.album.recordid) || 0) < ONE_HOUR_MS
+    ) {
+      alreadyPlayedAlbum = true;
+    }
+  }
+  const alreadyPlayedClass = alreadyPlayedTrack
+    ? "warn-red"
+    : alreadyPlayedArtist || alreadyPlayedAlbum
+    ? "warn-orange"
+    : "";
 
   return (
-    <span className="card-title">
+    <span className={"card-title " + alreadyPlayedClass}>
       <strong>
         {loadedItem !== null && loading === -1
           ? showName
@@ -257,15 +345,11 @@ function LoadedTrackInfo({ id }: { id: number }) {
   );
 }
 
-export function Player({
-  id,
-  isPreviewChannel,
-}: {
-  id: number;
-  isPreviewChannel: boolean;
-}) {
+export function Player({ id }: { id: number }) {
   // Define time remaining (secs) when the play icon should flash.
   const SECS_REMAINING_WARNING = 20;
+
+  const isPreviewChannel = id === PLAYER_ID_PREVIEW;
 
   // We want to force update the selector when we pass the SECS_REMAINING_WARNING barrier.
   const playerState = useSelector(
@@ -308,7 +392,7 @@ export function Player({
   plan?.forEach((pItem) => {
     if (pItem.channel === id) {
       channelDuration += HHMMTosec(pItem.length);
-      if (!pItem.played) {
+      if (!pItem.playedAt) {
         channelUnplayed += HHMMTosec(pItem.length);
       }
     }
@@ -343,9 +427,7 @@ export function Player({
                     : "btn-outline-secondary") +
                   " btn btn-sm col-4 sp-play-on-load"
                 }
-                onClick={() =>
-                  dispatch(MixerState.toggleAutoAdvance({ player: id }))
-                }
+                onClick={() => dispatch(MixerState.toggleAutoAdvance(id))}
               >
                 <FaLevelDownAlt />
                 &nbsp; Auto Advance
@@ -357,9 +439,7 @@ export function Player({
                     : "btn-outline-secondary") +
                   " btn btn-sm col-4 sp-play-on-load"
                 }
-                onClick={() =>
-                  dispatch(MixerState.togglePlayOnLoad({ player: id }))
-                }
+                onClick={() => dispatch(MixerState.togglePlayOnLoad(id))}
               >
                 <FaPlayCircle />
                 &nbsp; Play on Load
@@ -371,9 +451,7 @@ export function Player({
                     : "btn-outline-secondary") +
                   " btn btn-sm col-4 sp-play-on-load"
                 }
-                onClick={() =>
-                  dispatch(MixerState.toggleRepeat({ player: id }))
-                }
+                onClick={() => dispatch(MixerState.toggleRepeat(id))}
               >
                 <FaRedo />
                 &nbsp; Repeat {playerState.repeat}
@@ -413,7 +491,13 @@ export function Player({
               <FaPlay />
             </button>
             <button
-              onClick={() => dispatch(MixerState.pause(id))}
+              onClick={() =>
+                dispatch(
+                  playerState.state === "paused"
+                    ? MixerState.unpause(id)
+                    : MixerState.pause(id)
+                )
+              }
               className={
                 playerState.state === "paused" ? "sp-state-paused" : ""
               }
@@ -465,56 +549,63 @@ export function Player({
           </div>
         </div>
       </div>
-      {!isPreviewChannel && !customOutput && (
-        <div
-          className={
-            "mixer-buttons " +
-            (playerState.state === "playing"
-              ? playerState.volume === 0 && !playerState.pfl
-                ? "error-animation"
-                : playerState.pfl && "pfl"
-              : "")
-          }
-        >
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE &&
+        !isPreviewChannel &&
+        !customOutput && (
           <div
-            className="mixer-buttons-backdrop"
-            style={{
-              width:
-                (USE_REAL_GAIN_VALUE ? playerState.gain : playerState.volume) *
-                  100 +
-                "%",
-            }}
-          ></div>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
-            Off
-          </button>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
-            Bed
-          </button>
-          <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
-            Full
-          </button>
-        </div>
-      )}
-      {!isPreviewChannel && settings.proMode && settings.channelVUs && (
-        <div className="channel-vu">
-          {customOutput ? (
-            <span className="text-muted">
-              Custom audio output disables VU meters.
-            </span>
-          ) : playerState.pfl ? (
-            <span className="text-muted">This Player is playing in PFL.</span>
-          ) : (
-            <VUMeter
-              width={300}
-              height={40}
-              source={VUsource(id)}
-              range={[-40, 0]}
-              stereo={settings.channelVUsStereo}
-            />
-          )}
-        </div>
-      )}
+            className={
+              "mixer-buttons " +
+              (playerState.state === "playing"
+                ? playerState.volume === 0 && !playerState.pfl
+                  ? "error-animation"
+                  : playerState.pfl && "pfl"
+                : "")
+            }
+          >
+            <div
+              className="mixer-buttons-backdrop"
+              style={{
+                width:
+                  (USE_REAL_GAIN_VALUE
+                    ? playerState.gain
+                    : playerState.volume) *
+                    100 +
+                  "%",
+              }}
+            ></div>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "off"))}>
+              Off
+            </button>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "bed"))}>
+              Bed
+            </button>
+            <button onClick={() => dispatch(MixerState.setVolume(id, "full"))}>
+              Full
+            </button>
+          </div>
+        )}
+      {!process.env.REACT_APP_BAPSICLE_INTERFACE &&
+        !isPreviewChannel &&
+        settings.proMode &&
+        settings.channelVUs && (
+          <div className="channel-vu">
+            {customOutput ? (
+              <span className="text-muted">
+                Custom audio output disables VU meters.
+              </span>
+            ) : playerState.pfl ? (
+              <span className="text-muted">This Player is playing in PFL.</span>
+            ) : (
+              <VUMeter
+                width={300}
+                height={40}
+                source={VUsource(id)}
+                range={[-40, 0]}
+                stereo={settings.channelVUsStereo}
+              />
+            )}
+          </div>
+        )}
     </div>
   );
 }
@@ -525,7 +616,7 @@ export function PflPlayer() {
       <span className="mx-1 hover-label always-show">
         Preview Player (Headphones Only)
       </span>
-      <Player id={PLAYER_ID_PREVIEW} isPreviewChannel={true} />
+      <Player id={PLAYER_ID_PREVIEW} />
     </div>
   );
 }

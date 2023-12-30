@@ -15,6 +15,9 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
+
+import { bapsicleMiddleware } from "./bapsicle";
+
 import * as Sentry from "@sentry/react";
 
 // const ACTION_HISTORY_MAX_SIZE = 20;
@@ -46,6 +49,7 @@ const store = configureStore({
   middleware: [
     mixerMiddleware,
     mixerKeyboardShortcutsMiddleware,
+    bapsicleMiddleware,
     // actionHistoryMiddleware,
     ...getDefaultMiddleware({
       serializableCheck: {
@@ -68,6 +72,8 @@ export const persistor = persistStore(store);
 export type AppDispatch = typeof store.dispatch;
 export type AppThunk = ThunkAction<void, RootState, null, Action<string>>;
 
-store.dispatch(startNewsTimer() as any);
+if (!process.env.REACT_APP_BAPSICLE_INTERFACE) {
+  store.dispatch(startNewsTimer() as any);
+}
 
 export default store;

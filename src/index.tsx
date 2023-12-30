@@ -26,7 +26,7 @@ Sentry.init({
   integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0,
   environment: getEnvironment(),
-  release: process.env.REACT_APP_VERSION,
+  release: process.env.REACT_APP_VERSION + "-" + process.env.REACT_APP_GIT_SHA,
   normalizeDepth: 10,
 });
 
