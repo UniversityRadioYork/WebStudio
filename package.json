@@ -107,7 +107,7 @@
     "typescript": "3.7.2",
     "url-loader": "2.1.0",
     "wavesurfer.js": "4.1.1",
-    "webpack": "4.41.0",
+    "webpack": "4.47.0",
     "webpack-dev-server": "3.2.1",
     "webpack-manifest-plugin": "2.1.1",
     "workbox-webpack-plugin": "^5.1.2",
@@ -115,11 +115,11 @@
   },
   "homepage": "./",
   "scripts": {
-    "start": "node scripts/start.js",
-    "start-baps": "node scripts/start.js baps",
-    "build": "node scripts/build.js",
-    "build-baps": "node scripts/build.js baps",
-    "test": "node scripts/test.js"
+    "start": "node --openssl-legacy-provider scripts/start.js",
+    "start-baps": "node --openssl-legacy-provider scripts/start.js baps",
+    "build": "node --openssl-legacy-provider scripts/build.js",
+    "build-baps": "node --openssl-legacy-provider scripts/build.js baps",
+    "test": "node --openssl-legacy-provider scripts/test.js"
   },
   "eslintConfig": {
     "extends": "react-app"
