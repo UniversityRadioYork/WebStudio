@@ -5,6 +5,7 @@ import {
   FaCircleNotch,
   FaCog,
   FaDownload,
+  FaKeyboard,
   FaSearch,
   FaTimesCircle,
   FaTrashAlt,
@@ -58,6 +59,17 @@ export function LoadShowDialogue({ close }: { close: () => any }) {
         }}
       >
         <FaCircleNotch size={15} /> Mark All Unplayed
+      </div>
+      <div
+        className="btn btn-outline-dark outline float-right mr-1"
+        onClick={() => {
+          sendBAPSicleChannel({
+            command: "GETPLAN",
+            timeslotId: window.prompt("Enter timeslot ID"),
+          });
+        }}
+      >
+        <FaKeyboard size={15} /> Enter Show ID
       </div>
 
       <h2>Load Show</h2>
