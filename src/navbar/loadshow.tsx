@@ -16,8 +16,15 @@ type searchingStateEnum = "searching" | "results" | "no-results" | "error";
 
 export function LoadShowDialogue({ close }: { close: () => any }) {
   const [items, setItems] = useState<Timeslot[]>([]);
+  const [customTimeslotID, _setCustomTimeslotID] = useState("");
+  const [isInvalidShowId, setIsInvalidShowId] = useState(false);
 
   const [state, setState] = useState<searchingStateEnum>("searching");
+
+  const setCustomTimeslotID = (value: string) => {
+    _setCustomTimeslotID(value);
+    setIsInvalidShowId(false);
+  };
 
   useEffect(() => {
     getTimeslots().then((timeslots) => {
@@ -61,16 +68,33 @@ export function LoadShowDialogue({ close }: { close: () => any }) {
         <FaCircleNotch size={15} /> Mark All Unplayed
       </div>
       <div
-        className="btn btn-outline-dark outline float-right mr-1"
+        className="btn btn-outline-dark outline float-right mr-4"
         onClick={() => {
-          sendBAPSicleChannel({
-            command: "GETPLAN",
-            timeslotId: window.prompt("Enter timeslot ID"),
-          });
+          // check input is a number
+          if (isNaN(parseInt(customTimeslotID))) {
+            console.log("Invalid show ID provided; not loaded");
+            setIsInvalidShowId(true);
+          } else {
+            sendBAPSicleChannel({
+              command: "GETPLAN",
+              timeslotId: customTimeslotID,
+            });
+            close();
+          }
         }}
       >
-        <FaKeyboard size={15} /> Enter Show ID
+        <FaKeyboard size={15} /> Load Show ID
       </div>
+      <input
+        className={
+          "form-control form-control-sm outline float-right mr-1 mt-1 w-25 p-1" +
+          (isInvalidShowId ? " is-invalid" : "")
+        }
+        type="text"
+        placeholder="Enter Show ID..."
+        value={customTimeslotID}
+        onChange={(e) => setCustomTimeslotID(e.target.value)}
+      />
 
       <h2>Load Show</h2>
       <ResultsPlaceholder state={state} />
