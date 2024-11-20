@@ -110,6 +110,7 @@ export function LoadShowDialogue({ close }: { close: () => any }) {
                     command: "GETPLAN",
                     timeslotId: item.timeslot_id,
                   });
+                  close();
                 }}
               >
                 <FaDownload size={15} /> Load Show Plan
