@@ -10,12 +10,12 @@ from types import TracebackType
 from typing import Optional, Any, Type, Dict, List
 
 import aiohttp
-import av  # type: ignore
+import av
 import jack as Jack
 from jack import OwnPort
 import websockets.exceptions, websockets.server, websockets.connection
-from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
-from aiortc.mediastreams import MediaStreamError  # type: ignore
+from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
+from aiortc.mediastreams import MediaStreamError
 import sentry_sdk
 
 config = configparser.RawConfigParser()
@@ -131,7 +131,7 @@ class NotReadyException(BaseException):
 
 
 class Session(object):
-    websocket: Optional[websockets.server.WebSocketServerProtocol]
+    websocket: Optional[websockets.server.WebSocketServerProtocol]  # type: ignore
     connection_state: Optional[str]
     pc: Optional[Any]
     connection_id: str
@@ -194,7 +194,7 @@ class Session(object):
 
                 if (
                     self.websocket is not None
-                    and self.websocket.state == websockets.connection.State.OPEN
+                    and self.websocket.state == websockets.connection.State.OPEN  # type: ignore
                 ):
                     try:
                         await self.websocket.send(json.dumps({"kind": "DIED"}))
@@ -225,7 +225,7 @@ class Session(object):
         self.pc = RTCPeerConnection()
         assert self.pc is not None
 
-        @self.pc.on("signalingstatechange")  # type: ignore
+        @self.pc.on("signalingstatechange")
         async def on_signalingstatechange() -> None:
             assert self.pc is not None
             print(
@@ -233,7 +233,7 @@ class Session(object):
                 "Signaling state is {}".format(self.pc.signalingState),
             )
 
-        @self.pc.on("iceconnectionstatechange")  # type: ignore
+        @self.pc.on("iceconnectionstatechange")
         async def on_iceconnectionstatechange() -> None:
             if self.pc is None:
                 print(
@@ -249,7 +249,7 @@ class Session(object):
                     print(self.connection_id, "Ending due to ICE connection failure")
                     await self.end()
 
-        @self.pc.on("track")  # type: ignore
+        @self.pc.on("track")
         async def on_track(track: MediaStreamTrack) -> None:
             global live_session, transfer_buffer1, transfer_buffer2
             print(self.connection_id, "Received track")
@@ -258,7 +258,7 @@ class Session(object):
 
                 await notify_mattserver_about_sessions()
 
-                @track.on("ended")  # type: ignore
+                @track.on("ended")
                 async def on_ended() -> None:
                     print(
                         self.connection_id,
@@ -325,7 +325,7 @@ class Session(object):
             )
 
     async def connect(
-        self, websocket: websockets.server.WebSocketServerProtocol
+        self, websocket: websockets.server.WebSocketServerProtocol  # type: ignore
     ) -> None:
         global active_sessions
 
@@ -369,7 +369,7 @@ class Session(object):
 
 
 async def serve(
-    websocket: websockets.server.WebSocketServerProtocol, path: str
+    websocket: websockets.server.WebSocketServerProtocol, path: str  # type: ignore
 ) -> None:
     if path == "/stream":
         session = Session()
@@ -378,7 +378,7 @@ async def serve(
         pass
 
 
-start_server = websockets.server.serve(
+start_server = websockets.server.serve(  # type: ignore
     serve, host=None, port=int(config.get("shittyserver", "websocket_port"))
 )
 
