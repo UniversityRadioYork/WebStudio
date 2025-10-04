@@ -668,9 +668,6 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
     }
 
     if (ops.length > 0) {
-      console.log("Is corrupt, repairing locally");
-      dispatch(showplan.actions.applyOps(ops));
-
       console.log("Repairing showplan", ops);
       const updateResult = await api.updateShowplan(timeslotId, ops);
       if (!updateResult.every((x) => x.status)) {
@@ -679,6 +676,7 @@ export const getShowplan = (timeslotId: number): AppThunk => async (
         return;
       }
     }
+    // This is the fixed plan
     dispatch(showplan.actions.getShowplanSuccess(plan.flat(2)));
   } catch (e) {
     console.error(e);
