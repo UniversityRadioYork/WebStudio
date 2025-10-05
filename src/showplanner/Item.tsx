@@ -167,7 +167,12 @@ export const Item = memo(function Item({
       );
     }
     data.push(
-      "ID: " + ("trackid" in x && x.trackid ? x.trackid : "managedid" in x && x.managedid ? x.managedid : "None" )
+      "ID: " +
+        ("trackid" in x && x.trackid
+          ? x.trackid
+          : "managedid" in x && x.managedid
+          ? x.managedid
+          : "None")
     );
     if (showDebug) {
       data.push(
