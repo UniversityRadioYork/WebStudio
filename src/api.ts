@@ -284,7 +284,7 @@ export function setTimeslotItemCue(
   secs: number
 ): Promise<null> {
   return myradioApiRequest("/timeslotItem/" + timeslotItemId + "/cue", "PUT", {
-    start_time: secs,
+    secs,
   });
 }
 
