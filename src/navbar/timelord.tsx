@@ -14,7 +14,6 @@ export function Timelord() {
     if (process.env.REACT_APP_BAPSICLE_INTERFACE)
       return { id: -1, name: "Unknown" };
     let studio = await myradioApiRequest("/selector/studioattime", "GET", null);
-
     const sourceNames = [
       "Studio Red",
       "Studio Blue",
@@ -23,7 +22,7 @@ export function Timelord() {
       "WebStudio",
       "Unknown",
       "Sine Wave",
-      "Off Air",
+      "Station is Off Air",
     ];
 
     let sourceName = "Unknown";
@@ -94,7 +93,7 @@ export function Timelord() {
         source.id > -1 && (
           <span className="source">
             <span className={"studio studio" + source.id}>{source.name}</span>
-            &nbsp;is On Air
+            {source.id !== 8 ? " is On Air" : ""}
           </span>
         )
       )}

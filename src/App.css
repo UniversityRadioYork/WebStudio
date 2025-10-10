@@ -212,3 +212,7 @@ button {
 .ReactModal__Overlay {
   z-index: 10000;
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}

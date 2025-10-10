@@ -125,7 +125,14 @@ export function NavBarMyRadio() {
             <h6 className="dropdown-header">
               {sessionState.currentTimeslot?.title}
             </h6>
-            <h6 className="dropdown-header">
+            <h6
+              className="dropdown-header cursor-pointer"
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  sessionState.currentTimeslot?.timeslot_id.toString() || ""
+                );
+              }}
+            >
               ID: {sessionState.currentTimeslot?.timeslot_id}
             </h6>
           </div>

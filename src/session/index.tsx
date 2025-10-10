@@ -69,8 +69,7 @@ const SessionHandler: React.FC = function() {
           error={userLoadError}
           percent={71}
         />
-        {currentTimeslot === null &&
-          timeslotLoadError == null &&
+        {timeslotLoadError !== null &&
           timeslotLoadError !== undefined &&
           !timeslotLoading &&
           redirectToTimeslotSelect()}
