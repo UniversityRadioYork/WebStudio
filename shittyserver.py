@@ -10,12 +10,12 @@ from types import TracebackType
 from typing import Optional, Any, Type, Dict, List
 
 import aiohttp
-import av
+import av  # type: ignore
 import jack as Jack
 from jack import OwnPort
 import websockets.exceptions, websockets.server, websockets.connection
-from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
-from aiortc.mediastreams import MediaStreamError
+from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
+from aiortc.mediastreams import MediaStreamError  # type: ignore
 import sentry_sdk
 
 config = configparser.RawConfigParser()
@@ -131,7 +131,7 @@ class NotReadyException(BaseException):
 
 
 class Session(object):
-    websocket: Optional[websockets.server.WebSocketServerProtocol]  # type: ignore
+    websocket: Optional[websockets.server.WebSocketServerProtocol]
     connection_state: Optional[str]
     pc: Optional[Any]
     connection_id: str
@@ -194,7 +194,7 @@ class Session(object):
 
                 if (
                     self.websocket is not None
-                    and self.websocket.state == websockets.connection.State.OPEN  # type: ignore
+                    and self.websocket.state == websockets.connection.State.OPEN
                 ):
                     try:
                         await self.websocket.send(json.dumps({"kind": "DIED"}))
@@ -225,7 +225,7 @@ class Session(object):
         self.pc = RTCPeerConnection()
         assert self.pc is not None
 
-        @self.pc.on("signalingstatechange")
+        @self.pc.on("signalingstatechange")  # type: ignore
         async def on_signalingstatechange() -> None:
             assert self.pc is not None
             print(
@@ -233,7 +233,7 @@ class Session(object):
                 "Signaling state is {}".format(self.pc.signalingState),
             )
 
-        @self.pc.on("iceconnectionstatechange")
+        @self.pc.on("iceconnectionstatechange")  # type: ignore
         async def on_iceconnectionstatechange() -> None:
             if self.pc is None:
                 print(
@@ -249,7 +249,7 @@ class Session(object):
                     print(self.connection_id, "Ending due to ICE connection failure")
                     await self.end()
 
-        @self.pc.on("track")
+        @self.pc.on("track")  # type: ignore
         async def on_track(track: MediaStreamTrack) -> None:
             global live_session, transfer_buffer1, transfer_buffer2
             print(self.connection_id, "Received track")
@@ -258,7 +258,7 @@ class Session(object):
 
                 await notify_mattserver_about_sessions()
 
-                @track.on("ended")
+                @track.on("ended")  # type: ignore
                 async def on_ended() -> None:
                     print(
                         self.connection_id,
@@ -285,10 +285,14 @@ class Session(object):
                             self.resampler = av.audio.resampler.AudioResampler(
                                 format="fltp", layout="stereo", rate=jack.samplerate
                             )
+                            print('resampling from {}@{} to {}@{}'.format(frame.format, frame.sample_rate, self.resampler.format, self.resampler.rate))
                         frame.pts = None  # DIRTY HACK
-                        new_frame = self.resampler.resample(frame)
-                        transfer_buffer1.write(new_frame.planes[0])
-                        transfer_buffer2.write(new_frame.planes[1])
+                        new_frames = self.resampler.resample(frame)
+                        # we will only get one frame at a time back out, but loop anyway just to be safe
+                        for new_frame in new_frames:
+                            usable_data = new_frame.samples * 4 # TODO: unhardcode this? though I guess it's defined that fltp is 32-bit samples
+                            transfer_buffer1.write(bytes(new_frame.planes[0])[:usable_data])
+                            transfer_buffer2.write(bytes(new_frame.planes[1])[:usable_data])
 
     async def process_ice(self, message: Any) -> None:
         if self.connection_state == "HELLO" and message["kind"] == "OFFER":
@@ -325,7 +329,7 @@ class Session(object):
             )
 
     async def connect(
-        self, websocket: websockets.server.WebSocketServerProtocol  # type: ignore
+        self, websocket: websockets.server.WebSocketServerProtocol
     ) -> None:
         global active_sessions
 
@@ -369,7 +373,7 @@ class Session(object):
 
 
 async def serve(
-    websocket: websockets.server.WebSocketServerProtocol, path: str  # type: ignore
+    websocket: websockets.server.WebSocketServerProtocol, path: str
 ) -> None:
     if path == "/stream":
         session = Session()
@@ -378,7 +382,7 @@ async def serve(
         pass
 
 
-start_server = websockets.server.serve(  # type: ignore
+start_server = websockets.server.serve(
     serve, host=None, port=int(config.get("shittyserver", "websocket_port"))
 )
 
