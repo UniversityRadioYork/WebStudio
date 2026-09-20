@@ -83,8 +83,8 @@ pipeline {
       steps {
         sh 'sed -i -e \'s|"./",|"https://ury.org.uk/webstudio-dev",|\' package.json'
         sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
-        sshagent(credentials: ['ury']) {
-          sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio-dev'
+        sshagent(credentials: ['deploy2']) {
+          sh 'rsync -av --delete-after build/ deploy@ury.york.ac.uk:/usr/local/www/webstudio-dev'
         }
       }
       post {
@@ -130,8 +130,8 @@ pipeline {
           steps {
             sh 'sed -i -e \'s|ury.org.uk/webstudio-dev|ury.org.uk/webstudio|\' package.json'
             sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_PRODUCTION=true yarn build'
-            sshagent(credentials: ['ury']) {
-              sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio'
+            sshagent(credentials: ['deploy2']) {
+              sh 'rsync -av --delete-after build/ deploy@ury.york.ac.uk:/usr/local/www/webstudio'
             }
           }
           post {
@@ -150,7 +150,7 @@ pipeline {
 
         stage('Deploy server') {
           steps {
-            sshagent(credentials: ['ury']) {
+            sshagent(credentials: ['dolby-deploy']) {
               sh 'scp -v -o StrictHostKeyChecking=no stateserver.py liquidsoap@dolby.ury.york.ac.uk:/opt/webstudioserver/stateserver.py'
               sh 'scp -v -o StrictHostKeyChecking=no shittyserver.py liquidsoap@dolby.ury.york.ac.uk:/opt/webstudioserver/shittyserver.py'
               sh 'scp -v -o StrictHostKeyChecking=no pyproject.toml liquidsoap@dolby.ury.york.ac.uk:/opt/webstudioserver/pyproject.toml'
