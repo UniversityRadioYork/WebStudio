@@ -36,7 +36,7 @@ jobs:
         run: yarn lint
 
       - name: Check formatting
-        run: yarn format:chcek
+        run: yarn format:check
 
   python:
     runs-on: ubuntu-latest
