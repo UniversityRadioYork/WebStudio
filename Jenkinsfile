@@ -14,7 +14,7 @@ pipeline {
           stages {
             stage('Install dependencies') {
               steps {
-                sh 'CI=true yarnpkg --no-progress --non-interactive --skip-integrity-check --frozen-lockfile install'
+                sh 'CI=true yarnpkg install --immutable'
               }
             }
 
