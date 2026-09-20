@@ -102,13 +102,6 @@ pipeline {
     }
 
     stage('Build and deploy for production') {
-      agent {
-        docker {
-          image NODE_IMAGE
-          reuseNode true
-        }
-      }
-
       when {
         branch 'production'
       }
@@ -122,6 +115,13 @@ pipeline {
 
       parallel {
         stage('Deploy prod client') {
+          agent {
+            docker {
+              image NODE_IMAGE
+              reuseNode true
+            }
+          }
+
           environment {
             REACT_APP_MYRADIO_NONAPI_BASE = 'https://ury.org.uk/myradio'
             REACT_APP_MYRADIO_BASE = 'https://ury.org.uk/api/v2'
