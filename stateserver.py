@@ -3,14 +3,14 @@
 # show timestamps start on the hour.
 # normal shows in real studios aren't currently a thing!!!
 import subprocess
-from typing import List, Any, Dict, Optional
+from typing import Any
 
-from flask import Flask, jsonify, request
-from flask_cors import CORS  # type: ignore
+from flask import Flask, Response, jsonify, request
+from flask_cors import CORS
 import requests
 import datetime
 import random
-from telnetlib import Telnet
+from telnetlib3.telnetlib import Telnet
 import configparser
 
 config = configparser.RawConfigParser()
@@ -30,21 +30,21 @@ def do_ws_srv_telnet(source: str) -> None:
             HOST, config.get("shittyserver", "telnet_port"), source
         )
     )
-    tn = Telnet(HOST, int(config.get("shittyserver", "telnet_port")))
-    tn.write(b"SEL " + str.encode(source) + b"\n")
+    tn = Telnet(HOST, int(config.get("shittyserver", "telnet_port"))) # type: ignore
+    tn.write(b"SEL " + str.encode(source) + b"\n") # type: ignore
     try:
-        print(tn.read_until(b"\n").decode("utf-8"))
+        print(tn.read_until(b"\n").decode("utf-8")) # type: ignore
     except EOFError:
         pass
     else:
-        tn.close()
+        tn.close() # type: ignore
 
 
-def genFail(reason: str, code: int = 400) -> Any:
+def genFail(reason: str, code: int = 400) -> Response:
     return jsonify({"status": "FAIL", "reason": reason})
 
 
-def genPayload(payload: Any) -> Any:
+def genPayload(payload: Any) -> Response:
     return jsonify({"status": "OK", "payload": payload})
 
 
@@ -65,10 +65,10 @@ def getNextHourTimestamp() -> int:
 
 
 # sadly we're on python 3.7 so we can't use TypedDict
-Connection = Dict[str, Any]
+Connection = dict[str, Any]
 
 
-def getConnByID(connID: str) -> Optional[Connection]:
+def getConnByID(connID: str) -> Connection | None:
     for conn in connections:
         if conn["connid"] == connID:
             return conn
@@ -82,11 +82,11 @@ SOURCE_OFFAIR = 8
 SOURCES = [SOURCE_JUKEBOX, SOURCE_OB, SOURCE_WS, SOURCE_OFFAIR]
 
 # This array will only hold connections we've validated to be authorised to broadcast.
-connections: List[Connection] = []
-wsSessions: Dict[str, Dict[str, str]] = {}
+connections: list[Connection] = []
+wsSessions: dict[str, dict[str, str]] = {}
 
 
-def getCurrentShowConnection() -> Optional[Connection]:
+def getCurrentShowConnection() -> Connection | None:
     for connection in connections:
         if (connection["startTimestamp"] <= datetime.datetime.now().timestamp()) and (
             connection["endTimestamp"] >= getNextHourTimestamp()
@@ -95,7 +95,7 @@ def getCurrentShowConnection() -> Optional[Connection]:
     return None
 
 
-def getNextHourConnection() -> Optional[Connection]:
+def getNextHourConnection() -> Connection | None:
     nextHourTimestamp = getNextHourTimestamp()
     isConnectionEnding = False
     for connection in connections:
@@ -120,7 +120,7 @@ def cleanOldConnections() -> None:
             connections.pop(i)
 
 
-def stateDecider() -> Dict[str, Any]:
+def stateDecider() -> dict[str, Any]:
     currentConnection = getCurrentShowConnection()
     nextConnection = getNextHourConnection()
     print("currentConnection:", currentConnection)
@@ -280,7 +280,7 @@ def post_registerCheck() -> Any:
 
     now_time = datetime.datetime.now()
 
-    connection: Optional[Connection] = None
+    connection: Connection | None = None
     for conn in connections:
         if content["timeslotid"] == conn["timeslotid"]:
             # they've already registered, return the existing session

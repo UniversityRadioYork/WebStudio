@@ -3,19 +3,16 @@ import configparser
 import json
 import os
 import re
-import sys
+from typing import Any
 import uuid
 from datetime import datetime, timezone
-from types import TracebackType
-from typing import Optional, Any, Type, Dict, List
 
 import aiohttp
-import av  # type: ignore
+import av
 import jack as Jack
-from jack import OwnPort
-import websockets.exceptions, websockets.server, websockets.connection
-from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription  # type: ignore
-from aiortc.mediastreams import MediaStreamError  # type: ignore
+import websockets.exceptions, websockets.asyncio.server, websockets.connection
+from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
+from aiortc.mediastreams import MediaStreamError
 import sentry_sdk
 
 config = configparser.RawConfigParser()
@@ -44,13 +41,13 @@ def write_ob_status(status: bool) -> None:
         fd.truncate()
 
 
-TurnCredentials = List[Dict[str, Any]]
+TurnCredentials = list[dict[str, Any]]
 
 
 def get_turn_credentials() -> TurnCredentials:
     provider = config.get("shittyserver", "turn_provider")
     if provider == "twilio":
-        from twilio.rest import Client  # type: ignore
+        from twilio.rest import Client # type: ignore
 
         client = Client(
             config.get("twilio", "account_sid"), config.get("twilio", "auth_token")
@@ -59,7 +56,7 @@ def get_turn_credentials() -> TurnCredentials:
         token = client.tokens.create()
         # Twilio's typedef is wrong, reee
         # noinspection PyTypeChecker
-        return token.ice_servers  # type: ignore
+        return token.ice_servers # type: ignore
     elif provider == "hardcoded":
         raise Exception("Don't use hardcoded anymore!")
     else:
@@ -77,47 +74,37 @@ def info(msg: str) -> None:
 
 
 jack = Jack.Client("webstudio")
-out1: OwnPort = jack.outports.register("out_0")  # type: ignore
-out2: OwnPort = jack.outports.register("out_1")  # type: ignore
+out1: Jack.OwnPort = jack.outports.register("out_0")  # type: ignore
+out2: Jack.OwnPort = jack.outports.register("out_1")  # type: ignore
 
-transfer_buffer1: Any = None
-transfer_buffer2: Any = None
-
-
-def init_buffers() -> None:
-    global transfer_buffer1, transfer_buffer2
-    transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
-    transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
-
-
-init_buffers()
-
+transfer_buffer1 = Jack.RingBuffer(jack.samplerate * 10)
+transfer_buffer2 = Jack.RingBuffer(jack.samplerate * 10)
 
 @jack.set_process_callback
 def process(frames: int) -> None:
     buf1 = out1.get_buffer()
     if transfer_buffer1.read_space == 0:
         for i in range(len(buf1)):
-            buf1[i] = b"\x00"  # type: ignore
+            buf1[i] = "\x00"
     else:
         piece1 = transfer_buffer1.read(len(buf1))
-        buf1[: len(piece1)] = piece1
+        buf1[:len(piece1)] = bytes(piece1)
     buf2 = out2.get_buffer()
     if transfer_buffer2.read_space == 0:
         for i in range(len(buf2)):
-            buf2[i] = b"\x00"  # type: ignore
+            buf2[i] = "\x00"
     else:
         piece2 = transfer_buffer2.read(len(buf2))
-        buf2[: len(piece2)] = piece2
+        buf2[:len(piece2)] = bytes(piece2)
 
 
-active_sessions: Dict[str, "Session"] = {}
-live_session: Optional["Session"] = None
+active_sessions: dict[str, "Session"] = {}
+live_session: "Session | None" = None
 
 
 async def notify_mattserver_about_sessions() -> None:
     async with aiohttp.ClientSession() as session:
-        data: Dict[str, Dict[str, str]] = {}
+        data: dict[str, dict[str, str]] = {}
         for sid, sess in active_sessions.items():
             data[sid] = sess.to_dict()
         async with session.post(
@@ -131,15 +118,15 @@ class NotReadyException(BaseException):
 
 
 class Session(object):
-    websocket: Optional[websockets.server.WebSocketServerProtocol]
-    connection_state: Optional[str]
-    pc: Optional[Any]
+    websocket: websockets.asyncio.server.ServerConnection | None
+    connection_state: str | None
+    pc: Any | None
     connection_id: str
     connected_at: datetime
     lock: asyncio.Lock
     running: bool
     ended: bool
-    resampler: Optional[Any]
+    resampler: Any | None
 
     def __init__(self) -> None:
         self.websocket = None
@@ -153,7 +140,7 @@ class Session(object):
         self.running = False
         self.connected_at = datetime.now(timezone.utc)
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         return {
             "connection_id": self.connection_id,
             "connected_at": self.connected_at.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -194,7 +181,7 @@ class Session(object):
 
                 if (
                     self.websocket is not None
-                    and self.websocket.state == websockets.connection.State.OPEN
+                    and self.websocket.state == websockets.protocol.State.OPEN
                 ):
                     try:
                         await self.websocket.send(json.dumps({"kind": "DIED"}))
@@ -225,7 +212,7 @@ class Session(object):
         self.pc = RTCPeerConnection()
         assert self.pc is not None
 
-        @self.pc.on("signalingstatechange")  # type: ignore
+        @self.pc.on("signalingstatechange")
         async def on_signalingstatechange() -> None:
             assert self.pc is not None
             print(
@@ -233,7 +220,7 @@ class Session(object):
                 "Signaling state is {}".format(self.pc.signalingState),
             )
 
-        @self.pc.on("iceconnectionstatechange")  # type: ignore
+        @self.pc.on("iceconnectionstatechange")
         async def on_iceconnectionstatechange() -> None:
             if self.pc is None:
                 print(
@@ -249,7 +236,7 @@ class Session(object):
                     print(self.connection_id, "Ending due to ICE connection failure")
                     await self.end()
 
-        @self.pc.on("track")  # type: ignore
+        @self.pc.on("track")
         async def on_track(track: MediaStreamTrack) -> None:
             global live_session, transfer_buffer1, transfer_buffer2
             print(self.connection_id, "Received track")
@@ -258,7 +245,7 @@ class Session(object):
 
                 await notify_mattserver_about_sessions()
 
-                @track.on("ended")  # type: ignore
+                @track.on("ended")
                 async def on_ended() -> None:
                     print(
                         self.connection_id,
@@ -275,7 +262,7 @@ class Session(object):
                         print(e)
                         await self.end()
                         break
-                    if self.running:
+                    if self.running and isinstance(frame, av.AudioFrame):
                         # Right, depending on the format, we may need to do some fuckery.
                         # Jack expects all audio to be 32 bit floating point
                         # while PyAV may give us audio in any format
@@ -329,7 +316,7 @@ class Session(object):
             )
 
     async def connect(
-        self, websocket: websockets.server.WebSocketServerProtocol
+        self, websocket: websockets.asyncio.server.ServerConnection
     ) -> None:
         global active_sessions
 
@@ -373,16 +360,16 @@ class Session(object):
 
 
 async def serve(
-    websocket: websockets.server.WebSocketServerProtocol, path: str
+    websocket: websockets.asyncio.server.ServerConnection
 ) -> None:
-    if path == "/stream":
+    if websocket.request and websocket.request.path == "/stream":
         session = Session()
         await session.connect(websocket)
     else:
         pass
 
 
-start_server = websockets.server.serve(
+start_server = websockets.asyncio.server.serve(
     serve, host=None, port=int(config.get("shittyserver", "websocket_port"))
 )
 
@@ -410,7 +397,7 @@ async def telnet_server(
         print(parts)
 
         if parts[0] == "Q":
-            result: Dict[str, Dict[str, str]] = {}
+            result: dict[str, dict[str, str]] = {}
             for sid, sess in active_sessions.items():
                 result[sid] = sess.to_dict()
             writer.write(
