@@ -22,7 +22,8 @@
           packages = with pkgs; [
             python314
             uv
-            yarn
+            yarn-berry_4
+            nodejs_22
           ];
         };
       }

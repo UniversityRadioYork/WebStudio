@@ -1,4 +1,3 @@
-def NODE_IMAGE = 'node:22.23.2-bookworm'
 def PYTHON_IMAGE = 'astral/uv:python3.14-bookworm'
 
 pipeline {
@@ -12,13 +11,6 @@ pipeline {
     stage('Prepare') {
       parallel {
         stage('Client') {
-          agent {
-            docker {
-              image NODE_IMAGE
-              reuseNode true
-            }
-          }
-
           stages {
             stage('Install dependencies') {
               steps {
@@ -61,25 +53,20 @@ pipeline {
     }
 
     stage('Build and deploy to dev instance') {
-      agent {
-        docker {
-          image NODE_IMAGE
-          reuseNode true
-        }
-      }
-
       when {
         anyOf {
           branch 'master'
           branch 'production'
         }
       }
+
       environment {
         SENTRY_AUTH_TOKEN = credentials('sentry-auth-token')
         SENTRY_ORG = 'university-radio-york'
         SENTRY_PROJECT = 'webstudio'
         SENTRY_ENVIRONMENT = 'webstudio-dev'
       }
+
       steps {
         sh 'sed -i -e \'s|"./",|"https://ury.org.uk/webstudio-dev",|\' package.json'
         sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
@@ -87,6 +74,7 @@ pipeline {
           sh 'rsync -av --delete-after build/ deploy@ury.york.ac.uk:/usr/local/www/webstudio-dev'
         }
       }
+
       post {
         success {
           sh '''
@@ -115,13 +103,6 @@ pipeline {
 
       parallel {
         stage('Deploy prod client') {
-          agent {
-            docker {
-              image NODE_IMAGE
-              reuseNode true
-            }
-          }
-
           environment {
             REACT_APP_MYRADIO_NONAPI_BASE = 'https://ury.org.uk/myradio'
             REACT_APP_MYRADIO_BASE = 'https://ury.org.uk/api/v2'

@@ -50,7 +50,7 @@
     "eslint-plugin-react": "7.14.3",
     "eslint-plugin-react-hooks": "^1.6.1",
     "eventemitter3": "^4.0.0",
-    "fetch-progress": "github:UniversityRadioYork/fetch-progress",
+    "fetch-progress": "https://github.com/UniversityRadioYork/fetch-progress.git#commit=d3ffc6cf92c79f17b32405204053483b77249b68",
     "file-loader": "3.0.1",
     "fs-extra": "7.0.1",
     "html-webpack-plugin": "4.0.0-beta.5",
