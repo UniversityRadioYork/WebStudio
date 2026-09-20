@@ -10,6 +10,20 @@ import { Dispatch } from "redux";
 
 type StreamerState = "HELLO" | "OFFER" | "ANSWER" | "CONNECTED";
 
+enum ConnectionFeature {
+  TrickleICE = "trickleICE",
+}
+function isFeature(feat: string): feat is ConnectionFeature {
+  switch (feat) {
+    case ConnectionFeature.TrickleICE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const REQUESTED_FEATURES = [ConnectionFeature.TrickleICE];
+
 export class WebRTCStreamer extends Streamer {
   stream: MediaStream;
   pc: RTCPeerConnection | null = null;
@@ -18,6 +32,7 @@ export class WebRTCStreamer extends Streamer {
   isActive = false;
   dispatch: Dispatch<any>;
   unexpectedDeath = false;
+  features: Set<ConnectionFeature>;
 
   newsInterval?: later.Timer;
 
@@ -25,6 +40,7 @@ export class WebRTCStreamer extends Streamer {
     super();
     this.stream = stream;
     this.dispatch = dispatch;
+    this.features = new Set();
   }
 
   async start(): Promise<void> {
@@ -67,6 +83,15 @@ export class WebRTCStreamer extends Streamer {
           this.ws!.close();
         }
 
+        const features: string[] | undefined = data.features;
+        if (features) {
+          console.log("server advertises features " + JSON.stringify(features));
+          features.filter(isFeature).forEach((feat) => this.features.add(feat));
+          console.log(
+            "Supported feature set: " + JSON.stringify(this.features)
+          );
+        }
+
         this.createPeerConnection(data.iceServers);
 
         if (!this.pc) {
@@ -96,12 +121,17 @@ export class WebRTCStreamer extends Streamer {
         console.log("New SDP", offer.sdp);
 
         await this.pc.setLocalDescription(offer);
-        await this.waitForIceCandidates();
+
+        if (!this.features.has(ConnectionFeature.TrickleICE)) {
+          await this.waitForIceCandidates();
+        }
+
         this.ws!.send(
           JSON.stringify({
             kind: "OFFER",
             type: this.pc.localDescription!.type,
             sdp: this.pc.localDescription!.sdp,
+            features: Array.from(this.features),
           })
         );
         this.state = "OFFER";
@@ -116,6 +146,19 @@ export class WebRTCStreamer extends Streamer {
         });
         await this.pc.setRemoteDescription(answer);
         this.state = "ANSWER";
+        break;
+      case "CANDIDATES":
+        if (!this.pc) {
+          throw new Error("Tried to ANSWER with a null PeerConnection!");
+        }
+        if (data.candidates === null) {
+          // @ts-ignore
+          this.pc.addIceCandidate(null);
+        } else {
+          (data.candidates as RTCIceCandidateInit[]).forEach((cdt) =>
+            this.pc!.addIceCandidate(cdt)
+          );
+        }
         break;
       case "ACTIVATED":
         this.isActive = true;
@@ -142,6 +185,18 @@ export class WebRTCStreamer extends Streamer {
     this.pc = new RTCPeerConnection({
       iceServers,
     });
+    if (this.features.has(ConnectionFeature.TrickleICE)) {
+      this.pc.onicecandidate = (e) => {
+        if (e.candidate !== null) {
+          this.ws?.send(
+            JSON.stringify({
+              kind: "CANDIDATES",
+              candidates: [e.candidate],
+            })
+          );
+        }
+      };
+    }
     this.pc.oniceconnectionstatechange = async (e) => {
       if (!this.pc) {
         throw new Error(
