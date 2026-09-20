@@ -14,13 +14,13 @@ pipeline {
           stages {
             stage('Install dependencies') {
               steps {
-                sh 'CI=true yarn --no-progress --non-interactive --skip-integrity-check --frozen-lockfile install'
+                sh 'CI=true yarnpkg --no-progress --non-interactive --skip-integrity-check --frozen-lockfile install'
               }
             }
 
             stage('Typecheck') {
               steps {
-                sh 'yarn check:types'
+                sh 'yarnpkg check:types'
               }
             }
           }
@@ -69,7 +69,7 @@ pipeline {
 
       steps {
         sh 'sed -i -e \'s|"./",|"https://ury.org.uk/webstudio-dev",|\' package.json'
-        sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
+        sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarnpkg build'
         sshagent(credentials: ['deploy2']) {
           sh 'rsync -av --delete-after build/ deploy@ury.york.ac.uk:/usr/local/www/webstudio-dev'
         }
@@ -79,11 +79,11 @@ pipeline {
         success {
           sh '''
             export SENTRY_RELEASE="$(jq -r '.version' package.json)-$(git rev-parse --short HEAD)"
-            yarn sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
-            yarn sentry-cli releases set-commits $SENTRY_RELEASE --auto
-            yarn sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps build/static/js --url-prefix '/webstudio-dev/static/js'
-            yarn sentry-cli releases finalize $SENTRY_RELEASE
-            yarn sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
+            yarnpkg sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
+            yarnpkg sentry-cli releases set-commits $SENTRY_RELEASE --auto
+            yarnpkg sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps build/static/js --url-prefix '/webstudio-dev/static/js'
+            yarnpkg sentry-cli releases finalize $SENTRY_RELEASE
+            yarnpkg sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
           '''
         }
       }
@@ -110,7 +110,7 @@ pipeline {
           }
           steps {
             sh 'sed -i -e \'s|ury.org.uk/webstudio-dev|ury.org.uk/webstudio|\' package.json'
-            sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_PRODUCTION=true yarn build'
+            sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` REACT_APP_PRODUCTION=true yarnpkg build'
             sshagent(credentials: ['deploy2']) {
               sh 'rsync -av --delete-after build/ deploy@ury.york.ac.uk:/usr/local/www/webstudio'
             }
