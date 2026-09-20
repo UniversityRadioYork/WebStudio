@@ -45,14 +45,14 @@ pipeline {
           stages {
             stage('Install dependencies') {
               steps {
-                sh 'uv sync --locked'
+                sh 'uv sync --no-cache --locked'
               }
             }
 
             stage('MyPy') {
               steps {
-                sh 'uv run mypy stateserver.py'
-                sh 'uv run mypy shittyserver.py'
+                sh 'uv run --no-cache mypy stateserver.py'
+                sh 'uv run --no-cache mypy shittyserver.py'
               }
             }
           }
