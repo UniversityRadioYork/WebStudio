@@ -28,7 +28,9 @@ pipeline {
             }
 
             stage('Typecheck') {
-              sh 'yarn check:types'
+              steps {
+                sh 'yarn check:types'
+              }
             }
           }
         }
