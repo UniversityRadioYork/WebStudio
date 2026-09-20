@@ -120,7 +120,10 @@
     "build": "node --openssl-legacy-provider scripts/build.js",
     "build-baps": "node --openssl-legacy-provider scripts/build.js baps",
     "test": "node --openssl-legacy-provider scripts/test.js",
-    "check:types": "tsc -p tsconfig.json --noEmit --extendedDiagnostics"
+    "check:types": "tsc -p tsconfig.json --noEmit --extendedDiagnostics",
+    "lint": "eslint src/ --ext .ts,.tsx",
+    "format": "prettier -c 'src/**/*.{js,ts,tsx,css,scss}' --write",
+    "format:check": "prettier -c 'src/**/*.{js,ts,tsx,css,scss}'"
   },
   "eslintConfig": {
     "extends": "react-app"
