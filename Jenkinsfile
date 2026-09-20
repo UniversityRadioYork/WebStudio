@@ -1,6 +1,5 @@
-def NODE_IMAGE = 'node:26.9.0-trixie'
-def PYTHON_IMAGE = 'astral/uv:python3.14-trixie'
-def SENTRY_CLI_IMAGE=  'getsentry/sentry-cli:3.8.0'
+def NODE_IMAGE = 'node:22.23.2-bookworm'
+def PYTHON_IMAGE = 'astral/uv:python3.14-bookworm'
 
 pipeline {
   agent {
