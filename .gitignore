@@ -23,7 +23,8 @@ yarn-debug.log*
 yarn-error.log*
 
 .env.local
-.yarn/
+.yarn/*
+!.yarn/releases
 
 .mypy_cache/
 env/
