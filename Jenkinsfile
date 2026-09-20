@@ -81,7 +81,7 @@ pipeline {
         SENTRY_ENVIRONMENT = 'webstudio-dev'
       }
       steps {
-        sh 'sed -i -e \'s|"./",|"https://ury.org.uk/webstudio-dev",\' package.json'
+        sh 'sed -i -e \'s|"./",|"https://ury.org.uk/webstudio-dev",|\' package.json'
         sh 'REACT_APP_GIT_SHA=`git rev-parse --short HEAD` yarn build'
         sshagent(credentials: ['ury']) {
           sh 'rsync -av --delete-after build/ deploy@ury:/usr/local/www/webstudio-dev'
