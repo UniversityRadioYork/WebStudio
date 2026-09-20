@@ -30,7 +30,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Check types
-        uses: yarn check:types
+        run: yarn check:types
 
       - name: Run eslint
         run: yarn lint
