@@ -1,6 +1,6 @@
 {
   "name": "webstudio",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "private": true,
   "dependencies": {
     "@babel/core": "7.6.0",
@@ -119,7 +119,8 @@
     "start-baps": "node --openssl-legacy-provider scripts/start.js baps",
     "build": "node --openssl-legacy-provider scripts/build.js",
     "build-baps": "node --openssl-legacy-provider scripts/build.js baps",
-    "test": "node --openssl-legacy-provider scripts/test.js"
+    "test": "node --openssl-legacy-provider scripts/test.js",
+    "check:types": "tsc -p tsconfig.json --noEmit --extendedDiagnostics"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -137,6 +138,7 @@
     ]
   },
   "devDependencies": {
+    "@sentry/cli": "^3.8.0",
     "@types/puppeteer": "^3.0.0",
     "@ury1350/prettier-config": "^1.0.0",
     "husky": "^4.3.0",

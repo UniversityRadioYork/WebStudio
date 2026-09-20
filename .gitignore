@@ -34,3 +34,6 @@ serverconfig.ini
 
 .idea/
 .vscode/settings.json
+
+# nix
+/.direnv
